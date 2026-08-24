@@ -155,9 +155,19 @@ def main() -> int:
     # WORKSPACE.md §2: everything the adapter library may not reach. The two
     # sibling adapters are in here because adapters are siblings, never a stack
     # -- a runtime data path through one is not a build edge on it (§2.1).
+    #
+    # The third adapter is the edge that would be attempted in the *other*
+    # direction, which is why it is worth naming here as well as there:
+    # this library holds the only OSC decoder in the repository, so
+    # `vrmAdapterVrchatOsc` reaching in is the plausible mistake and this
+    # file is what refuses the return trip. `osc` is deliberately not a
+    # bare token on this list -- an OSC decoder is what this adapter
+    # legitimately contains -- and the shared library with two consumers
+    # arrives in its own change (osc-and-vrchat-trackers.md, OSC-3).
     forbidden_neighbours = re.compile(
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm\w*|execMotion|execVrm|"
-        r"vrmAdapterMocopi|vrmAdapterArdy|cgltf|mocopi|ardy)\b",
+        r"vrmAdapterMocopi|vrmAdapterVrchatOsc|vrmAdapterArdy|cgltf|mocopi|"
+        r"vrchat|ardy)\b",
         re.IGNORECASE)
     for area in (source / "include", source / "src"):
         for path in area.rglob("*"):
@@ -222,7 +232,8 @@ def main() -> int:
 
     forbidden_binary = re.compile(
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|vrmAdapterMocopi|"
-        r"vrmAdapterArdy|UsdVrm\w*)\b", re.IGNORECASE)
+        r"vrmAdapterVrchatOsc|vrmAdapterArdy|UsdVrm\w*)\b",
+        re.IGNORECASE)
     imported = forbidden_binary.search(dependencies)
     if imported:
         errors.append(
