@@ -3,15 +3,15 @@
 // Two decisions `UdpReceiver::Receive` makes around its `poll`, pulled out
 // where a test can reach them.
 //
-// This header is the reason usd-vrm-plugins' OSC-2 could pay a debt OSC-1 could not. Two of that
-// step's four fixes shipped without a test, and the obstacle was structural
-// rather than lazy: a poll timeout of `-1` and one of `INT_MAX` differ only
-// after 24.8 days, and a wake-up reporting `POLLERR` instead of a datagram is
-// not producible on three platforms from a suite that owns only its own
-// sockets. The honest seam is a unit test of the mapping and of the predicate,
-// and writing one inside a single adapter would have meant giving that adapter
-// a public function or an internal header its sibling did not have — divergence,
-// in the step whose purpose was convergence.
+// This header is the reason usd-vrm-plugins' OSC-2 could pay a debt OSC-1 could
+// not. Two of that step's four fixes shipped without a test, and the obstacle
+// was structural rather than lazy: a poll timeout of `-1` and one of `INT_MAX`
+// differ only after 24.8 days, and a wake-up reporting `POLLERR` instead of a
+// datagram is not producible on three platforms from a suite that owns only its
+// own sockets. The honest seam is a unit test of the mapping and of the
+// predicate, and writing one inside a single adapter would have meant giving
+// that adapter a public function or an internal header its sibling did not have
+// — divergence, in the step whose purpose was convergence.
 //
 // A library can hold an internal header. This is it, and
 // `tests/test_poll_timeout.cpp` is the test.

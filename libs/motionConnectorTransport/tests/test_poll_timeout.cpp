@@ -2,15 +2,15 @@
 //
 // The two decisions `UdpReceiver::Receive` makes around its `poll`, tested.
 //
-// This file is a debt being paid rather than a new suite. Two of usd-vrm-plugins' OSC-1's four
-// fixes shipped without a test, and the obstacle was structural: a poll timeout
-// of `-1` and one of `INT_MAX` differ only after 24.8 days, and a wake-up
-// reporting `POLLERR` instead of a datagram is not producible on three
-// platforms from a suite that owns only its own sockets — an unconnected UDP
-// socket collects no ICMP error, and `POLLNVAL` needs a descriptor closed
-// underneath a poll already running, which is the race `UdpReceiver` documents
-// as unsupported. A test that passed against the defect would have been worse
-// than none.
+// This file is a debt being paid rather than a new suite. Two of
+// usd-vrm-plugins' OSC-1's four fixes shipped without a test, and the obstacle
+// was structural: a poll timeout of `-1` and one of `INT_MAX` differ only after
+// 24.8 days, and a wake-up reporting `POLLERR` instead of a datagram is not
+// producible on three platforms from a suite that owns only its own sockets —
+// an unconnected UDP socket collects no ICMP error, and `POLLNVAL` needs a
+// descriptor closed underneath a poll already running, which is the race
+// `UdpReceiver` documents as unsupported. A test that passed against the defect
+// would have been worse than none.
 //
 // The honest seam was named there too: a unit test of the mapping and of the
 // wake-up predicate, in a library that can hold an internal header without
@@ -29,11 +29,13 @@
 namespace
 {
 
-using openstrata::connectors::transport::internal::ClassifyPollWakeUp;
-using openstrata::connectors::transport::internal::kPollForever;
-using openstrata::connectors::transport::internal::kPollMaxMilliseconds;
-using openstrata::connectors::transport::internal::PollWakeUp;
-using openstrata::connectors::transport::internal::TimeoutToMilliseconds;
+namespace transport = openstrata::connectors::transport;
+
+using transport::internal::ClassifyPollWakeUp;
+using transport::internal::kPollForever;
+using transport::internal::kPollMaxMilliseconds;
+using transport::internal::PollWakeUp;
+using transport::internal::TimeoutToMilliseconds;
 
 // The defect this replaces: a finite request at or above INT_MAX milliseconds
 // was mapped onto -1, which both `poll` and `WSAPoll` read as "wait forever".

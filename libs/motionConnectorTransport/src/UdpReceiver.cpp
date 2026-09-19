@@ -348,10 +348,10 @@ ReadReceiveBuffer(SocketHandle handle)
 } // namespace
 
 // `TimeoutToMilliseconds` and `ClassifyPollWakeUp` live in PollTimeout.h, where
-// a unit test can reach them — the debt usd-vrm-plugins' OSC-1 recorded and could not pay from
-// inside a single adapter. `FormatSeconds` is Diagnostics.h's, so a silence
-// report and the diagnostic line an adapter turns it into cannot disagree about
-// how a duration is spelled.
+// a unit test can reach them — the debt usd-vrm-plugins' OSC-1 recorded and
+// could not pay from inside a single adapter. `FormatSeconds` is
+// Diagnostics.h's, so a silence report and the diagnostic line an adapter turns
+// it into cannot disagree about how a duration is spelled.
 using internal::ClassifyPollWakeUp;
 using internal::PollWakeUp;
 using internal::TimeoutToMilliseconds;

@@ -3,8 +3,8 @@
 // A recorded packet capture: the on-disk form of what a socket received.
 //
 // This is the reader and writer two adapters had written twice — 44 header
-// lines and 366 implementation lines apiece, differing by six
-// (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2). Recording datagrams is not a
+// lines and 366 implementation lines apiece, differing by six (usd-vrm-plugins'
+// roadmap/osc-and-vrchat-trackers.md §2). Recording datagrams is not a
 // protocol, which is why the census put this file at the opposite end of its
 // table from `FrameAssembler`.
 //
@@ -28,11 +28,11 @@
 // this extraction did not converge. Both committed corpora name their producer
 // in their first token — `!vmc-packet-capture`, `!mocopi-packet-capture` — and
 // a single `!live-packet-capture` would have made every committed fixture a
-// rewrite, which is the constraint that roadmap's §3.2 states. It also keeps a property worth
-// keeping on its own: a capture of one protocol handed to the other protocol's
-// decoder fails at the first line with a clear message, rather than at the
-// first field with a malformed-packet diagnostic blamed on a source that did
-// nothing wrong.
+// rewrite, which is the constraint that roadmap's §3.2 states. It also keeps a
+// property worth keeping on its own: a capture of one protocol handed to the
+// other protocol's decoder fails at the first line with a clear message, rather
+// than at the first field with a malformed-packet diagnostic blamed on a source
+// that did nothing wrong.
 //
 // The header *vocabulary*, by contrast, is one vocabulary. `device` was
 // mocopi's alone and is now everyone's — an adapter that has nothing to put
@@ -87,11 +87,11 @@
 // names one peer for a whole capture, which was free while a session meant one
 // sender; a VRChat OSC session marks a *restart* with a new ephemeral source
 // port and with nothing else — no session identifier, no rest table, no
-// handshake — so the only signal that wire gives did not survive into a file.
-// A capture of a restart replayed through `--inspect` reported one peer where
-// the live session had seen two
-// (usd-vrm-plugins' docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md §4),
-// and every fixture-driven test of restart behaviour was therefore testing the
+// handshake — so the only signal that wire gives did not survive into a file. A
+// capture of a restart replayed through `--inspect` reported one peer where the
+// live session had seen two (usd-vrm-plugins'
+// docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md §4), and
+// every fixture-driven test of restart behaviour was therefore testing the
 // silence and not the identity change — which is precisely the difference
 // between one session pausing and a second session beginning.
 //
@@ -208,12 +208,13 @@ struct PacketCaptureError
 // Parses a capture whose first token must be `magic`. On failure `capture` is
 // left untouched and `error`, when given, names the line and the reason.
 MOTIONCONNECTORTRANSPORT_API bool ReadPacketCapture(std::string_view magic, std::istream& input,
-                                         PacketCapture* capture,
-                                         PacketCaptureError* error = nullptr);
+                                                    PacketCapture* capture,
+                                                    PacketCaptureError* error = nullptr);
 
-MOTIONCONNECTORTRANSPORT_API bool ReadPacketCaptureFile(std::string_view magic, const std::string& path,
-                                             PacketCapture* capture,
-                                             PacketCaptureError* error = nullptr);
+MOTIONCONNECTORTRANSPORT_API bool ReadPacketCaptureFile(std::string_view magic,
+                                                        const std::string& path,
+                                                        PacketCapture* capture,
+                                                        PacketCaptureError* error = nullptr);
 
 // Writes `capture` under `magic`. Emission is deterministic — fixed precision,
 // lowercase hex, sixteen bytes a line, a gutter on every line, and only the
@@ -221,14 +222,16 @@ MOTIONCONNECTORTRANSPORT_API bool ReadPacketCaptureFile(std::string_view magic, 
 // capture this writer produced is byte-identical, which is what lets a
 // committed fixture be compared rather than merely parsed.
 MOTIONCONNECTORTRANSPORT_API bool WritePacketCapture(std::string_view magic, std::ostream& output,
-                                          const PacketCapture& capture);
+                                                     const PacketCapture& capture);
 
-MOTIONCONNECTORTRANSPORT_API bool WritePacketCaptureFile(std::string_view magic, const std::string& path,
-                                              const PacketCapture& capture);
+MOTIONCONNECTORTRANSPORT_API bool WritePacketCaptureFile(std::string_view magic,
+                                                         const std::string& path,
+                                                         const PacketCapture& capture);
 
 // The gutter rendering: printable ASCII as itself, everything else as '.'. The
 // reader checks a gutter against this, so it is part of the format rather than
 // a courtesy of the writer.
-MOTIONCONNECTORTRANSPORT_API std::string PacketCaptureGutter(const std::uint8_t* bytes, std::size_t count);
+MOTIONCONNECTORTRANSPORT_API std::string PacketCaptureGutter(const std::uint8_t* bytes,
+                                                             std::size_t count);
 
 } // namespace openstrata::connectors::transport

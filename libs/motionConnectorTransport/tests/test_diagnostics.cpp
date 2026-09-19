@@ -21,13 +21,15 @@
 namespace
 {
 
-using openstrata::connectors::transport::Diagnostic;
-using openstrata::connectors::transport::DiagnosticCodeEntry;
-using openstrata::connectors::transport::DiagnosticCodeTable;
-using openstrata::connectors::transport::DiagnosticFields;
-using openstrata::connectors::transport::DiagnosticSeverity;
-using openstrata::connectors::transport::FormatDiagnostic;
-using openstrata::connectors::transport::FormatSeconds;
+namespace transport = openstrata::connectors::transport;
+
+using transport::Diagnostic;
+using transport::DiagnosticCodeEntry;
+using transport::DiagnosticCodeTable;
+using transport::DiagnosticFields;
+using transport::DiagnosticSeverity;
+using transport::FormatDiagnostic;
+using transport::FormatSeconds;
 
 enum class TestCode : std::uint8_t
 {
@@ -163,9 +165,9 @@ TestSecondsAreSpelledOneWay()
 void
 TestSeverityStrings()
 {
-    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Info) == "info");
-    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Warning) == "warning");
-    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Error) == "error");
+    assert(transport::DiagnosticSeverityString(DiagnosticSeverity::Info) == "info");
+    assert(transport::DiagnosticSeverityString(DiagnosticSeverity::Warning) == "warning");
+    assert(transport::DiagnosticSeverityString(DiagnosticSeverity::Error) == "error");
 }
 
 } // namespace

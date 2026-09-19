@@ -7,19 +7,21 @@
 //     the code set = the adapter    (frozen per protocol, before its decoder)
 //
 // Two adapters wrote the same 126 lines twice and differed only in their code
-// table (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2). Everything the two copies
-// agreed on is below; everything they disagreed on stayed where it was.
+// table (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2). Everything
+// the two copies agreed on is below; everything they disagreed on stayed where
+// it was.
 //
 // ## Why a code cannot live here, stated as a mechanism rather than a rule
 //
 // A code set is frozen *before* the decoder that raises it, so that the set
 // describes a protocol's failure modes rather than whichever bug was chased
-// last (usd-vrm-plugins' adapter plan §8). That freeze is per protocol by construction: mocopi
-// can report a device that cannot solve, VMC cannot express one, and a shared
-// enum would have to contain both and mean neither. So a code is an adapter's
-// property, `Diagnostic::code` keeps its adapter's enum *type*, and this
-// library never names a code — a `motionConnectorTransport` holding one is a contract
-// violation, not a shortcut (WORKSPACE.md §2).
+// last (usd-vrm-plugins' adapter plan §8). That freeze is per protocol by
+// construction: mocopi can report a device that cannot solve, VMC cannot
+// express one, and a shared enum would have to contain both and mean neither.
+// So a code is an adapter's property, `Diagnostic::code` keeps its adapter's
+// enum *type*, and this library never names a code — a
+// `motionConnectorTransport` holding one is a contract violation, not a
+// shortcut (WORKSPACE.md §2).
 //
 // What it does hold is the machinery a code table needs, so that the table is
 // the only thing an adapter writes: `DiagnosticCodeTable` turns an array of
@@ -44,7 +46,8 @@ enum class DiagnosticSeverity : std::uint8_t
     Error,
 };
 
-MOTIONCONNECTORTRANSPORT_API std::string_view DiagnosticSeverityString(DiagnosticSeverity severity) noexcept;
+MOTIONCONNECTORTRANSPORT_API std::string_view
+DiagnosticSeverityString(DiagnosticSeverity severity) noexcept;
 
 // One row of an adapter's frozen code table: the stable string, and the two
 // defaults that must not be decided at a raise site. `name` is the contract —
@@ -105,11 +108,11 @@ template <class Code, Code DefaultCode> struct Diagnostic : DiagnosticFields
 // order is fixed. The code arrives already resolved to its string, because
 // resolving it is the one step only the adapter can take.
 MOTIONCONNECTORTRANSPORT_API std::string FormatDiagnostic(std::string_view codeString,
-                                               const DiagnosticFields& fields);
+                                                          const DiagnosticFields& fields);
 
 // Six decimals in the classic locale, matching the recorded-trace format's
-// quantum (usd-motion-plugins' motionRecording/CaptureTrace.h), so a diagnostic line and the trace it
-// refers to spell the same instant the same way.
+// quantum (usd-motion-plugins' motionRecording/CaptureTrace.h), so a diagnostic
+// line and the trace it refers to spell the same instant the same way.
 //
 // The classic locale is not decoration. `printf("%.6f")` and a default-imbued
 // stream both take their decimal point from the *host's* locale, and a DCC that

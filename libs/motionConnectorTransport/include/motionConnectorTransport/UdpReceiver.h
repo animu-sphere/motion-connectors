@@ -23,8 +23,8 @@
 // that library (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2, §3.2).
 //
 // The four fixes landed in both adapters *before* this move, so that a file
-// move never carried a fix inside it (usd-vrm-plugins' OSC-1). What arrives here is the merged
-// behaviour, unchanged.
+// move never carried a fix inside it (usd-vrm-plugins' OSC-1). What arrives
+// here is the merged behaviour, unchanged.
 //
 // ## It raises no diagnostic code, and that is the contract
 //
@@ -32,9 +32,8 @@
 // that the set describes a protocol rather than a bug history. A shared
 // receiver therefore cannot name one — `motionConnectorTransport` holding an
 // adapter's code is a WORKSPACE.md §2 violation — so it reports what it
-// *observed*, as a
-// `TransportEventReport`, and the caller that knows which adapter it is maps
-// the event onto its own frozen code. This is the shape `MatchSourceProfile`
+// *observed*, as a `TransportEventReport`, and the caller that knows which
+// adapter it is maps the event onto its own frozen code. This is the shape `MatchSourceProfile`
 // already uses: the lower layer returns a typed refusal naming the event, and
 // the caller supplies the vocabulary.
 //
@@ -468,8 +467,8 @@ struct DatagramQueueStats
 //
 // A network thread pushes; the consumer's thread drains and decodes. Nothing
 // downstream of `Drain` learns that a second thread exists, which is the whole
-// point: an adapter's decode path and the live source it feeds keep the single-threaded
-// contract their tests are written against.
+// point: an adapter's decode path and the live source it feeds keep the
+// single-threaded contract their tests are written against.
 //
 // **It is opt-in, and that is the contract rather than a convenience.** The
 // failure mode of an extraction is that everything one caller needed becomes

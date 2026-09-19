@@ -33,9 +33,11 @@
 namespace
 {
 
-using openstrata::connectors::transport::PacketCapture;
-using openstrata::connectors::transport::PacketCaptureError;
-using openstrata::connectors::transport::RecordedDatagram;
+namespace transport = openstrata::connectors::transport;
+
+using transport::PacketCapture;
+using transport::PacketCaptureError;
+using transport::RecordedDatagram;
 
 // Not `!vmc-`, not `!mocopi-`, not `!vrchat-osc-`.
 constexpr std::string_view kMagic = "!test-packet-capture";
@@ -64,7 +66,7 @@ bool
 Read(const std::string& text, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
     std::istringstream input(text);
-    return openstrata::connectors::transport::ReadPacketCapture(kMagic, input, capture, error);
+    return transport::ReadPacketCapture(kMagic, input, capture, error);
 }
 
 std::size_t
