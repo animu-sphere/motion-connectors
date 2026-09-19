@@ -1,7 +1,8 @@
 # Current: the contract, then v0.1.0
 
 Status: 🚧 documentation baseline done (2026-09-19); scaffold done
-(2026-09-19) except its rendered CI; everything else below ⬜.
+(2026-09-19), its CI rendered with the first import; v0.1.0 🚧 —
+`motionConnectorTransport` imported (2026-09-19).
 
 Connector Phase 1 is *contract first* ([DESIGN_POLICY.md §30](../design/DESIGN_POLICY.md#30-recommended-initial-implementation-order),
 §44). The documents exist: the design policy, the connector contract, the
@@ -12,7 +13,7 @@ remains is the decisions that must precede code, and then the imports.
 
 ## What remains
 
-### The scaffold ✅ (2026-09-19), except the rendered CI
+### The scaffold ✅ (2026-09-19)
 
 The names and layout are decided (WS-O1:
 [WORKSPACE.md §1.1](../architecture/WORKSPACE.md#11-native-libraries)), and so
@@ -24,10 +25,11 @@ installed-consumer lane runs over an empty package list, and the community
 files are in place. What landed is in the [changelog](../../CHANGELOG.md), and
 how to build it is in the [building guide](../guides/building.md).
 
-- ⛔ **The rendered `ost` CI workflow**, for the reason `usd-motion-plugins`
-  gives. Under `ost` 0.22.10 every rendered job runs the workspace graph step,
-  and that step refuses a workspace with no member. The contract is in
-  `openstrata.ci.yaml`, and the workflow is rendered with the first member.
+- ✅ **The rendered `ost` CI workflow** (2026-09-19, with
+  `motionConnectorTransport`). Under `ost` 0.22.10 every rendered job runs the
+  workspace graph step, which refuses a workspace with no member, so the
+  scaffold could not render it; the first member made it renderable, and the
+  graph cell arrived with it.
 
 ### The contract, Connector Phase 1 ⬜ (the design can start now; the code waits for `motionCore`)
 
@@ -45,11 +47,19 @@ how to build it is in the [building guide](../guides/building.md).
 `usd-vrm-plugins` v0.9.0 was published on 2026-09-17, so `usd-motion-plugins`
 v0.1.0 is no longer blocked. It waits only for its own first import.
 
-- ⬜ Import, in dependency order and one identity per change, with history,
+- 🚧 Import, in dependency order and one identity per change, with history,
   tests and each identity's checks
-  ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)):
-  - `liveTransport` as `motionConnectorTransport` and `osc` as
-    `motionConnectorOsc`, with the address-literal check;
+  ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)). The
+  transport and the wire format depend on nothing, so they arrive before
+  `usd-motion-plugins` v0.1.0 is installable; everything after them links
+  `motionCore`. `usd-vrm-plugins` still deletes its copies in one change, after
+  the last import.
+  - ✅ `liveTransport` as `motionConnectorTransport` (2026-09-19): 10 commits
+    of history through `git filter-repo`, a move-only commit, then the rename
+    to `openstrata::connectors::transport`. Its three suites and its boundary
+    check came with it, and the check refuses this repository's other
+    libraries and every `usd-motion-plugins` library by name.
+  - ⬜ `osc` as `motionConnectorOsc`, with the address-literal check;
   - `motionTracking` as `motionConnectorTracking`, on the terms **WS-O2**
     settles;
   - `vrmAdapterVmc`, `vrmAdapterMocopi` and `vrmAdapterVrchatOsc` as

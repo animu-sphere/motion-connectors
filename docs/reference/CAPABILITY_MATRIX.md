@@ -9,7 +9,8 @@ nothing implemented. The "Implemented elsewhere" column says where the
 behaviour exists today, before it moves here; it is not a claim about this
 repository.
 
-Status (2026-09-19): **nothing is implemented.**
+Status (2026-09-19): **the transport is implemented** (`motionConnectorTransport`,
+imported from `usd-vrm-plugins`); no connector is.
 
 ## 1. Contract
 
@@ -19,7 +20,8 @@ Status (2026-09-19): **nothing is implemented.**
 | `MotionFrame`, `FrameTiming`, actors | — | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | nowhere | v0.1.0 |
 | Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | — | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | `usd-vrm-plugins` `liveTransport` (datagram queue) | v0.1.0 |
 | Source profiles | — | [SOURCE_PROFILES](../design/SOURCE_PROFILES.md) | nowhere as one format | v0.1.0 |
-| UDP transport, packet capture and replay | — | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | `usd-vrm-plugins` `liveTransport` | v0.1.0 |
+| UDP receive, the opt-in datagram queue, the packet-capture file format | supported — `motionConnectorTransport_packetCapture`, `_pollTimeout`, `_diagnostics` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
+| Replay of a capture through a connector | — | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | `usd-vrm-plugins` per adapter | v0.1.0 |
 | OSC 1.0 wire format | — | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | `usd-vrm-plugins` `osc` | v0.1.0 |
 | `TrackerObservation`, assignment, tracker solve | — | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | `usd-vrm-plugins` `motionTracking` | v0.1.0 |
 
