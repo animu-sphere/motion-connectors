@@ -1,4 +1,7 @@
-# motion-connectors
+# Motion Connectors
+
+[![CI](https://github.com/animu-sphere/motion-connectors/actions/workflows/ost-source-ci.yml/badge.svg)](https://github.com/animu-sphere/motion-connectors/actions/workflows/ost-source-ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Connectivity for live motion: devices, browsers, SDKs, streams and remote
 services, normalized into the one motion contract the OpenUSD avatar stack
