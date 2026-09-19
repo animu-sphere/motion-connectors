@@ -1,6 +1,7 @@
 {
   "about": "Every package motion-connectors installs, as a consumer outside the repository reaches it. scripts/check_installed_consumer.py checks the prefix for each, and CMakeLists.txt beside this file find_package()s each at the repository's major.minor and links its target. A new library adds its row in the change that creates it. The first package to find motionCore also puts the installed usd-motion-plugins prefix on the consumer's CMAKE_PREFIX_PATH; the transport and the wire format find nothing.",
   "packages": [
-    {"name": "motionConnectorTransport", "header": "motionConnectorTransport/UdpReceiver.h"}
+    {"name": "motionConnectorTransport", "header": "motionConnectorTransport/UdpReceiver.h"},
+    {"name": "motionConnectorOsc", "header": "motionConnectorOsc/OscPacket.h"}
   ]
 }

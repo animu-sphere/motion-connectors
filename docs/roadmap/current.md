@@ -2,7 +2,7 @@
 
 Status: 🚧 documentation baseline done (2026-09-19); scaffold done
 (2026-09-19), its CI rendered with the first import; v0.1.0 🚧 —
-`motionConnectorTransport` imported (2026-09-19).
+`motionConnectorTransport` and `motionConnectorOsc` imported (2026-09-19).
 
 Connector Phase 1 is *contract first* ([DESIGN_POLICY.md §30](../design/DESIGN_POLICY.md#30-recommended-initial-implementation-order),
 §44). The documents exist: the design policy, the connector contract, the
@@ -59,7 +59,11 @@ v0.1.0 is no longer blocked. It waits only for its own first import.
     to `openstrata::connectors::transport`. Its three suites and its boundary
     check came with it, and the check refuses this repository's other
     libraries and every `usd-motion-plugins` library by name.
-  - ⬜ `osc` as `motionConnectorOsc`, with the address-literal check;
+  - ✅ `osc` as `motionConnectorOsc`, with the address-literal check
+    (2026-09-19): 6 commits of history, a move-only commit, then the rename to
+    `openstrata::connectors::osc`. The check scans the suite too, and the
+    suite's corpus half, which reads the VMC capture format, arrives with the
+    VMC connector;
   - `motionTracking` as `motionConnectorTracking`, on the terms **WS-O2**
     settles;
   - `vrmAdapterVmc`, `vrmAdapterMocopi` and `vrmAdapterVrchatOsc` as

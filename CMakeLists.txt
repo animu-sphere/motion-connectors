@@ -83,6 +83,7 @@ endif()
 # wire format are not connectors: they have no option of their own, and are
 # built whenever this tree is.
 add_subdirectory("libs/motionConnectorTransport")
+add_subdirectory("libs/motionConnectorOsc")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)

@@ -14,4 +14,5 @@ profile = "usd"
 [workspace]
 members = [
     "libs/motionConnectorTransport",
+    "libs/motionConnectorOsc",
 ]
