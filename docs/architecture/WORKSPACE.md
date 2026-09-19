@@ -7,9 +7,10 @@ them and to the rest of the ecosystem, and the invariants every change keeps.
 first, in its own pull request**. It is never made through a README, a roadmap
 entry or code.
 
-Status (2026-09-19): **contract adopted, nothing exists.** The repository holds
-documentation only. Every identity below is *reserved* until the change that
-creates it lands, and its row then says so. The shape follows the design
+Status (2026-09-19): **contract adopted, scaffold only.** The build and CI
+tree exists with no component in it. Every identity below is *reserved* until
+the change that creates it lands, and its row then says so. The shape follows
+the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
 share: plain libraries, a manifest beside each component, every connector an
 optional module, and two build modes, `ost` and plain CMake.
@@ -20,22 +21,39 @@ optional module, and two build modes, `ost` and plain CMake.
 
 | Identity | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- |
-| `motionConnectorCore` | `src/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | reserved |
-| `motionConnectorTransport` | `src/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | reserved |
-| `motionConnectorOsc` | `src/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | reserved |
-| `motionConnectorVmc` | `src/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | reserved |
-| `motionConnectorMocopi` | `src/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | reserved |
-| `motionConnectorVrchatOsc` | `src/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | reserved |
-| `motionConnectorTracking` | `src/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | reserved |
-| `motionConnectorWebSocket` | `src/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions | new | reserved |
-| `motionConnectorOpenXR` | `src/motionConnectorOpenXR/` | OpenXR head, controllers, hands, body-tracking extensions | new | reserved |
+| `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | reserved |
+| `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | reserved |
+| `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | reserved |
+| `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | reserved |
+| `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | reserved |
+| `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | reserved |
+| `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | reserved |
+| `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions | new | reserved |
+| `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | OpenXR head, controllers, hands, body-tracking extensions | new | reserved |
+
+Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
+[DESIGN_POLICY.md §46.9](../design/DESIGN_POLICY.md#469-names-and-layout-are-the-siblings)):
+
+- **A native library lives under `libs/`**, as `usd-vrm-plugins`',
+  `usd-mmd-plugins`' and `usd-motion-plugins`' do, rather than under the
+  design policy's `src/`. A connector is a plain library and registers
+  nothing, so `libs/` is the right kind.
+- **An identity is lower-camel**, and it is also its directory, its CMake
+  package and its exported target
+  (`motionConnectorCore::motionConnectorCore`). Each connector is its own
+  package, so a consumer finds exactly the connectors it asked for.
+- **A CLI's command is snake_case** in a lower-camel directory (`motion_connect`
+  in `tools/motionConnect/`). An imported record tool keeps its command, so
+  `vmc_record` is still `vmc_record`.
+- **The C++ namespace is `openstrata::connectors`.** The include root is the
+  identity (`#include "motionConnectorVmc/Decoder.h"`).
 
 ### 1.2 Web modules
 
 | Identity | Directory | Role | Status |
 | --- | --- | --- | --- |
-| `motionConnectorMediaPipe` | `src/motionConnectorMediaPipe/` | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
-| `motionConnectorWebXR` | `src/motionConnectorWebXR/` | WebXR viewer, controllers and hand input, to `MotionFrame` | reserved |
+| `motionConnectorMediaPipe` | decided by WS-O6 | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
+| `motionConnectorWebXR` | decided by WS-O6 | WebXR viewer, controllers and hand input, to `MotionFrame` | reserved |
 
 Web modules are JavaScript / TypeScript (design policy §18, Rule 8). They are
 not compiled into any native build, and a native build never needs a browser
@@ -45,14 +63,14 @@ dependency (§17).
 
 | Identity | Kind | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- | --- |
-| `motion-connect` | CLI | `tools/motion-connect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36) | new | reserved |
-| `vmcRecord`, `mocopiRecord`, `vrchatOscRecord` | CLI | with their connector | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | reserved |
+| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36) | new | reserved |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | with their connector | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | reserved |
 | examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
 | Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
 | JS / TS package | binding | `bindings/js/` | `openConnector`, `frames()` async iterator, the WASM bridge (design policy §18) | new | reserved |
 | test corpus | data | `tests/data/<connector>/` | generated captures and recorded-session manifests (§5) | `usd-vrm-plugins`, with each connector | reserved |
 
-Whether the three record tools remain or fold into `motion-connect record`
+Whether the three record tools remain or fold into `motion_connect record`
 is WS-O3.
 
 ### 1.4 Reserved, later
@@ -67,7 +85,7 @@ is WS-O3.
 
 | Not here | Where it lives | Why |
 | --- | --- | --- |
-| `MotionPose`, `RootMotion`, `MotionChannelSet`, `SourceMetadata`, `MotionStream` intake | `usd-motion-plugins` `motion-core`, `motion-recording` | the shared motion values ([DESIGN_POLICY.md §46.1](../design/DESIGN_POLICY.md#461-the-pose-is-usd-motion-plugins-motionpose)) |
+| `MotionPose`, `RootMotion`, `MotionChannelSet`, `SourceMetadata`, `MotionStream` intake | `usd-motion-plugins` `motionCore`, `motionRecording` | the shared motion values ([DESIGN_POLICY.md §46.1](../design/DESIGN_POLICY.md#461-the-pose-is-usd-motion-plugins-motionpose)) |
 | retargeting, filtering, smoothing, resampling, canonical recording, BVH / NPZ / VMD | `usd-motion-plugins` | design policy §20, §25, §26 |
 | VRM humanoid mapping, expressions, spring bones | `usd-vrm-plugins` | design policy §21 |
 | PMX / MMD bone semantics | `usd-mmd-plugins` | design policy §22 |
@@ -79,7 +97,7 @@ is WS-O3.
 ### 2.1 Inside the repository
 
 ```text
-motionConnectorCore ───────→ usd-motion-plugins motion-core
+motionConnectorCore ───────→ usd-motion-plugins motionCore
 motionConnectorTransport ──→ (standard library, OS sockets)
 motionConnectorOsc ────────→ (standard library)
 motionConnectorVmc ────────→ motionConnectorCore, motionConnectorTransport, motionConnectorOsc
@@ -95,7 +113,7 @@ web modules ───────────────→ browser APIs, the M
 
 The imported connectors link `usd-vrm-plugins`' `motionRuntime` today, for its
 live-source bridge. After the import they link `usd-motion-plugins`'
-`motion-sampling` or `motion-recording` instead, whichever holds that bridge
+`motionSampling` or `motionRecording` instead, whichever holds that bridge
 when it moves. That edge is recorded here when the import lands.
 
 ### 2.2 Forbidden
@@ -133,7 +151,7 @@ ecosystem. Nothing in `usd-motion-plugins` may depend on it
 Gates, added with the code they guard, as in the sibling repositories: every
 edge declared in the component's manifest and validated by
 `ost plugin test --workspace --graph-only`; a link-line check per library
-(`motionConnectorCore` links nothing beyond `motion-core`); an include and
+(`motionConnectorCore` links nothing beyond `motionCore`); an include and
 literal scan refusing OpenUSD stage headers everywhere, and protocol address
 literals in `motionConnectorOsc` and `motionConnectorTransport`.
 
@@ -143,8 +161,13 @@ Code arrives from `usd-vrm-plugins` under that repository's moving rules (its
 WORKSPACE.md §9.2), which this repository keeps from the receiving side:
 
 1. **History comes with the code.**
-2. **One identity per move**, in dependency order: the transport and the wire
-   format before the connectors that link them.
+2. **Every live input arrives in one release, one identity per change**, in
+   dependency order: the transport and the wire format, then the tracker
+   library, then the three connectors with their record tools. All of them are
+   in v0.1.0, and `usd-vrm-plugins` drops them all in one change. Moving the
+   shared leaves first would leave that repository two copies for a release, or
+   an edge to this one that no contract declares (WS-O7, decided 2026-09-19;
+   its WORKSPACE.md §9.2 rule 7).
 3. **Renamed on arrival**, once:
 
    | `usd-vrm-plugins` | Here |
@@ -172,7 +195,7 @@ WORKSPACE.md §9.2), which this repository keeps from the receiving side:
 - One `VERSION` at the root, mirrored by the tag, the changelog and every
   manifest.
 - OpenUSD is pinned exactly, to the release `usd-motion-plugins` pins, because
-  `motion-core` is built against it
+  `motionCore` is built against it
   ([DEPENDENCIES.md §1](DEPENDENCIES.md#1-openusd)).
 - **Every connector is optional.** Each is a separate CMake option and a
   separate `ost` component. A build that asks only for VMC configures no
@@ -215,12 +238,13 @@ capture no longer matches its generator. This is `usd-vrm-plugins`' corpus rule
 
 ## 7. Open questions
 
+WS-O1, the names and layout, and WS-O7, the import order, were decided on
+2026-09-19 (§1.1 and §3).
+
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| WS-O1 | Names and layout: the design policy's `src/motionConnector*` or the siblings' `libs/` and `adapters/` directories; lower-camel identities as the policy and `usd-vrm-plugins` use, or kebab-case as `usd-motion-plugins` reserved (`motion-core`); CMake target namespace and C++ namespace (`openstrata::connectors`?) | the scaffold |
 | WS-O2 | `motionConnectorTracking`'s two halves. Assignment is a connector-side policy. The solve produces a `MotionPose` from observations, which `usd-vrm-plugins` called "the motion layer's" but still sent here. Keep both here, or send the solve to `usd-motion-plugins` | the VRChat OSC import |
-| WS-O3 | The three imported record tools: keep them, or fold them into `motion-connect record` after the move (they share argument-parsing idiom, not behaviour, as measured in `usd-vrm-plugins`' OSC track §3.4) | after the last import |
-| WS-O4 | `motionConnectorCore`'s closure. Through `motion-core` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
+| WS-O3 | The three imported record tools: keep them, or fold them into `motion_connect record` after the move (they share argument-parsing idiom, not behaviour, as measured in `usd-vrm-plugins`' OSC track §3.4) | after the last import |
+| WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
 | WS-O5 | Distribution (`usd-vrm-plugins` BND-2): one GitHub release carrying per-connector artifacts, or separate downloads; one version for all connectors (recommended there) or one each; how a vendor SDK dependency is declared rather than discovered; whether hardware validation becomes a capability lane | the first release |
-| WS-O7 | Import order against the one-copy rule. Moving `liveTransport` and `osc` in v0.1.0 while `vrmAdapterMocopi` and `vrmAdapterVrchatOsc`, which link them, stay in `usd-vrm-plugins` until v0.2.0 either leaves two copies for a release (its moving rule 1 forbids it) or gives `usd-vrm-plugins` a temporary edge to this repository, which no sibling contract declares. Options: import every MIG-4 identity in v0.1.0; declare the temporary edge in both workspace contracts and remove it at v0.2.0; or cut v0.1.0 and v0.2.0 in one `usd-vrm-plugins` cycle so it consumes neither | before the first import, with `usd-vrm-plugins` |
 | WS-O6 | Web module layout: under `src/` as design policy §16 lists them, or under `bindings/js/` as one npm package with the JS API | Connector Phase 4 |

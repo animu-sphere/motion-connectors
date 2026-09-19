@@ -21,15 +21,15 @@ Status (2026-09-19): **nothing is implemented.**
 | Source profiles | — | [SOURCE_PROFILES](../design/SOURCE_PROFILES.md) | nowhere as one format | v0.1.0 |
 | UDP transport, packet capture and replay | — | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | `usd-vrm-plugins` `liveTransport` | v0.1.0 |
 | OSC 1.0 wire format | — | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | `usd-vrm-plugins` `osc` | v0.1.0 |
-| `TrackerObservation`, assignment, tracker solve | — | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | `usd-vrm-plugins` `motionTracking` | v0.2.0 |
+| `TrackerObservation`, assignment, tracker solve | — | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | `usd-vrm-plugins` `motionTracking` | v0.1.0 |
 
 ## 2. Sources
 
 | Source | Profile | Body | Hands | Face | Root | Trackers | Status | Implemented elsewhere | Release |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | VMC Protocol | `vmc.v1` | — | — | — | — | | — | `usd-vrm-plugins` `vrmAdapterVmc` | v0.1.0 |
-| mocopi native UDP | `mocopi.body.v1` | — | | | — | | — | `usd-vrm-plugins` `vrmAdapterMocopi` | v0.2.0 |
-| VRChat OSC Trackers | `vrchat-osc.trackers.v1` | | | | | — | — | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | v0.2.0 |
+| mocopi native UDP | `mocopi.body.v1` | — | | | — | | — | `usd-vrm-plugins` `vrmAdapterMocopi` | v0.1.0 |
+| VRChat OSC Trackers | `vrchat-osc.trackers.v1` | | | | | — | — | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | v0.1.0 |
 | WebSocket (`MotionFrame`) | — | — | — | — | — | — | — | nowhere | v0.2.0 |
 | MediaPipe | `mediapipe.*.v1` | — | — | — | | | — | nowhere | v0.3.0 |
 | WebXR | `webxr.*.v1` | | — | | | | — | nowhere | v0.4.0 |
@@ -42,9 +42,9 @@ An empty cell means that source cannot carry that part.
 
 | Capability | Status | Implemented elsewhere | Release |
 | --- | --- | --- | --- |
-| `motion-connect dump` | — | nowhere | v0.1.0 |
-| `motion-connect list`, `inspect` | — | nowhere | v0.1.0 |
-| `motion-connect record`, `bridge` | — | `usd-vrm-plugins` `vmcRecord`, `mocopiRecord`, `vrchatOscRecord` (record only) | v0.2.0 |
+| `motion_connect dump` | — | nowhere | v0.1.0 |
+| `motion_connect list`, `inspect` | — | nowhere | v0.1.0 |
+| `motion_connect record`, `bridge` | — | `usd-vrm-plugins` `vmc_record`, `mocopi_record`, `vrchat_osc_record` (record only) | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |
 | JS / TS package, WASM data ABI | — | nowhere | v0.3.0 |
 

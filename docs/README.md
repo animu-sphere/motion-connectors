@@ -5,8 +5,8 @@ class of question. The layout is the one `usd-motion-plugins`,
 `usd-vrm-plugins` and `usd-mmd-plugins` use, so the repositories read the same
 way.
 
-**The tree holds documentation only (2026-09-19).** The design policy is
-accepted and the focused contracts are proposed. The first connectors arrive
+**The tree holds documentation and an empty build scaffold (2026-09-19).**
+The design policy is accepted and the focused contracts are proposed. The first connectors arrive
 from `usd-vrm-plugins`, where they are implemented and measured today.
 [reference/](reference/) is the only place that says what is implemented
 here. So far, nothing is.
@@ -17,10 +17,10 @@ here. So far, nothing is.
 | [architecture/](architecture/) | Component identities, dependency directions inside and across repositories, external dependencies. | [WORKSPACE.md](architecture/WORKSPACE.md) · [DEPENDENCIES.md](architecture/DEPENDENCIES.md) |
 | [reference/](reference/) | Facts about the current tree: what is implemented, which diagnostics exist. | [CAPABILITY_MATRIX.md](reference/CAPABILITY_MATRIX.md) · [DIAGNOSTICS.md](reference/DIAGNOSTICS.md) |
 | [roadmap/](roadmap/) | What is planned next (incomplete work only), and which release carries it. | [README.md](roadmap/README.md) · [current.md](roadmap/current.md) |
+| [guides/](guides/) | How to build and test the tree. | [building.md](guides/building.md) |
 | [contributing/](contributing/) | How to maintain these documents. | [documentation.md](contributing/documentation.md) |
 
-`guides/`, `releases/` and `reports/` are each created with their first real
-content. `guides/` comes with the first build guide, alongside the scaffold;
+`releases/` and `reports/` are each created with their first real content:
 `releases/` with the first release record, at the first tag; `reports/` with
 the first dated session, recorded here or imported with a connector.
 

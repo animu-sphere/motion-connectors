@@ -1,31 +1,35 @@
-# Current: the scaffold and the contract, then v0.1.0
+# Current: the contract, then v0.1.0
 
-Status: 🚧 documentation baseline done (2026-09-19); everything below ⬜.
+Status: 🚧 documentation baseline done (2026-09-19); scaffold done
+(2026-09-19) except its rendered CI; everything else below ⬜.
 
 Connector Phase 1 is *contract first* ([DESIGN_POLICY.md §30](../design/DESIGN_POLICY.md#30-recommended-initial-implementation-order),
 §44). The documents exist: the design policy, the connector contract, the
 coordinate-system and source-profile contracts, and the workspace contract.
 They are **proposed**, and they build on `usd-motion-plugins`' motion contract
-and `usd-vrm-plugins`' measurements. What remains is a tree that can receive
-code, the decisions that must precede code, and then the first import.
+and `usd-vrm-plugins`' measurements. The tree can now receive code. What
+remains is the decisions that must precede code, and then the imports.
 
 ## What remains
 
-### The scaffold ⬜ (can start now)
+### The scaffold ✅ (2026-09-19), except the rendered CI
 
-- ⬜ Resolve **WS-O1**: names, directories, target and C++ namespaces.
-- ⬜ Root `CMakeLists.txt`, `CMakePresets.json`, `VERSION` (`0.1.0` in
-  development), `openstrata.toml`, `openstrata.ci.yaml` with the siblings'
-  OpenUSD 26.08 runtimes and `ost` pin, and a generated CI workflow. Every
-  connector is a separate option, off unless asked for.
-- ⬜ A docs check in CI: every relative link and anchor resolves, and every
-  version mirror agrees with `VERSION`, as the siblings' `check_docs.py` do.
-- ⬜ Community files matching the siblings: `CONTRIBUTING.md`,
-  `CODE_OF_CONDUCT.md`, `SECURITY.md` (with the network-exposure rules of
-  [CONNECTOR_CONTRACT.md §10](../design/CONNECTOR_CONTRACT.md#10-untrusted-input)),
-  `THIRD_PARTY_NOTICES.md`, and issue and pull request templates.
+The names and layout are decided (WS-O1:
+[WORKSPACE.md §1.1](../architecture/WORKSPACE.md#11-native-libraries)), and so
+is the import order (WS-O7:
+[WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)). The root
+project pins OpenUSD 26.08 and gives every connector its own option, off
+unless asked for. The docs check gates every pull request, the
+installed-consumer lane runs over an empty package list, and the community
+files are in place. What landed is in the [changelog](../../CHANGELOG.md), and
+how to build it is in the [building guide](../guides/building.md).
 
-### The contract, Connector Phase 1 ⬜ (the design can start now; the code waits for `motion-core`)
+- ⛔ **The rendered `ost` CI workflow**, for the reason `usd-motion-plugins`
+  gives. Under `ost` 0.22.10 every rendered job runs the workspace graph step,
+  and that step refuses a workspace with no member. The contract is in
+  `openstrata.ci.yaml`, and the workflow is rendered with the first member.
+
+### The contract, Connector Phase 1 ⬜ (the design can start now; the code waits for `motionCore`)
 
 - ⬜ Resolve **CC-O6** (`Poll`), **SP-O1** (profile ids), **SP-O2** (profiles as
   data) and **DIAG-O1** (code style, together with `usd-motion-plugins`).
@@ -34,38 +38,48 @@ code, the decisions that must precede code, and then the first import.
   before its v0.1.0 freezes it.
 - ⬜ `motionConnectorCore`: the interface, `MotionFrame`, state, capabilities,
   timing and the bounded buffer, with unit tests for every buffer mode and every
-  state transition. ⛔ on an installed `motion-core`.
+  state transition. ⛔ on an installed `motionCore`.
 
-### v0.1.0: contract and VMC ⛔ on `usd-motion-plugins` v0.1.0
+### v0.1.0: the contract and every imported input ⛔ on `usd-motion-plugins` v0.1.0
 
-`usd-motion-plugins` v0.1.0 waits for `usd-vrm-plugins` v0.9.0 (the OpenExec
-foundation), whose findings are fixed as the core moves.
+`usd-vrm-plugins` v0.9.0 was published on 2026-09-17, so `usd-motion-plugins`
+v0.1.0 is no longer blocked. It waits only for its own first import.
 
-- ⬜ Resolve **WS-O7** with `usd-vrm-plugins`: whether the shared leaves can
-  move before every connector that links them.
-- ⬜ Import `liveTransport` as `motionConnectorTransport` and `osc` as
-  `motionConnectorOsc`, with history, tests and the address-literal check
-  ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)).
-- ⬜ Import `vrmAdapterVmc` as `motionConnectorVmc`, with `vmcRecord`, the
-  generated corpus and the recorded-session manifests. Rename its diagnostics
-  per DIAG-O1.
-- ⬜ Adapt it to `IMotionConnector` in a change of its own, after the move.
+- ⬜ Import, in dependency order and one identity per change, with history,
+  tests and each identity's checks
+  ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)):
+  - `liveTransport` as `motionConnectorTransport` and `osc` as
+    `motionConnectorOsc`, with the address-literal check;
+  - `motionTracking` as `motionConnectorTracking`, on the terms **WS-O2**
+    settles;
+  - `vrmAdapterVmc`, `vrmAdapterMocopi` and `vrmAdapterVrchatOsc` as
+    `motionConnectorVmc`, `motionConnectorMocopi` and
+    `motionConnectorVrchatOsc`. Each comes with its record tool, its
+    generated corpus and its recorded-session manifests, and each renames its
+    diagnostics per DIAG-O1. The mocopi import settles **CC-O4**, and the
+    VRChat OSC import settles **CS-O1** and **CS-O3**.
+- ⬜ Adapt each connector to `IMotionConnector` in a change of its own, after
+  it moves, VMC first.
 - ⬜ Write `vmc.v1` as the first source profile, with the basis evidence of
-  [COORDINATE_SYSTEMS.md §5](../design/COORDINATE_SYSTEMS.md#5-known-sources).
-- ⬜ `motion-connect dump --source vmc --port 39539`, printing the frame shape
+  [COORDINATE_SYSTEMS.md §5](../design/COORDINATE_SYSTEMS.md#5-known-sources),
+  then `mocopi.body.v1` and the VRChat OSC profile.
+- ⬜ `motion_connect dump --source vmc --port 39539`, printing the frame shape
   of design policy §31; `list` and `inspect`.
-- ⬜ Reproduce `usd-vrm-plugins`' VMC replay evidence against this repository's
-  package, so that repository can delete its copy.
+- ⬜ Reproduce `usd-vrm-plugins`' replay evidence for all three connectors
+  against this repository's packages, so that repository can delete every
+  copy in one change (its migration track, MIG-4).
 
 ## Completion criteria
 
 v0.1.0 is done when all of the following hold:
 
-- A VMC sender on loopback reaches `motion-connect dump` as `MotionFrame`s with
+- A VMC sender on loopback reaches `motion_connect dump` as `MotionFrame`s with
   canonical body joints, timestamps, confidence and a source profile.
 - A packet capture replays through the same path, deterministically, in CI,
   with no hardware and no network peer.
 - Every generated malformed-packet case is refused with a diagnostic.
 - The packages configure from a clean installed prefix.
-- `usd-vrm-plugins` builds without its `vrmAdapterVmc`, and without its
-  `liveTransport` and `osc` on the terms WS-O7 settles.
+- The mocopi and VRChat OSC captures replay through the same path, each to
+  the result `usd-vrm-plugins` recorded for it.
+- `usd-vrm-plugins` builds without `liveTransport`, `osc`, `motionTracking`
+  and all three `vrmAdapter*` libraries, consuming none of them.

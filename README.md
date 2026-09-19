@@ -4,8 +4,8 @@ Connectivity for live motion: devices, browsers, SDKs, streams and remote
 services, normalized into the one motion contract the OpenUSD avatar stack
 shares.
 
-> **Status: documentation only.** The design policy is accepted and the
-> contracts are proposed. The first connectors (VMC, mocopi, VRChat OSC
+> **Status: documentation and an empty build scaffold.** The design policy is
+> accepted and the contracts are proposed. The first connectors (VMC, mocopi, VRChat OSC
 > Trackers) are implemented and measured today in
 > [`usd-vrm-plugins`](https://github.com/animu-sphere/usd-vrm-plugins), and
 > they arrive here once `usd-motion-plugins` publishes its core
@@ -47,8 +47,8 @@ repository depends on that one, and nothing depends on it except the runtime.
 | `motionConnectorCore` | `IMotionConnector`, `MotionFrame`, state, capabilities, timing, the bounded frame buffer | v0.1.0 |
 | `motionConnectorTransport`, `motionConnectorOsc` | UDP and packet capture; the OSC 1.0 wire format | v0.1.0 |
 | `motionConnectorVmc` | VMC Protocol | v0.1.0 |
-| `motion-connect` | `list`, `dump`, `inspect`, then `record`, `bridge` | v0.1.0, v0.2.0 |
-| `motionConnectorMocopi`, `motionConnectorVrchatOsc`, `motionConnectorTracking` | mocopi native UDP; VRChat OSC Trackers; tracker assignment and solve | v0.2.0 |
+| `motion_connect` | `list`, `dump`, `inspect`, then `record`, `bridge` | v0.1.0, v0.2.0 |
+| `motionConnectorMocopi`, `motionConnectorVrchatOsc`, `motionConnectorTracking` | mocopi native UDP; VRChat OSC Trackers; tracker assignment and solve | v0.1.0 |
 | `motionConnectorWebSocket`, Python bindings | `MotionFrame` over the network; `open_connector` | v0.2.0 |
 | `motionConnectorMediaPipe`, JS / TS package | browser body, hand and face tracking | v0.3.0 |
 | `motionConnectorWebXR` | browser XR head, controllers and hands | v0.4.0 |
