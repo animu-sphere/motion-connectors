@@ -1,0 +1,12 @@
+# Normalize text to LF in the repository; each checkout converts as it likes.
+* text=auto
+
+# Packet captures and recorded traces are compared byte for byte.
+*.vmcpackets binary
+*.mocopipackets binary
+*.vrchatoscpackets binary
+*.bvh binary
+
+# USDA fixtures check out with LF everywhere: a CRLF smudge changes the content
+# of a multi-line string (usd-vrm-plugins, PR #42).
+*.usda text eol=lf

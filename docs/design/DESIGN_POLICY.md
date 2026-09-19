@@ -1822,8 +1822,16 @@ ecosystem already has `usd-motion-plugins`' Migration Phase A–F,
 §31–§34 put mocopi in v0.4.x. The mocopi and VRChat OSC connectors and
 `motionTracking` are imports of measured code, not new designs, and
 `usd-vrm-plugins` cannot finish its migration (MIG-5) while they wait here;
-each is frozen there until it moves. They are scheduled for v0.2.0, after
-v0.1.0 has fixed the contract. The mapping, and every other departure from
+each is frozen there until it moves. They were first scheduled for v0.2.0,
+after v0.1.0 had fixed the contract. On 2026-09-19 WS-O7 moved them into
+v0.1.0, beside VMC: `liveTransport` and `osc` are linked by all three
+connectors, so importing them ahead of mocopi and VRChat OSC would have left
+`usd-vrm-plugins` either two copies for a release or an undeclared edge to
+this repository. The contract still comes first. `motionConnectorCore` exists
+before any import, and each connector adapts to it in a change of its own
+after it moves ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)).
+So §30's concern, that mocopi should not define the core API, still holds. The
+mapping, and every other departure from
 §31–§34, is in the [roadmap status table](../roadmap/README.md#status-at-a-glance),
 which is the single source of truth for which release carries what.
 
@@ -1840,3 +1848,20 @@ and those four live at:
 | `motion-contract.md` | [design/CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) — the connector side only (§46.1) |
 | `coordinate-systems.md` | [design/COORDINATE_SYSTEMS.md](COORDINATE_SYSTEMS.md) |
 | `connectors.md` | [design/SOURCE_PROFILES.md](SOURCE_PROFILES.md) for what each source is; [reference/CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md) for what is implemented |
+
+### 46.9 Names and layout are the siblings'
+
+§16 puts the native connectors under `src/motionConnector*`. They take the
+layout `usd-vrm-plugins`, `usd-mmd-plugins` and `usd-motion-plugins` share
+instead (WS-O1, decided 2026-09-19):
+
+- `libs/motionConnectorVmc/`, not `src/motionConnectorVmc/`;
+- a lower-camel identity that is also the CMake package and the exported
+  target (`motionConnectorVmc::motionConnectorVmc`);
+- snake_case CLI commands (`motion_connect`, `vmc_record`);
+- the C++ namespace `openstrata::connectors`.
+
+The web modules' layout stays open (WS-O6), because it is a JavaScript
+package's shape and not a CMake one. Binding in
+[WORKSPACE.md §1.1](../architecture/WORKSPACE.md#11-native-libraries).
+

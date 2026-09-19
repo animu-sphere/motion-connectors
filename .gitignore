@@ -1,0 +1,52 @@
+# --- OpenStrata / build state (tool-owned, never committed) ---
+/build/
+**/build/
+**/dist/
+/.strata/
+**/.strata/
+CMakeUserPresets.json
+strata.lock
+# What a generated CI job creates in its checkout: the bootstrapped `ost` and
+# its OST_HOME (the materialized runtime).
+/.ost-ci/
+/.ost-ci-home/
+
+# Built plugin libraries are staged into each bundle's lib/ by the build, and
+# tools into their own bin/.
+/plugins/*/lib/
+/tools/*/bin/
+
+# Generated into bundle resources by the build: plugInfo.json names this
+# platform's library suffix, and buildInfo.json varies per commit, toolchain
+# and platform.
+/plugins/*/plugin/resources/*/plugInfo.json
+/plugins/*/plugin/resources/*/buildInfo.json
+
+# --- CMake / MSVC generated ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+
+# --- Python cache ---
+__pycache__/
+*.pyc
+
+# --- Docs scratch ---
+/docs/local/
+
+# --- Editor / OS noise ---
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Agent / assistant tooling (local, not shared) ---
+/.claude/

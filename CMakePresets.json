@@ -1,0 +1,103 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 22,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/build/${presetName}-install",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "MOTIONCONNECTORS_BUILD_TESTS": "ON",
+                "CMAKE_PREFIX_PATH": "$env{USD_INSTALL_ROOT}"
+            }
+        },
+        {
+            "name": "windows-msvc",
+            "displayName": "Windows / Visual Studio (plain CMake)",
+            "description": "Set USD_INSTALL_ROOT to an OpenUSD 26.08 install. No generator is named, so CMake picks the newest Visual Studio installed.",
+            "inherits": "base",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "macos-ninja",
+            "displayName": "macOS / Ninja (plain CMake)",
+            "description": "Set USD_INSTALL_ROOT to an OpenUSD 26.08 install.",
+            "inherits": "base",
+            "generator": "Ninja Multi-Config",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            }
+        },
+        {
+            "name": "linux-ninja",
+            "displayName": "Linux / Ninja (plain CMake)",
+            "description": "Set USD_INSTALL_ROOT to an OpenUSD 26.08 install.",
+            "inherits": "base",
+            "generator": "Ninja Multi-Config",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-release",
+            "configurePreset": "windows-msvc",
+            "configuration": "Release"
+        },
+        {
+            "name": "macos-release",
+            "configurePreset": "macos-ninja",
+            "configuration": "Release"
+        },
+        {
+            "name": "linux-release",
+            "configurePreset": "linux-ninja",
+            "configuration": "Release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "windows-release",
+            "configurePreset": "windows-msvc",
+            "configuration": "Release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "macos-release",
+            "configurePreset": "macos-ninja",
+            "configuration": "Release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "linux-release",
+            "configurePreset": "linux-ninja",
+            "configuration": "Release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

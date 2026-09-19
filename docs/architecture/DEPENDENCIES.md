@@ -4,16 +4,18 @@ What `motion-connectors` builds against and what it refuses. Edges between
 this repository's own components are
 [WORKSPACE.md §2](WORKSPACE.md#2-dependency-directions)'s.
 
-Status (2026-09-19): **planned.** Nothing builds yet. Each value below is what
-the scaffold adopts, taken from the sibling repositories so that
-`usd-avatar-runtime` can compose all of them into one process.
+Status (2026-09-19): **adopted by the scaffold.** The OpenUSD pin and the
+toolchain below are what the root project enforces. The per-connector rows
+apply as each connector arrives. Every value is taken from the sibling
+repositories so that `usd-avatar-runtime` can compose all of them into one
+process.
 
 ## 1. OpenUSD
 
 | | |
 | --- | --- |
-| Pin | OpenUSD **26.08**, exactly: the release `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins` pin. This repository opens no stage, but `motion-core` is built against one OpenUSD release, and a consumer built against another does not link |
-| `motionConnectorCore`, connectors | foundation value types only, through `motion-core`: `gf`, `tf`, `vt` |
+| Pin | OpenUSD **26.08**, exactly: the release `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins` pin. This repository opens no stage, but `motionCore` is built against one OpenUSD release, and a consumer built against another does not link |
+| `motionConnectorCore`, connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
 | tools, examples | whatever `usd-motion-plugins` library they call; `examples/usd_avatar_live` is the only place a stage appears |
 | Pin changes | coordinated: a new OpenUSD release is adopted here together with `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins`. Who releases first is open in `usd-vrm-plugins`' migration track |
 
@@ -24,7 +26,7 @@ Whether the web path can avoid this closure is
 
 | | |
 | --- | --- |
-| Links | `motion-core` (the pose values); `motion-sampling` or `motion-recording` for the live-source bridge the imported connectors use (WORKSPACE §2.1) |
+| Links | `motionCore` (the pose values); `motionSampling` or `motionRecording` for the live-source bridge the imported connectors use (WORKSPACE §2.1) |
 | Version | during 0.x, one exact `usd-motion-plugins` release per release here, until both sides agree a range. The same question is open in `usd-vrm-plugins`' migration track |
 | Consumed as | an installed package, never a source tree |
 
@@ -35,7 +37,7 @@ Whether the web path can avoid this closure is
 | Language | C++20 for native libraries; TypeScript for web modules |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
-| OpenStrata | `ost`, pinned in `openstrata.ci.yaml` to the version the siblings pin when the scaffold lands |
+| OpenStrata | `ost` 0.22.10, pinned in `openstrata.ci.yaml`, as `usd-motion-plugins` and `usd-mmd-plugins` pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
 | Python | the interpreter OpenUSD was built against, for bindings and tooling (v0.2.0) |
 | Node | an LTS release, for the JS / TS package (v0.3.0) |
