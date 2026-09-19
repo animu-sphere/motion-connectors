@@ -4,9 +4,10 @@
 //
 // These tests build datagrams byte by byte, because the point of this layer is
 // what it does with bytes. They arrived here with the decoder: they were
-// written beside it in usd-vrm-plugins' `vrmAdapterVmc` and frozen there by OSC-0 before
-// anything moved, which is what makes this file's diff against that one a move
-// rather than a rewrite (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §9).
+// written beside it in usd-vrm-plugins' `vrmAdapterVmc` and frozen there by
+// OSC-0 before anything moved, which is what makes this file's diff against
+// that one a move rather than a rewrite (usd-vrm-plugins'
+// roadmap/osc-and-vrchat-trackers.md §9).
 //
 // Two kinds of substitution happened on the way, and both are visible in every
 // test below. A refusal is an `OscDecodeError` with no code in it, so what used

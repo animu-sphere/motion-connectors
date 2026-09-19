@@ -26,7 +26,7 @@ fail by being misplaced; it fails by *learning something*.
   reversible.** That half is not here: it is in the neighbours' own checks,
   which refuse this library by name (the transport's already does).
 
-## `tests/` is scanned, and that is the difference from `motionConnectorTransport`'s check
+## `tests/` is scanned, unlike `motionConnectorTransport`'s check
 
 That library's check reads `include/` and `src/`. This one reads `tests/` as
 well, because a decoder's tests are the one place a vendor address plausibly
@@ -190,8 +190,9 @@ def main() -> int:
          "an adapter's diagnostic code is forbidden in motionConnectorOsc; a refusal here "
          "carries a subject and a detail and no code"),
     )
-    # tests/ is in this list and not in motionConnectorTransport's. See the module
-    # docstring: a decoder's payloads are where an address literal arrives.
+    # tests/ is in this list and not in motionConnectorTransport's. See the
+    # module docstring: a decoder's payloads are where an address literal
+    # arrives.
     for area in (source / "include", source / "src", source / "tests"):
         for path in sorted(area.rglob("*")):
             if not path.is_file() or path.suffix not in {".h", ".cpp"}:

@@ -33,14 +33,14 @@
 // it is turns that into `VRM_VMC_PACKET_MALFORMED` or whatever its own frozen
 // set spells.
 //
-// It carries no neutral event *enum* either, where `motionConnectorTransport` does, and
-// the difference is real rather than stylistic. That library's receiver raises
-// two events a caller must tell apart — one adapter maps `BindFailed` and drops
-// `Silence`. This one makes a single distinction: a datagram is decodable OSC
-// or it is not. Naming three neutral refusals would be a classification
-// invented at the boundary, mapped straight back onto one code by every caller,
-// and believed by the next reader (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md
-// §8).
+// It carries no neutral event *enum* either, where `motionConnectorTransport`
+// does, and the difference is real rather than stylistic. That library's
+// receiver raises two events a caller must tell apart — one adapter maps
+// `BindFailed` and drops `Silence`. This one makes a single distinction: a
+// datagram is decodable OSC or it is not. Naming three neutral refusals would
+// be a classification invented at the boundary, mapped straight back onto one
+// code by every caller, and believed by the next reader (usd-vrm-plugins'
+// roadmap/osc-and-vrchat-trackers.md §8).
 //
 // **This layer cannot tell an unimplemented address from any other address**,
 // because it does not know what an address means. `/foo/bar` and
@@ -165,8 +165,8 @@ struct OscDecodeError
 
 // Decodes one datagram. On failure `packet` is left untouched and `error`, when
 // given, says which byte and which address.
-MOTIONCONNECTOROSC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size, OscPacket* packet,
-                             OscDecodeError* error = nullptr);
+MOTIONCONNECTOROSC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size,
+                                            OscPacket* packet, OscDecodeError* error = nullptr);
 
 inline bool
 DecodeOscPacket(const std::vector<std::uint8_t>& datagram, OscPacket* packet,

@@ -3,9 +3,9 @@
 # motionConnectorOsc — the OSC 1.0 wire format, and nothing that uses it.
 #
 # A plain static library: it registers nothing with OpenUSD and ships no
-# plugInfo.json (WORKSPACE.md §1.1). Its edge set is **empty**, and emptier
-# than `motionConnectorTransport`'s in the one way a reader would not predict:
-# it links no platform primitive either. A transport needs a socket and a mutex; a
+# plugInfo.json (WORKSPACE.md §1.1). Its edge set is **empty**, and emptier than
+# `motionConnectorTransport`'s in the one way a reader would not predict: it
+# links no platform primitive either. A transport needs a socket and a mutex; a
 # decoder is handed a byte range and returns messages, so the only thing below
 # that is not this library's own sources is an interpreter to run the boundary
 # check with. `tests/check_boundaries.py` enforces exactly that reading, with an

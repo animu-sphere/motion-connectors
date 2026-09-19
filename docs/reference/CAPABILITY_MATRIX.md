@@ -19,7 +19,7 @@ implemented** (`motionConnectorTransport`, `motionConnectorOsc`, imported from
 | --- | --- | --- | --- | --- |
 | `IMotionConnector`, state, capabilities | — | [CONNECTOR §2, §5](../design/CONNECTOR_CONTRACT.md) | `usd-vrm-plugins` per adapter (`LiveSource`), not as one interface | v0.1.0 |
 | `MotionFrame`, `FrameTiming`, actors | — | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | nowhere | v0.1.0 |
-| Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | — | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | `usd-vrm-plugins` `liveTransport` (datagram queue) | v0.1.0 |
+| Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | — | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | only its datagram half, as `motionConnectorTransport`'s queue (imported 2026-09-19) | v0.1.0 |
 | Source profiles | — | [SOURCE_PROFILES](../design/SOURCE_PROFILES.md) | nowhere as one format | v0.1.0 |
 | The packet-capture file format, `p` peer lines included | supported — `motionConnectorTransport_packetCapture` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
 | The poll timeout mapping and wake-up predicate; the diagnostic vehicle | supported — `motionConnectorTransport_pollTimeout`, `_diagnostics` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
