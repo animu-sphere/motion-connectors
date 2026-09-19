@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# osc — the OSC 1.0 wire format, and nothing that uses it.
+# motionConnectorOsc — the OSC 1.0 wire format, and nothing that uses it.
 #
-# A plain static library, not a plugin bundle: it registers nothing with OpenUSD
-# and ships no plugInfo.json (WORKSPACE.md §1). Its edge set is **empty**, and
-# emptier than `liveTransport`'s in the one way a reader would not predict: it
-# links no platform primitive either. A transport needs a socket and a mutex; a
+# A plain static library: it registers nothing with OpenUSD and ships no
+# plugInfo.json (WORKSPACE.md §1.1). Its edge set is **empty**, and emptier
+# than `motionConnectorTransport`'s in the one way a reader would not predict:
+# it links no platform primitive either. A transport needs a socket and a mutex; a
 # decoder is handed a byte range and returns messages, so the only thing below
 # that is not this library's own sources is an interpreter to run the boundary
 # check with. `tests/check_boundaries.py` enforces exactly that reading, with an
-# allowlist that names `osc` and the CMake keywords and nothing else.
+# allowlist that names `motionConnectorOsc` and the CMake keywords and nothing
+# else.
 #
-# It is outside the aggregate product, and §5 needed a third question to say
-# why: an OSC decoder names no product and opens nothing, so both of that
-# section's existing clauses pass. What keeps it out is that no member of the
-# product links it or can — nothing in the product reads a datagram.
+# Arrived from usd-vrm-plugins' `osc`, with its history (that repository's
+# MIG-4; WORKSPACE.md §3). No address literal may appear in it, tests included
+# (WORKSPACE.md §2.2).
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -23,10 +23,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
          LIMIT_COUNT 1)
     string(STRIP "${_osc_version}" _osc_version)
 else()
-    set(_osc_version "0.9.0")
+    set(_osc_version "0.1.0")
 endif()
 
-project(osc
+project(motionConnectorOsc
     VERSION ${_osc_version}
     DESCRIPTION "OSC 1.0 packet decoding, shared by every OSC-speaking adapter"
     LANGUAGES CXX)
@@ -37,24 +37,25 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(NOT DEFINED OSC_BUILD_TESTS)
-    if(DEFINED USDVRM_BUILD_TESTS)
-        set(_osc_tests_default "${USDVRM_BUILD_TESTS}")
+if(NOT DEFINED MOTIONCONNECTOROSC_BUILD_TESTS)
+    if(DEFINED MOTIONCONNECTORS_BUILD_TESTS)
+        set(_osc_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
     else()
         set(_osc_tests_default "${PROJECT_IS_TOP_LEVEL}")
     endif()
-    option(OSC_BUILD_TESTS "Build osc tests" ${_osc_tests_default})
+    option(MOTIONCONNECTOROSC_BUILD_TESTS "Build motionConnectorOsc tests"
+           ${_osc_tests_default})
 endif()
 
-add_library(osc STATIC src/OscPacket.cpp)
-add_library(osc::osc ALIAS osc)
-set_target_properties(osc PROPERTIES
-    EXPORT_NAME osc
+add_library(motionConnectorOsc STATIC src/OscPacket.cpp)
+add_library(motionConnectorOsc::motionConnectorOsc ALIAS motionConnectorOsc)
+set_target_properties(motionConnectorOsc PROPERTIES
+    EXPORT_NAME motionConnectorOsc
     POSITION_INDEPENDENT_CODE ON)
 
-target_compile_features(osc PUBLIC cxx_std_17)
-target_compile_definitions(osc PUBLIC OSC_STATIC)
-target_include_directories(osc
+target_compile_features(motionConnectorOsc PUBLIC cxx_std_17)
+target_compile_definitions(motionConnectorOsc PUBLIC MOTIONCONNECTOROSC_STATIC)
+target_include_directories(motionConnectorOsc
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>")
@@ -65,15 +66,15 @@ target_include_directories(osc
 # an exception for.
 
 if(MSVC)
-    # PUBLIC for the same reason the adapters use it: the installed headers
+    # PUBLIC for the same reason the connectors use it: the installed headers
     # carry UTF-8 section references, and a consumer on a non-UTF-8 code page
     # warns C4819 without the flag.
-    target_compile_options(osc PUBLIC /utf-8)
+    target_compile_options(motionConnectorOsc PUBLIC /utf-8)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS osc
-    EXPORT oscTargets
+install(TARGETS motionConnectorOsc
+    EXPORT motionConnectorOscTargets
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -82,24 +83,32 @@ install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/oscConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/oscConfig.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/osc")
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/motionConnectorOscConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorOscConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorOsc")
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/oscConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorOscConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-install(EXPORT oscTargets
-    FILE oscTargets.cmake
-    NAMESPACE osc::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/osc")
+    COMPATIBILITY SameMinorVersion)
+install(EXPORT motionConnectorOscTargets
+    FILE motionConnectorOscTargets.cmake
+    NAMESPACE motionConnectorOsc::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorOsc")
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/oscConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/oscConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/osc")
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorOscConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorOscConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorOsc")
 
-if(OSC_BUILD_TESTS)
+if(MOTIONCONNECTOROSC_BUILD_TESTS)
     enable_testing()
-    find_package(Python3 COMPONENTS Interpreter QUIET)
+    # The root names the interpreter once, as MOTIONCONNECTORS_TEST_PYTHON,
+    # because pxrConfig.cmake leaves Python3_Interpreter_FOUND false in its
+    # scope; a standalone build of this library finds its own.
+    if(NOT MOTIONCONNECTORS_TEST_PYTHON)
+        find_package(Python3 COMPONENTS Interpreter QUIET)
+        if(Python3_Interpreter_FOUND)
+            set(MOTIONCONNECTORS_TEST_PYTHON "${Python3_EXECUTABLE}")
+        endif()
+    endif()
     add_subdirectory(tests)
 endif()

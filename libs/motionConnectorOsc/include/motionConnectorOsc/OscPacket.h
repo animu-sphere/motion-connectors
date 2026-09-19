@@ -7,8 +7,8 @@
 // position`, and that separation is what makes both layers testable: OSC has
 // its own malformed-input cases, and a decoder that mixed the two could only
 // ever be tested end to end
-// (roadmap/adapters-mocopi-vmc-ardy.md §5, roadmap/osc-and-vrchat-trackers.md
-// §4).
+// (usd-vrm-plugins' roadmap/adapters-mocopi-vmc-ardy.md §5 and
+// roadmap/osc-and-vrchat-trackers.md §4).
 //
 // Four rules are worth stating before the API, because each is a decision
 // rather than a detail.
@@ -33,13 +33,14 @@
 // it is turns that into `VRM_VMC_PACKET_MALFORMED` or whatever its own frozen
 // set spells.
 //
-// It carries no neutral event *enum* either, where `liveTransport` does, and
+// It carries no neutral event *enum* either, where `motionConnectorTransport` does, and
 // the difference is real rather than stylistic. That library's receiver raises
 // two events a caller must tell apart — one adapter maps `BindFailed` and drops
 // `Silence`. This one makes a single distinction: a datagram is decodable OSC
 // or it is not. Naming three neutral refusals would be a classification
 // invented at the boundary, mapped straight back onto one code by every caller,
-// and believed by the next reader (roadmap/osc-and-vrchat-trackers.md §8).
+// and believed by the next reader (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md
+// §8).
 //
 // **This layer cannot tell an unimplemented address from any other address**,
 // because it does not know what an address means. `/foo/bar` and
@@ -47,7 +48,7 @@
 // implemented is the adapter's job, one step up.
 #pragma once
 
-#include "osc/api.h"
+#include "motionConnectorOsc/api.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -55,7 +56,7 @@
 #include <string_view>
 #include <vector>
 
-namespace osc
+namespace openstrata::connectors::osc
 {
 
 // Nested bundles are legal OSC and no sender in this space emits them, so the
@@ -164,7 +165,7 @@ struct OscDecodeError
 
 // Decodes one datagram. On failure `packet` is left untouched and `error`, when
 // given, says which byte and which address.
-OSC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size, OscPacket* packet,
+MOTIONCONNECTOROSC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size, OscPacket* packet,
                              OscDecodeError* error = nullptr);
 
 inline bool
@@ -187,4 +188,4 @@ DecodeOscPacket(const std::vector<std::uint8_t>& datagram, OscPacket* packet,
 bool DecodeOscPacket(std::vector<std::uint8_t>&& datagram, OscPacket* packet,
                      OscDecodeError* error = nullptr) = delete;
 
-} // namespace osc
+} // namespace openstrata::connectors::osc

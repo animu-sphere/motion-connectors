@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Enforce osc's leaf boundary.
+"""Enforce motionConnectorOsc's leaf boundary.
 
 WORKSPACE.md §2 gives this library an edge set that is **empty**, and unlike
-`liveTransport`'s it is empty of `liveTransport` too: a decoder that reads no
+`motionConnectorTransport`'s it is empty of `motionConnectorTransport` too: a decoder that reads no
 socket needs nothing a transport owns, and the two are siblings rather than a
 stack. So this check names no permitted neighbour, because there is none.
 
 Four rules, and each catches a different way a shared decoder fails. It does not
 fail by being misplaced; it fails by *learning something*.
 
-* **The first `motionCore` value makes it a motion library.** Every workspace
-  library is refused by name, `liveTransport` included.
+* **The first `motionCore` value makes it a motion library.** Every library
+  of this repository and of usd-motion-plugins is refused by name,
+  `motionConnectorTransport` included.
 * **The first address literal makes it one protocol's decoder.** `/VMC/`,
   `/tracking/`, `/avatar/`, and a producer's name in any form. This is the cheap
   check and it catches the realistic failure the plan names: a decoder that
-  "just knows" one address is special ([the OSC track] §4).
+  "just knows" one address is special (usd-vrm-plugins' OSC track §4).
 * **The first adapter code makes one adapter's frozen diagnostics into every
   adapter's.** `VRM_<something>_<SOMETHING>` is refused outright. This library
   raises no code at all — its refusal is an `OscDecodeError` carrying a subject
-  and a detail — so unlike `liveTransport` it does not even own a vehicle to
+  and a detail — so unlike `motionConnectorTransport` it does not even own a vehicle to
   put one in.
-* **The first `osc::` in a neighbour makes the direction reversible.** That half
-  is not here: it is in the four libraries' own checks, which refuse this
-  library by name.
+* **The first include of this library in a neighbour makes the direction
+  reversible.** That half is not here: it is in the neighbours' own checks,
+  which refuse this library by name (the transport's already does).
 
-## `tests/` is scanned, and that is the difference from `liveTransport`'s check
+## `tests/` is scanned, and that is the difference from `motionConnectorTransport`'s check
 
 That library's check reads `include/` and `src/`. This one reads `tests/` as
 well, because a decoder's tests are the one place a vendor address plausibly
 arrives: every payload needs *some* address, and the shortest path is to paste
 one off a real session. The suite that moved here did exactly that — it was
-written inside `vrmAdapterVmc` and every sample address was a `/VMC/...` one —
+written inside usd-vrm-plugins' `vrmAdapterVmc` and every sample address was a `/VMC/...` one —
 and the addresses were replaced on the way, at identical length so the byte
 offsets it asserts stayed the same numbers. Without this rule that substitution
 would be a convention, and a convention is what the next author has not read.
@@ -46,7 +47,7 @@ The binary argument is the library's **test executable**, not its `.lib`/`.a`.
 A static archive records no imports at all, so pointing this check at the
 library would make it a gate that cannot fail.
 
-This executable links `osc` and the standard library and nothing else — not even
+This executable links `motionConnectorOsc` and the standard library and nothing else — not even
 the platform's socket, which is what most visibly separates this leaf from the
 transport one — so **no** OpenUSD library may appear in its imports, and there
 is nothing to allowlist.
@@ -112,13 +113,16 @@ def _binary_dependencies(binary: pathlib.Path) -> str:
         stdout=subprocess.PIPE).stdout
 
 
-# Every workspace library and bundle, plus OpenExec and the sibling leaf. None
-# of these is allowed through: the edge set is empty, so this list has no
-# companion allowlist.
+# Every library of this repository but this one, the sibling leaf included,
+# every usd-motion-plugins library, and the usd-vrm-plugins identities this code
+# left. None of these is allowed through: the edge set is empty, so this list
+# has no companion allowlist.
 _FORBIDDEN_WORKSPACE = re.compile(
-    r"\b(?:motionCore|motionRuntime|motionSource|motionBvh|vrmRetarget|"
-    r"vrmContainer|vrmSchema|usdVrm\w*|execMotion|execVrm|ExecIr\w*|"
-    r"vrmAdapter\w*|liveTransport)\b",
+    r"\b(?:motionConnector(?!Osc(?![A-Za-z0-9]))\w+|"
+    r"motionCore|motionSampling|motionRecording|motionRetarget|motionUsd|"
+    r"motionSource|motionBvh|motionRuntime|execMotion|"
+    r"liveTransport|vrmRetarget|vrmContainer|vrmSchema|usdVrm\w*|execVrm|"
+    r"ExecIr\w*|vrmAdapter\w*)\b",
     re.IGNORECASE)
 
 # OpenUSD in any form. This library names no value type at all, not even Gf.
@@ -157,7 +161,7 @@ def _report(errors: list[str]) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print("osc boundary check passed")
+    print("motionConnectorOsc boundary check passed")
     return 0
 
 
@@ -174,17 +178,19 @@ def main() -> int:
 
     checks = (
         (_FORBIDDEN_WORKSPACE,
-         "osc's edge set is empty; this names a workspace library"),
-        (_FORBIDDEN_USD, "OpenUSD is forbidden in osc"),
+         "motionConnectorOsc's edge set is empty; this names a library"),
+        (_FORBIDDEN_USD, "OpenUSD is forbidden in motionConnectorOsc"),
         (_FORBIDDEN_PRODUCER,
-         "a producer, protocol or SDK name is forbidden in osc"),
+         "a producer, protocol or SDK name is forbidden in "
+         "motionConnectorOsc"),
         (_FORBIDDEN_ADDRESS,
-         "an address literal is forbidden in osc, tests included"),
+         "an address literal is forbidden in motionConnectorOsc, tests "
+         "included"),
         (_FORBIDDEN_CODE,
-         "an adapter's diagnostic code is forbidden in osc; a refusal here "
+         "an adapter's diagnostic code is forbidden in motionConnectorOsc; a refusal here "
          "carries a subject and a detail and no code"),
     )
-    # tests/ is in this list and not in liveTransport's. See the module
+    # tests/ is in this list and not in motionConnectorTransport's. See the module
     # docstring: a decoder's payloads are where an address literal arrives.
     for area in (source / "include", source / "src", source / "tests"):
         for path in sorted(area.rglob("*")):
@@ -203,13 +209,13 @@ def main() -> int:
     # leaf's: this library opens nothing and waits for nothing.
     cmake = re.sub(r"#[^\n]*", "",
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
-    allowed_link = {"osc", "public", "private", "interface"}
+    allowed_link = {"motionconnectorosc", "public", "private", "interface"}
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
                                 re.DOTALL):
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "osc may link no workspace library and no transport; "
+                    "motionConnectorOsc may link no library and no transport; "
                     f"CMakeLists.txt links `{token}`")
 
     # `find_package` is how an edge arrives without a link line, so it is
@@ -217,7 +223,8 @@ def main() -> int:
     for package in re.findall(r"find_package\s*\(\s*([A-Za-z0-9_]+)", cmake):
         if package not in {"Python3"}:
             errors.append(
-                "osc's allowed edge set is empty; CMakeLists.txt calls "
+                "motionConnectorOsc's allowed edge set is empty; CMakeLists.txt "
+                "calls "
                 f"find_package({package})")
 
     if binary is None:
@@ -240,7 +247,7 @@ def main() -> int:
 
     for match in sorted(set(_USD_LIBRARY.findall(dependencies))):
         errors.append(
-            f"{binary.name} imports usd_{match}; osc links no OpenUSD and "
+            f"{binary.name} imports usd_{match}; motionConnectorOsc links no OpenUSD and "
             "neither may anything it links")
 
     return _report(errors)

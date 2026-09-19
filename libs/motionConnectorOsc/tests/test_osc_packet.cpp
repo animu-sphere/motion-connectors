@@ -4,9 +4,9 @@
 //
 // These tests build datagrams byte by byte, because the point of this layer is
 // what it does with bytes. They arrived here with the decoder: they were
-// written beside it in `vrmAdapterVmc` and frozen there by OSC-0 before
+// written beside it in usd-vrm-plugins' `vrmAdapterVmc` and frozen there by OSC-0 before
 // anything moved, which is what makes this file's diff against that one a move
-// rather than a rewrite (roadmap/osc-and-vrchat-trackers.md §9).
+// rather than a rewrite (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §9).
 //
 // Two kinds of substitution happened on the way, and both are visible in every
 // test below. A refusal is an `OscDecodeError` with no code in it, so what used
@@ -21,7 +21,7 @@
 //
 // The corpus half did not come along. It reads an adapter's capture format over
 // an adapter's fixtures, so it stays where those live.
-#include "osc/OscPacket.h"
+#include "motionConnectorOsc/OscPacket.h"
 
 #include <cassert>
 #include <cmath>
@@ -34,6 +34,8 @@
 
 namespace
 {
+
+namespace osc = openstrata::connectors::osc;
 
 using osc::OscDecodeError;
 using osc::OscPacket;

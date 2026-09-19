@@ -1,13 +1,18 @@
-# osc
+# motionConnectorOsc
 
-`osc` decodes the **OSC 1.0 wire format** and does nothing with it: packets and
+`motionConnectorOsc` decodes the **OSC 1.0 wire format** and does nothing with it: packets and
 bundles, bundle flattening into wire order, addresses, type tags, arguments, and
 a refusal that names the byte and the address it refused at.
 
 That is the whole of its job. It knows no address *semantics* — `/VMC/...`,
 `/tracking/...` and `/avatar/...` are all just addresses here — no bone name, no
 tracker role, no coordinate convention, no product name
-([WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md)).
+([WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md#2-dependency-directions)).
+
+It arrived from `usd-vrm-plugins`' `osc` with its history
+([WORKSPACE.md §3](../../docs/architecture/WORKSPACE.md#3-moving-code-in)).
+The account below is that repository's, and still speaks of *adapters*, which
+is what it called a connector; the history it cites lives there.
 
 ```text
 OSC wire format       = this library
@@ -16,11 +21,11 @@ OSC address semantics = the adapter
 
 ## Why it exists, and why it did not exist sooner
 
-The decoder was written inside `vrmAdapterVmc` and stayed there through two
+The decoder was written inside `usd-vrm-plugins`' `vrmAdapterVmc` and stayed there through two
 releases, because it had one consumer. A library extracted on the strength of
 one caller is a library shaped like that caller — the only evidence that a
 surface is protocol-neutral is a second caller that never says `VMC`
-([the OSC track §3.1](../../docs/roadmap/osc-and-vrchat-trackers.md)).
+([the OSC track §3.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
 
 That caller was written first and measured. An address inventory of a VRChat OSC
 session, decoding through the VMC-owned decoder without moving it, needed **five
@@ -44,14 +49,14 @@ library's receiver raises two events a caller must tell apart, and this one
 makes a single distinction — a datagram is decodable OSC or it is not. Three
 invented neutral names would have been mapped straight back onto one adapter
 code by every caller, and believed by the next reader
-([the OSC track §8](../../docs/roadmap/osc-and-vrchat-trackers.md)).
+([the OSC track §8](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
 
 ## The edge set is empty, and emptier than the transport leaf's
 
-Not short — none, `liveTransport` included: a decoder that reads no socket needs
+Not short — none, `motionConnectorTransport` included: a decoder that reads no socket needs
 nothing a transport owns, and the two are siblings rather than a stack. It also
-links no *platform* library, which `liveTransport` does — no socket, no
-threading primitive — so `osc_boundaries` has an allowlist with no exception in
+links no *platform* library, which `motionConnectorTransport` does — no socket, no
+threading primitive — so `motionConnectorOsc_boundaries` has an allowlist with no exception in
 it.
 
 That check reads `tests/` as well as `include/` and `src/`, which is the one
@@ -63,10 +68,10 @@ they were.
 
 ## Tests
 
-`osc_oscPacket` is the suite that OSC-0 froze beside the decoder before anything
+`motionConnectorOsc_oscPacket` is the suite that OSC-0 froze beside the decoder before anything
 moved, minus the corpus half that reads an adapter's capture format over an
-adapter's fixtures. That half stayed with those fixtures and still runs, so the
-same decoder is still checked against recorded bytes as well as against
-hand-built ones.
+adapter's fixtures. That half stays with those fixtures and arrives with the
+VMC connector, so the same decoder is checked against recorded bytes as well as
+against hand-built ones again once it does.
 
-`osc_boundaries` checks the leaf boundary in source and against a built binary.
+`motionConnectorOsc_boundaries` checks the leaf boundary in source and against a built binary.

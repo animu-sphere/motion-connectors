@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "osc/OscPacket.h"
+#include "motionConnectorOsc/OscPacket.h"
 
 #include <cstring>
 #include <string>
 #include <utility>
 
-namespace osc
+namespace openstrata::connectors::osc
 {
 
 namespace
@@ -441,4 +441,4 @@ DecodeOscPacket(const std::uint8_t* bytes, std::size_t size, OscPacket* packet,
     return true;
 }
 
-} // namespace osc
+} // namespace openstrata::connectors::osc
