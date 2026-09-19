@@ -8,6 +8,19 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorTransport`, imported from `usd-vrm-plugins`' `liveTransport`
+  with its history** (that repository's MIG-4, its first identity). The UDP
+  receiver, the opt-in datagram queue, the packet-capture file format and the
+  diagnostic vehicle, unchanged in behaviour, under
+  `openstrata::connectors::transport`. Its edge set is empty, and its boundary
+  check refuses this repository's other libraries, every `usd-motion-plugins`
+  library, producer names, address literals and diagnostic codes. New CTest
+  names: `motionConnectorTransport_pollTimeout`, `_diagnostics`,
+  `_packetCapture`, `_boundaries`. The package is the installed-consumer lane's
+  first row.
+- **The rendered `ost` workflow and the graph cell**, which the scaffold could
+  not carry: the first member is what lets `ost` 0.22.10's graph step pass.
+
 - **The documentation baseline**, with no code:
   - the design policy, accepted on 2026-09-19. Its §46 records how it was
     reconciled with `usd-motion-plugins`, `usd-vrm-plugins` and

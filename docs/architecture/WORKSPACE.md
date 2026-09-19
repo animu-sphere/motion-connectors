@@ -7,9 +7,10 @@ them and to the rest of the ecosystem, and the invariants every change keeps.
 first, in its own pull request**. It is never made through a README, a roadmap
 entry or code.
 
-Status (2026-09-19): **contract adopted, scaffold only.** The build and CI
-tree exists with no component in it. Every identity below is *reserved* until
-the change that creates it lands, and its row then says so. The shape follows
+Status (2026-09-19): **contract adopted; the first library imported.** The
+build and CI tree holds `motionConnectorTransport`. Every other identity below
+is *reserved* until the change that creates it lands, and its row then says
+so. The shape follows
 the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
 share: plain libraries, a manifest beside each component, every connector an
@@ -22,7 +23,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | Identity | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- |
 | `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | reserved |
-| `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | reserved |
+| `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | imported 2026-09-19, with its history; namespace `openstrata::connectors::transport` |
 | `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | reserved |
 | `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | reserved |
 | `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | reserved |
@@ -45,8 +46,10 @@ Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 - **A CLI's command is snake_case** in a lower-camel directory (`motion_connect`
   in `tools/motionConnect/`). An imported record tool keeps its command, so
   `vmc_record` is still `vmc_record`.
-- **The C++ namespace is `openstrata::connectors`.** The include root is the
-  identity (`#include "motionConnectorVmc/Decoder.h"`).
+- **The C++ namespace is `openstrata::connectors`**, with one level for each
+  library (`openstrata::connectors::transport`), as `usd-motion-plugins` nests
+  `openstrata::motion::bvh`. The include root is the identity
+  (`#include "motionConnectorVmc/Decoder.h"`).
 
 ### 1.2 Web modules
 

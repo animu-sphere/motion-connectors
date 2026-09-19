@@ -7,12 +7,11 @@ version = "0.1.0"
 platform = "cy2026"
 profile = "usd"
 
-# No [workspace] table yet, on purpose. `ost` 0.22.10 refuses a member list
-# with no entry ("workspace.members must declare at least one member
-# pattern"), and this tree has no component until the first import
-# (docs/roadmap/current.md). `ost build` and `ost test` at the root need no
-# member set: they configure the root CMakeLists.txt. The table arrives with
-# the first connector library, each named in full, as the siblings name theirs:
-#
-#   [workspace]
-#   members = ["libs/motionConnectorTransport"]
+# The member set, declared rather than discovered, each member named in full as
+# the siblings name theirs: adding a member is a visible edit here, not a side
+# effect of creating a directory. The table arrived with the first member,
+# because `ost` 0.22.10 refuses an empty one.
+[workspace]
+members = [
+    "libs/motionConnectorTransport",
+]

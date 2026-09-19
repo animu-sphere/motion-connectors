@@ -1,0 +1,23 @@
+# OpenStrata plain-library descriptor. motionConnectorTransport is the shared
+# leaf every connector receives through: the UDP receiver, the optional
+# datagram queue, the packet-capture file format, and the diagnostic vehicle
+# (docs/architecture/WORKSPACE.md §1.1). It arrived from usd-vrm-plugins'
+# liveTransport, with its history.
+#
+# A library, not a plugin bundle: it registers nothing with OpenUSD and has no
+# plugInfo.json.
+#
+# `requires` is absent rather than empty-by-accident. Its allowed edge set is
+# **empty** (WORKSPACE.md §2): the six files it was extracted from include their
+# own headers and the standard library and nothing else, so a first edge here is
+# a contract change and not a commit. It knows no protocol, no vendor grammar,
+# no address literal and no product name, and it holds no diagnostic *code* --
+# a code enum is frozen per connector and stays there.
+schema: openstrata.library/v1alpha1
+library:
+  id: motionConnectorTransport
+  # Mirrors the repository-root VERSION (docs/architecture/WORKSPACE.md §4).
+  version: 0.1.0
+cmake:
+  package: motionConnectorTransport
+  target: motionConnectorTransport::motionConnectorTransport

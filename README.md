@@ -45,7 +45,7 @@ repository depends on that one, and nothing depends on it except the runtime.
 | Component | Role | Release |
 | --- | --- | --- |
 | `motionConnectorCore` | `IMotionConnector`, `MotionFrame`, state, capabilities, timing, the bounded frame buffer | v0.1.0 |
-| `motionConnectorTransport`, `motionConnectorOsc` | UDP and packet capture; the OSC 1.0 wire format | v0.1.0 |
+| `motionConnectorTransport`, `motionConnectorOsc` | UDP and packet capture (**imported**); the OSC 1.0 wire format | v0.1.0 |
 | `motionConnectorVmc` | VMC Protocol | v0.1.0 |
 | `motion_connect` | `list`, `dump`, `inspect`, then `record`, `bridge` | v0.1.0, v0.2.0 |
 | `motionConnectorMocopi`, `motionConnectorVrchatOsc`, `motionConnectorTracking` | mocopi native UDP; VRChat OSC Trackers; tracker assignment and solve | v0.1.0 |
