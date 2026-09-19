@@ -1,35 +1,34 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# liveTransport — the live half's shared leaf.
+# motionConnectorTransport — the shared leaf every connector receives through.
 #
-# A plain static library, not a plugin bundle: it registers nothing with OpenUSD
-# and ships no plugInfo.json (WORKSPACE.md §1). Its edge set is **empty** — not
-# short, none — and that is a measurement rather than an intention: the six
-# files it was extracted from include their own headers and the standard library
-# and nothing else. No `find_package` below names a workspace library, and the
-# first one that does is a contract change rather than a commit (WORKSPACE.md
-# §2). The two that are here ask for the platform's threading primitive and for
-# an interpreter to run the boundary check with, neither of which is a
-# dependency direction — and `tests/check_boundaries.py` enforces exactly that
-# reading, refusing every other package by name.
+# A plain static library: it registers nothing with OpenUSD and ships no
+# plugInfo.json (WORKSPACE.md §1.1). Its edge set is **empty** — not short,
+# none — and that is a measurement rather than an intention: the six files it
+# was extracted from in usd-vrm-plugins included their own headers and the
+# standard library and nothing else. No `find_package` below names a library of
+# this repository or of usd-motion-plugins, and the first one that does is a
+# contract change rather than a commit (WORKSPACE.md §2). The two that are here
+# ask for the platform's threading primitive and for an interpreter to run the
+# boundary check with, neither of which is a dependency direction — and
+# `tests/check_boundaries.py` enforces exactly that reading, refusing every
+# other package by name.
 #
-# It is outside the aggregate product, on the *adapter* side of §5's split
-# though it carries no product name. §5's reader test is producer-neutral **and**
-# opens nothing; this library satisfies the first clause exactly as motionBvh
-# does and is still out, because the product would acquire I/O.
+# Arrived from usd-vrm-plugins' `liveTransport`, with its history (that
+# repository's MIG-4; WORKSPACE.md §3).
 
 cmake_minimum_required(VERSION 3.22)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
     file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _live_transport_version LIMIT_COUNT 1)
-    string(STRIP "${_live_transport_version}" _live_transport_version)
+         _transport_version LIMIT_COUNT 1)
+    string(STRIP "${_transport_version}" _transport_version)
 else()
-    set(_live_transport_version "0.9.0")
+    set(_transport_version "0.1.0")
 endif()
 
-project(liveTransport
-    VERSION ${_live_transport_version}
+project(motionConnectorTransport
+    VERSION ${_transport_version}
     DESCRIPTION "Shared UDP receiver, packet-capture format and diagnostic vehicle for live adapters"
     LANGUAGES CXX)
 
@@ -39,68 +38,69 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(NOT DEFINED LIVETRANSPORT_BUILD_TESTS)
-    if(DEFINED USDVRM_BUILD_TESTS)
-        set(_live_transport_tests_default "${USDVRM_BUILD_TESTS}")
+if(NOT DEFINED MOTIONCONNECTORTRANSPORT_BUILD_TESTS)
+    if(DEFINED MOTIONCONNECTORS_BUILD_TESTS)
+        set(_transport_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
     else()
-        set(_live_transport_tests_default "${PROJECT_IS_TOP_LEVEL}")
+        set(_transport_tests_default "${PROJECT_IS_TOP_LEVEL}")
     endif()
-    option(LIVETRANSPORT_BUILD_TESTS "Build liveTransport tests"
-           ${_live_transport_tests_default})
+    option(MOTIONCONNECTORTRANSPORT_BUILD_TESTS "Build motionConnectorTransport tests"
+           ${_transport_tests_default})
 endif()
 
-add_library(liveTransport STATIC
+add_library(motionConnectorTransport STATIC
     src/Diagnostics.cpp
     src/PacketCapture.cpp
     src/UdpReceiver.cpp)
-add_library(liveTransport::liveTransport ALIAS liveTransport)
-set_target_properties(liveTransport PROPERTIES
-    EXPORT_NAME liveTransport
+add_library(motionConnectorTransport::motionConnectorTransport ALIAS motionConnectorTransport)
+set_target_properties(motionConnectorTransport PROPERTIES
+    EXPORT_NAME motionConnectorTransport
     POSITION_INDEPENDENT_CODE ON)
 
-target_compile_features(liveTransport PUBLIC cxx_std_17)
-target_compile_definitions(liveTransport PUBLIC LIVETRANSPORT_STATIC)
-target_include_directories(liveTransport
+target_compile_features(motionConnectorTransport PUBLIC cxx_std_17)
+target_compile_definitions(motionConnectorTransport PUBLIC MOTIONCONNECTORTRANSPORT_STATIC)
+target_include_directories(motionConnectorTransport
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>"
     PRIVATE
         # src/ is on the private include path for PollTimeout.h, which is this
-        # library's one internal header and the reason OSC-2 could pay a debt
-        # OSC-1 could not: an adapter cannot hold one without diverging from its
-        # sibling, and a library can. It is deliberately not installed.
+        # library's one internal header and the reason usd-vrm-plugins' OSC-2
+        # could pay a debt its OSC-1 could not: an adapter cannot hold one
+        # without diverging from its sibling, and a library can. It is
+        # deliberately not installed.
         "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 # The platform's own transport and threading primitives, which are not a
-# dependency direction: WORKSPACE.md §2 constrains which *workspace* libraries
-# this leaf may reach, and its answer there is "none". `tests/check_boundaries.py`
+# dependency direction: WORKSPACE.md §2 constrains which libraries of the
+# ecosystem this leaf may reach, and its answer there is "none". `tests/check_boundaries.py`
 # allows exactly these two names and nothing else, so the gate still fails on a
-# workspace edge.
+# library edge.
 #
 # Threads arrives with `DatagramQueue`, whose mutex is the whole of this
-# library's answer to motion policy §11.4 (UdpReceiver.h). libstdc++ needs the
+# library's answer to the threading question UdpReceiver.h states. libstdc++ needs the
 # link even for a std::mutex that is never contended.
 if(WIN32)
-    target_link_libraries(liveTransport PUBLIC ws2_32)
+    target_link_libraries(motionConnectorTransport PUBLIC ws2_32)
 else()
     # Ask for `-pthread` rather than a bare `-lpthread`: on GCC the flag also
     # affects code generation, and a target that only gets the library links but
     # is not built for threads.
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    target_link_libraries(liveTransport PUBLIC Threads::Threads)
+    target_link_libraries(motionConnectorTransport PUBLIC Threads::Threads)
 endif()
 
 if(MSVC)
-    # PUBLIC for the same reason the adapters use it: the installed headers
+    # PUBLIC for the same reason the connectors use it: the installed headers
     # carry UTF-8 section references, and a consumer on a non-UTF-8 code page
     # warns C4819 without the flag.
-    target_compile_options(liveTransport PUBLIC /utf-8)
+    target_compile_options(motionConnectorTransport PUBLIC /utf-8)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS liveTransport
-    EXPORT liveTransportTargets
+install(TARGETS motionConnectorTransport
+    EXPORT motionConnectorTransportTargets
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -109,24 +109,32 @@ install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/liveTransportConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/liveTransportConfig.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/liveTransport")
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/motionConnectorTransportConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTransportConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTransport")
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/liveTransportConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTransportConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-install(EXPORT liveTransportTargets
-    FILE liveTransportTargets.cmake
-    NAMESPACE liveTransport::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/liveTransport")
+    COMPATIBILITY SameMinorVersion)
+install(EXPORT motionConnectorTransportTargets
+    FILE motionConnectorTransportTargets.cmake
+    NAMESPACE motionConnectorTransport::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTransport")
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/liveTransportConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/liveTransportConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/liveTransport")
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTransportConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTransportConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTransport")
 
-if(LIVETRANSPORT_BUILD_TESTS)
+if(MOTIONCONNECTORTRANSPORT_BUILD_TESTS)
     enable_testing()
-    find_package(Python3 COMPONENTS Interpreter QUIET)
+    # The root names the interpreter once, as MOTIONCONNECTORS_TEST_PYTHON,
+    # because pxrConfig.cmake leaves Python3_Interpreter_FOUND false in its
+    # scope; a standalone build of this library finds its own.
+    if(NOT MOTIONCONNECTORS_TEST_PYTHON)
+        find_package(Python3 COMPONENTS Interpreter QUIET)
+        if(Python3_Interpreter_FOUND)
+            set(MOTIONCONNECTORS_TEST_PYTHON "${Python3_EXECUTABLE}")
+        endif()
+    endif()
     add_subdirectory(tests)
 endif()

@@ -10,7 +10,7 @@
 // seen. The enum below is invented here, is not any adapter's, and is not
 // contiguous with either — which is the point. A vehicle that only carries the
 // two sets already in the tree is a vehicle that has been generalised on paper.
-#include "liveTransport/Diagnostics.h"
+#include "motionConnectorTransport/Diagnostics.h"
 
 #include <array>
 #include <cassert>
@@ -21,13 +21,13 @@
 namespace
 {
 
-using liveTransport::Diagnostic;
-using liveTransport::DiagnosticCodeEntry;
-using liveTransport::DiagnosticCodeTable;
-using liveTransport::DiagnosticFields;
-using liveTransport::DiagnosticSeverity;
-using liveTransport::FormatDiagnostic;
-using liveTransport::FormatSeconds;
+using openstrata::connectors::transport::Diagnostic;
+using openstrata::connectors::transport::DiagnosticCodeEntry;
+using openstrata::connectors::transport::DiagnosticCodeTable;
+using openstrata::connectors::transport::DiagnosticFields;
+using openstrata::connectors::transport::DiagnosticSeverity;
+using openstrata::connectors::transport::FormatDiagnostic;
+using openstrata::connectors::transport::FormatSeconds;
 
 enum class TestCode : std::uint8_t
 {
@@ -163,9 +163,9 @@ TestSecondsAreSpelledOneWay()
 void
 TestSeverityStrings()
 {
-    assert(liveTransport::DiagnosticSeverityString(DiagnosticSeverity::Info) == "info");
-    assert(liveTransport::DiagnosticSeverityString(DiagnosticSeverity::Warning) == "warning");
-    assert(liveTransport::DiagnosticSeverityString(DiagnosticSeverity::Error) == "error");
+    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Info) == "info");
+    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Warning) == "warning");
+    assert(openstrata::connectors::transport::DiagnosticSeverityString(DiagnosticSeverity::Error) == "error");
 }
 
 } // namespace
@@ -179,7 +179,7 @@ main()
     TestTheFormattedLine();
     TestSecondsAreSpelledOneWay();
     TestSeverityStrings();
-    std::printf("liveTransport diagnostics: the vehicle carries a code set it "
+    std::printf("motionConnectorTransport diagnostics: the vehicle carries a code set it "
                 "has never seen\n");
     return 0;
 }

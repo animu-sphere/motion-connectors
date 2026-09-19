@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <algorithm>
 #include <cmath>
@@ -16,7 +16,7 @@
 #include <string_view>
 #include <vector>
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 
 namespace
@@ -543,4 +543,4 @@ WritePacketCaptureFile(std::string_view magic, const std::string& path,
     return WritePacketCapture(magic, output, capture) && output.flush().good();
 }
 
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport

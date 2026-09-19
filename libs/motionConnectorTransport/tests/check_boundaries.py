@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Enforce liveTransport's leaf boundary.
+"""Enforce motionConnectorTransport's leaf boundary.
 
 WORKSPACE.md §2 gives this library an edge set that is **empty** — not short,
 none — and that is a measurement rather than an intention: the six files it was
 extracted from include their own headers and the standard library and nothing
-else. So this check is the unusual one in the workspace: it names no permitted
+else. So this check is the unusual one in the ecosystem: it names no permitted
 neighbour, because there is none to name.
 
 Three rules, and each catches a different way a shared leaf fails. A shared leaf
 does not fail by being misplaced; it fails by *growing*.
 
-* **The first `motionCore` value makes it a motion library.** Every workspace
-  library is refused by name, `motionCore` most of all — the neighbouring
+* **The first `motionCore` value makes it a motion library.** Every library
+  of this repository and of usd-motion-plugins is refused by name, `motionCore` most of all — the neighbouring
   libraries are not "allowed through" here as they are in an adapter's check.
 * **The first address literal makes it a protocol decoder.** `/VMC/`,
   `/tracking/`, `/avatar/`, and a producer's name in any form. This is the cheap
@@ -21,7 +21,7 @@ does not fail by being misplaced; it fails by *growing*.
 * **The first adapter code makes one adapter's frozen diagnostics into every
   adapter's.** `VRM_<something>_<SOMETHING>` is refused outright. The library
   owns the diagnostic *vehicle*; a code is an adapter's property, frozen before
-  its decoder, and a `liveTransport` holding one is a violation.
+  its decoder, and a `motionConnectorTransport` holding one is a violation.
 
 The binary argument is the library's **test executable**, not its `.lib`/`.a`.
 A static archive records no imports at all — `dumpbin /dependents` on one prints
@@ -29,8 +29,8 @@ a section summary and nothing else — so pointing this check at the library wou
 make it a gate that cannot fail, which is worse than no gate.
 
 What the binary half proves here is stronger than what it proves for an adapter,
-because the claim is stronger: this executable links `liveTransport` and the
-platform, so **no** OpenUSD library may appear in its imports. An adapter's
+because the claim is stronger: this executable links
+`motionConnectorTransport` and the platform, so **no** OpenUSD library may appear in its imports. An adapter's
 check has to maintain an allowlist of the value-type layer its declared edges
 drag in; this one has nothing to allow.
 """
@@ -106,12 +106,16 @@ def _binary_dependencies(binary: pathlib.Path) -> str:
         stdout=subprocess.PIPE).stdout
 
 
-# Every workspace library and bundle, plus OpenExec. None of these is allowed
-# through: the edge set is empty, so this list has no companion allowlist.
+# Every library of this repository but this one, every usd-motion-plugins
+# library, and the usd-vrm-plugins identities this code left. None of these is
+# allowed through: the edge set is empty, so this list has no companion
+# allowlist.
 _FORBIDDEN_WORKSPACE = re.compile(
-    r"\b(?:motionCore|motionRuntime|motionSource|motionBvh|vrmRetarget|"
-    r"vrmContainer|vrmSchema|usdVrm\w*|execMotion|execVrm|ExecIr\w*|"
-    r"vrmAdapter\w*)\b",
+    r"\b(?:motionConnector(?!Transport(?![A-Za-z0-9]))\w+|"
+    r"motionCore|motionSampling|motionRecording|motionRetarget|motionUsd|"
+    r"motionSource|motionBvh|motionRuntime|execMotion|"
+    r"liveTransport|vrmRetarget|vrmContainer|vrmSchema|usdVrm\w*|execVrm|"
+    r"ExecIr\w*|vrmAdapter\w*)\b",
     re.IGNORECASE)
 
 # OpenUSD in any form. This library names no value type at all, not even Gf.
@@ -153,7 +157,7 @@ def _report(errors: list[str]) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print("liveTransport boundary check passed")
+    print("motionConnectorTransport boundary check passed")
     return 0
 
 
@@ -169,14 +173,15 @@ def main() -> int:
             errors.append(f"plugin registration file is forbidden: {path}")
 
     checks = (
-        (_FORBIDDEN_WORKSPACE, "liveTransport's edge set is empty; this names a "
-                               "workspace library"),
-        (_FORBIDDEN_USD, "OpenUSD is forbidden in liveTransport"),
+        (_FORBIDDEN_WORKSPACE, "motionConnectorTransport's edge set is empty; "
+                               "this names a library"),
+        (_FORBIDDEN_USD, "OpenUSD is forbidden in motionConnectorTransport"),
         (_FORBIDDEN_PRODUCER, "a producer, protocol or SDK name is forbidden in "
-                              "liveTransport"),
-        (_FORBIDDEN_ADDRESS, "an address literal is forbidden in liveTransport"),
+                              "motionConnectorTransport"),
+        (_FORBIDDEN_ADDRESS, "an address literal is forbidden in "
+                             "motionConnectorTransport"),
         (_FORBIDDEN_CODE, "an adapter's diagnostic code is forbidden in "
-                          "liveTransport; it owns the vehicle, not the codes"),
+                          "motionConnectorTransport; it owns the vehicle, not the codes"),
     )
     for area in (source / "include", source / "src"):
         for path in sorted(area.rglob("*")):
@@ -192,12 +197,12 @@ def main() -> int:
     # anticipate the spelling of every library nobody has linked yet, and it
     # misses a multi-line call outright; naming the tokens that *are* permitted
     # cannot. `ws2_32` and `Threads::Threads` are the platform's own primitives
-    # and are not workspace edges — §2 constrains which *workspace* libraries
+    # and are not library edges — §2 constrains which libraries
     # this leaf may reach, and its answer there is none.
     cmake = re.sub(r"#[^\n]*", "",
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
     allowed_link = {
-        "livetransport", "public", "private", "interface",
+        "motionconnectortransport", "public", "private", "interface",
         "ws2_32", "threads::threads",
     }
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
@@ -205,7 +210,7 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "liveTransport may link no workspace library; "
+                    "motionConnectorTransport may link no library; "
                     f"CMakeLists.txt links `{token}`")
 
     # `find_package` is how an edge arrives without a link line, so it is
@@ -213,7 +218,7 @@ def main() -> int:
     for package in re.findall(r"find_package\s*\(\s*([A-Za-z0-9_]+)", cmake):
         if package not in {"Threads", "Python3"}:
             errors.append(
-                "liveTransport's allowed edge set is empty; CMakeLists.txt "
+                "motionConnectorTransport's allowed edge set is empty; CMakeLists.txt "
                 f"calls find_package({package})")
 
     if binary is None:
@@ -239,7 +244,7 @@ def main() -> int:
     # a question about the linker.
     for match in sorted(set(_USD_LIBRARY.findall(dependencies))):
         errors.append(
-            f"{binary.name} imports usd_{match}; liveTransport links no "
+            f"{binary.name} imports usd_{match}; motionConnectorTransport links no "
             "OpenUSD and neither may anything it links")
 
     return _report(errors)

@@ -20,18 +20,19 @@
 // everything else, fixed in the younger copy alone, and written down there as
 // still present in the older one. Both files named the trigger for turning the
 // repetition into a library and named it exactly: a third recorder. This is
-// that library (roadmap/osc-and-vrchat-trackers.md §2, §3.2).
+// that library (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2, §3.2).
 //
 // The four fixes landed in both adapters *before* this move, so that a file
-// move never carried a fix inside it (OSC-1). What arrives here is the merged
+// move never carried a fix inside it (usd-vrm-plugins' OSC-1). What arrives here is the merged
 // behaviour, unchanged.
 //
 // ## It raises no diagnostic code, and that is the contract
 //
 // A diagnostic code set is frozen per adapter, before its decoder exists, so
 // that the set describes a protocol rather than a bug history. A shared
-// receiver therefore cannot name one — `liveTransport` holding an adapter's
-// code is a WORKSPACE.md §2 violation — so it reports what it *observed*, as a
+// receiver therefore cannot name one — `motionConnectorTransport` holding an
+// adapter's code is a WORKSPACE.md §2 violation — so it reports what it
+// *observed*, as a
 // `TransportEventReport`, and the caller that knows which adapter it is maps
 // the event onto its own frozen code. This is the shape `MatchSourceProfile`
 // already uses: the lower layer returns a typed refusal naming the event, and
@@ -88,8 +89,8 @@
 // class's.
 #pragma once
 
-#include "liveTransport/PacketCapture.h"
-#include "liveTransport/api.h"
+#include "motionConnectorTransport/PacketCapture.h"
+#include "motionConnectorTransport/api.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -98,7 +99,7 @@
 #include <string>
 #include <vector>
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 
 struct UdpReceiverConfig
@@ -256,7 +257,7 @@ struct UdpReceiverStats
 
 // A bound UDP socket. Caller-driven throughout: it starts no thread, invokes no
 // callback, and does nothing between calls to `Receive`.
-class LIVETRANSPORT_API UdpReceiver final
+class MOTIONCONNECTORTRANSPORT_API UdpReceiver final
 {
   public:
     UdpReceiver();
@@ -467,7 +468,7 @@ struct DatagramQueueStats
 //
 // A network thread pushes; the consumer's thread drains and decodes. Nothing
 // downstream of `Drain` learns that a second thread exists, which is the whole
-// point: an adapter's decode path and `motionRuntime` keep the single-threaded
+// point: an adapter's decode path and the live source it feeds keep the single-threaded
 // contract their tests are written against.
 //
 // **It is opt-in, and that is the contract rather than a convenience.** The
@@ -489,7 +490,7 @@ struct DatagramQueueStats
 // that would block on this queue already has a thread of its own to wait on,
 // and giving it one here would need a wakeup path for shutdown — a second
 // cancellation problem, in a class whose entire job is to have no opinions.
-class LIVETRANSPORT_API DatagramQueue final
+class MOTIONCONNECTORTRANSPORT_API DatagramQueue final
 {
   public:
     explicit DatagramQueue(const DatagramQueueConfig& config = {});
@@ -520,4 +521,4 @@ class LIVETRANSPORT_API DatagramQueue final
     DatagramQueueStats _stats;
 };
 
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport

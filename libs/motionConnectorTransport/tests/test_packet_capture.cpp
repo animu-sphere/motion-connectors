@@ -20,7 +20,7 @@
 // sixty-odd committed fixtures depend on it, and the corpus round-trip tests
 // would catch a break — after a rebuild of three adapters, in a failure that
 // names a fixture rather than the rule. This says the rule.
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <cassert>
 #include <cstdint>
@@ -33,9 +33,9 @@
 namespace
 {
 
-using liveTransport::PacketCapture;
-using liveTransport::PacketCaptureError;
-using liveTransport::RecordedDatagram;
+using openstrata::connectors::transport::PacketCapture;
+using openstrata::connectors::transport::PacketCaptureError;
+using openstrata::connectors::transport::RecordedDatagram;
 
 // Not `!vmc-`, not `!mocopi-`, not `!vrchat-osc-`.
 constexpr std::string_view kMagic = "!test-packet-capture";
@@ -54,7 +54,7 @@ std::string
 Write(const PacketCapture& capture)
 {
     std::ostringstream output;
-    const bool ok = liveTransport::WritePacketCapture(kMagic, output, capture);
+    const bool ok = openstrata::connectors::transport::WritePacketCapture(kMagic, output, capture);
     assert(ok);
     (void)ok;
     return output.str();
@@ -64,7 +64,7 @@ bool
 Read(const std::string& text, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
     std::istringstream input(text);
-    return liveTransport::ReadPacketCapture(kMagic, input, capture, error);
+    return openstrata::connectors::transport::ReadPacketCapture(kMagic, input, capture, error);
 }
 
 std::size_t
@@ -311,6 +311,6 @@ main()
     TestARedundantPeerLineIsAcceptedAndCanonicalisedAway();
     TestTheRefusalsThePLineInherits();
     TestTheHeaderPeerAndTheRecordPeerAreDifferentStatements();
-    std::printf("liveTransport packet capture: a record can say who sent it\n");
+    std::printf("motionConnectorTransport packet capture: a record can say who sent it\n");
     return 0;
 }

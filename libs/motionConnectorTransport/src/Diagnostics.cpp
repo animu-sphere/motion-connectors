@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "liveTransport/Diagnostics.h"
+#include "motionConnectorTransport/Diagnostics.h"
 
 #include <iomanip>
 #include <ios>
 #include <locale>
 #include <sstream>
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 
 std::string_view
@@ -74,4 +74,4 @@ FormatDiagnostic(std::string_view codeString, const DiagnosticFields& fields)
     return line;
 }
 
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport

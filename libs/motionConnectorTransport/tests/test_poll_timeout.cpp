@@ -2,7 +2,7 @@
 //
 // The two decisions `UdpReceiver::Receive` makes around its `poll`, tested.
 //
-// This file is a debt being paid rather than a new suite. Two of OSC-1's four
+// This file is a debt being paid rather than a new suite. Two of usd-vrm-plugins' OSC-1's four
 // fixes shipped without a test, and the obstacle was structural: a poll timeout
 // of `-1` and one of `INT_MAX` differ only after 24.8 days, and a wake-up
 // reporting `POLLERR` instead of a datagram is not producible on three
@@ -29,11 +29,11 @@
 namespace
 {
 
-using liveTransport::internal::ClassifyPollWakeUp;
-using liveTransport::internal::kPollForever;
-using liveTransport::internal::kPollMaxMilliseconds;
-using liveTransport::internal::PollWakeUp;
-using liveTransport::internal::TimeoutToMilliseconds;
+using openstrata::connectors::transport::internal::ClassifyPollWakeUp;
+using openstrata::connectors::transport::internal::kPollForever;
+using openstrata::connectors::transport::internal::kPollMaxMilliseconds;
+using openstrata::connectors::transport::internal::PollWakeUp;
+using openstrata::connectors::transport::internal::TimeoutToMilliseconds;
 
 // The defect this replaces: a finite request at or above INT_MAX milliseconds
 // was mapped onto -1, which both `poll` and `WSAPoll` read as "wait forever".
@@ -140,7 +140,7 @@ main()
     TestSubMillisecondTimeoutsWaitATick();
     TestOnlyTheRequestedBitMeansADatagram();
     TestTheClassificationIsAConstantExpression();
-    std::printf("liveTransport poll: timeout mapping and wake-up predicate "
+    std::printf("motionConnectorTransport poll: timeout mapping and wake-up predicate "
                 "verified\n");
     return 0;
 }

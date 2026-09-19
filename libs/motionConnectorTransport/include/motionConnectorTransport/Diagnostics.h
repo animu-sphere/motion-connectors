@@ -7,18 +7,18 @@
 //     the code set = the adapter    (frozen per protocol, before its decoder)
 //
 // Two adapters wrote the same 126 lines twice and differed only in their code
-// table (roadmap/osc-and-vrchat-trackers.md §2). Everything the two copies
+// table (usd-vrm-plugins' roadmap/osc-and-vrchat-trackers.md §2). Everything the two copies
 // agreed on is below; everything they disagreed on stayed where it was.
 //
 // ## Why a code cannot live here, stated as a mechanism rather than a rule
 //
 // A code set is frozen *before* the decoder that raises it, so that the set
 // describes a protocol's failure modes rather than whichever bug was chased
-// last (adapter plan §8). That freeze is per protocol by construction: mocopi
+// last (usd-vrm-plugins' adapter plan §8). That freeze is per protocol by construction: mocopi
 // can report a device that cannot solve, VMC cannot express one, and a shared
 // enum would have to contain both and mean neither. So a code is an adapter's
 // property, `Diagnostic::code` keeps its adapter's enum *type*, and this
-// library never names a code — a `liveTransport` holding one is a contract
+// library never names a code — a `motionConnectorTransport` holding one is a contract
 // violation, not a shortcut (WORKSPACE.md §2).
 //
 // What it does hold is the machinery a code table needs, so that the table is
@@ -26,7 +26,7 @@
 // rows into the four accessors both adapters had written out by hand.
 #pragma once
 
-#include "liveTransport/api.h"
+#include "motionConnectorTransport/api.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -34,7 +34,7 @@
 #include <string>
 #include <string_view>
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 
 enum class DiagnosticSeverity : std::uint8_t
@@ -44,7 +44,7 @@ enum class DiagnosticSeverity : std::uint8_t
     Error,
 };
 
-LIVETRANSPORT_API std::string_view DiagnosticSeverityString(DiagnosticSeverity severity) noexcept;
+MOTIONCONNECTORTRANSPORT_API std::string_view DiagnosticSeverityString(DiagnosticSeverity severity) noexcept;
 
 // One row of an adapter's frozen code table: the stable string, and the two
 // defaults that must not be decided at a raise site. `name` is the contract —
@@ -104,11 +104,11 @@ template <class Code, Code DefaultCode> struct Diagnostic : DiagnosticFields
 // Absent optional fields are omitted rather than printed empty, and the field
 // order is fixed. The code arrives already resolved to its string, because
 // resolving it is the one step only the adapter can take.
-LIVETRANSPORT_API std::string FormatDiagnostic(std::string_view codeString,
+MOTIONCONNECTORTRANSPORT_API std::string FormatDiagnostic(std::string_view codeString,
                                                const DiagnosticFields& fields);
 
 // Six decimals in the classic locale, matching the recorded-trace format's
-// quantum (motionRuntime/CaptureTrace.h), so a diagnostic line and the trace it
+// quantum (usd-motion-plugins' motionRecording/CaptureTrace.h), so a diagnostic line and the trace it
 // refers to spell the same instant the same way.
 //
 // The classic locale is not decoration. `printf("%.6f")` and a default-imbued
@@ -118,7 +118,7 @@ LIVETRANSPORT_API std::string FormatDiagnostic(std::string_view codeString,
 // where a live session is being debugged. CaptureTrace.cpp imbues the classic
 // locale on both its reader and its writer for this reason; this matches it
 // rather than inventing a second answer.
-LIVETRANSPORT_API std::string FormatSeconds(double seconds);
+MOTIONCONNECTORTRANSPORT_API std::string FormatSeconds(double seconds);
 
 // An adapter's code table, read.
 //
@@ -185,4 +185,4 @@ template <class Code> class DiagnosticCodeTable final
     std::size_t _count;
 };
 
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport

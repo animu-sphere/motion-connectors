@@ -1,13 +1,18 @@
-# liveTransport
+# motionConnectorTransport
 
-`liveTransport` holds the four things every live input adapter needs and none of
-them can own: a **UDP receiver**, an opt-in **datagram queue**, the
+`motionConnectorTransport` holds the four things every connector needs and none
+of them can own: a **UDP receiver**, an opt-in **datagram queue**, the
 **packet-capture file format**, and the **diagnostic vehicle** an adapter
 reports through.
 
 That is the whole of its job. It knows no protocol — no OSC, no vendor grammar,
 no address literal, no product name — and it holds no diagnostic **code**
-([WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md)).
+([WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md#2-dependency-directions)).
+
+It arrived from `usd-vrm-plugins`' `liveTransport` with its history
+([WORKSPACE.md §3](../../docs/architecture/WORKSPACE.md#3-moving-code-in)).
+The account below is that repository's, and still speaks of *adapters*, which
+is what it called a connector; the history it cites lives there.
 
 ```text
 OSC / a vendor grammar / a tracker surface  = the adapter
@@ -21,7 +26,7 @@ stripped of comments, `PacketCapture.cpp` differed by **5 lines out of 366** and
 `PacketCapture.h` by **1 out of 44**; `UdpReceiver.cpp` differed by 161 and
 `UdpReceiver.h` by 49, and that gap was **four defects** the younger copy had
 fixed and the older one still carried
-([osc-and-vrchat-trackers.md §2](../../docs/roadmap/osc-and-vrchat-trackers.md)).
+([`usd-vrm-plugins` osc-and-vrchat-trackers.md §2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
 Both receivers said so in their own preambles, and both named the same trigger
 for turning the repetition into a library: a **third** recorder. A third live
 adapter is what made that arrive.
@@ -34,18 +39,15 @@ fix inside it. What is here is the merged behaviour, unchanged.
 
 Not short — none. It links no workspace library, and that is a measurement
 rather than an aspiration: the six files it was extracted from include their own
-headers and the standard library and nothing else. `liveTransport_boundaries`
+headers and the standard library and nothing else. `motionConnectorTransport_boundaries`
 checks it both ways on every build, in source and against a built binary, and
 the binary half has no allowlist because nothing here can drag an OpenUSD
 library in.
 
-It is **outside the aggregate product**, on the adapter side of
-[§5](../../docs/architecture/WORKSPACE.md)'s split though it carries no product
-name. That section's reader test is *producer-neutral **and** opens nothing*;
-this library satisfies the first clause exactly as `motionBvh` does and is still
-out, because the product would acquire I/O — and no tool in the product opens a
-transport, which is what makes every clip in this repository reproducible by
-construction.
+In `usd-vrm-plugins` it was **outside the aggregate product**, because the
+product would have acquired I/O. That is why it left for this repository rather
+than for `usd-motion-plugins`: nothing that authors or retargets motion opens a
+transport, which keeps every clip reproducible by construction.
 
 ## It reports events, not codes
 
@@ -88,7 +90,7 @@ ephemeral source port and with nothing else — no session identifier, no rest
 table, no handshake — so the only signal that wire gives died at the file
 boundary. The live session saw two peers and `--inspect` on the same capture
 reported one
-([report 02](../../docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md) §4),
+([`usd-vrm-plugins` report 02](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md) §4),
 which made every fixture-driven test of restart behaviour a test of the
 silence rather than of the identity change.
 
@@ -118,9 +120,9 @@ convergence. `tests/test_poll_timeout.cpp` is that test.
 ## Layout
 
 ```text
-include/liveTransport/Diagnostics.h    the vehicle, the severity scale, the line
-include/liveTransport/PacketCapture.h  the recorded-datagram file format
-                                       (and `p`, its one non-adapter line)
-include/liveTransport/UdpReceiver.h    the socket, and the opt-in queue
-src/PollTimeout.h                      internal; not installed
+include/motionConnectorTransport/Diagnostics.h    the vehicle, the severity scale, the line
+include/motionConnectorTransport/PacketCapture.h  the recorded-datagram file format
+                                                  (and `p`, its one non-adapter line)
+include/motionConnectorTransport/UdpReceiver.h    the socket, and the opt-in queue
+src/PollTimeout.h                                 internal; not installed
 ```

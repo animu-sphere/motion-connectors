@@ -3,7 +3,7 @@
 // Two decisions `UdpReceiver::Receive` makes around its `poll`, pulled out
 // where a test can reach them.
 //
-// This header is the reason OSC-2 could pay a debt OSC-1 could not. Two of that
+// This header is the reason usd-vrm-plugins' OSC-2 could pay a debt OSC-1 could not. Two of that
 // step's four fixes shipped without a test, and the obstacle was structural
 // rather than lazy: a poll timeout of `-1` and one of `INT_MAX` differ only
 // after 24.8 days, and a wake-up reporting `POLLERR` instead of a datagram is
@@ -23,7 +23,7 @@
 
 #include <cstdint>
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 namespace internal
 {
@@ -78,4 +78,4 @@ ClassifyPollWakeUp(int revents, int readableBit) noexcept
 }
 
 } // namespace internal
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport

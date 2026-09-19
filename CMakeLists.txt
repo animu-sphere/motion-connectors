@@ -79,8 +79,10 @@ if(MOTIONCONNECTORS_BUILD_TESTS)
     endif()
 endif()
 
-# Components, in dependency order, as each import lands:
-#   add_subdirectory("libs/motionConnectorTransport")
+# Components, in dependency order, as each import lands. The transport and the
+# wire format are not connectors: they have no option of their own, and are
+# built whenever this tree is.
+add_subdirectory("libs/motionConnectorTransport")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)

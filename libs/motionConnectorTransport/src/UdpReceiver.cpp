@@ -5,12 +5,12 @@
 // rename `min`, `max`, and a good deal else — reach nothing but this
 // translation unit.
 
-#include "liveTransport/UdpReceiver.h"
+#include "motionConnectorTransport/UdpReceiver.h"
 
 #include "PollTimeout.h"
 
-#include "liveTransport/Diagnostics.h"
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/Diagnostics.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <algorithm>
 #include <chrono>
@@ -41,7 +41,7 @@
 #include <unistd.h>
 #endif
 
-namespace liveTransport
+namespace openstrata::connectors::transport
 {
 
 namespace
@@ -348,7 +348,7 @@ ReadReceiveBuffer(SocketHandle handle)
 } // namespace
 
 // `TimeoutToMilliseconds` and `ClassifyPollWakeUp` live in PollTimeout.h, where
-// a unit test can reach them — the debt OSC-1 recorded and could not pay from
+// a unit test can reach them — the debt usd-vrm-plugins' OSC-1 recorded and could not pay from
 // inside a single adapter. `FormatSeconds` is Diagnostics.h's, so a silence
 // report and the diagnostic line an adapter turns it into cannot disagree about
 // how a duration is spelled.
@@ -854,4 +854,4 @@ DatagramQueue::ResetStats()
     _stats = DatagramQueueStats();
 }
 
-} // namespace liveTransport
+} // namespace openstrata::connectors::transport
