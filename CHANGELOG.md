@@ -18,6 +18,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   names: `motionConnectorTransport_pollTimeout`, `_diagnostics`,
   `_packetCapture`, `_boundaries`. The package is the installed-consumer lane's
   first row.
+- **`motionConnectorOsc`, imported from `usd-vrm-plugins`' `osc` with its
+  history** (MIG-4, its second identity). The OSC 1.0 wire format, unchanged
+  in behaviour, under `openstrata::connectors::osc`. Its edge set is empty, the
+  transport's included, and its boundary check refuses address literals in its
+  tests as well as its sources. New CTest names: `motionConnectorOsc_oscPacket`,
+  `_boundaries`. The package is the installed-consumer lane's second row.
 - **The rendered `ost` workflow and the graph cell**, which the scaffold could
   not carry: the first member is what lets `ost` 0.22.10's graph step pass.
 

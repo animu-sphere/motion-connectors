@@ -44,8 +44,8 @@
 #   * workspace-graph-pr: the WORKSPACE.md §2 dependency gate
 #     (`ost plugin test --workspace --graph-only`), before anything builds.
 #   * workspace-pr-{windows,macos-arm64,linux}: the root CMake tree and its
-#     CTest suite -- motionConnectorTransport's unit and boundary tests, the
-#     docs check and its self-test, and the installed-consumer lane
+#     CTest suite -- motionConnectorTransport's and motionConnectorOsc's unit
+#     and boundary tests, the docs check and its self-test, and the installed-consumer lane
 #     (workspace_installed_consumer), which installs the tree and configures a
 #     consumer outside the repository.
 schema: 1

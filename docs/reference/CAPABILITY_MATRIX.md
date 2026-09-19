@@ -9,8 +9,9 @@ nothing implemented. The "Implemented elsewhere" column says where the
 behaviour exists today, before it moves here; it is not a claim about this
 repository.
 
-Status (2026-09-19): **the transport is implemented** (`motionConnectorTransport`,
-imported from `usd-vrm-plugins`); no connector is.
+Status (2026-09-19): **the transport and the OSC wire format are
+implemented** (`motionConnectorTransport`, `motionConnectorOsc`, imported from
+`usd-vrm-plugins`); no connector is.
 
 ## 1. Contract
 
@@ -24,7 +25,7 @@ imported from `usd-vrm-plugins`); no connector is.
 | The poll timeout mapping and wake-up predicate; the diagnostic vehicle | supported — `motionConnectorTransport_pollTimeout`, `_diagnostics` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
 | UDP receive and the opt-in datagram queue on a socket | — the code is here; no suite here opens a socket, and the socket suites arrive with the connectors | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | `usd-vrm-plugins` adapter suites (`*_udpReceiverTruncation`) | v0.1.0 |
 | Replay of a capture through a connector | — | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | `usd-vrm-plugins` per adapter | v0.1.0 |
-| OSC 1.0 wire format | — | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | `usd-vrm-plugins` `osc` | v0.1.0 |
+| OSC 1.0 wire format: packets, nested bundles in wire order, type tags, arguments, a refusal naming the byte | supported — `motionConnectorOsc_oscPacket` | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | — (imported 2026-09-19) | v0.1.0 |
 | `TrackerObservation`, assignment, tracker solve | — | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | `usd-vrm-plugins` `motionTracking` | v0.1.0 |
 
 ## 2. Sources

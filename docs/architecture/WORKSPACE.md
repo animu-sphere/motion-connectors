@@ -7,8 +7,9 @@ them and to the rest of the ecosystem, and the invariants every change keeps.
 first, in its own pull request**. It is never made through a README, a roadmap
 entry or code.
 
-Status (2026-09-19): **contract adopted; the first library imported.** The
-build and CI tree holds `motionConnectorTransport`. Every other identity below
+Status (2026-09-19): **contract adopted; the two leaf libraries imported.**
+The build and CI tree holds `motionConnectorTransport` and
+`motionConnectorOsc`. Every other identity below
 is *reserved* until the change that creates it lands, and its row then says
 so. The shape follows
 the design
@@ -24,7 +25,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | --- | --- | --- | --- | --- |
 | `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | reserved |
 | `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | imported 2026-09-19, with its history; namespace `openstrata::connectors::transport` |
-| `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | reserved |
+| `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | imported 2026-09-19, with its history; namespace `openstrata::connectors::osc` |
 | `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | reserved |
 | `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | reserved |
 | `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | reserved |
