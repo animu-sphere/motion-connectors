@@ -24,8 +24,9 @@
 # usd-vrm-plugins' motionRuntime suite hit this first.
 set(_transport_assertions $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
-# The debt usd-vrm-plugins' OSC-1 recorded: the poll timeout mapping and the wake-up predicate,
-# neither of which a socket-owning suite can produce on demand.
+# The debt usd-vrm-plugins' OSC-1 recorded: the poll timeout mapping and the
+# wake-up predicate, neither of which a socket-owning suite can produce on
+# demand.
 add_executable(motionConnectorTransport_pollTimeout_tests test_poll_timeout.cpp)
 # src/ is on this target's include path rather than the library's PUBLIC one:
 # PollTimeout.h is internal and is not installed, and a consumer that could
@@ -71,9 +72,9 @@ add_test(NAME motionConnectorTransport_packetCapture
 if(MOTIONCONNECTORS_TEST_PYTHON)
     # Source *and* binary. A check whose library reaches motionCore's Gf value
     # types has to allow the OpenUSD libraries three toolchains disagree about
-    # recording (usd-vrm-plugins' motionBvh check measured it). Here the edge set is empty, so the binary half has
-    # no allowlist and no platform variance to survive: no `usd_*` import may
-    # appear, on any of the three.
+    # recording (usd-vrm-plugins' motionBvh check measured it). Here the edge
+    # set is empty, so the binary half has no allowlist and no platform variance
+    # to survive: no `usd_*` import may appear, on any of the three.
     add_test(NAME motionConnectorTransport_boundaries
         COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
             "${CMAKE_CURRENT_SOURCE_DIR}/check_boundaries.py"

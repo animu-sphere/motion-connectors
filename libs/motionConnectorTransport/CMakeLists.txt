@@ -73,13 +73,13 @@ target_include_directories(motionConnectorTransport
 
 # The platform's own transport and threading primitives, which are not a
 # dependency direction: WORKSPACE.md §2 constrains which libraries of the
-# ecosystem this leaf may reach, and its answer there is "none". `tests/check_boundaries.py`
-# allows exactly these two names and nothing else, so the gate still fails on a
-# library edge.
+# ecosystem this leaf may reach, and its answer there is "none".
+# `tests/check_boundaries.py` allows exactly these two names and nothing else,
+# so the gate still fails on a library edge.
 #
 # Threads arrives with `DatagramQueue`, whose mutex is the whole of this
-# library's answer to the threading question UdpReceiver.h states. libstdc++ needs the
-# link even for a std::mutex that is never contended.
+# library's answer to the threading question UdpReceiver.h states. libstdc++
+# needs the link even for a std::mutex that is never contended.
 if(WIN32)
     target_link_libraries(motionConnectorTransport PUBLIC ws2_32)
 else()
