@@ -10,7 +10,10 @@
 # 0.22.10 every rendered workspace job runs
 # `ost plugin test --workspace --graph-only`, and that refuses a workspace with
 # no member, so the scaffold committed this contract without its workflow; the
-# first member is what made it renderable.
+# first member is what made it renderable. 0.23.0 closed that: an explicitly
+# empty workspace now validates as a zero-member graph, so the next repository
+# to start empty renders its CI on day one. This one has had members since
+# 2026-09-19, so nothing here changes.
 #
 # Lanes: one, `pull_request`, on GitHub-hosted runners. Each runner bootstraps
 # the pinned `ost` below and pulls the runtime SDK from its OCI reference.
@@ -21,7 +24,14 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is usd-motion-plugins' and usd-mmd-plugins' (0.22.10).
+# `ost` pin is 0.23.0 (2026-09-20), re-pinned across the ecosystem together
+# with usd-motion-plugins and usd-vrm-plugins. It is taken for what it adds,
+# not because it is current: `requires.libraries` can name a digest-pinned
+# library artifact from another repository, and every rendered job pulls it
+# (`ost library pull`) before it builds. This repository's remaining imports --
+# motionTracking and the three adapters -- all link usd-motion-plugins'
+# motionCore, so that edge is what they were waiting for (usd-vrm-plugins'
+# ost report 41). The runtime leaves below do not move.
 #
 #   NOT `core` leaves: they are built --no-imaging, and no connector needs
 #   anything from imaging -- but the `gl`/`metal` leaves are the ones the rest
@@ -52,7 +62,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.22.10"
+    version: "0.23.0"
     repository: animu-sphere/open-strata
 
 runners:
