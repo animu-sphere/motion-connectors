@@ -61,7 +61,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **The `ost` pin is 0.23.1**, re-pinned across the ecosystem together with
+- **The `ost` pin is 0.23.2**, re-pinned across the ecosystem together with
   `usd-motion-plugins` and `usd-vrm-plugins`, and the workflow re-rendered from
   it. `requires.libraries` can name a digest-pinned library artifact from
   another repository now, and every rendered job runs `ost library pull` before
@@ -75,6 +75,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ost plugin build` apply to that same prefix, so this repository's hosted
   Linux and Windows lanes went red on the pin bump alone. Measured, reported
   as `usd-vrm-plugins`' ost report 42 and fixed upstream the same day.
+
+  0.23.2 then came out of **this repository's own first import**: the root
+  `ost build` did not compose the external library artifacts a member
+  declares, so `motionConnectorTracking` built through `ost library build` and
+  the workspace could not configure. Reported as ost report 43 and fixed
+  upstream; this repository is the first that needed it.
 
 - **The documentation baseline**, with no code:
   - the design policy, accepted on 2026-09-19. Its §46 records how it was

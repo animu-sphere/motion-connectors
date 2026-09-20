@@ -24,7 +24,7 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is 0.23.1 (2026-09-20), re-pinned across the ecosystem together
+# `ost` pin is 0.23.2 (2026-09-21), re-pinned across the ecosystem together
 # with usd-motion-plugins and usd-vrm-plugins. It is taken for what it adds,
 # not because it is current: `requires.libraries` can name a digest-pinned
 # library artifact from another repository, and every rendered job pulls it
@@ -39,7 +39,11 @@
 # to that same prefix, and a generated job's order is pull -> validate ->
 # build, so this repository's hosted Linux and Windows lanes went red on the
 # pin bump alone (usd-vrm-plugins' ost report 42, measured and fixed the same
-# day). 0.23.1 applies the repair before the claim.
+# day). 0.23.1 applies the repair before the claim, and 0.23.2 -- reported
+# from this repository's own first import -- makes the ROOT build compose the
+# external library artifacts a member declares, without which a workspace
+# consuming a digest-pinned library from another repository cannot configure
+# at all (report 43). This repository is the first to need that.
 #
 #   NOT `core` leaves: they are built --no-imaging, and no connector needs
 #   anything from imaging -- but the `gl`/`metal` leaves are the ones the rest
@@ -70,7 +74,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.23.1"
+    version: "0.23.2"
     repository: animu-sphere/open-strata
 
 runners:
