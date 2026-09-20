@@ -163,12 +163,60 @@ def in_range(version: str, lower: str, upper: str) -> bool:
 
 
 def check_ranges(root: pathlib.Path, manifest: pathlib.Path, version: str) -> list[str]:
-    """Every sibling this workspace requires is built at VERSION, so every
-    required range has to admit it -- or the release cannot resolve itself."""
+    """Every SIBLING this workspace requires is built at VERSION, so every
+    required range has to admit it -- or the release cannot resolve itself.
+
+    A dependency carrying an `artifact:` pin is not a sibling: it names a
+    library from another repository, at that repository's version, and this
+    one's VERSION says nothing about it. `motionConnectorTracking` requires
+    `motionCore >=0.5,<0.6` while this workspace is 0.1.0, and both are right.
+    So the ranges under an `artifact:` block are skipped, and the rest -- which
+    are siblings -- are checked exactly as before.
+    """
     where = manifest.relative_to(root).as_posix()
+    text = manifest.read_text(encoding="utf-8")
     return [f"{where}: required range >={lower},<{upper} excludes {version}"
-            for lower, upper in REQUIRED_RANGE.findall(manifest.read_text(encoding="utf-8"))
+            for lower, upper in REQUIRED_RANGE.findall(sibling_ranges_only(text))
             if not in_range(version, lower, upper)]
+
+
+def sibling_ranges_only(text: str) -> str:
+    """`text` with every externally pinned dependency's range removed.
+
+    A dependency block is externally pinned when it carries `artifact:`. The
+    range line precedes it, so the removal walks the block: from a `- id:` line
+    to the next one at the same indentation, dropping the whole block when an
+    `artifact:` key appears inside it.
+    """
+    lines = text.splitlines()
+    kept: list[str] = []
+    block: list[str] | None = None
+    indent = 0
+
+    def flush() -> None:
+        nonlocal block
+        if block is not None and not any(
+                line.strip().startswith("artifact:") for line in block):
+            kept.extend(block)
+        block = None
+
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith("- id:"):
+            flush()
+            block = [line]
+            indent = len(line) - len(stripped)
+            continue
+        if block is not None:
+            bare = line.strip()
+            continues = not bare or (len(line) - len(line.lstrip())) > indent
+            if continues:
+                block.append(line)
+                continue
+            flush()
+        kept.append(line)
+    flush()
+    return "\n".join(kept)
 
 
 def check_mirrors(root: pathlib.Path) -> list[str]:

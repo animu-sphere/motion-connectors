@@ -8,6 +8,36 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorTracking`, imported from `usd-vrm-plugins`' `motionTracking`
+  with its history** (that repository's MIG-4). Tracker regions, assignment and
+  the tracker solve, under `openstrata::connectors::tracking`. New CTest names:
+  `motionConnectorTracking_trackerAssignment`, `_trackerSolve`, `_boundaries`.
+  - **It is the first member here to consume `usd-motion-plugins`**, and the
+    first declared cross-repository edge in this repository: its
+    `requires.libraries` pins `motionCore >=0.5,<0.6` by archive digest per
+    target, with the `oci://` source from that release's generated pin table.
+    In `usd-vrm-plugins` the same edge existed in CMake and in no descriptor,
+    so the declaration is a correction as well as a move.
+  - One assertion changed meaning rather than spelling: the solve stamps no
+    provenance, which used to be an absent optional and is now the default
+    `SourceMetadata`, because the consumed `motionCore` makes a pose's
+    `metadata` always present.
+  - The boundary check is rewritten for this repository's edges: it refuses
+    every sibling connector and every `usd-motion-plugins` library except
+    `motionCore`. Its exception for this library's own name ends in
+    `(?![A-Za-z0-9])` rather than ``, because under `IGNORECASE` a word
+    boundary lets `MOTIONCONNECTORTRACKING_API` through it.
+
+### Fixed
+
+- **`scripts/check_docs.py` no longer reads an external pin as a sibling's
+  version.** Every required range had to admit this repository's `VERSION`,
+  which is right for a sibling and wrong for a library from another
+  repository: `motionCore >=0.5,<0.6` is `usd-motion-plugins`' version while
+  this workspace is 0.1.0, and both are correct. Ranges inside a dependency
+  carrying an `artifact:` pin are skipped; sibling ranges are checked exactly
+  as before, which a mutation confirms.
+
 - **`motionConnectorTransport`, imported from `usd-vrm-plugins`' `liveTransport`
   with its history** (that repository's MIG-4, its first identity). The UDP
   receiver, the opt-in datagram queue, the packet-capture file format and the
