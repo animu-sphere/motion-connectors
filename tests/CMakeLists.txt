@@ -39,12 +39,26 @@ if(CMAKE_GENERATOR MATCHES "Ninja|Makefiles")
         --make-program "${CMAKE_MAKE_PROGRAM}"
         --cxx-compiler "${CMAKE_CXX_COMPILER}")
 endif()
+# Packages this workspace consumes from another repository are materialized
+# outside the tree and put on CMAKE_PREFIX_PATH by `ost`. A consumer of an
+# installed motionConnectorTracking has to find motionCore the same way, so the
+# prefixes this configure was given travel to it -- forwarded rather than
+# rediscovered, so the lane cannot disagree with the build about where the
+# package came from.
+set(_consumer_prefixes "")
+foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
+    if(_prefix MATCHES "external-libraries")
+        list(APPEND _consumer_prefixes --external-prefix "${_prefix}")
+    endif()
+endforeach()
+
 add_test(NAME workspace_installed_consumer
     COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
         "${PROJECT_SOURCE_DIR}/scripts/check_installed_consumer.py"
         --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>"
         --usd-root "${_usd_root}"
+        ${_consumer_prefixes}
         ${_consumer_toolchain})
 set_tests_properties(workspace_installed_consumer PROPERTIES
     LABELS "installed-consumer")

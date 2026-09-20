@@ -97,6 +97,11 @@ def main() -> int:
     parser.add_argument("--build-dir", required=True, type=pathlib.Path)
     parser.add_argument("--config", default="Release")
     parser.add_argument("--usd-root", required=True, type=pathlib.Path)
+    parser.add_argument("--external-prefix", action="append", default=[],
+                        type=pathlib.Path,
+                        help="a package this workspace consumes from another "
+                             "repository, materialized outside the tree; the "
+                             "build was given the same prefixes")
     parser.add_argument("--generator")
     parser.add_argument("--make-program")
     parser.add_argument("--cxx-compiler")
@@ -134,9 +139,16 @@ def main() -> int:
         source = work / "consumer-src"
         shutil.copytree(CONSUMER, source)
         build = work / "consumer-build"
+        # The consumer sees the install prefix, OpenUSD, and every package
+        # this workspace consumes from another repository. The last of those
+        # is not optional: an installed motionConnectorTracking names
+        # motionCore, and a consumer that cannot find it cannot link -- which
+        # is exactly what a downstream consumer of THIS repository will face.
+        prefix_path = ";".join(
+            [prefix.as_posix(), args.usd_root.as_posix()]
+            + [external.as_posix() for external in args.external_prefix])
         configure = ["cmake", "-S", source, "-B", build,
-                     f"-DCMAKE_PREFIX_PATH={prefix.as_posix()};"
-                     f"{args.usd_root.as_posix()}",
+                     f"-DCMAKE_PREFIX_PATH={prefix_path}",
                      f"-DMOTIONCONNECTORS_CONSUMER_VERSION={major_minor}",
                      f"-DCMAKE_BUILD_TYPE={args.config}"]
         if args.generator:
