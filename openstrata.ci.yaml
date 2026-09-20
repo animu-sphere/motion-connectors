@@ -24,7 +24,7 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is 0.23.0 (2026-09-20), re-pinned across the ecosystem together
+# `ost` pin is 0.23.1 (2026-09-20), re-pinned across the ecosystem together
 # with usd-motion-plugins and usd-vrm-plugins. It is taken for what it adds,
 # not because it is current: `requires.libraries` can name a digest-pinned
 # library artifact from another repository, and every rendered job pulls it
@@ -32,6 +32,14 @@
 # motionTracking and the three adapters -- all link usd-motion-plugins'
 # motionCore, so that edge is what they were waiting for (usd-vrm-plugins'
 # ost report 41). The runtime leaves below do not move.
+#
+# 0.23.1 and not 0.23.0, because 0.23.0 could not be adopted: its new
+# `consumer-link` claim in `ost runtime validate` probed the materialized
+# runtime before the relocation `ost configure` and `ost plugin build` apply
+# to that same prefix, and a generated job's order is pull -> validate ->
+# build, so this repository's hosted Linux and Windows lanes went red on the
+# pin bump alone (usd-vrm-plugins' ost report 42, measured and fixed the same
+# day). 0.23.1 applies the repair before the claim.
 #
 #   NOT `core` leaves: they are built --no-imaging, and no connector needs
 #   anything from imaging -- but the `gl`/`metal` leaves are the ones the rest
@@ -62,7 +70,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.23.0"
+    version: "0.23.1"
     repository: animu-sphere/open-strata
 
 runners:

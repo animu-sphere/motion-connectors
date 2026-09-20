@@ -31,7 +31,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **The `ost` pin is 0.23.0**, re-pinned across the ecosystem together with
+- **The `ost` pin is 0.23.1**, re-pinned across the ecosystem together with
   `usd-motion-plugins` and `usd-vrm-plugins`, and the workflow re-rendered from
   it. `requires.libraries` can name a digest-pinned library artifact from
   another repository now, and every rendered job runs `ost library pull` before
@@ -39,6 +39,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   three adapters — all link `usd-motion-plugins`' `motionCore`, so that edge is
   what they were waiting for (`usd-vrm-plugins`' ost report 41). The pinned
   runtime leaves do not move.
+
+  0.23.1 and not 0.23.0: 0.23.0's new `consumer-link` claim probed a
+  materialized runtime before the relocation `ost configure` and
+  `ost plugin build` apply to that same prefix, so this repository's hosted
+  Linux and Windows lanes went red on the pin bump alone. Measured, reported
+  as `usd-vrm-plugins`' ost report 42 and fixed upstream the same day.
 
 - **The documentation baseline**, with no code:
   - the design policy, accepted on 2026-09-19. Its §46 records how it was
