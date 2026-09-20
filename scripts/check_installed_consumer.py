@@ -97,9 +97,21 @@ def main() -> int:
     parser.add_argument("--build-dir", required=True, type=pathlib.Path)
     parser.add_argument("--config", default="Release")
     parser.add_argument("--usd-root", required=True, type=pathlib.Path)
+    parser.add_argument("--external-prefix", action="append", default=[],
+                        type=pathlib.Path,
+                        help="a package this workspace consumes from another "
+                             "repository, materialized outside the tree; the "
+                             "build was given the same prefixes")
     parser.add_argument("--generator")
     parser.add_argument("--make-program")
     parser.add_argument("--cxx-compiler")
+    # The pinned runtime's pxrConfig.cmake names the Python of the machine that
+    # built it, and this consumer configures outside `ost build`, so nothing
+    # pins the Development artifacts for it. The root configure forwards the
+    # three it used (usd-vrm-plugins' ost report 37, its P1).
+    parser.add_argument("--python-executable")
+    parser.add_argument("--python-library")
+    parser.add_argument("--python-include-dir")
     parser.add_argument("--keep", type=pathlib.Path,
                         help="work here instead of a deleted temporary directory")
     args = parser.parse_args()
@@ -134,11 +146,23 @@ def main() -> int:
         source = work / "consumer-src"
         shutil.copytree(CONSUMER, source)
         build = work / "consumer-build"
+        # The consumer sees the install prefix, OpenUSD, and every package
+        # this workspace consumes from another repository. The last of those
+        # is not optional: an installed motionConnectorTracking names
+        # motionCore, and a consumer that cannot find it cannot link -- which
+        # is exactly what a downstream consumer of THIS repository will face.
+        prefix_path = ";".join(
+            [prefix.as_posix(), args.usd_root.as_posix()]
+            + [external.as_posix() for external in args.external_prefix])
         configure = ["cmake", "-S", source, "-B", build,
-                     f"-DCMAKE_PREFIX_PATH={prefix.as_posix()};"
-                     f"{args.usd_root.as_posix()}",
+                     f"-DCMAKE_PREFIX_PATH={prefix_path}",
                      f"-DMOTIONCONNECTORS_CONSUMER_VERSION={major_minor}",
                      f"-DCMAKE_BUILD_TYPE={args.config}"]
+        configure += [f"-D{name}={value}" for name, value in (
+            ("Python3_EXECUTABLE", args.python_executable),
+            ("Python3_LIBRARY", args.python_library),
+            ("Python3_INCLUDE_DIR", args.python_include_dir),
+        ) if value]
         if args.generator:
             configure += ["-G", args.generator]
         if args.make_program:
