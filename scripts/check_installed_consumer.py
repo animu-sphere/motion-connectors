@@ -105,6 +105,13 @@ def main() -> int:
     parser.add_argument("--generator")
     parser.add_argument("--make-program")
     parser.add_argument("--cxx-compiler")
+    # The pinned runtime's pxrConfig.cmake names the Python of the machine that
+    # built it, and this consumer configures outside `ost build`, so nothing
+    # pins the Development artifacts for it. The root configure forwards the
+    # three it used (usd-vrm-plugins' ost report 37, its P1).
+    parser.add_argument("--python-executable")
+    parser.add_argument("--python-library")
+    parser.add_argument("--python-include-dir")
     parser.add_argument("--keep", type=pathlib.Path,
                         help="work here instead of a deleted temporary directory")
     args = parser.parse_args()
@@ -151,6 +158,11 @@ def main() -> int:
                      f"-DCMAKE_PREFIX_PATH={prefix_path}",
                      f"-DMOTIONCONNECTORS_CONSUMER_VERSION={major_minor}",
                      f"-DCMAKE_BUILD_TYPE={args.config}"]
+        configure += [f"-D{name}={value}" for name, value in (
+            ("Python3_EXECUTABLE", args.python_executable),
+            ("Python3_LIBRARY", args.python_library),
+            ("Python3_INCLUDE_DIR", args.python_include_dir),
+        ) if value]
         if args.generator:
             configure += ["-G", args.generator]
         if args.make_program:

@@ -45,6 +45,24 @@ endif()
 # prefixes this configure was given travel to it -- forwarded rather than
 # rediscovered, so the lane cannot disagree with the build about where the
 # package came from.
+# The Python this configure handed OpenUSD, forwarded so the consumer's
+# find_package(pxr) resolves the same one. It cannot find it alone: the pinned
+# runtime's pxrConfig.cmake names the Python of the machine that BUILT it, and
+# a consumer configuring outside `ost build` has no toolchain pinning the three
+# Development variables (usd-vrm-plugins' ost report 37, its P1). Until this
+# import nothing in this lane reached OpenUSD at all -- the transport and the
+# wire format link nothing -- so this is the first configure here that needs
+# it. Only what is set is forwarded: under `ost build` the toolchain sets all
+# three, and a plain configure that found Python by itself needs none.
+foreach(_python_var Python3_EXECUTABLE Python3_LIBRARY Python3_INCLUDE_DIR)
+    if(${_python_var})
+        string(TOLOWER "${_python_var}" _python_arg)
+        string(REPLACE "python3_" "--python-" _python_arg "${_python_arg}")
+        string(REPLACE "_" "-" _python_arg "${_python_arg}")
+        list(APPEND _consumer_toolchain "${_python_arg}" "${${_python_var}}")
+    endif()
+endforeach()
+
 set(_consumer_prefixes "")
 foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
     if(_prefix MATCHES "external-libraries")
