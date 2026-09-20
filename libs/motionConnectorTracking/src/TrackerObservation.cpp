@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "motionTracking/TrackerObservation.h"
+#include "motionConnectorTracking/TrackerObservation.h"
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 std::vector<std::string_view>
@@ -16,4 +16,4 @@ TrackerIdentities(const std::vector<TrackerObservation>& observed)
     return identities;
 }
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

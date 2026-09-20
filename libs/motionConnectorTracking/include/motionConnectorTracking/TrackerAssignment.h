@@ -75,8 +75,8 @@
 // would give one event one adapter's spelling for all of them.
 #pragma once
 
-#include "motionTracking/TrackerRegion.h"
-#include "motionTracking/api.h"
+#include "motionConnectorTracking/TrackerRegion.h"
+#include "motionConnectorTracking/api.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -85,7 +85,7 @@
 #include <string_view>
 #include <vector>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 // One line of an operator's statement: this tracker is on this region.
@@ -122,10 +122,10 @@ enum class UnplacedTrackerPolicy : std::uint8_t
     Count,
 };
 
-MOTIONTRACKING_API std::string_view
+MOTIONCONNECTORTRACKING_API std::string_view
 UnplacedTrackerPolicyName(UnplacedTrackerPolicy policy) noexcept;
 
-MOTIONTRACKING_API std::optional<UnplacedTrackerPolicy>
+MOTIONCONNECTORTRACKING_API std::optional<UnplacedTrackerPolicy>
 ParseUnplacedTrackerPolicy(std::string_view name) noexcept;
 
 // An operator's statement, whole.
@@ -150,7 +150,7 @@ struct TrackerAssignmentSpec
 //
 // `reason` is filled with plain text naming the first failure when it is not
 // null; it is untouched on success.
-MOTIONTRACKING_API bool ValidateTrackerAssignmentSpec(const TrackerAssignmentSpec& spec,
+MOTIONCONNECTORTRACKING_API bool ValidateTrackerAssignmentSpec(const TrackerAssignmentSpec& spec,
                                                       std::string* reason = nullptr);
 
 // Read a statement in the form an operator types:
@@ -164,7 +164,7 @@ MOTIONTRACKING_API bool ValidateTrackerAssignmentSpec(const TrackerAssignmentSpe
 // Returns false with `reason` filled on the first syntax error or on a spec
 // that does not validate — the two are one refusal to a caller, and separating
 // them would offer a spec that parsed and cannot be used.
-MOTIONTRACKING_API bool ParseTrackerAssignmentSpec(std::string_view text,
+MOTIONCONNECTORTRACKING_API bool ParseTrackerAssignmentSpec(std::string_view text,
                                                    TrackerAssignmentSpec* out,
                                                    std::string* reason = nullptr);
 
@@ -203,7 +203,7 @@ enum class TrackerAssignmentRefusal : std::uint8_t
 inline constexpr std::size_t TrackerAssignmentRefusalCount =
     static_cast<std::size_t>(TrackerAssignmentRefusal::Count);
 
-MOTIONTRACKING_API std::string_view
+MOTIONCONNECTORTRACKING_API std::string_view
 TrackerAssignmentRefusalName(TrackerAssignmentRefusal refusal) noexcept;
 
 // One region bound to one observed tracker.
@@ -261,11 +261,11 @@ struct TrackerAssignment
     }
 
     // The observed tracker bound to `region`, or nullopt when none is.
-    MOTIONTRACKING_API std::optional<std::size_t> ObservedFor(TrackerRegion region) const;
+    MOTIONCONNECTORTRACKING_API std::optional<std::size_t> ObservedFor(TrackerRegion region) const;
 
     // The region an observed tracker was bound to, or nullopt when it is
     // unplaced or out of range.
-    MOTIONTRACKING_API std::optional<TrackerRegion> RegionFor(std::size_t observedIndex) const;
+    MOTIONCONNECTORTRACKING_API std::optional<TrackerRegion> RegionFor(std::size_t observedIndex) const;
 };
 
 // Assign `spec` to the trackers an observation carries.
@@ -281,7 +281,7 @@ struct TrackerAssignment
 // nothing placed. It runs outermost-first — a statement that is not a statement
 // says nothing about a rig, and an observation that is not one is not addressed
 // by any check below it.
-MOTIONTRACKING_API TrackerAssignment AssignTrackers(const TrackerAssignmentSpec& spec,
+MOTIONCONNECTORTRACKING_API TrackerAssignment AssignTrackers(const TrackerAssignmentSpec& spec,
                                                     const std::vector<std::string_view>& observed);
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

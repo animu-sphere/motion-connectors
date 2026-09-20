@@ -15,4 +15,5 @@ profile = "usd"
 members = [
     "libs/motionConnectorTransport",
     "libs/motionConnectorOsc",
+    "libs/motionConnectorTracking",
 ]

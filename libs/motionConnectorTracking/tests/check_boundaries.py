@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Enforce motionTracking's leaf boundary, which is now two boundaries.
+"""Enforce motionConnectorTracking's leaf boundary, which is now two boundaries.
 
 WORKSPACE.md §2 gave this library an empty edge set and VRC-5 gave it exactly
 one line: `motionCore`, taken by the **solve** and by nothing else. That is not
@@ -9,13 +9,13 @@ lives here, per file:
 
 * the **assignment half** (`TrackerRegion`, `TrackerAssignment`, and their
   suite) keeps every rule it had. No workspace name, `motionCore` included; no
-  OpenUSD in any form, not even a `Gf` value type; no `HumanBone` and no
-  `motion::` qualifier. Assignment maps one vocabulary this library owns onto
+  OpenUSD in any form, not even a `Gf` value type; no `HumanJoint` and no
+  `openstrata::motion::` qualifier. Assignment maps one vocabulary this library owns onto
   another, and the day it names a bone it has become a lookup.
 * the **solve half** (`TrackerObservation`, `TrackerSolve`, and their suite) may
   name `motionCore` and OpenUSD's `Gf` value types, and nothing else: no stage,
   no `Sdf`, no `Plug`, no registration macro, and no other workspace library.
-  A solve produces a `HumanoidPose`, which is what the edge exists for.
+  A solve produces a `MotionPose`, which is what the edge exists for.
 
 **A file in neither half is an error**, and that is the rule that keeps this
 check honest as the library grows. Adding a file to the solve half is a
@@ -25,7 +25,7 @@ rules by existing is how the split would end.
 Three rules apply to every file whatever its half:
 
 * **the alias, in either direction.** `TrackerRegion` may never *be* a
-  `HumanBone`. This is the one prohibition in §2 that forbids a `typedef`, and
+  `HumanJoint`. This is the one prohibition in §2 that forbids a `typedef`, and
   it is the failure with no link line to fail on — the enum copied by hand, or
   the two names tied together with `using`. The solve half may name both
   vocabularies, so it is the half where the alias is actually reachable.
@@ -131,12 +131,22 @@ _SOLVE_HALF = frozenset({
 # working.
 _NEITHER_HALF = frozenset({"api.h"})
 
-# Every workspace library and bundle. `motionCore` is absent because the solve
-# half may name it; the assignment half's own pattern below adds it back.
+# Every library of this workspace and of the two it sits between. `motionCore`
+# is absent because the solve half may name it; the assignment half's own
+# pattern below adds it back.
+#
+# The exception for this library's own name ends in `(?![A-Za-z0-9])` and not
+# in `\b`, because under IGNORECASE a word boundary lets
+# `MOTIONCONNECTORTRACKING_API` through: `_` is a word character, so the name
+# followed by `_API` still satisfies `\b` and the exception swallows a hit it
+# was not written for.
 _FORBIDDEN_WORKSPACE = re.compile(
-    r"\b(?:motionRuntime|motionSource|motionBvh|vrmRetarget|"
-    r"vrmContainer|vrmSchema|usdVrm\w*|execMotion|execVrm|ExecIr\w*|"
-    r"vrmAdapter\w*|liveTransport)\b|\bosc::|\bosc/",
+    r"\b(?:motionConnector(?!Tracking(?![A-Za-z0-9]))\w+|"
+    r"motionSampling|motionRecording|motionRetarget|motionUsd|"
+    r"motionSource|motionBvh|motionRuntime|execMotion|"
+    r"liveTransport|vrmRetarget|vrmContainer|vrmSchema|usdVrm\w*|execVrm|"
+    r"ExecIr\w*|vrmAdapter\w*)\b|"
+    r"\bconnectors::(?!tracking(?![A-Za-z0-9]))\w+",
     re.IGNORECASE)
 
 _FORBIDDEN_MOTIONCORE = re.compile(r"\bmotionCore\b", re.IGNORECASE)
@@ -180,7 +190,7 @@ _FORBIDDEN_ADDRESS = re.compile(
 _FORBIDDEN_CODE = re.compile(r"\bVRM_[A-Z0-9]+_[A-Z0-9_]+\b")
 
 # `motionCore`'s humanoid vocabulary, arriving as a copy rather than as an edge.
-# Every name here is a `HumanBone` enumerator that is NOT a `TrackerRegion`, so
+# Every name here is a `HumanJoint` enumerator that is NOT a `TrackerRegion`, so
 # the pattern cannot fire on this library's own eleven regions: `Head`, `Chest`
 # and `Hips` are spelled in both vocabularies and are deliberately absent from
 # this list — a region named `Chest` is the whole point, and refusing it would
@@ -196,7 +206,7 @@ _BONE_ONLY_NAMES = (
     "ThumbMetacarpal", "IndexProximal", "MiddleProximal",
 )
 _FORBIDDEN_BONE = re.compile(
-    r"\b(?:HumanBone|motion::|" +
+    r"\b(?:HumanJoint|openstrata::motion::|" +
     "|".join(re.escape(n) for n in _BONE_ONLY_NAMES) + r")\b")
 
 # The alias, in either direction and in either spelling. A `using` names its new
@@ -205,7 +215,7 @@ _FORBIDDEN_BONE = re.compile(
 _ALIAS_USING = re.compile(r"\busing\s+(\w+)\s*=\s*([^;]{0,200});")
 _ALIAS_TYPEDEF = re.compile(r"\btypedef\s+([^;]{0,200}?)\s+(\w+)\s*;")
 _REGION_NAME = re.compile(r"\bTrackerRegion\b")
-_BONE_NAME = re.compile(r"\b(?:HumanBone|motion::HumanBone)\b")
+_BONE_NAME = re.compile(r"\b(?:HumanJoint|openstrata::motion::HumanJoint)\b")
 
 
 def _alias_between_vocabularies(code: str) -> str | None:
@@ -238,7 +248,7 @@ def _report(errors: list[str]) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print("motionTracking boundary check passed")
+    print("motionConnectorTracking boundary check passed")
     return 0
 
 
@@ -255,12 +265,12 @@ def main() -> int:
 
     everywhere = (
         (_FORBIDDEN_WORKSPACE,
-         "motionTracking's edge set is `motionCore` alone; this names another "
+         "motionConnectorTracking's edge set is `motionCore` alone; this names another "
          "workspace library"),
         (_FORBIDDEN_PRODUCER,
-         "a producer, protocol or SDK name is forbidden in motionTracking"),
+         "a producer, protocol or SDK name is forbidden in motionConnectorTracking"),
         (_FORBIDDEN_ADDRESS,
-         "an address literal is forbidden in motionTracking, tests included"),
+         "an address literal is forbidden in motionConnectorTracking, tests included"),
         # This rule overlaps the producer one completely -- every adapter code
         # here is spelled `VRM_...` -- and both fire, because the scan below
         # appends one error per matching pattern and has no first-match-wins.
@@ -268,17 +278,17 @@ def main() -> int:
         # nothing: a code injection reports two reasons rather than one, which
         # is more information than a reader needs and none that is wrong.
         (_FORBIDDEN_CODE,
-         "an adapter's diagnostic code is forbidden in motionTracking; a "
+         "an adapter's diagnostic code is forbidden in motionConnectorTracking; a "
          "refusal here names the event and the caller supplies the code"),
     )
     assignment_only = (
         (_FORBIDDEN_MOTIONCORE,
          "the assignment half takes no edge at all; `motionCore` is the "
          "solve's"),
-        (_FORBIDDEN_USD, "OpenUSD is forbidden in motionTracking's assignment "
+        (_FORBIDDEN_USD, "OpenUSD is forbidden in motionConnectorTracking's assignment "
                          "half; an assignment is two names and an index"),
         (_FORBIDDEN_BONE,
-         "a humanoid bone is forbidden in motionTracking's assignment half; a "
+         "a humanoid bone is forbidden in motionConnectorTracking's assignment half; a "
          "region is a mount point and a bone is a joint, and the alias is what "
          "would turn assignment into a lookup"),
     )
@@ -326,14 +336,14 @@ def main() -> int:
     # nothing and waits for nothing.
     cmake = re.sub(r"#[^\n]*", "",
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
-    allowed_link = {"motiontracking", "motioncore::motioncore", "public",
+    allowed_link = {"motionconnectortracking", "motioncore::motioncore", "public",
                     "private", "interface"}
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
                                 re.DOTALL):
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "motionTracking may link only motionCore; "
+                    "motionConnectorTracking may link only motionCore; "
                     f"CMakeLists.txt links `{token}`")
 
     # `find_package` is how an edge arrives without a link line, so it is
@@ -343,7 +353,7 @@ def main() -> int:
     for package in re.findall(r"find_package\s*\(\s*([A-Za-z0-9_]+)", cmake):
         if package not in {"Python3", "pxr", "motionCore"}:
             errors.append(
-                "motionTracking's allowed edge set is `motionCore`; "
+                "motionConnectorTracking's allowed edge set is `motionCore`; "
                 f"CMakeLists.txt calls find_package({package})")
 
     if binary is None:
@@ -370,7 +380,7 @@ def main() -> int:
             "types and never its stage, composition or registration half")
     for match in sorted(set(_FORBIDDEN_BINARY_NEIGHBOUR.findall(dependencies))):
         errors.append(
-            f"{binary.name} imports {match}; motionTracking links motionCore "
+            f"{binary.name} imports {match}; motionConnectorTracking links motionCore "
             "and nothing else in this workspace")
 
     return _report(errors)

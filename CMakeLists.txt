@@ -84,6 +84,11 @@ endif()
 # built whenever this tree is.
 add_subdirectory("libs/motionConnectorTransport")
 add_subdirectory("libs/motionConnectorOsc")
+# The tracker layer links usd-motion-plugins' motionCore, which is not in this
+# tree: its descriptor pins the published artifact per target and `ost` puts it
+# on CMAKE_PREFIX_PATH before the build, so the find_package below resolves
+# against a materialized package rather than a sibling.
+add_subdirectory("libs/motionConnectorTracking")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)

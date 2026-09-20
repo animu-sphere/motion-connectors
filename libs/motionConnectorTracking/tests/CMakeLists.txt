@@ -14,34 +14,34 @@
 set(_motiontracking_assertions
     $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
-add_executable(motionTracking_trackerAssignment_tests
+add_executable(motionConnectorTracking_trackerAssignment_tests
     test_tracker_assignment.cpp)
-target_link_libraries(motionTracking_trackerAssignment_tests
-    PRIVATE motionTracking::motionTracking)
-target_compile_options(motionTracking_trackerAssignment_tests
+target_link_libraries(motionConnectorTracking_trackerAssignment_tests
+    PRIVATE motionConnectorTracking::motionConnectorTracking)
+target_compile_options(motionConnectorTracking_trackerAssignment_tests
     PRIVATE ${_motiontracking_assertions})
 if(MSVC)
     # The headers cite contract sections by their `§` sign, and MSVC reads
     # source in the *system* code page unless told otherwise -- so a
     # Japanese-Windows build warns C4819 on every include without this.
-    target_compile_options(motionTracking_trackerAssignment_tests PRIVATE /utf-8)
+    target_compile_options(motionConnectorTracking_trackerAssignment_tests PRIVATE /utf-8)
 endif()
-add_test(NAME motionTracking_trackerAssignment
-    COMMAND motionTracking_trackerAssignment_tests)
+add_test(NAME motionConnectorTracking_trackerAssignment
+    COMMAND motionConnectorTracking_trackerAssignment_tests)
 
-add_executable(motionTracking_trackerSolve_tests test_tracker_solve.cpp)
-target_link_libraries(motionTracking_trackerSolve_tests
-    PRIVATE motionTracking::motionTracking)
-target_compile_options(motionTracking_trackerSolve_tests
+add_executable(motionConnectorTracking_trackerSolve_tests test_tracker_solve.cpp)
+target_link_libraries(motionConnectorTracking_trackerSolve_tests
+    PRIVATE motionConnectorTracking::motionConnectorTracking)
+target_compile_options(motionConnectorTracking_trackerSolve_tests
     PRIVATE ${_motiontracking_assertions})
 if(MSVC)
-    target_compile_options(motionTracking_trackerSolve_tests PRIVATE /utf-8)
+    target_compile_options(motionConnectorTracking_trackerSolve_tests PRIVATE /utf-8)
 endif()
-add_test(NAME motionTracking_trackerSolve
-    COMMAND motionTracking_trackerSolve_tests)
+add_test(NAME motionConnectorTracking_trackerSolve
+    COMMAND motionConnectorTracking_trackerSolve_tests)
 
 set(_motiontracking_tests
-    motionTracking_trackerAssignment motionTracking_trackerSolve)
+    motionConnectorTracking_trackerAssignment motionConnectorTracking_trackerSolve)
 
 if(WIN32)
     if(TARGET gf)
@@ -76,9 +76,9 @@ if(Python3_Interpreter_FOUND)
     # The solve suite is the binary argument, because it is the one whose
     # imports are worth a question: it links the same static library the other
     # does, and it is the executable that actually pulls the Gf entry points in.
-    add_test(NAME motionTracking_boundaries
+    add_test(NAME motionConnectorTracking_boundaries
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/check_boundaries.py"
             "${CMAKE_CURRENT_SOURCE_DIR}/.."
-            "$<TARGET_FILE:motionTracking_trackerSolve_tests>")
+            "$<TARGET_FILE:motionConnectorTracking_trackerSolve_tests>")
 endif()

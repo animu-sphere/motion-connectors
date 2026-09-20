@@ -14,8 +14,8 @@
 // generic contract whose fixtures are one source's numbering is a generic
 // contract in name only. `t1`/`t2`/`t3` are what a device could be called and
 // what none of them is.
-#include "motionTracking/TrackerAssignment.h"
-#include "motionTracking/TrackerRegion.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerRegion.h"
 
 #include <cassert>
 #include <cstdio>
@@ -26,22 +26,24 @@
 namespace
 {
 
-using motionTracking::AssignTrackers;
-using motionTracking::ParseTrackerAssignmentSpec;
-using motionTracking::ParseTrackerRegion;
-using motionTracking::ParseUnplacedTrackerPolicy;
-using motionTracking::TrackerAssignment;
-using motionTracking::TrackerAssignmentRefusal;
-using motionTracking::TrackerAssignmentRefusalCount;
-using motionTracking::TrackerAssignmentRefusalName;
-using motionTracking::TrackerAssignmentSpec;
-using motionTracking::TrackerRegion;
-using motionTracking::TrackerRegionCount;
-using motionTracking::TrackerRegionName;
-using motionTracking::TrackerRegionStatement;
-using motionTracking::UnplacedTrackerPolicy;
-using motionTracking::UnplacedTrackerPolicyName;
-using motionTracking::ValidateTrackerAssignmentSpec;
+namespace tracking = openstrata::connectors::tracking;
+
+using tracking::AssignTrackers;
+using tracking::ParseTrackerAssignmentSpec;
+using tracking::ParseTrackerRegion;
+using tracking::ParseUnplacedTrackerPolicy;
+using tracking::TrackerAssignment;
+using tracking::TrackerAssignmentRefusal;
+using tracking::TrackerAssignmentRefusalCount;
+using tracking::TrackerAssignmentRefusalName;
+using tracking::TrackerAssignmentSpec;
+using tracking::TrackerRegion;
+using tracking::TrackerRegionCount;
+using tracking::TrackerRegionName;
+using tracking::TrackerRegionStatement;
+using tracking::UnplacedTrackerPolicy;
+using tracking::UnplacedTrackerPolicyName;
+using tracking::ValidateTrackerAssignmentSpec;
 
 TrackerRegionStatement
 Statement(std::string tracker, TrackerRegion region)
@@ -471,6 +473,6 @@ main()
     TestAStatementThatIsNotOneIsRefusedBeforeAnyRig();
     TestAnObservationThatIsNotOneIsRefusedRatherThanHalfBound();
     TestTheTextFormIsWhatAnOperatorTypes();
-    std::puts("motionTracking tracker assignment tests passed");
+    std::puts("motionConnectorTracking tracker assignment tests passed");
     return 0;
 }

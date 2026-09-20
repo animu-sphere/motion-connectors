@@ -1,6 +1,6 @@
-# motionTracking
+# motionConnectorTracking
 
-`motionTracking` answers two questions in the order they have to be asked:
+`motionConnectorTracking` answers two questions in the order they have to be asked:
 **which tracker is on which body region**, and **what that means for a
 skeleton**. It never answers the first by way of the second, which is the whole
 reason it is one library and not a header in `motionCore`.
@@ -19,7 +19,7 @@ them is how one protocol's semantics leak into the motion layer
 
 ## A region is not a bone
 
-`TrackerRegion` reads like a short `HumanBone` and is deliberately not one. The
+`TrackerRegion` reads like a short `HumanJoint` and is deliberately not one. The
 two places it stops being one are the two rigs people actually wear: a **knee**
 tracker sits on a strap between two bones — there is no knee joint, and which of
 the two the device observes is the solve's question — and a **chest** tracker
@@ -99,7 +99,7 @@ same observation.
 
 ## What it does not have
 
-One edge, taken by the solve alone: `motionCore`, because a `HumanoidPose` is
+One edge, taken by the solve alone: `motionCore`, because a `MotionPose` is
 that library's type. Beyond it, nothing — no platform primitive, no socket, no
 file format, no address literal, no adapter identity, and no diagnostic code. A
 refusal names the **event**, and whoever knows which adapter it is supplies the
@@ -117,7 +117,7 @@ chooses its rules deliberately or not at all.
 It is on the **product** side of
 [WORKSPACE.md §5](../../docs/architecture/WORKSPACE.md)'s split, and its first
 consumer arrived on 2026-08-31: `vrchat_osc_record --export-trace` takes the
-permission §2 grants — `adapters/*/tools/* -> motionTracking` — and turns a
+permission §2 grants — `adapters/*/tools/* -> motionConnectorTracking` — and turns a
 tracker frame into a canonical pose (VRC-6). It is an **adapter's CLI**, so a
 library on the product's side of that split currently travels only in an
 artifact the product excludes. Its absence from a product artifact therefore
@@ -126,5 +126,5 @@ not the exclusion the two shared leaves carry.
 
 No adapter *library* names it, and none may: an adapter that resolved an
 assignment would have invented a calibration and hidden it inside a decoder,
-which is why `adapters/* -> motionTracking` is a refused source token in all
+which is why `adapters/* -> motionConnectorTracking` is a refused source token in all
 three adapters' boundary checks.

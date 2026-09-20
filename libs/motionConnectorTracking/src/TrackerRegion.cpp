@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "motionTracking/TrackerRegion.h"
+#include "motionConnectorTracking/TrackerRegion.h"
 
 #include <array>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 namespace
@@ -49,4 +49,4 @@ ParseTrackerRegion(std::string_view name) noexcept
     return std::nullopt;
 }
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

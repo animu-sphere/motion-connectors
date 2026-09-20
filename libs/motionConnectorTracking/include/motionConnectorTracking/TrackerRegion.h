@@ -4,20 +4,20 @@
 // is.
 //
 // This enum is the reason this library exists rather than a header in
-// `motionCore`. It reads like a short `HumanBone` and it is not one, and the
+// `motionCore`. It reads like a short `HumanJoint` and it is not one, and the
 // two places it stops being one are the two rigs everybody actually wears:
 //
 //   * a **knee** tracker sits on a strap between two bones. There is no knee
 //     bone in `motionCore` and there should not be one — `LeftUpperLeg` and
 //     `LeftLowerLeg` meet there, and which of them the device observes is a
 //     question about the solve, not about the strap.
-//   * a **chest** tracker observes a torso. `HumanBone::Chest` is a joint whose
+//   * a **chest** tracker observes a torso. `HumanJoint::Chest` is a joint whose
 //     transform a solve produces; the strap is above it, below `UpperChest`,
 //     and moves with the ribcage rather than with either.
 //
 // So a region names a *mount point*, the vocabulary is this library's own, and
 // [WORKSPACE.md §2](../../../../docs/architecture/WORKSPACE.md) forbids the
-// alias by name: the day `TrackerRegion` becomes a `HumanBone` typedef,
+// alias by name: the day `TrackerRegion` becomes a `HumanJoint` typedef,
 // assignment has become a lookup and the solve has nothing left to do, which is
 // the collapse
 // [the OSC track §5.1](../../../../docs/roadmap/osc-and-vrchat-trackers.md#51-assignment-is-a-third-thing-and-it-belongs-to-neither-end)
@@ -39,14 +39,14 @@
 // the automatic assignment this milestone deliberately does not build.
 #pragma once
 
-#include "motionTracking/api.h"
+#include "motionConnectorTracking/api.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string_view>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 // A place on a body where a tracker can be mounted. Not a joint; see above.
@@ -78,10 +78,10 @@ inline constexpr std::size_t TrackerRegionCount = static_cast<std::size_t>(Track
 // The name an operator writes, in the lowerCamelCase every declarative file in
 // this repository uses. Empty for `Count` and for a value outside the enum,
 // which is what makes a printed assignment show a hole rather than invent one.
-MOTIONTRACKING_API std::string_view TrackerRegionName(TrackerRegion region) noexcept;
+MOTIONCONNECTORTRACKING_API std::string_view TrackerRegionName(TrackerRegion region) noexcept;
 
 // The inverse, exact-match only. `nullopt` for anything this vocabulary does
 // not carry, including a differently-cased spelling of something it does.
-MOTIONTRACKING_API std::optional<TrackerRegion> ParseTrackerRegion(std::string_view name) noexcept;
+MOTIONCONNECTORTRACKING_API std::optional<TrackerRegion> ParseTrackerRegion(std::string_view name) noexcept;
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

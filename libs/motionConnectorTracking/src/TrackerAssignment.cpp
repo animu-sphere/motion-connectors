@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "motionTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
 
 #include <array>
 #include <string>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 namespace
@@ -380,4 +380,4 @@ AssignTrackers(const TrackerAssignmentSpec& spec, const std::vector<std::string_
     return assignment;
 }
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

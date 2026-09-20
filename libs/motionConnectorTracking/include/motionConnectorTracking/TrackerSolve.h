@@ -6,10 +6,10 @@
 //
 // Decode is the adapter's, assignment is the operator's (TrackerAssignment.h),
 // and this is where a body role finally becomes a joint. It is the one file in
-// this library that names `motion::HumanBone`, and that is the whole shape of
+// this library that names `openstrata::motion::HumanJoint`, and that is the whole shape of
 // the boundary check beside it: the region vocabulary and the assignment are
 // scanned for a bone exactly as they were, because a `TrackerRegion` that
-// resolved to a `HumanBone` would make assignment a lookup and leave this file
+// resolved to a `HumanJoint` would make assignment a lookup and leave this file
 // nothing to do ([WORKSPACE.md §2](../../../../docs/architecture/WORKSPACE.md)).
 //
 // ## This solve is direct, and that is a stated stopping point
@@ -41,7 +41,7 @@
 //
 // ## The composition, and the invariant a test can read
 //
-// A `HumanoidPose` carries rotations **local to the semantic humanoid parent**,
+// A `MotionPose` carries rotations **local to the semantic humanoid parent**,
 // and a tracker reports an orientation in the world. So for each placed bone
 //
 //     local = inverse(world rotation of its parent chain) * observed world
@@ -122,7 +122,7 @@
 // it.
 //
 // A caller that wants the table without a solve can ask for it: see
-// `TrackerRegionBone`, which is this solve's answer and not the region's
+// `TrackerRegionJoint`, which is this solve's answer and not the region's
 // identity.
 //
 // ## The root, on the rule that already exists
@@ -130,7 +130,7 @@
 // A hips tracker is a body translation observed at one place, which is the case
 // the root/hips record answers: its position is `RootMotion::worldPosition`,
 // its rotation is `RootMotion::worldOrientation`, and that same rotation
-// remains the `HumanBone::Hips` local rotation, because a rig rooted at its
+// remains the `HumanJoint::Hips` local rotation, because a rig rooted at its
 // hips has a root path of one joint. Authoring a second convention here would
 // make two observations of one session incomparable field for field, which is
 // the cost that record was written to stop paying.
@@ -140,12 +140,12 @@
 // way: a body that turned turned whatever the translation is worth.
 #pragma once
 
-#include "motionTracking/TrackerAssignment.h"
-#include "motionTracking/TrackerObservation.h"
-#include "motionTracking/TrackerRegion.h"
-#include "motionTracking/api.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerObservation.h"
+#include "motionConnectorTracking/TrackerRegion.h"
+#include "motionConnectorTracking/api.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -153,7 +153,7 @@
 #include <string>
 #include <vector>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 // The bone this solve places `region` on, or nullopt for a region it refuses.
@@ -166,8 +166,8 @@ namespace motionTracking
 // will reach needs it before it has a frame, on the same argument that makes
 // `motion_bvh_inspect` able to print a profile's bones without converting a
 // file.
-MOTIONTRACKING_API std::optional<motion::HumanBone>
-TrackerRegionBone(TrackerRegion region) noexcept;
+MOTIONCONNECTORTRACKING_API std::optional<openstrata::motion::HumanJoint>
+TrackerRegionJoint(TrackerRegion region) noexcept;
 
 struct TrackerSolveConfig
 {
@@ -215,7 +215,7 @@ enum class TrackerSolveRefusal : std::uint8_t
 inline constexpr std::size_t TrackerSolveRefusalCount =
     static_cast<std::size_t>(TrackerSolveRefusal::Count);
 
-MOTIONTRACKING_API std::string_view TrackerSolveRefusalName(TrackerSolveRefusal refusal) noexcept;
+MOTIONCONNECTORTRACKING_API std::string_view TrackerSolveRefusalName(TrackerSolveRefusal refusal) noexcept;
 
 // What solving an assignment against an observation produced.
 //
@@ -244,8 +244,8 @@ struct TrackerSolve
     // nothing else, exactly as a clip that omits a bone does. No tracker
     // identity and no per-bone provenance reaches it — a consumer that cannot
     // tell this pose from a clip-driven one is reading it correctly, and
-    // `HumanoidPose::source` is where a producer says what it was.
-    motion::HumanoidPose pose;
+    // `MotionPose::source` is where a producer says what it was.
+    openstrata::motion::MotionPose pose;
 
     // Regions placed onto a bone, in the assignment's binding order.
     std::vector<TrackerRegion> placed;
@@ -298,9 +298,9 @@ struct TrackerSolve
 // solved. It runs outermost-first, because an assignment that refused says
 // nothing about an observation and an assignment applied to the wrong array is
 // not addressed by any check below it.
-MOTIONTRACKING_API TrackerSolve SolveTrackerPose(const TrackerAssignment& assignment,
+MOTIONCONNECTORTRACKING_API TrackerSolve SolveTrackerPose(const TrackerAssignment& assignment,
                                                  const std::vector<TrackerObservation>& observed,
                                                  double timestamp,
                                                  const TrackerSolveConfig& config = {});
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

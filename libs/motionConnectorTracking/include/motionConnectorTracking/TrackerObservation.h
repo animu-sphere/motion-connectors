@@ -69,7 +69,7 @@
 // library's.
 #pragma once
 
-#include "motionTracking/api.h"
+#include "motionConnectorTracking/api.h"
 
 #include "pxr/base/gf/quatf.h"
 #include "pxr/base/gf/vec3f.h"
@@ -78,7 +78,7 @@
 #include <string_view>
 #include <vector>
 
-namespace motionTracking
+namespace openstrata::connectors::tracking
 {
 
 // One device's placement, in the canonical basis.
@@ -130,7 +130,7 @@ struct TrackerObservation
 // refuses an index it cannot resolve rather than trusting the caller did it.
 //
 // The views borrow from `observed`, so it must outlive them.
-MOTIONTRACKING_API std::vector<std::string_view>
+MOTIONCONNECTORTRACKING_API std::vector<std::string_view>
 TrackerIdentities(const std::vector<TrackerObservation>& observed);
 
-} // namespace motionTracking
+} // namespace openstrata::connectors::tracking

@@ -20,13 +20,13 @@
 //
 // The rig identities are made up here exactly as they are next door: `t1`,
 // `t2`, `t3` are what a device could be called and what no wire calls one.
-#include "motionTracking/TrackerAssignment.h"
-#include "motionTracking/TrackerObservation.h"
-#include "motionTracking/TrackerRegion.h"
-#include "motionTracking/TrackerSolve.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerObservation.h"
+#include "motionConnectorTracking/TrackerRegion.h"
+#include "motionConnectorTracking/TrackerSolve.h"
 
 #include "motionCore/Compare.h"
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/quatd.h"
 #include "pxr/base/gf/rotation.h"
@@ -44,24 +44,26 @@
 namespace
 {
 
-using motionTracking::AssignTrackers;
-using motionTracking::ParseTrackerAssignmentSpec;
-using motionTracking::SolveTrackerPose;
-using motionTracking::TrackerAssignment;
-using motionTracking::TrackerAssignmentBinding;
-using motionTracking::TrackerAssignmentRefusal;
-using motionTracking::TrackerAssignmentRefusalName;
-using motionTracking::TrackerAssignmentSpec;
-using motionTracking::TrackerIdentities;
-using motionTracking::TrackerObservation;
-using motionTracking::TrackerRegion;
-using motionTracking::TrackerRegionBone;
-using motionTracking::TrackerSolve;
-using motionTracking::TrackerSolveConfig;
-using motionTracking::TrackerSolveRefusal;
-using motionTracking::TrackerSolveRefusalCount;
-using motionTracking::TrackerSolveRefusalName;
-using motionTracking::UnplacedTrackerPolicy;
+namespace tracking = openstrata::connectors::tracking;
+
+using tracking::AssignTrackers;
+using tracking::ParseTrackerAssignmentSpec;
+using tracking::SolveTrackerPose;
+using tracking::TrackerAssignment;
+using tracking::TrackerAssignmentBinding;
+using tracking::TrackerAssignmentRefusal;
+using tracking::TrackerAssignmentRefusalName;
+using tracking::TrackerAssignmentSpec;
+using tracking::TrackerIdentities;
+using tracking::TrackerObservation;
+using tracking::TrackerRegion;
+using tracking::TrackerRegionJoint;
+using tracking::TrackerSolve;
+using tracking::TrackerSolveConfig;
+using tracking::TrackerSolveRefusal;
+using tracking::TrackerSolveRefusalCount;
+using tracking::TrackerSolveRefusalName;
+using tracking::UnplacedTrackerPolicy;
 
 // A list of regions an `assert` can hold. The braced initialiser cannot: the
 // preprocessor balances parentheses and not braces, so `{A, B}` inside a macro
@@ -101,14 +103,14 @@ Reporting(std::string tracker, const pxr::GfVec3f& position, const pxr::GfQuatf&
 // from the library: a test that reused the solve's own composition would agree
 // with it by construction and measure nothing.
 pxr::GfQuatd
-WorldRotation(const motion::HumanoidPose& pose, motion::HumanBone bone)
+WorldRotation(const openstrata::motion::MotionPose& pose, openstrata::motion::HumanJoint bone)
 {
-    std::vector<motion::HumanBone> chain;
-    std::optional<motion::HumanBone> walk = bone;
+    std::vector<openstrata::motion::HumanJoint> chain;
+    std::optional<openstrata::motion::HumanJoint> walk = bone;
     while (walk)
     {
         chain.push_back(*walk);
-        walk = motion::HumanBoneParent(*walk);
+        walk = openstrata::motion::HumanJointParent(*walk);
     }
 
     pxr::GfQuatd world = pxr::GfQuatd::GetIdentity();
@@ -141,14 +143,14 @@ AngleBetween(const pxr::GfQuatd& lhs, const pxr::GfQuatd& rhs)
 }
 
 void
-AssertReproduces(const motion::HumanoidPose& pose, motion::HumanBone bone,
+AssertReproduces(const openstrata::motion::MotionPose& pose, openstrata::motion::HumanJoint bone,
                  const pxr::GfQuatf& observed)
 {
     const double angle = AngleBetween(WorldRotation(pose, bone), pxr::GfQuatd(observed));
     // The comparison semantics' own tolerance, never a hand-picked epsilon:
     // what this solve is allowed to lose is what a retarget composition is
     // allowed to lose.
-    assert(angle < static_cast<double>(motion::MotionTolerance{}.angle));
+    assert(angle < static_cast<double>(openstrata::motion::MotionTolerance{}.angle));
 }
 
 // A six-point rig: hips, head, two hands, two feet. Every fixture below starts
@@ -194,24 +196,24 @@ TestEveryRefusalHasAName()
 }
 
 void
-TestARegionReachesABoneOnlyWhereThisSolveKnowsWhichOne()
+TestARegionReachesAJointOnlyWhereThisSolveKnowsWhichOne()
 {
-    assert(TrackerRegionBone(TrackerRegion::Hips) == motion::HumanBone::Hips);
-    assert(TrackerRegionBone(TrackerRegion::Chest) == motion::HumanBone::Chest);
-    assert(TrackerRegionBone(TrackerRegion::Head) == motion::HumanBone::Head);
-    assert(TrackerRegionBone(TrackerRegion::LeftHand) == motion::HumanBone::LeftHand);
-    assert(TrackerRegionBone(TrackerRegion::RightHand) == motion::HumanBone::RightHand);
-    assert(TrackerRegionBone(TrackerRegion::LeftFoot) == motion::HumanBone::LeftFoot);
-    assert(TrackerRegionBone(TrackerRegion::RightFoot) == motion::HumanBone::RightFoot);
+    assert(TrackerRegionJoint(TrackerRegion::Hips) == openstrata::motion::HumanJoint::Hips);
+    assert(TrackerRegionJoint(TrackerRegion::Chest) == openstrata::motion::HumanJoint::Chest);
+    assert(TrackerRegionJoint(TrackerRegion::Head) == openstrata::motion::HumanJoint::Head);
+    assert(TrackerRegionJoint(TrackerRegion::LeftHand) == openstrata::motion::HumanJoint::LeftHand);
+    assert(TrackerRegionJoint(TrackerRegion::RightHand) == openstrata::motion::HumanJoint::RightHand);
+    assert(TrackerRegionJoint(TrackerRegion::LeftFoot) == openstrata::motion::HumanJoint::LeftFoot);
+    assert(TrackerRegionJoint(TrackerRegion::RightFoot) == openstrata::motion::HumanJoint::RightFoot);
 
     // The four straps that sit between two bones. This is the library's own
     // argument read forwards, and it is checked rather than described because a
     // table is the cheapest place to answer a question this solve cannot.
-    assert(!TrackerRegionBone(TrackerRegion::LeftKnee));
-    assert(!TrackerRegionBone(TrackerRegion::RightKnee));
-    assert(!TrackerRegionBone(TrackerRegion::LeftElbow));
-    assert(!TrackerRegionBone(TrackerRegion::RightElbow));
-    assert(!TrackerRegionBone(TrackerRegion::Count));
+    assert(!TrackerRegionJoint(TrackerRegion::LeftKnee));
+    assert(!TrackerRegionJoint(TrackerRegion::RightKnee));
+    assert(!TrackerRegionJoint(TrackerRegion::LeftElbow));
+    assert(!TrackerRegionJoint(TrackerRegion::RightElbow));
+    assert(!TrackerRegionJoint(TrackerRegion::Count));
 }
 
 void
@@ -238,19 +240,19 @@ TestASolvedRigReproducesEveryObservedOrientation()
     // The invariant, once per placed bone. A hand is four joints below the
     // root and a foot is three, so a chain composed in the wrong order or
     // against the wrong parent fails here and only here.
-    AssertReproduces(solve.pose, motion::HumanBone::Hips, rig.observed[0].rotation);
-    AssertReproduces(solve.pose, motion::HumanBone::Head, rig.observed[1].rotation);
-    AssertReproduces(solve.pose, motion::HumanBone::LeftHand, rig.observed[2].rotation);
-    AssertReproduces(solve.pose, motion::HumanBone::RightHand, rig.observed[3].rotation);
-    AssertReproduces(solve.pose, motion::HumanBone::LeftFoot, rig.observed[4].rotation);
-    AssertReproduces(solve.pose, motion::HumanBone::RightFoot, rig.observed[5].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Hips, rig.observed[0].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Head, rig.observed[1].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::LeftHand, rig.observed[2].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::LeftFoot, rig.observed[4].rotation);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::RightFoot, rig.observed[5].rotation);
 
     // Sparse by construction: six placed bones and nothing else, with every
     // unobserved joint left at rest rather than estimated.
     assert(solve.pose.validRotations.count() == 6);
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(motion::HumanBone::Spine)));
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(motion::HumanBone::Neck)));
-    assert(solve.pose.localRotations[static_cast<std::size_t>(motion::HumanBone::Neck)] ==
+    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Spine)));
+    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)));
+    assert(solve.pose.localRotations[static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)] ==
            pxr::GfQuatf::GetIdentity());
 
     // Reported in binding order, which is the operator's declaration order.
@@ -265,9 +267,16 @@ TestASolvedRigReproducesEveryObservedOrientation()
 
     // Nothing about a tracker reaches the pose: a consumer that cannot tell
     // this from a clip-driven pose is reading it correctly.
-    assert(!solve.pose.source);
+    //
+    // The shape of "nothing" changed with the move. In usd-vrm-plugins a pose's
+    // provenance was an optional and this asserted its absence; the consumed
+    // `motionCore` makes `metadata` always present, so a producer that recorded
+    // nothing says so with the default value instead of with no value
+    // (usd-motion-plugins' MOTION_CONTRACT.md §5.1). The claim is unchanged --
+    // this solve stamps no provenance -- and only its spelling moved.
+    assert(solve.pose.metadata == openstrata::motion::SourceMetadata{});
     assert(!solve.pose.confidence);
-    assert(solve.pose.expressions.IsEmpty());
+    assert(solve.pose.channels.IsEmpty());
 }
 
 void
@@ -295,21 +304,21 @@ TestAnAddedStrapChangesALocalRotationAndNoWorldOne()
     const TrackerSolve with = SolveTrackerPose(assignment, rig.observed, 0.0);
     assert(with.Solved());
 
-    const std::size_t head = static_cast<std::size_t>(motion::HumanBone::Head);
+    const std::size_t head = static_cast<std::size_t>(openstrata::motion::HumanJoint::Head);
     // The chest absorbed part of the head's rotation, so the *local* value
     // moved...
     assert(with.pose.localRotations[head] != without.pose.localRotations[head]);
     // ...and the world orientation the head's tracker reported did not.
-    AssertReproduces(with.pose, motion::HumanBone::Head, rig.observed[1].rotation);
-    AssertReproduces(with.pose, motion::HumanBone::Chest, rig.observed[6].rotation);
+    AssertReproduces(with.pose, openstrata::motion::HumanJoint::Head, rig.observed[1].rotation);
+    AssertReproduces(with.pose, openstrata::motion::HumanJoint::Chest, rig.observed[6].rotation);
     // The hands hang off the upper chest, which the chest strap moved: their
     // world orientations are still their own.
-    AssertReproduces(with.pose, motion::HumanBone::LeftHand, rig.observed[2].rotation);
-    AssertReproduces(with.pose, motion::HumanBone::RightHand, rig.observed[3].rotation);
+    AssertReproduces(with.pose, openstrata::motion::HumanJoint::LeftHand, rig.observed[2].rotation);
+    AssertReproduces(with.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
 }
 
 void
-TestTheHipsAreTheRootAndTheHipsBoneAtOnce()
+TestTheHipsAreTheRootAndTheHipsJointAtOnce()
 {
     const SixPoint rig = MakeSixPoint();
     const TrackerSolve solve = SolveTrackerPose(rig.assignment, rig.observed, 0.0);
@@ -321,10 +330,10 @@ TestTheHipsAreTheRootAndTheHipsBoneAtOnce()
     // The rule the root/hips record states: a rig rooted at its hips has a root
     // path of one joint, so the body's orientation and the hips' local rotation
     // are the same value twice rather than two readings of one session.
-    const std::size_t hips = static_cast<std::size_t>(motion::HumanBone::Hips);
+    const std::size_t hips = static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips);
     assert(AngleBetween(pxr::GfQuatd(solve.pose.root.worldOrientation),
                         pxr::GfQuatd(solve.pose.localRotations[hips])) <
-           static_cast<double>(motion::MotionTolerance{}.angle));
+           static_cast<double>(openstrata::motion::MotionTolerance{}.angle));
 
     // Neither velocity is derived here. A solve sees one frame, and a velocity
     // computed from one frame would be a zero pretending to be a measurement.
@@ -348,7 +357,7 @@ TestARootThePolicyDoesNotAuthorIsReportedRatherThanDropped()
     // The rotation is authored either way: a body that turned turned, whatever
     // the translation is worth.
     assert(solve.pose.root.hasOrientation);
-    assert(solve.pose.validRotations.test(static_cast<std::size_t>(motion::HumanBone::Hips)));
+    assert(solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
     // And the position it did not take is on the report rather than gone.
     assert(solve.positionsUnused == Regions({TrackerRegion::Hips}));
 }
@@ -374,7 +383,7 @@ TestEveryPositionButTheHipsIsReportedUnused()
 }
 
 void
-TestAStrapBetweenTwoBonesIsDataRatherThanARefusal()
+TestAStrapBetweenTwoJointsIsDataRatherThanARefusal()
 {
     std::vector<TrackerObservation> observed = {
         Reporting("t1", pxr::GfVec3f(0.0f, 0.9f, 0.0f), Turn(pxr::GfVec3d(0.0, 1.0, 0.0), 10.0)),
@@ -461,7 +470,7 @@ TestAPositionOnlyTrackerCannotOrientAJoint()
     assert(solve.Solved());
     // The alternative — authoring identity — is bit-for-bit a tracker
     // reporting rest, so a consumer could not tell the two apart.
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(motion::HumanBone::Hips)));
+    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
     assert(!solve.pose.root.hasOrientation);
     assert(solve.withoutRotation == Regions({TrackerRegion::Hips}));
     // The position half still reached the root: half an observation is half an
@@ -479,11 +488,11 @@ TestAPositionOnlyTrackerCannotOrientAJoint()
     // trace and again in the clip replayed from it (report 04 section 5).
     assert(solve.placed.empty());
     assert(solve.withheldWithParent == Regions({TrackerRegion::Head}));
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(motion::HumanBone::Head)));
+    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Head)));
 }
 
 void
-TestAWithheldBoneIsTheOneWhoseAncestorWasAssigned()
+TestAWithheldJointIsTheOneWhoseAncestorWasAssigned()
 {
     // Two rigs differing in one thing: whether the silent hips is a bone this
     // assignment placed at all. That is the whole of the distinction the
@@ -554,12 +563,12 @@ TestAWithheldBoneIsTheOneWhoseAncestorWasAssigned()
         assert(solve.Solved());
         assert(solve.placed == Regions({TrackerRegion::Head}));
         assert(solve.withheldWithParent.empty());
-        AssertReproduces(solve.pose, motion::HumanBone::Head, turned);
+        AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Head, turned);
     }
 }
 
 void
-TestAWithheldBoneWithholdsWhatIsUnderItToo()
+TestAWithheldJointWithholdsWhatIsUnderItToo()
 {
     // hips silent, chest and head both reporting. The chest is withheld under
     // the hips and the head under the chest -- and the head's chain is checked
@@ -746,11 +755,11 @@ TestARotationIsNormalisedRatherThanTrusted()
         SolveTrackerPose(AssignTrackers(spec, TrackerIdentities(observed)), observed, 0.0);
 
     assert(solve.Solved());
-    const std::size_t head = static_cast<std::size_t>(motion::HumanBone::Head);
+    const std::size_t head = static_cast<std::size_t>(openstrata::motion::HumanJoint::Head);
     // A non-unit quaternion is a scaling as well as a rotation, and a pose that
     // carried one would compose that scale into every bone below it.
     assert(std::fabs(solve.pose.localRotations[head].GetLength() - 1.0f) < 1e-5f);
-    AssertReproduces(solve.pose, motion::HumanBone::Head, turned);
+    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Head, turned);
 }
 
 void
@@ -796,18 +805,18 @@ int
 main()
 {
     TestEveryRefusalHasAName();
-    TestARegionReachesABoneOnlyWhereThisSolveKnowsWhichOne();
+    TestARegionReachesAJointOnlyWhereThisSolveKnowsWhichOne();
     TestADefaultSolveHasConcludedNothing();
     TestASolvedRigReproducesEveryObservedOrientation();
     TestAnAddedStrapChangesALocalRotationAndNoWorldOne();
-    TestTheHipsAreTheRootAndTheHipsBoneAtOnce();
+    TestTheHipsAreTheRootAndTheHipsJointAtOnce();
     TestARootThePolicyDoesNotAuthorIsReportedRatherThanDropped();
     TestEveryPositionButTheHipsIsReportedUnused();
-    TestAStrapBetweenTwoBonesIsDataRatherThanARefusal();
+    TestAStrapBetweenTwoJointsIsDataRatherThanARefusal();
     TestAnUnsetHalfIsNotCompared();
     TestAPositionOnlyTrackerCannotOrientAJoint();
-    TestAWithheldBoneIsTheOneWhoseAncestorWasAssigned();
-    TestAWithheldBoneWithholdsWhatIsUnderItToo();
+    TestAWithheldJointIsTheOneWhoseAncestorWasAssigned();
+    TestAWithheldJointWithholdsWhatIsUnderItToo();
     TestAnAssignmentThatRefusedRefusesTheSolveWithItsReasonAttached();
     TestAnAssignmentAppliedToADifferentArrayIsRefused();
     TestAValueThatIsNotOneIsRefusedAndOneNobodyReadsIsNot();
@@ -815,6 +824,6 @@ main()
     TestARotationIsNormalisedRatherThanTrusted();
     TestTheFirstRefusalWinsInTheStatedOrder();
     TestIdentitiesAreTheArrayTheAssignmentWasMadeFrom();
-    std::puts("motionTracking tracker solve tests passed");
+    std::puts("motionConnectorTracking tracker solve tests passed");
     return 0;
 }
