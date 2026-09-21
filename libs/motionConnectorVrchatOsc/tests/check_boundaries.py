@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Enforce motionConnectorVrchatOsc's leaf boundary.
 
-WORKSPACE.md §2 gives a connector library at most four edges — motionCore, the
-sampling and recording packages, motionConnectorTransport and
-motionConnectorOsc — and forbids the rest: the consumer repositories'
+WORKSPACE.md §2 gives a tracker connector the shared contract edge plus
+motionCore, motionConnectorTransport and motionConnectorOsc, and forbids the
+rest: the consumer repositories'
 libraries, every USD file-format bundle, OpenExec, `ExecIr`, and every sibling
 connector. It also may not be a plugin bundle (§1), so a plugin manifest or a
 plugInfo.json anywhere under the connector is a failure by itself.
@@ -228,7 +228,7 @@ def main() -> int:
     # connector's TOOL and not on the connector, and this is the only place that
     # prohibition is enforceable.
     forbidden_neighbours = re.compile(
-        r"motionConnector(?:Vmc|Mocopi|Tracking|Core|WebSocket|OpenXR)\w*|"
+        r"motionConnector(?:Vmc|Mocopi|Tracking|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
         r"vrmAdapter|cgltf|ardy)\w*|"
         r"\b(?:vmc|mocopi)\w*",
@@ -248,12 +248,11 @@ def main() -> int:
     # misses a multi-line call outright; naming the tokens that *are* permitted
     # cannot.
     #
-    # `motioncore` and `motionruntime` are permitted and not linked. They are the
-    # two edges WORKSPACE.md §2 allows an adapter that produces canonical values,
-    # and this milestone produces none -- so the list states the contract and the
-    # CMakeLists states the milestone, which is the right way round: a link line
-    # growing to them is a change a reviewer sees, and this file is not where the
-    # permission is granted or withheld.
+    # `motionConnectorCore` and `motionCore` are linked edges here. The shared
+    # core carries the connector contract, while `motionCore` carries the Gf
+    # value types used by the measured tracking-space conversion. The allowlist
+    # states the contract and CMakeLists states the actual closure; this file
+    # does not grant a new dependency by itself.
     #
     # `ws2_32` and `threads::threads` are on the list for the reason the mocopi
     # adapter's check gives: a platform library is the contract's permission, not
@@ -263,6 +262,7 @@ def main() -> int:
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
     allowed_link = {
         "motionconnectorvrchatosc", "public", "private", "interface",
+        "motionconnectorcore::motionconnectorcore",
         "motioncore::motioncore",
         "motionconnectortransport::motionconnectortransport",
         "motionconnectorosc::motionconnectorosc",
@@ -273,7 +273,8 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "motionConnectorVrchatOsc may link only motionCore, "
+                    "motionConnectorVrchatOsc may link only motionConnectorCore, "
+                    "motionCore, "
                     "motionConnectorTransport, motionConnectorOsc and the "
                     "platform's own "
                     f"primitives; CMakeLists.txt links `{token}`")

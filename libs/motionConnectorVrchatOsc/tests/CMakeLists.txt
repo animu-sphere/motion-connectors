@@ -7,6 +7,14 @@
 set(_vrchatosc_assertions
     $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
+add_executable(motionConnectorVrchatOsc_connector test_connector.cpp)
+target_link_libraries(motionConnectorVrchatOsc_connector
+    PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+target_compile_options(motionConnectorVrchatOsc_connector
+    PRIVATE ${_vrchatosc_assertions})
+add_test(NAME motionConnectorVrchatOsc_connector
+         COMMAND motionConnectorVrchatOsc_connector)
+
 add_executable(motionConnectorVrchatOsc_tests test_vrm_adapter_vrchat_osc.cpp)
 target_link_libraries(motionConnectorVrchatOsc_tests
     PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
@@ -137,7 +145,8 @@ file(GLOB _vrchatosc_captures CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/corpus/*/*.vrchatoscpackets"
      "${CMAKE_CURRENT_SOURCE_DIR}/corpus/*/*/*.vrchatoscpackets")
 set(_vrchatosc_tests
-    motionConnectorVrchatOsc_unit motionConnectorVrchatOsc_packetCapture
+    motionConnectorVrchatOsc_connector motionConnectorVrchatOsc_unit
+    motionConnectorVrchatOsc_packetCapture
     motionConnectorVrchatOsc_addressInventory motionConnectorVrchatOsc_trackerMessage
     motionConnectorVrchatOsc_trackingSpace motionConnectorVrchatOsc_frameAssembler
     motionConnectorVrchatOsc_udpReceiver motionConnectorVrchatOsc_udpReceiverTruncation)

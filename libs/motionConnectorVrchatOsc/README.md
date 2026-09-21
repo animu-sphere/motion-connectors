@@ -2,17 +2,17 @@
 
 The VRChat OSC tracker adapter: tracking observations in, a normalized tracker
 frame out. It is the first adapter here whose input is not a pose; it stops
-before target-avatar semantics and is still pending adaptation to the shared
-`MotionFrame` contract.
+before target-avatar semantics and publishes the normalized observations in the
+shared `MotionFrame` contract.
 
 ```text
 UDP datagram → OSC decode → tracker semantics → tracking-space normalisation
-             → tracker frame → MotionFrame (optional generic tracking solve)
+             → tracker frame → MotionFrame → optional generic tracking solve
 ```
 
-**Status: a recorder, a measured inventory, a tracker decoder and a measured
-tracking space** (VRC-3, 2026-08-30). What exists is the library's identity and
-its three edges, the
+**Status: a shared-contract connector, a recorder, a measured inventory, a
+tracker decoder and a measured tracking space** (VRC-3, 2026-08-30). What
+exists is the library's identity and its four edges, the
 [frozen diagnostic set](include/motionConnectorVrchatOsc/Diagnostics.h), the
 [recorded-packet format](include/motionConnectorVrchatOsc/PacketCapture.h), the
 [receiver seam](include/motionConnectorVrchatOsc/UdpReceiver.h) onto the shared
@@ -20,6 +20,7 @@ transport, the [address inventory](include/motionConnectorVrchatOsc/AddressInven
 the [tracker decoder](include/motionConnectorVrchatOsc/TrackerMessage.h),
 [the change of basis](include/motionConnectorVrchatOsc/TrackingSpace.h) measured from
 a labelled session,
+[the shared connector adapter](include/motionConnectorVrchatOsc/Connector.h),
 [the generated corpus](tests/corpus/generated/README.md) it replays, and
 [**`vrchat_osc_record`**](../../tools/vrchatOscRecord/README.md) — the CLI that turns a
 sender aimed at this machine into a capture file and reads one back.
@@ -168,13 +169,16 @@ third copy of a file is what that inheritance *is*.
 
 ## Edges
 
-Three: `motionCore`, `motionConnectorTransport` and `motionConnectorOsc`.
+Four: `motionConnectorCore`, `motionCore`, `motionConnectorTransport` and
+`motionConnectorOsc`.
 
-WORKSPACE.md §2 permits a connector four, and the fourth — the recording package — is
-what an adapter takes when it produces a **pose**. This one produces none: a
-tracker observation is pre-IK, and the solve that makes it a pose is generic and
-lives in `libs/motionConnectorTracking`. Declaring it would claim a dependency the library
-does not have.
+The shared core is the contract edge: it carries `IMotionConnector`,
+`MotionFrame` and `TrackerObservation`. WORKSPACE.md §2 permits sampling and
+recording packages for an adapter that produces a **pose**; this one produces
+tracker observations instead. The observation is pre-IK, and the solve that
+makes it a pose is generic and lives in `libs/motionConnectorTracking`, so
+declaring those packages here would claim a dependency the library does not
+have.
 
 **Its CLI has two edges this library may not have**, and that split is §2's
 rather than an accident of layout: `tools/vrchatOscRecord` links `motionConnectorTracking`
@@ -257,28 +261,22 @@ maps one refusal onto one of its own codes, and here that is
 [`src/AddressInventory.cpp`](src/AddressInventory.cpp) and
 [`src/TrackerMessage.cpp`](src/TrackerMessage.cpp).
 
-**Seven of the ten are raised today**: five from the decode path — malformed,
-unsupported, argument mismatch, bad tracker id, bad coordinate — and two from
-[`src/UdpReceiver.cpp`](src/UdpReceiver.cpp), which has raised `SOURCE_TIMEOUT`
-and `SOCKET_BIND_FAILED` since VRC-0 because a receiver had them before a
-decoder existed.
-
-The three that are not are `TRACKER_PARTIAL`, `SOURCE_RESTARTED` and
-`CALIBRATION_REQUIRED`, and what they have in common is the argument for
-freezing a code set before writing a decoder. Two need a layer that remembers
-the previous frame, which is VRC-4's. The third has **no recorded behaviour
-behind it at all** — the application was calibrated before every take of the
-2026-08-30 session, so nothing here has ever seen an uncalibrated stream — and it
-stays frozen and unraised on the same terms `VRM_MOCOPI_TRACKING_LOST` did. A
-set written after the decoder would contain none of the three.
+**All ten are reachable today**: five from the decode path — malformed,
+unsupported, argument mismatch, bad tracker id and bad coordinate — two from
+[`src/UdpReceiver.cpp`](src/UdpReceiver.cpp), and three from
+[`src/FrameAssembler.cpp`](src/FrameAssembler.cpp), which owns partial samples,
+source restarts and calibration discontinuities. The latter three require the
+frame history that VRC-4 introduced, while `CALIBRATION_REQUIRED` remains a
+policy signal rather than a refusal: the frame is still emitted for the
+consumer to decide how to handle it.
 
 ## Layout
 
 ```text
 include/motionConnectorVrchatOsc/   Diagnostics, the capture magic, the receiver seam,
                                the address inventory, the tracker decoder,
-                               the basis, the frame
-src/                           the code table, the event → code map, the
+                               the basis, the frame and the shared connector
+src/                           the connector adapter, the code table, the event → code map, the
                                inventory (the first file here that reads a byte),
                                the decoder (the first that reads a meaning), the
                                conversion (the first that produces a canonical

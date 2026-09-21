@@ -16,6 +16,9 @@ endif()
 if(NOT TARGET motionCore::motionCore)
     find_dependency(motionCore CONFIG REQUIRED)
 endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_dependency(motionConnectorCore CONFIG REQUIRED)
+endif()
 # The live half's shared leaf: the socket, the capture format and the diagnostic
 # vehicle (WORKSPACE.md §2). Its own config brings the platform's threading
 # primitive with it, so this file does not ask for one.
