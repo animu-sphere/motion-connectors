@@ -4,7 +4,6 @@
 #include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -102,46 +101,43 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         vrchatOsc::VrchatOscConnector connector;
-        openstrata::connectors::core::ConnectorConfig config;
-        config.bindAddress = "127.0.0.1";
-        config.port = 0;
-        config.sourceProfile = "vrchat-osc.trackers.v1";
-        config.bufferMode = openstrata::connectors::core::BufferMode::Ordered;
-        config.bufferCapacity = 128;
-        assert(connector.Open(config));
+        std::size_t frames = 0;
+        std::uint64_t expectedFrameNumber = 1;
+        bool validFrames = true;
+        auto drain = [&]()
+        {
+            openstrata::connectors::core::MotionFrame frame;
+            while (validFrames && connector.Poll(frame))
+            {
+                ++frames;
+                if (frame.frameNumber != expectedFrameNumber ||
+                    frame.sourceProfile != "vrchat-osc.trackers.v1" ||
+                    frame.actors.size() != 1 || frame.actors.front().pose.has_value() ||
+                    frame.actors.front().trackers.empty())
+                {
+                    std::fprintf(stderr, "%s: invalid MotionFrame at index %zu\n",
+                                 name.c_str(), frames);
+                    validFrames = false;
+                    break;
+                }
+                ++expectedFrameNumber;
+            }
+        };
 
         for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
         {
             connector.PushDatagram(datagram.bytes.data(), datagram.bytes.size(),
                                    datagram.receiveTime, datagram.peer);
+            drain();
         }
         connector.Flush();
-
-        std::size_t frames = 0;
-        std::uint64_t expectedFrameNumber = 1;
-        openstrata::connectors::core::MotionFrame frame;
-        while (connector.Poll(frame))
-        {
-            ++frames;
-            if (frame.frameNumber != expectedFrameNumber ||
-                frame.sourceProfile != "vrchat-osc.trackers.v1" ||
-                frame.actors.size() != 1 || frame.actors.front().pose.has_value() ||
-                frame.actors.front().trackers.empty())
-            {
-                std::fprintf(stderr, "%s: invalid MotionFrame at index %zu\n",
-                             name.c_str(), frames);
-                ++failures;
-                break;
-            }
-            ++expectedFrameNumber;
-        }
+        drain();
         if (frames != expected->frames)
         {
             std::fprintf(stderr, "%s: %zu frame(s), expected %zu\n", name.c_str(),
                          frames, expected->frames);
             ++failures;
         }
-        connector.Close();
     }
 
     for (const Expected& expected : kExpected)
@@ -163,6 +159,10 @@ CheckCorpus(const std::filesystem::path& directory)
 int
 main(int argc, char** argv)
 {
-    assert(argc == 2);
+    if (argc != 2)
+    {
+        std::fprintf(stderr, "usage: test_connector_corpus <corpus>\n");
+        return 2;
+    }
     return CheckCorpus(std::filesystem::path(argv[1]));
 }
