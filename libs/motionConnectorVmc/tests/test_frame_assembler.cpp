@@ -328,7 +328,7 @@ TestABlendValueIsAssembledLikeABone()
     assert(assembler.GetStats().expressionsDuplicated == 1);
     assert(assembler.GetStats().expressionsAccepted == 2);
     assert(CountCode(diagnostics, DiagnosticCode::DuplicateBone) == 1);
-    assert(diagnostics[0].subject == "Joy");
+    assert(diagnostics[0].subject == "vmc:Joy");
 
     // The same name in a *later* datagram: the sender has moved on, so it ends
     // the frame exactly as a repeated bone does.
@@ -340,9 +340,9 @@ TestABlendValueIsAssembledLikeABone()
     // dropped it would find one name here instead of two.
     const openstrata::motion::MotionChannelSet& weights = frames[0].pose.channels;
     assert(weights.entries.size() == 2);
-    assert(weights.Find("Joy") != nullptr && *weights.Find("Joy") == 0.5f);
-    assert(weights.Find("A") != nullptr && *weights.Find("A") == 0.0f);
-    assert(weights.Find("Blink") == nullptr);
+    assert(weights.Find("vmc:Joy") != nullptr && *weights.Find("vmc:Joy") == 0.5f);
+    assert(weights.Find("vmc:A") != nullptr && *weights.Find("vmc:A") == 0.0f);
+    assert(weights.Find("vmc:Blink") == nullptr);
 }
 
 void
@@ -1033,9 +1033,9 @@ CheckCorpus(const std::filesystem::path& directory)
             for (std::size_t index = 0; index != frames.size(); ++index)
             {
                 const openstrata::motion::MotionChannelSet& weights = frames[index].pose.channels;
-                const float* joy = weights.Find("Joy");
-                const float* blink = weights.Find("Blink");
-                const float* a = weights.Find("A");
+                const float* joy = weights.Find("vmc:Joy");
+                const float* blink = weights.Find("vmc:Blink");
+                const float* a = weights.Find("vmc:A");
                 const float expected = 0.25f * static_cast<float>(index);
                 if (weights.entries.size() != 3 || !joy || !blink || !a ||
                     std::abs(*joy - expected) > 1e-6f ||
@@ -1048,10 +1048,11 @@ CheckCorpus(const std::filesystem::path& directory)
                     ++failures;
                     break;
                 }
-                // Sent under the sender's own spelling, not normalised to a VRM
-                // preset name: the vocabulary is the model's.
-                if (weights.entries[0].name != "A" || weights.entries[1].name != "Blink" ||
-                    weights.entries[2].name != "Joy")
+                // Preserve the sender's spelling inside the adapter namespace;
+                // the vocabulary is still the model's, not a VRM preset map.
+                if (weights.entries[0].name != "vmc:A" ||
+                    weights.entries[1].name != "vmc:Blink" ||
+                    weights.entries[2].name != "vmc:Joy")
                 {
                     std::fprintf(stderr,
                                  "%s: frame %zu did not carry the sender's own "

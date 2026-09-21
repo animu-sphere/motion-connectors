@@ -34,6 +34,28 @@ VMC_SOURCE_JOINTS = [
     "RightRingProximal", "RightRingIntermediate", "RightRingDistal",
     "RightLittleProximal", "RightLittleIntermediate", "RightLittleDistal",
 ]
+VMC_HUMAN_JOINTS = [
+        "hips", "spine", "chest", "upperChest", "neck", "head", "leftEye",
+        "rightEye", "jaw", "leftUpperLeg", "leftLowerLeg", "leftFoot", "leftToes",
+        "rightUpperLeg", "rightLowerLeg", "rightFoot", "rightToes", "leftShoulder",
+        "leftUpperArm", "leftLowerArm", "leftHand", "rightShoulder", "rightUpperArm",
+        "rightLowerArm", "rightHand", "leftThumbMetacarpal", "leftThumbProximal",
+        "leftThumbDistal", "leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal",
+        "leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal",
+        "leftRingProximal", "leftRingIntermediate", "leftRingDistal",
+        "leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal",
+        "rightThumbMetacarpal", "rightThumbProximal", "rightThumbDistal",
+        "rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal",
+        "rightMiddleProximal", "rightMiddleIntermediate", "rightMiddleDistal",
+        "rightRingProximal", "rightRingIntermediate", "rightRingDistal",
+        "rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal",
+]
+MOCOPI_HUMAN_JOINTS = [
+        "hips", "spine", "chest", "upperChest", "neck", "head", "leftShoulder",
+        "leftUpperArm", "leftLowerArm", "leftHand", "rightShoulder", "rightUpperArm",
+        "rightLowerArm", "rightHand", "leftUpperLeg", "leftLowerLeg", "leftFoot",
+        "leftToes", "rightUpperLeg", "rightLowerLeg", "rightFoot", "rightToes",
+]
 
 MOCOPI_UNMAPPED = {"bnid:1", "bnid:3", "bnid:5", "bnid:6", "bnid:9"}
 VRCHAT_TRACKERS = {str(index) for index in range(1, 9)} | {"head"}
@@ -98,6 +120,14 @@ def check_hierarchy(profile_id: str, joints: list[dict]) -> None:
                     f"{profile_id}: parent {parent} must precede {joint['source']}")
 
 
+def check_human_joint_map(profile_id: str, joints: list[dict], expected: list[str]) -> None:
+    mapped = [joint.get("humanJoint") for joint in joints if joint.get("humanJoint") is not None]
+    require(all(isinstance(name, str) and name for name in mapped),
+            f"{profile_id}: every mapped joint needs a humanJoint")
+    require(len(mapped) == len(set(mapped)), f"{profile_id}: duplicate humanJoint mapping")
+    require(mapped == expected, f"{profile_id}: humanJoint mapping does not match the contract")
+
+
 def check_vmc(profile: dict) -> None:
     profile_id = profile["id"]
     joints = profile["jointSet"]
@@ -106,8 +136,7 @@ def check_vmc(profile: dict) -> None:
     require([joint.get("source") for joint in joints] == VMC_SOURCE_JOINTS,
             f"{profile_id}: source joint order does not match VMC HumanBodyBones")
     check_hierarchy(profile_id, joints)
-    require(sum(joint.get("humanJoint") is not None for joint in joints) == 55,
-            f"{profile_id}: expected 55 mapped joints")
+    check_human_joint_map(profile_id, joints, VMC_HUMAN_JOINTS)
     require(joints[25]["humanJoint"] == "leftThumbMetacarpal" and
             joints[26]["humanJoint"] == "leftThumbProximal" and
             joints[40]["humanJoint"] == "rightThumbMetacarpal" and
@@ -138,8 +167,7 @@ def check_mocopi(profile: dict) -> None:
     check_hierarchy(profile_id, joints)
     require({joint["source"] for joint in joints if joint.get("humanJoint") is None} ==
             MOCOPI_UNMAPPED, f"{profile_id}: unmapped joint set mismatch")
-    require(sum(joint.get("humanJoint") is not None for joint in joints) == 22,
-            f"{profile_id}: expected 22 mapped joints")
+    check_human_joint_map(profile_id, joints, MOCOPI_HUMAN_JOINTS)
     require(set(profile["capabilities"]) == {"body", "root-motion", "source-timestamps"},
             f"{profile_id}: capability set mismatch")
     require(profile["basis"]["handedness"] == "right" and
