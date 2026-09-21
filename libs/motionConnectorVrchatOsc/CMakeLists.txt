@@ -6,18 +6,19 @@
 # and ships no plugInfo.json (WORKSPACE.md §1). The CLI that may retarget and
 # author a stage is a separate tool under tools/.
 #
-# ## Three link lines, and the one that is still not here
+# ## Four link lines, and the boundary they preserve
 #
-# `motionConnectorTransport`, `motionConnectorOsc` and `motionCore`.
+# `motionConnectorCore`, `motionConnectorTransport`, `motionConnectorOsc` and
+# `motionCore`.
 # WORKSPACE.md §2 permits a connector the sampling and recording packages as
 # well, and those are what a connector takes when it produces a *pose*; this
-# one still produces none. What
-# VRC-3 added is one layer below that: a tracker observation in the canonical
-# basis, which is a value the rest of this repository can read and therefore a
-# `GfVec3f` and a `GfQuatf` (usd-vrm-plugins' osc-and-vrchat-trackers.md §5, §9).
+# one still produces tracker observations rather than a pose. What VRC-3 added
+# is one layer below that: canonical `GfVec3f` and `GfQuatf` values, and this
+# adapter now publishes them through the shared `MotionFrame` contract
+# (usd-vrm-plugins' osc-and-vrchat-trackers.md §5, §9).
 #
 # **The edge is taken for the value types**, and no `motion::` type is named in
-# this library yet. That is the contract's route rather than a convenience:
+# this library directly. That is the contract's route rather than a convenience:
 # §2 gives an adapter `motionCore` and does not give it `pxr`, so Gf arrives
 # through the library whose contract already carries it, and the boundary check
 # holds the allowlist that says which OpenUSD libraries may follow.
@@ -75,18 +76,25 @@ endif()
 if(NOT TARGET motionConnectorOsc::motionConnectorOsc)
     find_package(motionConnectorOsc REQUIRED CONFIG)
 endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_package(motionConnectorCore REQUIRED CONFIG)
+endif()
 # The value types, by the route WORKSPACE.md §2 gives an adapter: Gf arrives
 # through motionCore and never through a direct `find_package(pxr)` here.
 if(NOT TARGET motionCore::motionCore)
     find_package(motionCore REQUIRED CONFIG)
 endif()
 
-# Six files. Two of them exist because a shared library may not hold what is
+# Seven files. Two of them exist because a shared library may not hold what is
 # in them: a code table, and the map from a transport event to one of its rows
 # (WORKSPACE.md §2's diagnostic split). The capture format contributes a third
 # thing of the same kind and it is one string, so it lives in a header.
 #
-# `AddressInventory.cpp` is the first file here that is neither of those: it is
+# `Connector.cpp` is the adapter boundary: it feeds the tested decoder and
+# frame assembler into `IMotionConnector` and publishes tracker observations
+# without assigning them to a body role.
+# `AddressInventory.cpp` is the first source-specific file here that is neither
+# of those: it is
 # this adapter reading a session rather than describing itself, and it is what
 # made it a library — a decoder with one caller is a decoder shaped like that
 # caller (usd-vrm-plugins' osc-and-vrchat-trackers.md §3.1). It carries the same diagnostic split
@@ -100,13 +108,14 @@ endif()
 # adapter's own vocabulary: the sender's axes into the canonical ones, measured
 # from a labelled session rather than read off VRChat's documentation (VRC-3).
 # It is the file the motionCore edge below exists for.
-# `FrameAssembler.cpp` is the sixth and the first that *decides* rather than
+# `FrameAssembler.cpp` is the seventh and the first that *decides* rather than
 # converts: which observations belong to one frame, which tracker has stopped
 # reporting, and when a stream has become a different stream (VRC-4). It adds
 # no edge -- the canonical value types arrived with VRC-3 and a frame is made
 # of them -- and it names no body role, which is what keeps the assignment
 # policy outside this library (usd-vrm-plugins' osc-and-vrchat-trackers.md §5.1).
 add_library(motionConnectorVrchatOsc STATIC
+    src/Connector.cpp
     src/AddressInventory.cpp
     src/Diagnostics.cpp
     src/FrameAssembler.cpp
@@ -124,14 +133,15 @@ target_include_directories(motionConnectorVrchatOsc
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>")
-# The three edges this library has. The platform's socket and its threading
+# The four edges this library has. The platform's socket and its threading
 # primitive arrive behind the first, as they do for both siblings since OSC-2;
 # nothing at all arrives behind the second; and OpenUSD's value-type layer
-# arrives behind the third, which is the change VRC-3 makes to this binary's
-# closure. All three are PUBLIC because the installed headers name types from
+# arrives behind the fourth, which is the change VRC-3 makes to this binary's
+# closure. All four are PUBLIC because the installed headers name types from
 # each.
 target_link_libraries(motionConnectorVrchatOsc
     PUBLIC
+        motionConnectorCore::motionConnectorCore
         motionConnectorTransport::motionConnectorTransport
         motionConnectorOsc::motionConnectorOsc
         motionCore::motionCore)

@@ -5,7 +5,7 @@
 # and generic boundary.
 #
 # A library, not a plugin bundle, and deliberately so -- it registers nothing
-# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The three edges below
+# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The four edges below
 # are the only ones it is allowed (WORKSPACE.md §2), and neither sibling
 # connector is among them.
 #
@@ -26,6 +26,8 @@ library:
   version: 0.1.0
 requires:
   libraries:
+    - id: motionConnectorCore
+      version: ">=0.1,<0.2"
     - id: motionCore
       version: ">=0.5,<0.6"
       artifact:

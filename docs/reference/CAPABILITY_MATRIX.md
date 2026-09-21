@@ -20,14 +20,14 @@ row's status.
 
 | Capability | Status | Contract | Implemented elsewhere | Release |
 | --- | --- | --- | --- | --- |
-| `IMotionConnector`, state, capabilities | supported — `motionConnectorVmc_connector`, `motionConnectorMocopi_connector` | [CONNECTOR §2, §5](../design/CONNECTOR_CONTRACT.md) | `motionConnectorCore`; VMC and mocopi are adapted sources | v0.1.0 |
-| `MotionFrame`, `FrameTiming`, actors | supported — `motionConnectorVmc_connector`, `motionConnectorMocopi_connector` | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | `motionConnectorCore`; VMC and mocopi are adapted sources | v0.1.0 |
-| Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | supported — `motionConnectorCore_frameBuffer`, `motionConnectorVmc_connector`, `motionConnectorMocopi_connector` | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | — | v0.1.0 |
+| `IMotionConnector`, state, capabilities | supported — `motionConnectorVmc_connector`, `motionConnectorMocopi_connector`, `motionConnectorVrchatOsc_connector` | [CONNECTOR §2, §5](../design/CONNECTOR_CONTRACT.md) | `motionConnectorCore`; all three imported sources are adapted | v0.1.0 |
+| `MotionFrame`, `FrameTiming`, actors | supported — `motionConnectorVmc_connector`, `motionConnectorMocopi_connector`, `motionConnectorVrchatOsc_connector` | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | `motionConnectorCore`; all three imported sources are adapted | v0.1.0 |
+| Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | supported — `motionConnectorCore_frameBuffer`, `motionConnectorVmc_connector`, `motionConnectorMocopi_connector`, `motionConnectorVrchatOsc_connector` | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | — | v0.1.0 |
 | Source profiles | — | [SOURCE_PROFILES](../design/SOURCE_PROFILES.md) | nowhere as one format | v0.1.0 |
 | The packet-capture file format, `p` peer lines included | supported — `motionConnectorTransport_packetCapture` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
 | The poll timeout mapping and wake-up predicate; the diagnostic vehicle | supported — `motionConnectorTransport_pollTimeout`, `_diagnostics` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
 | UDP receive and the opt-in datagram queue on a socket | supported — the VMC, mocopi and VRChat OSC receiver/loopback suites and their recorders' loopback names | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
-| Replay of a capture through a connector | supported — VMC and mocopi live-source corpus suites plus VRChat OSC frame/tracker corpus and loopback readings | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
+| Replay of a capture through a connector | supported — VMC and mocopi live-source corpus suites plus VRChat OSC connector, frame/tracker corpus and loopback readings | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
 | OSC 1.0 wire format: packets, nested bundles in wire order, type tags, arguments, a refusal naming the byte | supported — `motionConnectorOsc_oscPacket` | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | — (imported 2026-09-19) | v0.1.0 |
 | `TrackerObservation`, assignment, tracker solve | supported — `motionConnectorTracking_trackerAssignment`, `_trackerSolve`, and end to end through `vrchat_osc_record_export` | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | — (imported 2026-09-20) | v0.1.0 |
 
@@ -37,7 +37,7 @@ row's status.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | VMC Protocol | `vmc.v1` | ✅ | ✅ | ✅ | ✅ | | supported — `motionConnectorVmc_connector` plus `motionConnectorVmc_vmcMessage`, `_frameAssembler`, `_liveSource`, `_skeletonMap`, `_corpus`, `_udpReceiver`, `_packetCapture`, and `vmc_record`'s inspect and loopback | — (imported 2026-09-21; shared-contract adapter 2026-09-21) | v0.1.0 |
 | mocopi native UDP | `mocopi.body.v1` | ✅ | | | ✅ | | supported — `motionConnectorMocopi_connector` plus `motionConnectorMocopi_motionPacket`, `_skeletonMap`, `_frameAssembler`, `_liveSource`, `_corpus`, `_udpReceiver`, `_packetCapture`, and `mocopi_record`'s inspect, loopback, export and IPv6 names | — (imported and shared-contract adapter 2026-09-21) | v0.1.0 |
-| VRChat OSC Trackers | `vrchat-osc.trackers.v1` | | | | | ✅ | supported — `motionConnectorVrchatOsc_trackerMessage`, `_addressInventory`, `_trackingSpace`, `_frameAssembler`, `_udpReceiver`, `_packetCapture`, their corpus readings, and `vrchat_osc_record`'s four names | — (imported 2026-09-21) | v0.1.0 |
+| VRChat OSC Trackers | `vrchat-osc.trackers.v1` | | | | | ✅ | supported — `motionConnectorVrchatOsc_connector` plus `_trackerMessage`, `_addressInventory`, `_trackingSpace`, `_frameAssembler`, `_udpReceiver`, `_packetCapture`, their corpus readings, and `vrchat_osc_record`'s four names | — (imported and shared-contract adapter 2026-09-21) | v0.1.0 |
 | WebSocket (`MotionFrame`) | — | — | — | — | — | — | — | nowhere | v0.2.0 |
 | MediaPipe | `mediapipe.*.v1` | — | — | — | | | — | nowhere | v0.3.0 |
 | WebXR | `webxr.*.v1` | | — | | | | — | nowhere | v0.4.0 |
