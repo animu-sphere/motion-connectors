@@ -15,6 +15,13 @@ target_compile_options(motionConnectorVrchatOsc_connector
 add_test(NAME motionConnectorVrchatOsc_connector
          COMMAND motionConnectorVrchatOsc_connector)
 
+add_executable(motionConnectorVrchatOsc_connector_corpus_tests
+    test_connector_corpus.cpp)
+target_link_libraries(motionConnectorVrchatOsc_connector_corpus_tests
+    PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+target_compile_options(motionConnectorVrchatOsc_connector_corpus_tests
+    PRIVATE ${_vrchatosc_assertions})
+
 add_executable(motionConnectorVrchatOsc_tests test_vrm_adapter_vrchat_osc.cpp)
 target_link_libraries(motionConnectorVrchatOsc_tests
     PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
@@ -153,6 +160,10 @@ set(_vrchatosc_tests
 
 if(_vrchatosc_captures)
     set(_vrchatosc_corpus "${CMAKE_CURRENT_SOURCE_DIR}/corpus")
+    add_test(NAME motionConnectorVrchatOsc_connectorCorpus
+        COMMAND motionConnectorVrchatOsc_connector_corpus_tests
+                "${_vrchatosc_corpus}")
+    list(APPEND _vrchatosc_tests motionConnectorVrchatOsc_connectorCorpus)
     # The format's reading: every committed capture parses and re-emits
     # byte-identically, so a fixture can never drift from the C++ writer.
     add_test(NAME motionConnectorVrchatOsc_corpus

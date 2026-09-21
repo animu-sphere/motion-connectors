@@ -1,9 +1,9 @@
 # Building
 
-How to build and test `motion-connectors` from a checkout. The tree holds no
-component yet (the [roadmap](../roadmap/current.md) says what arrives first),
-so a build today configures the root project, pins OpenUSD, and runs the
-workspace tests. The commands do not change when the first library arrives.
+How to build and test `motion-connectors` from a checkout. The tree builds the
+shared core, transport and wire-format leaves, the VMC, mocopi and VRChat OSC
+connectors, their record tools, and the `motion_connect` CLI. A build pins
+OpenUSD and runs the source corpus, installed-consumer and workspace tests.
 
 ## Requirements
 
@@ -47,6 +47,8 @@ test configures a second project, and it fails without them.
 | Test | Checks |
 | --- | --- |
 | `workspace_docs`, `workspace_docs_selftest` | every relative link and anchor resolves; every version and OpenUSD pin mirror agrees (`scripts/check_docs.py`) |
-| `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package `tests/installed_consumer/packages.json` lists (none yet) |
+| `motionConnector*_*Corpus` | each committed VMC, mocopi and VRChat OSC capture reaches the shared connector's `MotionFrame` path with stable frame counts |
+| `motion_connect_inspect_*` | the CLI replays representative captures through the shared contract |
+| `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package `tests/installed_consumer/packages.json` lists |
 
 `ctest -LE installed-consumer` leaves the second project out.

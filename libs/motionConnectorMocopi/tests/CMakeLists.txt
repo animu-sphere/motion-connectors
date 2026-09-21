@@ -15,6 +15,12 @@ target_compile_options(motionConnectorMocopi_connector_tests
     PRIVATE ${_mocopi_assertions})
 add_test(NAME motionConnectorMocopi_connector COMMAND motionConnectorMocopi_connector_tests)
 
+add_executable(motionConnectorMocopi_connector_corpus_tests test_connector_corpus.cpp)
+target_link_libraries(motionConnectorMocopi_connector_corpus_tests
+    PRIVATE motionConnectorMocopi::motionConnectorMocopi)
+target_compile_options(motionConnectorMocopi_connector_corpus_tests
+    PRIVATE ${_mocopi_assertions})
+
 add_executable(motionConnectorMocopi_tests test_vrm_adapter_mocopi.cpp)
 target_link_libraries(motionConnectorMocopi_tests
     PRIVATE motionConnectorMocopi::motionConnectorMocopi)
@@ -115,7 +121,8 @@ add_test(NAME motionConnectorMocopi_liveSource
          COMMAND motionConnectorMocopi_liveSource_tests)
 
 set(_mocopi_tests
-    motionConnectorMocopi_connector motionConnectorMocopi_unit motionConnectorMocopi_packetCapture
+    motionConnectorMocopi_connector motionConnectorMocopi_unit
+    motionConnectorMocopi_packetCapture
     motionConnectorMocopi_motionPacket motionConnectorMocopi_skeletonMap
     motionConnectorMocopi_frameAssembler motionConnectorMocopi_liveSource
     motionConnectorMocopi_udpReceiver motionConnectorMocopi_udpReceiverTruncation)
@@ -147,6 +154,9 @@ set(_mocopi_tests
 # phenomenon rather than reading it out of the JSON.
 set(_mocopi_corpus "${CMAKE_CURRENT_SOURCE_DIR}/corpus")
 if(EXISTS "${_mocopi_corpus}")
+    add_test(NAME motionConnectorMocopi_connectorCorpus
+        COMMAND motionConnectorMocopi_connector_corpus_tests "${_mocopi_corpus}")
+    list(APPEND _mocopi_tests motionConnectorMocopi_connectorCorpus)
     add_test(NAME motionConnectorMocopi_corpus
         COMMAND motionConnectorMocopi_packetCapture_tests
                 "${_mocopi_corpus}")
