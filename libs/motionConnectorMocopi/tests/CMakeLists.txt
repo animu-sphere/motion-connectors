@@ -8,6 +8,13 @@
 set(_mocopi_assertions
     $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
 
+add_executable(motionConnectorMocopi_connector_tests test_connector.cpp)
+target_link_libraries(motionConnectorMocopi_connector_tests
+    PRIVATE motionConnectorMocopi::motionConnectorMocopi)
+target_compile_options(motionConnectorMocopi_connector_tests
+    PRIVATE ${_mocopi_assertions})
+add_test(NAME motionConnectorMocopi_connector COMMAND motionConnectorMocopi_connector_tests)
+
 add_executable(motionConnectorMocopi_tests test_vrm_adapter_mocopi.cpp)
 target_link_libraries(motionConnectorMocopi_tests
     PRIVATE motionConnectorMocopi::motionConnectorMocopi)
@@ -108,7 +115,7 @@ add_test(NAME motionConnectorMocopi_liveSource
          COMMAND motionConnectorMocopi_liveSource_tests)
 
 set(_mocopi_tests
-    motionConnectorMocopi_unit motionConnectorMocopi_packetCapture
+    motionConnectorMocopi_connector motionConnectorMocopi_unit motionConnectorMocopi_packetCapture
     motionConnectorMocopi_motionPacket motionConnectorMocopi_skeletonMap
     motionConnectorMocopi_frameAssembler motionConnectorMocopi_liveSource
     motionConnectorMocopi_udpReceiver motionConnectorMocopi_udpReceiverTruncation)
@@ -227,8 +234,8 @@ if(Python3_Interpreter_FOUND)
     # a static library and an archive records no imports at all, so inspecting
     # it is a check that cannot fail. This executable is the first artifact in
     # which the adapter's real transitive imports exist, and its link closure is
-    # exactly the one the boundary is about: the connector, motionCore, and
-    # the sampling and recording packages.
+    # exactly the one the boundary is about: the connector core and adapter,
+    # motionCore, and the sampling and recording packages.
     #
     # `Python3_Interpreter_FOUND` is trustworthy *here* and is not at the root:
     # the adapter's own CMakeLists re-runs find_package(Python3 Interpreter) in
@@ -240,7 +247,7 @@ if(Python3_Interpreter_FOUND)
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/check_boundaries.py"
             "${CMAKE_CURRENT_SOURCE_DIR}/.."
-            "$<TARGET_FILE:motionConnectorMocopi_tests>")
+            "$<TARGET_FILE:motionConnectorMocopi_connector_tests>")
 
     # motionConnectorMocopi_corpus proves the committed captures are canonical for
     # C++ writer; this proves they still match the generator that authored them.

@@ -2,15 +2,15 @@
 
 The native source adapter for one capture product: that product's own UDP
 packets from the device's application in, source-normalized motion observations
-out. No third-party sender application is involved. Its source-specific API is
-not yet adapted to the shared `MotionFrame` contract.
+out. No third-party sender application is involved. `MocopiConnector` adapts
+the source-specific path to the shared `MotionFrame` contract.
 
 ```text
 UDP datagram → packet decode → joint mapping → coordinate conversion
              → frame assembly → shared MotionPose values → MotionFrame
 ```
 
-**Status: imported source implementation; shared-contract adaptation pending.**
+**Status: imported source implementation with a shared-contract adapter.**
 The source-specific library and its two edges, the frozen diagnostic set, the
 recorded-packet format, the
 **UDP receiver**, [**`mocopi_record`**](../../tools/mocopiRecord/README.md) — the CLI
@@ -24,8 +24,11 @@ which is the first layer here that knows a humanoid exists, then
 decides whether a datagram is a frame, whether it is complete, and whether the
 source restarted — and finally the
 [**live-source bridge**](include/motionConnectorMocopi/LiveSource.h). The
-imported replay and loopback evidence is hardware-free; adaptation to
-`IMotionConnector` is tracked in the [current roadmap](../../docs/roadmap/current.md).
+shared adapter is [`MocopiConnector`](include/motionConnectorMocopi/Connector.h),
+which preserves those tested paths and exposes non-blocking `Poll`; its focused
+test is `motionConnectorMocopi_connector`. The imported replay and loopback
+evidence is hardware-free, and the remaining source-profile installation work
+is tracked in the [current roadmap](../../docs/roadmap/current.md).
 
 **What does not exist is a session that met a device.** Every layer above is
 exercised, and by committed bytes that never met a sensor. Tracking state and
@@ -191,12 +194,13 @@ A plain static CMake library with an `openstrata.library.yaml`, exactly like
 its siblings here — **not** a plugin bundle. It registers nothing with OpenUSD
 and ships no `plugInfo.json`, because
 [WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) keeps it away from every
-file-format bundle and from OpenExec. It has exactly four dependencies, and
-they are the four its manifest declares — three of them published
+file-format bundle and from OpenExec. It has exactly five dependencies, and
+they are the five its manifest declares — four of them published
 `usd-motion-plugins` artifacts, pinned there by digest per target:
 
 ```text
-motionConnectorMocopi -> motionCore, motionSampling, motionRecording,
+motionConnectorMocopi -> motionConnectorCore, motionCore, motionSampling,
+                         motionRecording,
                          motionConnectorTransport
 ```
 
@@ -206,7 +210,7 @@ API in `include/` or `src/`, on a mention of the sibling adapter or a plugin
 bundle, on a `target_link_libraries` naming anything outside its allowlist, and
 on a binary whose imports leave the OpenUSD value-type layer.
 
-That allowlist is the four libraries above plus `ws2_32`, which is not a
+That allowlist is the five libraries above plus `ws2_32`, which is not a
 dependency direction — WORKSPACE.md §2 constrains which *workspace* libraries an
 connector may reach, and DESIGN_POLICY.md §8.2 puts the socket inside the
 connector
@@ -417,7 +421,7 @@ Composed with the rest of the workspace:
 ```sh
 cmake -S . -B build -DCMAKE_PREFIX_PATH=<usd-install>
 cmake --build build --config Release
-# Both halves: the library's sixteen names and the CLI's three. `-R motionConnectorMocopi`
+# Both halves: the library's seventeen names and the CLI's four. `-R motionConnectorMocopi`
 # alone silently misses the tool, whose names begin with `mocopi_record`.
 ctest --test-dir build -R "motionConnectorMocopi|mocopi_record"
 ```
@@ -428,8 +432,9 @@ Or through the runtime `ost` resolves for the workspace:
 ost build && ost test
 ```
 
-Standalone — this directory is its own CMake project, resolving `motionCore`,
-`motionSampling`, `motionRecording` and `motionConnectorTransport` as installed
+Standalone — this directory is its own CMake project, resolving
+`motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording` and
+`motionConnectorTransport` as installed
 packages rather than in-tree targets:
 
 ```sh

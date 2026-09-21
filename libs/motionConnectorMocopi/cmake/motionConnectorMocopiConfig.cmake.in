@@ -10,6 +10,9 @@ endif()
 if(NOT TARGET motionCore::motionCore)
     find_dependency(motionCore CONFIG REQUIRED)
 endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_dependency(motionConnectorCore CONFIG REQUIRED)
+endif()
 # What was one `motionRuntime` in usd-vrm-plugins is two packages here, and a
 # consumer resolves both: the frame assembler reads motionSampling's source
 # interface and the live source writes motionRecording's capture trace.

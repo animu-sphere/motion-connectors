@@ -8,13 +8,14 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **`motionConnectorCore` and the first shared-contract VMC adapter.** The new
+- **`motionConnectorCore` and the first shared-contract VMC and mocopi adapters.** The new
   core provides `IMotionConnector`, `MotionFrame`, timing, actor and tracker
   values, capability descriptors, and the thread-safe bounded
-  `Latest`/`Ordered`/`Lossless` frame buffer. `VmcConnector` wraps the existing
-  tested VMC assembly and exposes the same frames through non-blocking `Poll`.
-  New focused CTest names: `motionConnectorCore_frameBuffer` and
-  `motionConnectorVmc_connector`.
+  `Latest`/`Ordered`/`Lossless` frame buffer. `VmcConnector` and
+  `MocopiConnector` wrap their existing tested assemblies and expose the same
+  frames through non-blocking `Poll`. New focused CTest names:
+  `motionConnectorCore_frameBuffer`, `motionConnectorVmc_connector` and
+  `motionConnectorMocopi_connector`.
 
 - **`motionConnectorVrchatOsc` and `vrchat_osc_record`, imported from
   `usd-vrm-plugins`' `vrmAdapterVrchatOsc` with their history** (that

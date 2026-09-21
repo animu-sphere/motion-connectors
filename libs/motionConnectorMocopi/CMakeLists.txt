@@ -4,8 +4,9 @@
 #
 # A plain static library, not a plugin bundle: it registers nothing with
 # OpenUSD and ships no plugInfo.json (WORKSPACE.md §1). It links motionCore,
-# motionSampling, motionRecording and motionConnectorTransport and nothing
-# else; the CLI that may author a stage is a separate tool under the root
+# motionConnectorCore, motionSampling, motionRecording and
+# motionConnectorTransport and nothing else; the CLI that may author a stage is
+# a separate tool under the root
 # tools/.
 
 cmake_minimum_required(VERSION 3.22)
@@ -53,6 +54,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
 if(NOT TARGET motionCore::motionCore)
     find_package(motionCore REQUIRED CONFIG)
 endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_package(motionConnectorCore REQUIRED CONFIG)
+endif()
 # What was one `motionRuntime` in usd-vrm-plugins is two packages here: the
 # frame assembler reads `motionSampling`'s source interface and the live source
 # writes `motionRecording`'s capture trace, so both are named rather than one
@@ -78,6 +82,7 @@ endif()
 # two files that moved -- a code table and an event-to-code map, which are the
 # two things a shared library may not hold.
 add_library(motionConnectorMocopi STATIC
+    src/Connector.cpp
     src/Diagnostics.cpp
     src/FrameAssembler.cpp
     src/LiveSource.cpp
@@ -96,9 +101,10 @@ target_include_directories(motionConnectorMocopi
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>")
-# The four edges WORKSPACE.md §2 permits.
+# The five edges WORKSPACE.md §2 permits.
 target_link_libraries(motionConnectorMocopi
     PUBLIC
+        motionConnectorCore::motionConnectorCore
         motionCore::motionCore
         motionSampling::motionSampling
         motionRecording::motionRecording
