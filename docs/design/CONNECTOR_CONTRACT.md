@@ -1,9 +1,10 @@
 # Connector contract
 
-> Status: **proposed**, 2026-09-19. This document defines the shared connector
-> contract. The imported source-specific implementations are tested and
-> measured, but they have not yet been adapted to one `IMotionConnector` and
-> one canonical `MotionFrame`; the capability matrix says what is implemented.
+> Status: **core implemented, source convergence in progress**, 2026-09-21. This
+> document defines the shared connector contract. The VMC source now has an
+> `IMotionConnector` adapter; the remaining imported source-specific
+> implementations have not yet converged, and the capability matrix says what
+> is implemented.
 > A section becomes **binding** when the code it describes lands here with its
 > tests.
 >
@@ -255,6 +256,12 @@ Poll(MotionFrame&)                 ← the only public read
   default for driving an avatar; `Ordered` delivers every frame in order until
   the buffer overflows — the default for capture; `Lossless` refuses to drop
   and reports back-pressure instead — for recording from a replayed capture.
+- The core's `Poll` removes at most one frame. `Latest` replaces the pending
+  frame and increments `droppedFrames` and `skippedFrames`; `Ordered` drops the
+  oldest frame on overflow and increments the same counters; `Lossless` leaves
+  the buffer unchanged and returns back-pressure from `Push`. The counters are
+  cumulative buffer statistics, so a caller can report skipped frames without
+  changing the `Poll(MotionFrame&)` shape.
 - **Push is a wrapper over pull.** A callback source fills the buffer; `Poll`
   drains it. A runtime that wants push registers a callback that polls, so
   every connector has one read path to test (design policy §10).
@@ -324,6 +331,5 @@ file format.
 | CC-O3 | The public `MotionStream` shape (`usd-motion-plugins` MC-O5): this repository's proposal is pull over a bounded buffer, push as a wrapper (§8) | the first connector consumed through `motionCore` |
 | CC-O4 | Per-joint tracking loss (`usd-motion-plugins` MC-O6): mocopi's native stream reports it; VMC does not | v0.1.0 convergence |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
-| CC-O6 | Whether `Poll` returns one frame or drains, and whether `Latest` mode reports how many frames it skipped per poll or only in totals | v0.1.0 |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |
 | CC-O8 | The wire representation of `MotionFrame` for WebSocket and JS (design policy §37): JSON first for debuggability, with the ABI left open | v0.2.0 |

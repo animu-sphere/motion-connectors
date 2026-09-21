@@ -79,9 +79,10 @@ if(MOTIONCONNECTORS_BUILD_TESTS)
     endif()
 endif()
 
-# Components, in dependency order, as each import lands. The transport and the
-# wire format are not connectors: they have no option of their own, and are
-# built whenever this tree is.
+# Components, in dependency order, as each implementation lands. The core,
+# transport and wire format are shared leaves; the transport and wire format
+# have no option of their own.
+add_subdirectory("libs/motionConnectorCore")
 add_subdirectory("libs/motionConnectorTransport")
 add_subdirectory("libs/motionConnectorOsc")
 # The tracker layer links usd-motion-plugins' motionCore, which is not in this

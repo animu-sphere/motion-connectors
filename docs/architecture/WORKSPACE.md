@@ -7,10 +7,10 @@ them and to the rest of the ecosystem, and the invariants every change keeps.
 first, in its own pull request**. It is never made through a README, a roadmap
 entry or code.
 
-Status (2026-09-21): **contract adopted; the imported source implementations
-are present, while the shared core remains reserved.** The build and CI tree
-holds the transport, OSC, tracking, VMC, mocopi and VRChat OSC implementations,
-along with their record tools. Unimplemented identities below remain
+Status (2026-09-21): **contract adopted; the shared core and first VMC adapter
+are implemented, while the remaining source adapters are still source-specific.**
+The build and CI tree holds the transport, OSC, tracking, VMC, mocopi and
+VRChat OSC implementations, along with their record tools. Unimplemented identities below remain
 *reserved* until the change that creates them lands, and their rows say so.
 The shape follows
 the design
@@ -24,10 +24,10 @@ optional module, and two build modes, `ost` and plain CMake.
 
 | Identity | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- |
-| `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | reserved |
+| `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | implemented 2026-09-21 |
 | `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | imported 2026-09-19, with its history; namespace `openstrata::connectors::transport` |
 | `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | imported 2026-09-19, with its history; namespace `openstrata::connectors::osc` |
-| `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | imported 2026-09-21, with its history; namespace `openstrata::connectors::vmc`; its recorder is `tools/vmcRecord/` |
+| `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterVmc` | imported 2026-09-21, with its history; namespace `openstrata::connectors::vmc`; its recorder is `tools/vmcRecord/` |
 | `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | imported 2026-09-21, with its history; namespace `openstrata::connectors::mocopi`; its recorder is `tools/mocopiRecord/` |
 | `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | imported 2026-09-21, with its history; namespace `openstrata::connectors::vrchatOsc`; its recorder is `tools/vrchatOscRecord/` |
 | `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | imported 2026-09-20, with its history; namespace `openstrata::connectors::tracking`; consumes `usd-motion-plugins` `motionCore` |
@@ -105,10 +105,10 @@ is WS-O3.
 motionConnectorCore ───────→ usd-motion-plugins motionCore
 motionConnectorTransport ──→ (standard library, OS sockets)
 motionConnectorOsc ────────→ (standard library)
-motionConnectorVmc ────────→ usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
+motionConnectorVmc ────────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
 motionConnectorMocopi ─────→ usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
 motionConnectorVrchatOsc ──→ usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc (its CLI adds motionConnectorTracking, motionRecording)
-motionConnectorTracking ───→ usd-motion-plugins motionCore (motionConnectorCore is still reserved)
+motionConnectorTracking ───→ usd-motion-plugins motionCore (shared-contract adaptation remains pending)
 motionConnectorWebSocket ──→ motionConnectorCore, an optional WebSocket library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
 tools/*, examples/* ───────→ the connectors they name; usd-motion-plugins libraries
@@ -119,8 +119,8 @@ web modules ───────────────→ browser APIs, the M
 The imported pose connectors currently link the installed
 `usd-motion-plugins` packages that provide their bridge: `motionCore`,
 `motionSampling` and/or `motionRecording`. The tracker connector uses
-`motionCore`. The planned `motionConnectorCore` will provide the shared
-connector contract; it is not present in the current dependency graph.
+`motionCore`. `motionConnectorCore` now provides the shared connector contract;
+VMC is the first source adapter to consume it.
 
 ### 2.2 Forbidden
 

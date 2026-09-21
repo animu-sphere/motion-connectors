@@ -14,11 +14,14 @@ into the shared layer.
 
 ### Shared contract
 
-- ⬜ Add `motionConnectorCore` with `IMotionConnector`, `ConnectorConfig`,
+- ✅ Add `motionConnectorCore` with `IMotionConnector`, `ConnectorConfig`,
   `ConnectorState`, `ConnectorCapabilities`, `MotionFrame`, `FrameTiming`,
   actor identity and the bounded `Latest` / `Ordered` / `Lossless` buffer.
-- ⬜ Resolve `Poll` result and skipped-frame semantics (`CC-O6`) and agree on
-  the `MotionStream` intake boundary with `usd-motion-plugins` (`CC-O3`).
+- ✅ Resolve `Poll` result and skipped-frame semantics (`CC-O6`): one frame per
+  poll, cumulative buffer counters, oldest-drop `Ordered` and back-pressure
+  `Lossless` behavior.
+- ⬜ Agree on the `MotionStream` intake boundary with `usd-motion-plugins`
+  (`CC-O3`).
 - ⬜ Decide the profile identifier and representation rules (`SP-O1`, `SP-O2`)
 - ⬜ Resolve `DIAG-O1` before v0.1.0: rename all three imported diagnostic
   families (`VRM_VMC_*`, `VRM_MOCOPI_*`, `VRM_VRCHAT_OSC_*`) in one sweep,
@@ -27,8 +30,10 @@ into the shared layer.
 
 ### Source convergence
 
-- ⬜ Adapt VMC first, then mocopi and VRChat OSC Trackers, to the shared
+- 🚧 Adapt VMC first, then mocopi and VRChat OSC Trackers, to the shared
   connector contract without replacing their tested source-specific assembly.
+  `VmcConnector` now wraps the tested VMC source path; mocopi and VRChat OSC
+  remain pending.
 - ⬜ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
   `vrchat-osc.trackers.v1`; keep target-avatar mapping outside this repository.
 - ⬜ Resolve the shared change-of-basis primitive and VMC translation-channel
