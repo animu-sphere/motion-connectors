@@ -166,6 +166,16 @@ VrchatOscConnector::_PushPacket(const TrackerPacket& packet, double receiveTimes
     return _EnqueueFrames();
 }
 
+std::size_t
+VrchatOscConnector::Flush()
+{
+    _frames.clear();
+    const std::size_t diagnosticsBefore = _diagnostics.size();
+    _source.Flush(&_frames, &_diagnostics);
+    _StampDiagnostics(diagnosticsBefore);
+    return _EnqueueFrames();
+}
+
 void
 VrchatOscConnector::_StampDiagnostics(std::size_t from)
 {

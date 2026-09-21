@@ -46,6 +46,10 @@ class MOTIONCONNECTORVRCHATOSC_API VrchatOscConnector final
     std::size_t PushPacket(const TrackerPacket& packet, double receiveTimestamp,
                            std::string_view peer);
 
+    // Completes the frame left open by a replayed capture. Live UDP input has
+    // no end marker, so Poll never needs this path.
+    std::size_t Flush();
+
     const std::vector<Diagnostic>&
     GetDiagnostics() const noexcept
     {

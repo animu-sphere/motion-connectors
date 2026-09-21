@@ -50,8 +50,8 @@ An empty cell means that source cannot carry that part.
 
 | Capability | Status | Implemented elsewhere | Release |
 | --- | --- | --- | --- |
-| `motion_connect dump` | — | nowhere | v0.1.0 |
-| `motion_connect list`, `inspect` | — | nowhere | v0.1.0 |
+| `motion_connect dump` | supported — `motion_connect_dump_vmc`, `_mocopi`, `_vrchat_osc` | shared `MotionFrame` live dump | v0.1.0 |
+| `motion_connect list`, `inspect` | supported — `motion_connect_list`, `motion_connect_inspect_vmc`, `_mocopi`, `_vrchat_osc` | shared `MotionFrame` inventory and packet-capture replay | v0.1.0 |
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` raw capture tools | supported — inspect/loopback evidence is listed in the source rows | — (imported 2026-09-21) | v0.1.0 |
 | `motion_connect record`, `bridge` | — | nowhere | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |

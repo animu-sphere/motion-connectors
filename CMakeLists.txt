@@ -107,6 +107,10 @@ add_subdirectory("tools/mocopiRecord")
 add_subdirectory("libs/motionConnectorVrchatOsc")
 add_subdirectory("tools/vrchatOscRecord")
 
+# The shared-contract CLI. It links every v0.1.0 connector so `list` reports
+# the capabilities the adapters actually declare rather than a second table.
+add_subdirectory("tools/motionConnect")
+
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)
     add_subdirectory("tests")

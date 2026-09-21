@@ -1,0 +1,16 @@
+# OpenStrata workspace-tool descriptor for the shared-contract CLI.
+schema: openstrata.tool/v1alpha1
+tool:
+  id: motion_connect
+  version: 0.1.0
+  license: Apache-2.0
+executables: [motion_connect]
+directories: [bin]
+requires:
+  libraries:
+    - id: motionConnectorVmc
+      version: ">=0.1,<0.2"
+    - id: motionConnectorMocopi
+      version: ">=0.1,<0.2"
+    - id: motionConnectorVrchatOsc
+      version: ">=0.1,<0.2"

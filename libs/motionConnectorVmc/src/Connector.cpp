@@ -128,6 +128,13 @@ VmcConnector::PushPacket(const VmcPacket& packet, double receiveTimestamp)
 }
 
 std::size_t
+VmcConnector::Flush(double receiveTimestamp)
+{
+    _source.Flush(&_diagnostics);
+    return _EnqueueFrames(receiveTimestamp);
+}
+
+std::size_t
 VmcConnector::_EnqueueFrames(double receiveTimestamp)
 {
     std::size_t accepted = 0;
