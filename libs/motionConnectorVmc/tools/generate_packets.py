@@ -25,7 +25,7 @@ and added to this corpus as they are measured
 The output must match the C++ writer byte for byte; `motionConnectorVmc_corpus`
 enforces that. Run:
 
-    python adapters/liveCapture/vmc/tools/generate_packets.py
+    python libs/motionConnectorVmc/tools/generate_packets.py
 
 `manifest.json` is maintained from here too. Its measured fields (datagram
 counts, payload sizes, durations, the address patterns present, digests) are
@@ -342,7 +342,7 @@ def capture_mixed_traffic() -> Capture:
     point of this fixture.
 
     The blend shapes were once in that list and are not any more: they become
-    `MotionPose::expressions`. `A` is sent as `0.0` on every frame, which makes
+    `MotionPose::channels`. `A` is sent as `0.0` on every frame, which makes
     this the capture that records the difference between a weight that is zero
     and a name a sender never sent -- a reader that conflated the two would find
     two names here where the assembler reports three.

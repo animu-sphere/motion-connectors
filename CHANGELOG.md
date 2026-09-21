@@ -33,10 +33,11 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `cmake/MotionConnectorsUtf8CodePage.cmake` arrives with the recorder: a
     Windows CLI handed a non-ASCII path needs its process code page to be
     UTF-8, or it passes OpenUSD bytes it cannot decode.
-  - `.gitattributes` gains the corpus rules (`*.vmcpackets`,
-    `*.mocopipackets`, `*.trace`). A byte-compare corpus checked out with CRLF
-    fails every fixture while the data is fine, so the rule travels with the
-    corpus — declared for mocopi too, so that import does not have to remember.
+  - `.gitattributes` gains `*.trace binary`, beside the `*.vmcpackets` and
+    `*.mocopipackets` rules already here. A byte-compare fixture must not be
+    normalized on a Windows checkout, and `binary` is what says so: a later
+    `text eol=lf` rule overrides it and puts CRLF → LF back on `git add`, which
+    strips a 0x0D out of any datagram carrying the pair 0x0D 0x0A.
 
 ### Fixed
 

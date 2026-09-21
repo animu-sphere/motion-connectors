@@ -29,7 +29,7 @@
 // ## The silence timeout is still absent, and now for a visible reason
 //
 // The shared receiver has one; this adapter does not expose it, because
-// `MOTION_VMC_*` has no code for silence and its own documentation argues it did
+// `VRM_VMC_*` has no code for silence and its own documentation argues it did
 // not need a ninth. Inventing a second spelling of the sibling's
 // `VRM_MOCOPI_DEVICE_UNAVAILABLE` would be a contract change, and it is the
 // adapter plan's §8 to make, not this file's. The difference used to be a
@@ -104,7 +104,7 @@ struct UdpReceiverConfig
 //
 // Every member forwards to `transport::UdpReceiver`. The two that do more
 // than forward are `Open` and the constructor of `UdpReceiverConfig`: the first
-// turns a `TransportEvent` into a `MOTION_VMC_*` diagnostic, and the second is
+// turns a `TransportEvent` into a `VRM_VMC_*` diagnostic, and the second is
 // where this adapter's port and its four-of-five configuration surface live.
 class MOTIONCONNECTORVMC_API UdpReceiver final
 {

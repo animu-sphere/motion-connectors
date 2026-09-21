@@ -9,8 +9,8 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../../VERSION"
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
+    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
          _vmc_version LIMIT_COUNT 1)
     string(STRIP "${_vmc_version}" _vmc_version)
 else()

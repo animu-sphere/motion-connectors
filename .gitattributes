@@ -11,23 +11,15 @@
 # of a multi-line string (usd-vrm-plugins, PR #42).
 *.usda text eol=lf
 
-# Recorded VMC packet captures must check out with LF everywhere.
-# `motionConnectorVmc_corpus` re-emits every committed capture through the
-# connector's writer and compares raw bytes; the writer always emits '
-', so a
-# CRLF smudge on a Windows checkout would fail the comparison for every fixture
-# while the recorded datagrams were fine. The rule travels with the corpus --
-# without it here, a Windows checkout of an imported corpus fails every
-# byte-compare in the suite and the data is not what is wrong.
-*.vmcpackets text eol=lf
-
-# Recorded mocopi packet captures, for the VMC reason plus one more: that
-# corpus is also compared against the generator that authored it, and its
-# manifest records a SHA-256 of each capture. Declared with the VMC rule so the
-# mocopi import does not have to remember it.
-*.mocopipackets text eol=lf
-
-# Capture traces, for the same reason: a trace is re-emitted through
-# usd-motion-plugins' writer, which always writes '
-', and compared as bytes.
-*.trace text eol=lf
+# Recorded capture traces, for the same reason as the captures above: a trace
+# is re-emitted through usd-motion-plugins' writer and compared as bytes. The
+# rule is declared here so an import that brings traces does not have to
+# remember it.
+#
+# These fixtures must stay `binary` and NOT `text eol=lf`: a later `text` rule
+# overrides `binary`, which re-enables CRLF -> LF normalization on `git add`
+# and silently strips 0x0D bytes out of a datagram that happens to contain the
+# pair 0x0D 0x0A. `binary` already suppresses every smudge and clean filter,
+# which is the whole of what a byte-compare corpus needs on a Windows
+# checkout.
+*.trace binary

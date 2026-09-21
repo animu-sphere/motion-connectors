@@ -9,7 +9,7 @@
 // describing whichever bug was chased last. Every failure the VMC path can
 // report is one of the eight below.
 //
-// Two namespaces meet here and must not merge. `MOTION_VMC_*` says the *protocol*
+// Two namespaces meet here and must not merge. `VRM_VMC_*` says the *protocol*
 // layer refused something — a datagram, an OSC type tag, a frame boundary.
 // `VRM_MOTION_*` says the *canonical* layer's contract was violated, and those
 // codes belong to the motion libraries rather than to any adapter, so that a

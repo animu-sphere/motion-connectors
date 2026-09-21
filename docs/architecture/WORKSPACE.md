@@ -68,7 +68,7 @@ dependency (§17).
 | Identity | Kind | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- | --- |
 | `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36) | new | reserved |
-| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | reserved |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | `vmc_record` imported 2026-09-21, with its history; `mocopi_record` and `vrchat_osc_record` reserved |
 | examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
 | Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
 | JS / TS package | binding | `bindings/js/` | `openConnector`, `frames()` async iterator, the WASM bridge (design policy §18) | new | reserved |

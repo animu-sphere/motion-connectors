@@ -6,8 +6,14 @@ if(NOT Python3_Interpreter_FOUND)
 endif()
 
 # The connector owns the corpus; the recorder is a root member here, so the
-# path is named from the workspace root rather than walked up from the tool.
-set(_vmcrecord_corpus "${CMAKE_SOURCE_DIR}/libs/motionConnectorVmc/tests/corpus")
+# path walks up to the repository root rather than to a sibling of the tool.
+# Relative to this directory and not to `CMAKE_SOURCE_DIR`: a standalone
+# configure of tools/vmcRecord -- which this tool's CMakeLists.txt supports on
+# purpose -- makes that variable the tool's own directory, and both tests below
+# would then be handed a corpus path that does not exist and fail on an empty
+# fixture list.
+set(_vmcrecord_corpus
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/motionConnectorVmc/tests/corpus")
 
 # Two tests, split the way every other socket claim in this adapter is split:
 # what can be checked from committed bytes, and what needs a socket. The first

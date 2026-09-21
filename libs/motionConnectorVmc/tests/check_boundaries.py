@@ -194,10 +194,16 @@ def main() -> int:
     # name, so the boundary the rule wanted is not there and the symbol walked
     # straight through. Measured: a probe exactly like that passed this check
     # until the trailing boundary came off.
+    #
+    # EVERY name on the list is a prefix, not only the two the measurement
+    # happened to use. A trailing `\b` left on `vrmRetarget` would let
+    # `vrmRetargetSolver` walk through by exactly the argument above, so the
+    # second group carries one `\w*` for the whole alternation rather than one
+    # per name and a boundary for the rest.
     forbidden_neighbours = re.compile(
         r"motionConnector(?:Mocopi|VrchatOsc|Tracking|Core|WebSocket|OpenXR)\w*|"
-        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm\w*|execMotion|execVrm|"
-        r"vrmAdapter\w*|cgltf|ardy)\b|"
+        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
+        r"vrmAdapter|cgltf|ardy)\w*|"
         r"\b(?:mocopi|vrchat)\w*",
         re.IGNORECASE)
     for area in (source / "include", source / "src"):

@@ -4,7 +4,7 @@
   "format": {
     "name": "vmc-packet-capture",
     "version": 1,
-    "spec": "adapters/liveCapture/vmc/include/motionConnectorVmc/PacketCapture.h"
+    "spec": "libs/motionConnectorVmc/include/motionConnectorVmc/PacketCapture.h"
   },
   "provenance": {
     "origin": "synthetic",
