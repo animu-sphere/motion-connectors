@@ -45,7 +45,8 @@ into the shared layer.
 
 ### Tools and evidence
 
-- ⬜ Add `motion_connect dump`, `list` and `inspect` over `MotionFrame`.
+- ✅ Add `motion_connect dump`, `list` and `inspect` over `MotionFrame`; the
+  remaining CLI work is the later `record` / `bridge` scope.
 - ⬜ Re-run the imported capture/replay evidence through the unified contract
   and verify the packages from a clean installed prefix.
 - ⬜ Confirm that `usd-vrm-plugins` no longer consumes the imported libraries

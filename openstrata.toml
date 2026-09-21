@@ -23,4 +23,5 @@ members = [
     "tools/mocopiRecord",
     "libs/motionConnectorVrchatOsc",
     "tools/vrchatOscRecord",
+    "tools/motionConnect",
 ]

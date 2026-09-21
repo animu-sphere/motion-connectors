@@ -38,6 +38,10 @@ class MOTIONCONNECTORVMC_API VmcConnector final
                              double receiveTimestamp);
     std::size_t PushPacket(const VmcPacket& packet, double receiveTimestamp);
 
+    // Completes the frame left open by a replayed capture. Live UDP input has
+    // no end marker, so Poll never needs this path.
+    std::size_t Flush(double receiveTimestamp);
+
     const std::vector<Diagnostic>&
     GetDiagnostics() const noexcept
     {
