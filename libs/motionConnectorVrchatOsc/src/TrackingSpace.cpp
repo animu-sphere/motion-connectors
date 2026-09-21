@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVrchatOsc/TrackingSpace.h"
+#include "motionConnectorVrchatOsc/TrackingSpace.h"
 
 #include <cmath>
 #include <cstddef>
@@ -8,7 +8,7 @@
 #include <string_view>
 #include <utility>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
@@ -154,4 +154,4 @@ MapTrackerRotation(const TrackerMessage& message, pxr::GfQuatf* out, Diagnostic*
     return true;
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

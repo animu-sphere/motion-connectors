@@ -78,7 +78,7 @@
 // than held forward from the previous frame — because a defaulted rotation of
 // identity is bit-for-bit the rotation a tracker at rest reports, and a held one
 // is indistinguishable from a fresh one. Whether a gap becomes a held value is
-// the consumer's policy, exactly as `MissingBonePolicy` is one adapter over, and
+// the consumer's policy, exactly as `MissingJointPolicy` is one adapter over, and
 // answering it here would take the decision away from the layer that has the
 // context to make it.
 //
@@ -117,7 +117,7 @@
 // nothing else — no session identifier, no rest table, no handshake — with a
 // 4.85 s dark window around it (report 02 §4). Until 2026-08-30 a capture could
 // not carry that identity at all, so a replayed restart was indistinguishable
-// from a pause; `liveTransport`'s `p` line is what changed, and `Push` takes the
+// from a pause; `motionConnectorTransport`'s `p` line is what changed, and `Push` takes the
 // peer for exactly this reason.
 //
 // So the policy is split along what is actually observable:
@@ -164,10 +164,10 @@
 // the frame is emitted and the flag is what a consumer reads.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/TrackerMessage.h"
-#include "vrmAdapterVrchatOsc/TrackingSpace.h"
-#include "vrmAdapterVrchatOsc/api.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
+#include "motionConnectorVrchatOsc/TrackingSpace.h"
+#include "motionConnectorVrchatOsc/api.h"
 
 #include "pxr/base/gf/quatf.h"
 #include "pxr/base/gf/vec3f.h"
@@ -181,7 +181,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 struct TrackerFrameConfig
@@ -345,7 +345,7 @@ struct TrackerFrameStats
 // the datagram boundary is what tells a duplicate from a new frame, and a
 // caller that flattened its packets into a message stream would have thrown it
 // away before this class could use it.
-class VRMADAPTERVRCHATOSC_API TrackerFrameAssembler
+class MOTIONCONNECTORVRCHATOSC_API TrackerFrameAssembler
 {
   public:
     explicit TrackerFrameAssembler(const TrackerFrameConfig& config = {});
@@ -494,4 +494,4 @@ class VRMADAPTERVRCHATOSC_API TrackerFrameAssembler
     TrackerFrameStats _stats;
 };
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

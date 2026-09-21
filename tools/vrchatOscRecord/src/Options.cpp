@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <string>
 
+namespace tracking = openstrata::connectors::tracking;
+
 namespace vrchatOscRecordTool
 {
 namespace
@@ -609,7 +611,7 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
             // (TrackerAssignment.h), which is what makes the two flags order-
             // independent: `--unplaced hold --assign ...` and `--assign ...
             // --unplaced hold` are the same command.
-            if (!motionTracking::ParseTrackerAssignmentSpec(text, &options->assignment, &reason))
+            if (!tracking::ParseTrackerAssignmentSpec(text, &options->assignment, &reason))
             {
                 *error = "--assign: " + reason;
                 return false;
@@ -623,8 +625,8 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
             {
                 return false;
             }
-            const std::optional<motionTracking::UnplacedTrackerPolicy> policy =
-                motionTracking::ParseUnplacedTrackerPolicy(text);
+            const std::optional<tracking::UnplacedTrackerPolicy> policy =
+                tracking::ParseUnplacedTrackerPolicy(text);
             if (!policy)
             {
                 *error = "--unplaced expects refuse, ignore or hold, got '" + text + "'";

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVrchatOsc/AddressInventory.h"
+#include "motionConnectorVrchatOsc/AddressInventory.h"
 
-#include "osc/OscPacket.h"
+#include "motionConnectorOsc/OscPacket.h"
 
 #include <algorithm>
 #include <map>
 #include <utility>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
@@ -88,4 +88,4 @@ InventoryAddresses(const PacketCapture& capture)
     return inventory;
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

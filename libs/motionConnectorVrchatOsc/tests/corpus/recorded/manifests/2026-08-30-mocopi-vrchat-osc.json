@@ -4,20 +4,20 @@
   "format": {
     "name": "vrchat-osc-packet-capture",
     "version": 1,
-    "spec": "adapters/liveCapture/vrchatOsc/include/vrmAdapterVrchatOsc/PacketCapture.h"
+    "spec": "libs/motionConnectorVrchatOsc/include/motionConnectorVrchatOsc/PacketCapture.h"
   },
   "recordedWith": {
     "tool": "vrchat_osc_record",
     "toolVersion": "0.7.0",
     "repositoryCommit": "24ecf63",
-    "note": "The recording path is `liveTransport::UdpReceiver` and `liveTransport::WritePacketCapture` through this adapter's forwarding seam. Nothing on it decodes: the tool that wrote these files could not have told a VRChat address from any other byte string, which is the property that makes them evidence a decoder is built from rather than evidence a decoder agreed with itself."
+    "note": "The recording path is `motionConnectorTransport::UdpReceiver` and `motionConnectorTransport::WritePacketCapture` through this adapter's forwarding seam. Nothing on it decodes: the tool that wrote these files could not have told a VRChat address from any other byte string, which is the property that makes them evidence a decoder is built from rather than evidence a decoder agreed with itself."
   },
   "measuredWith": {
     "tool": "vrchat_osc_record --inspect",
     "toolVersion": "0.7.0",
     "repositoryCommit": "24ecf63",
     "date": "2026-08-30",
-    "how": "`vrchat_osc_record --inspect <capture>`, whose output is saved beside each capture as `<capture>.inspect.txt` in the operator's session directory. The address rows are `vrmAdapterVrchatOsc::InventoryAddresses`, keyed on the address *and* the type tag string."
+    "how": "`vrchat_osc_record --inspect <capture>`, whose output is saved beside each capture as `<capture>.inspect.txt` in the operator's session directory. The address rows are `motionConnectorVrchatOsc::InventoryAddresses`, keyed on the address *and* the type tag string."
   },
   "session": {
     "date": "2026-08-30",

@@ -5,13 +5,16 @@
 #include <string_view>
 #include <utility>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+namespace tracking = openstrata::connectors::tracking;
+
 namespace vrchatOscRecordTool
 {
 namespace
 {
 
 std::size_t
-RefusalIndex(motionTracking::TrackerSolveRefusal refusal) noexcept
+RefusalIndex(tracking::TrackerSolveRefusal refusal) noexcept
 {
     const auto index = static_cast<std::size_t>(refusal);
     // A value outside the enum cannot come from `SolveTrackerPose`, and the
@@ -19,21 +22,21 @@ RefusalIndex(motionTracking::TrackerSolveRefusal refusal) noexcept
     // `TrackerSolveRefusalCount` writes into a bucket rather than past the
     // array. It is cheaper than the alternative and it is not a policy: nothing
     // reads the bucket back as a refusal name.
-    return index < motionTracking::TrackerSolveRefusalCount ? index : 0;
+    return index < tracking::TrackerSolveRefusalCount ? index : 0;
 }
 
 std::size_t
-RegionIndex(motionTracking::TrackerRegion region) noexcept
+RegionIndex(tracking::TrackerRegion region) noexcept
 {
     const auto index = static_cast<std::size_t>(region);
-    return index < motionTracking::TrackerRegionCount ? index : motionTracking::TrackerRegionCount;
+    return index < tracking::TrackerRegionCount ? index : tracking::TrackerRegionCount;
 }
 
 void
-Tally(std::array<std::size_t, motionTracking::TrackerRegionCount>& counts,
-      const std::vector<motionTracking::TrackerRegion>& regions)
+Tally(std::array<std::size_t, tracking::TrackerRegionCount>& counts,
+      const std::vector<tracking::TrackerRegion>& regions)
 {
-    for (const motionTracking::TrackerRegion region : regions)
+    for (const tracking::TrackerRegion region : regions)
     {
         const std::size_t index = RegionIndex(region);
         if (index < counts.size())
@@ -49,7 +52,7 @@ Tally(std::array<std::size_t, motionTracking::TrackerRegionCount>& counts,
 // measurement.
 void
 PrintRegionCounts(std::FILE* out, const char* label,
-                  const std::array<std::size_t, motionTracking::TrackerRegionCount>& counts)
+                  const std::array<std::size_t, tracking::TrackerRegionCount>& counts)
 {
     std::fprintf(out, "  %s:", label);
     bool any = false;
@@ -60,7 +63,7 @@ PrintRegionCounts(std::FILE* out, const char* label,
             continue;
         }
         const std::string_view name =
-            motionTracking::TrackerRegionName(static_cast<motionTracking::TrackerRegion>(i));
+            tracking::TrackerRegionName(static_cast<tracking::TrackerRegion>(i));
         std::fprintf(out, "%s %.*s %zu", any ? "," : "", static_cast<int>(name.size()), name.data(),
                      counts[i]);
         any = true;
@@ -70,8 +73,8 @@ PrintRegionCounts(std::FILE* out, const char* label,
 
 } // namespace
 
-TraceCollector::TraceCollector(motionTracking::TrackerAssignmentSpec assignment,
-                               motionTracking::TrackerSolveConfig solve)
+TraceCollector::TraceCollector(tracking::TrackerAssignmentSpec assignment,
+                               tracking::TrackerSolveConfig solve)
     : _assignment(std::move(assignment)), _solve(solve)
 {
 }
@@ -83,8 +86,8 @@ TraceCollector::_OpenSession()
 }
 
 void
-TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& frames,
-                        const motion::MotionSourceMetadata& metadata)
+TraceCollector::Observe(const std::vector<vrchatOsc::TrackerFrame>& frames,
+                        const openstrata::motion::SourceMetadata& metadata)
 {
     // Observing after `Close` re-opens it, which is the sibling collector's
     // rule and matters more here than it does there. `Close` sizes `_hips` to
@@ -97,7 +100,7 @@ TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& fr
     // all, which `GetSessions` already documents.
     _closed = false;
 
-    for (const vrmAdapterVrchatOsc::TrackerFrame& frame : frames)
+    for (const vrchatOsc::TrackerFrame& frame : frames)
     {
         ++_report.framesObserved;
 
@@ -114,11 +117,11 @@ TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& fr
 
         // The conversion this file exists for: two types, four fields, no
         // arithmetic. See the header on the two that do not cross.
-        std::vector<motionTracking::TrackerObservation> observed;
+        std::vector<tracking::TrackerObservation> observed;
         observed.reserve(frame.samples.size());
-        for (const vrmAdapterVrchatOsc::TrackerSample& sample : frame.samples)
+        for (const vrchatOsc::TrackerSample& sample : frame.samples)
         {
-            motionTracking::TrackerObservation observation;
+            tracking::TrackerObservation observation;
             observation.tracker = sample.tracker;
             observation.position = sample.position;
             observation.rotation = sample.rotation;
@@ -131,8 +134,8 @@ TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& fr
         // holds an index into the array the assignment was made from: building
         // the identities separately is how the two calls drift apart and bind a
         // region to a device nobody wore (TrackerObservation.h).
-        const motionTracking::TrackerAssignment assignment = motionTracking::AssignTrackers(
-            _assignment, motionTracking::TrackerIdentities(observed));
+        const tracking::TrackerAssignment assignment = tracking::AssignTrackers(
+            _assignment, tracking::TrackerIdentities(observed));
 
         // Filled whatever the refusal, which is that layer's rule -- so these
         // are read before the solve rather than under its success. They
@@ -153,8 +156,8 @@ TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& fr
             }
         }
 
-        const motionTracking::TrackerSolve solve =
-            motionTracking::SolveTrackerPose(assignment, observed, frame.receiveTime, _solve);
+        const tracking::TrackerSolve solve =
+            tracking::SolveTrackerPose(assignment, observed, frame.receiveTime, _solve);
 
         const std::size_t refusal = RefusalIndex(solve.refusal);
         ++_report.refusals[refusal];
@@ -175,7 +178,7 @@ TraceCollector::Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& fr
         Tally(_report.withheldWithParent, solve.withheldWithParent);
         Tally(_report.positionsUnused, solve.positionsUnused);
 
-        motion::HumanoidAnimation& session = _sessions.back();
+        openstrata::motion::MotionClip& session = _sessions.back();
         session.samples.push_back(solve.pose);
         session.source = metadata;
         ++_poses;
@@ -205,7 +208,7 @@ TraceCollector::Close()
     _hips.assign(_sessions.size(), HipsMotion());
     for (std::size_t i = 0; i < _sessions.size(); ++i)
     {
-        motion::HumanoidAnimation& session = _sessions[i];
+        openstrata::motion::MotionClip& session = _sessions[i];
         session.startTime = session.samples.front().timestamp;
         session.endTime = session.samples.back().timestamp;
 
@@ -225,7 +228,7 @@ TraceCollector::Close()
         bool started = false;
         pxr::GfVec3f first(0.0f);
         pxr::GfVec3f previous(0.0f);
-        for (const motion::HumanoidPose& pose : session.samples)
+        for (const openstrata::motion::MotionPose& pose : session.samples)
         {
             if (!pose.root.hasPosition)
             {
@@ -258,12 +261,12 @@ PrintSolveReport(std::FILE* out, const SolveReport& report)
 
     for (std::size_t i = 0; i < report.refusals.size(); ++i)
     {
-        const auto refusal = static_cast<motionTracking::TrackerSolveRefusal>(i);
-        if (refusal == motionTracking::TrackerSolveRefusal::None || report.refusals[i] == 0)
+        const auto refusal = static_cast<tracking::TrackerSolveRefusal>(i);
+        if (refusal == tracking::TrackerSolveRefusal::None || report.refusals[i] == 0)
         {
             continue;
         }
-        const std::string_view name = motionTracking::TrackerSolveRefusalName(refusal);
+        const std::string_view name = tracking::TrackerSolveRefusalName(refusal);
         std::fprintf(out, "  refused %.*s: %zu frame(s)", static_cast<int>(name.size()),
                      name.data(), report.refusals[i]);
         if (!report.firstDetail[i].empty())

@@ -53,9 +53,9 @@
 // will go looking for jitter in a sender that never had any.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
-#include "vrmAdapterVrchatOsc/UdpReceiver.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/UdpReceiver.h"
 
 #include <array>
 #include <cstddef>
@@ -65,6 +65,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
 
 namespace vrchatOscRecordTool
 {
@@ -105,7 +107,7 @@ class SessionReport
     // The diagnostics one receive call appended, and only those: the caller
     // clears its list every iteration, so the whole of it is what the last call
     // added.
-    void ObserveDiagnostics(const std::vector<vrmAdapterVrchatOsc::Diagnostic>& log);
+    void ObserveDiagnostics(const std::vector<vrchatOsc::Diagnostic>& log);
 
     void
     SetStopReason(StopReason reason) noexcept
@@ -141,8 +143,8 @@ class SessionReport
     // live session the operator supplied it on the command line a moment ago and
     // does not need it read back; for a capture recorded months ago it is half
     // of what "is this fixture still what I thought it was" means.
-    void Print(std::FILE* out, const vrmAdapterVrchatOsc::UdpReceiver* receiver,
-               const vrmAdapterVrchatOsc::PacketCapture* provenance) const;
+    void Print(std::FILE* out, const vrchatOsc::UdpReceiver* receiver,
+               const vrchatOsc::PacketCapture* provenance) const;
 
   private:
     void _ObservePrefix(const std::uint8_t* bytes, std::size_t count);
@@ -209,10 +211,10 @@ class SessionReport
     // when the cap is what shortened it.
     std::size_t _shortestDatagram = 0;
 
-    std::array<std::uint64_t, vrmAdapterVrchatOsc::DiagnosticCodeCount> _diagnostics{};
+    std::array<std::uint64_t, vrchatOsc::DiagnosticCodeCount> _diagnostics{};
     // The first of each code, kept whole. A count says a session reported
     // silence twice; the first line says when.
-    std::array<vrmAdapterVrchatOsc::Diagnostic, vrmAdapterVrchatOsc::DiagnosticCodeCount>
+    std::array<vrchatOsc::Diagnostic, vrchatOsc::DiagnosticCodeCount>
         _firstDiagnostic{};
 
     StopReason _stop = StopReason::EndOfCapture;

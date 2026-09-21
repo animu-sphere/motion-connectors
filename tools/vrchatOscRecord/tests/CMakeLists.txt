@@ -5,7 +5,13 @@ if(NOT Python3_Interpreter_FOUND)
     return()
 endif()
 
-set(_vrchat_osc_record_corpus "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/corpus")
+# The connector owns the corpus; the recorder is a root member here, so the
+# path walks up to the repository root rather than to a sibling of the tool.
+# Relative to this directory and not to `CMAKE_SOURCE_DIR`: a standalone
+# configure of tools/vrchatOscRecord -- which this tool's CMakeLists.txt
+# supports on purpose -- makes that variable the tool's own directory.
+set(_vrchatoscrecord_corpus
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/motionConnectorVrchatOsc/tests/corpus")
 
 # Four names, split the way every other claim in this adapter is split: what can
 # be checked without a socket, what needs one, what needs a socket this runner
@@ -39,7 +45,7 @@ add_test(NAME vrchat_osc_record_loopback
 
 # The IPv6 warning, on its own name so that "could not check this here" is a word
 # in the ctest summary rather than a line nobody sees -- the arrangement
-# `vrmAdapterVrchatOsc_udpReceiverTruncation` uses in this adapter for the same
+# `motionConnectorVrchatOsc_udpReceiverTruncation` uses in this adapter for the same
 # reason. A runner without IPv6 loopback cannot bind `::1`.
 #
 # The claim is worth a name of its own besides. `UdpReceiver` deliberately does
@@ -58,85 +64,44 @@ add_test(NAME vrchat_osc_record_export
             "${CMAKE_CURRENT_SOURCE_DIR}/test_vrchat_osc_record.py"
             --tool "$<TARGET_FILE:vrchat_osc_record>"
             --mode export
-            --corpus "${_vrchat_osc_record_corpus}")
+            --corpus "${_vrchatoscrecord_corpus}")
 
-# The chain a VRChat OSC session takes to a rig, which exists only in a build
-# tree that carries the product's tools as well as this adapter. A standalone
-# configure of the adapter has neither target, and naming one that does not
-# exist fails at generate time -- so the guard, exactly as both sibling adapters
-# and tools/motionCapture use one.
-#
-# **This name did not exist until VRC-6, and the absence was stated here rather
-# than left to be noticed**: a tracker source produces no pose, so until the
-# humanoid solve had a home the chain was missing a link and not a test. It has
-# one now (`libs/motionTracking`, VRC-5) and `vrchat_osc_record --export-trace`
-# is what calls it, so the leg closes.
-#
-# It is a second driver rather than a share of a sibling's, and deliberately:
-# WORKSPACE.md §2 forbids an adapter from knowing its siblings exist, and a
-# shared end-to-end driver would be that knowledge in a test directory instead
-# of a link line. There is also no `--vrm-avatar` half here, where both siblings
-# have one -- see the test's own note on what a released avatar would add to a
-# check that already asserts fourteen unobserved joints holding rest exactly.
-if(TARGET motion_capture AND TARGET motion_retarget)
-    add_test(NAME vrchat_osc_record_endToEnd
-        COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/test_vrchat_osc_end_to_end.py"
-                --record-tool "$<TARGET_FILE:vrchat_osc_record>"
-                --capture-tool "$<TARGET_FILE:motion_capture>"
-                --retarget-tool "$<TARGET_FILE:motion_retarget>"
-                --corpus "${_vrchat_osc_record_corpus}"
-                --avatar "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/vrchat_osc_avatar.usda")
-else()
-    message(STATUS
-        "vrchatOscRecord: the product's motion tools are not in this build "
-        "tree; the VRChat OSC->rig end-to-end test will be skipped")
-endif()
+# The VRChat OSC -> rig end-to-end leg is NOT registered here, and that is a
+# decision rather than an omission. Its last step bakes a recorded session onto
+# an avatar with a retarget CLI, and this repository has neither and will have
+# neither: WORKSPACE.md §2.3 points every edge at usd-motion-plugins and none
+# at a consumer. The leg stays in usd-vrm-plugins with the avatar it needs, as
+# both sibling recorders' did. What is here is what this repository can answer
+# for: the recorder's own inspect, loopback, IPv6 and export names -- and the
+# export is the one that calls the humanoid solve, so the link the leg was
+# waiting for is exercised here even though the bake is not.
 
 if(WIN32)
     # The runtime the adapter's own tests need, for the reason both sibling
     # tools' suites give: the tool is statically linked against the adapter, but
-    # motionCore, motionTracking and motionRuntime call exported Gf entry
+    # motionCore, motionConnectorTracking and motionRuntime call exported Gf entry
     # points, so the process loads usd_gf.dll -> usd_tf.dll -> tbb.dll plus
     # python3xx.dll at start-up. An activated `ost` session has them on PATH; a
     # plain-CMake `ctest` does not, and the tool exits 0xC0000135 before main().
     #
     # **Every name here needs it now, including the three that predate the
     # export.** Until VRC-6 this tool's closure reached no OpenUSD at all, so
-    # this block did not exist; linking motionTracking put usd_gf in front of
+    # this block did not exist; linking motionConnectorTracking put usd_gf in front of
     # `--help`.
     if(TARGET gf)
-        set(_vrchat_osc_record_gf gf)
+        set(_vrchatoscrecord_gf gf)
     else()
-        set(_vrchat_osc_record_gf pxr::gf)
+        set(_vrchatoscrecord_gf pxr::gf)
     endif()
-    set(_vrchat_osc_record_test_path
-        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_vrchat_osc_record_gf}>"
-        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_vrchat_osc_record_gf}>/../bin")
-    get_filename_component(_vrchat_osc_record_python_dir
+    set(_vrchatoscrecord_test_path
+        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_vrchatoscrecord_gf}>"
+        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_vrchatoscrecord_gf}>/../bin")
+    get_filename_component(_vrchatoscrecord_python_dir
                            "${Python3_EXECUTABLE}" DIRECTORY)
-    list(APPEND _vrchat_osc_record_test_path
-         "PATH=path_list_prepend:${_vrchat_osc_record_python_dir}")
+    list(APPEND _vrchatoscrecord_test_path
+         "PATH=path_list_prepend:${_vrchatoscrecord_python_dir}")
     set_tests_properties(vrchat_osc_record_inspect vrchat_osc_record_loopback
                          vrchat_osc_record_ipv6 vrchat_osc_record_export
                          PROPERTIES
-        ENVIRONMENT_MODIFICATION "${_vrchat_osc_record_test_path}")
-endif()
-
-if(TEST vrchat_osc_record_endToEnd)
-    # This one needs more than the tools' own DLLs: it opens the baked stage
-    # through `pxr` in Python, so the USD runtime has to be importable and not
-    # merely loadable. Derived the way tools/motionCapture derives it -- pxr_DIR
-    # points at the config package, three levels below the prefix holding bin/,
-    # lib/ and the Python packages.
-    set(_vrchat_osc_usd_root "")
-    if(pxr_DIR AND EXISTS "${pxr_DIR}/bin")
-        set(_vrchat_osc_usd_root "${pxr_DIR}")
-    elseif(pxr_DIR)
-        get_filename_component(_vrchat_osc_usd_root "${pxr_DIR}/../../.."
-                               ABSOLUTE)
-    endif()
-    set_tests_properties(vrchat_osc_record_endToEnd PROPERTIES
-        ENVIRONMENT_MODIFICATION
-        "PATH=path_list_prepend:${_vrchat_osc_usd_root}/bin;PATH=path_list_prepend:${_vrchat_osc_usd_root}/lib;PYTHONPATH=path_list_prepend:${_vrchat_osc_usd_root}/lib/python;PYTHONPATH=path_list_prepend:${_vrchat_osc_usd_root}/lib/site-packages")
+        ENVIRONMENT_MODIFICATION "${_vrchatoscrecord_test_path}")
 endif()

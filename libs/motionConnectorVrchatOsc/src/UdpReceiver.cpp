@@ -10,16 +10,16 @@
 // instead of the five hundred and fifty the census measured
 // (osc-and-vrchat-trackers.md §2).
 //
-// What could not be shared is the naming. `liveTransport` reports what it
+// What could not be shared is the naming. `motionConnectorTransport` reports what it
 // observed; a code is frozen per adapter, before its decoder exists, so the
 // layer that knows which adapter it is has to be the one that names it
 // (WORKSPACE.md §2's diagnostic split).
 
-#include "vrmAdapterVrchatOsc/UdpReceiver.h"
+#include "motionConnectorVrchatOsc/UdpReceiver.h"
 
 #include <utility>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
@@ -39,18 +39,18 @@ namespace
 // receiver's clock there would give a session report two unrelated timelines in
 // one column.
 Diagnostic
-Translate(const liveTransport::TransportEventReport& report)
+Translate(const transport::TransportEventReport& report)
 {
     switch (report.event)
     {
-    case liveTransport::TransportEvent::Silence:
+    case transport::TransportEvent::Silence:
     {
         Diagnostic diagnostic = MakeDiagnostic(DiagnosticCode::SourceTimeout, report.detail);
         diagnostic.source = report.source;
         diagnostic.subject = report.subject;
         return diagnostic;
     }
-    case liveTransport::TransportEvent::BindFailed:
+    case transport::TransportEvent::BindFailed:
         break;
     }
     Diagnostic diagnostic = MakeDiagnostic(DiagnosticCode::SocketBindFailed, report.detail);
@@ -60,14 +60,14 @@ Translate(const liveTransport::TransportEventReport& report)
 }
 
 void
-Append(const std::vector<liveTransport::TransportEventReport>& events,
+Append(const std::vector<transport::TransportEventReport>& events,
        std::vector<Diagnostic>* diagnostics)
 {
     if (!diagnostics)
     {
         return;
     }
-    for (const liveTransport::TransportEventReport& report : events)
+    for (const transport::TransportEventReport& report : events)
     {
         diagnostics->push_back(Translate(report));
     }
@@ -78,14 +78,14 @@ Append(const std::vector<liveTransport::TransportEventReport>& events,
 bool
 UdpReceiver::Open(const UdpReceiverConfig& config, std::vector<Diagnostic>* diagnostics)
 {
-    liveTransport::UdpReceiverConfig transport;
+    transport::UdpReceiverConfig transport;
     transport.listenAddress = config.listenAddress;
     transport.listenPort = config.listenPort;
     transport.reuseAddress = config.reuseAddress;
     transport.receiveBufferBytes = config.receiveBufferBytes;
     transport.silenceTimeoutSeconds = config.silenceTimeoutSeconds;
 
-    std::vector<liveTransport::TransportEventReport> events;
+    std::vector<transport::TransportEventReport> events;
     const bool opened = _receiver.Open(transport, &events);
     Append(events, diagnostics);
     return opened;
@@ -105,10 +105,10 @@ UdpReceiver::Receive(ReceivedDatagram* datagram, double timeoutSeconds,
         return _receiver.Receive(datagram, timeoutSeconds);
     }
 
-    std::vector<liveTransport::TransportEventReport> events;
+    std::vector<transport::TransportEventReport> events;
     const ReceiveStatus status = _receiver.Receive(datagram, timeoutSeconds, &events);
     Append(events, diagnostics);
     return status;
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

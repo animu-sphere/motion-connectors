@@ -51,7 +51,7 @@
 // existed, and whether a threshold is exposed follows from whether the set has a
 // code for it.
 //
-// ## What this class promises, all of it `liveTransport`'s to keep
+// ## What this class promises, all of it `motionConnectorTransport`'s to keep
 //
 // An over-long datagram is detected and dropped rather than passed on half-read;
 // `receiveTime` is seconds since `Open` on a steady clock, which is the origin a
@@ -77,18 +77,18 @@
 // refusing it would be a socket inventing a restriction on itself.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
-#include "vrmAdapterVrchatOsc/api.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/api.h"
 
-#include "liveTransport/UdpReceiver.h"
+#include "motionConnectorTransport/UdpReceiver.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 // The port a VRChat OSC sender sends to unless it is told otherwise — the port
@@ -96,7 +96,7 @@ namespace vrmAdapterVrchatOsc
 // rather than defaulted silently, because an operator reading a config file
 // should see the number the application's own documentation told them, and
 // because the shared receiver has no default port at all: a port is a protocol's
-// property and `liveTransport` knows no protocol.
+// property and `motionConnectorTransport` knows no protocol.
 //
 // 9001 is the other half of that pair and is deliberately not here. It is the
 // port VRChat *sends* from, and this adapter never sends: an outbound half is
@@ -109,9 +109,9 @@ inline constexpr std::uint16_t DefaultVrchatOscPort = 9000;
 // overflowing, and a recorder is a polling loop that always can. It is opt-in
 // there for exactly this reason, so not naming it costs nothing and reserves
 // nothing.
-using liveTransport::ReceivedDatagram;
-using liveTransport::ReceiveStatus;
-using liveTransport::UdpReceiverStats;
+using transport::ReceivedDatagram;
+using transport::ReceiveStatus;
+using transport::UdpReceiverStats;
 
 struct UdpReceiverConfig
 {
@@ -150,7 +150,7 @@ struct UdpReceiverConfig
 };
 
 // A bound UDP socket, reporting this adapter's codes.
-class VRMADAPTERVRCHATOSC_API UdpReceiver final
+class MOTIONCONNECTORVRCHATOSC_API UdpReceiver final
 {
   public:
     UdpReceiver() = default;
@@ -256,7 +256,7 @@ class VRMADAPTERVRCHATOSC_API UdpReceiver final
 
     // Starts a new counting window without disturbing the session. It rearms the
     // silence report as well as zeroing the tally, and does not move the point
-    // silence is measured from — both are `liveTransport`'s contract, argued in
+    // silence is measured from — both are `motionConnectorTransport`'s contract, argued in
     // its header.
     void
     ResetStats() noexcept
@@ -265,7 +265,7 @@ class VRMADAPTERVRCHATOSC_API UdpReceiver final
     }
 
   private:
-    liveTransport::UdpReceiver _receiver;
+    transport::UdpReceiver _receiver;
 };
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

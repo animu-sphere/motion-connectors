@@ -6,19 +6,19 @@
 //
 // `motion-capture-trace` is defined as "what an adapter delivered -- after
 // protocol decode and coordinate conversion, before any intake policy"
-// (motionRuntime/CaptureTrace.h). For the two pose sources that sentence
+// (motionRecording/CaptureTrace.h). For the two pose sources that sentence
 // describes a frame exactly, and their exports are transcriptions. **Here it
 // does not**, and the difference is the whole of VRC-5: a `TrackerFrame` is a
-// handful of observations of places on a body, and a `HumanoidPose` is a rig's
+// handful of observations of places on a body, and a `MotionPose` is a rig's
 // joints. Something has to turn the first into the second, and this file is
 // where that something is *called* rather than where it lives:
 //
 //     TrackerFrame -> TrackerObservation[] -> AssignTrackers -> SolveTrackerPose
 //
-// Every step but the first belongs to `libs/motionTracking`. This file converts
+// Every step but the first belongs to `libs/motionConnectorTracking`. This file converts
 // a frame's samples into that library's observation type, hands them over, and
 // keeps what comes back. The permission is `adapters/*/tools/* ->
-// motionTracking` ([WORKSPACE.md §2](../../../../../docs/architecture/WORKSPACE.md)),
+// motionConnectorTracking` ([WORKSPACE.md §2](../../../../../docs/architecture/WORKSPACE.md)),
 // and it is a *tool's* permission for a reason this file is the demonstration
 // of: the assignment is an operator's statement about a rig, so an adapter
 // library that resolved it would have invented a calibration and hidden it
@@ -105,19 +105,22 @@
 // and it is printed rather than serialised.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/FrameAssembler.h"
+#include "motionConnectorVrchatOsc/FrameAssembler.h"
 
-#include "motionCore/Humanoid.h"
-#include "motionTracking/TrackerAssignment.h"
-#include "motionTracking/TrackerObservation.h"
-#include "motionTracking/TrackerRegion.h"
-#include "motionTracking/TrackerSolve.h"
+#include "motionCore/MotionPose.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerObservation.h"
+#include "motionConnectorTracking/TrackerRegion.h"
+#include "motionConnectorTracking/TrackerSolve.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdio>
 #include <string>
 #include <vector>
+
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+namespace tracking = openstrata::connectors::tracking;
 
 namespace vrchatOscRecordTool
 {
@@ -138,24 +141,24 @@ struct SolveReport
 
     // Per refusal enumerator, including `None`, so the counts sum to
     // `framesObserved` and a reader can check that they do.
-    std::array<std::size_t, motionTracking::TrackerSolveRefusalCount> refusals{};
+    std::array<std::size_t, tracking::TrackerSolveRefusalCount> refusals{};
     // The first detail seen under each refusal. One line rather than a count:
     // a 2000-frame session that refuses every frame refuses for one reason, and
     // 2000 copies of it would bury the report an operator ran this for.
-    std::array<std::string, motionTracking::TrackerSolveRefusalCount> firstDetail;
+    std::array<std::string, tracking::TrackerSolveRefusalCount> firstDetail;
 
     // Over solved frames only. A refused solve reports nothing about a region,
     // and folding its empty vectors in would make a session that refused
     // everything look like one whose straps were merely unused.
-    std::array<std::size_t, motionTracking::TrackerRegionCount> placed{};
-    std::array<std::size_t, motionTracking::TrackerRegionCount> unsolved{};
-    std::array<std::size_t, motionTracking::TrackerRegionCount> withoutRotation{};
+    std::array<std::size_t, tracking::TrackerRegionCount> placed{};
+    std::array<std::size_t, tracking::TrackerRegionCount> unsolved{};
+    std::array<std::size_t, tracking::TrackerRegionCount> withoutRotation{};
     // Kept beside `withoutRotation` and never folded into it: this region's own
     // tracker sent an orientation and a bone above it did not. An operator
     // reading a session wants the difference, because the two have different
     // fixes -- one is a strap, the other is the frame the strap arrived in.
-    std::array<std::size_t, motionTracking::TrackerRegionCount> withheldWithParent{};
-    std::array<std::size_t, motionTracking::TrackerRegionCount> positionsUnused{};
+    std::array<std::size_t, tracking::TrackerRegionCount> withheldWithParent{};
+    std::array<std::size_t, tracking::TrackerRegionCount> positionsUnused{};
 
     // The assignment layer's two ways for an observation to miss a statement,
     // kept apart here as they are there: a stated region whose tracker did not
@@ -176,7 +179,7 @@ struct SolveReport
     // first-seen order. Counted over every observed frame rather than every
     // solved one, because both are read off the assignment, which is filled
     // whatever the solve then refuses.
-    std::array<std::size_t, motionTracking::TrackerRegionCount> absent{};
+    std::array<std::size_t, tracking::TrackerRegionCount> absent{};
     std::vector<std::string> unplaced;
 };
 
@@ -209,14 +212,14 @@ class TraceCollector
     // export. An assignment that changed mid-capture would be a second
     // calibration nobody stated, and the operator who could state one is not at
     // the prompt any more.
-    TraceCollector(motionTracking::TrackerAssignmentSpec assignment,
-                   motionTracking::TrackerSolveConfig solve);
+    TraceCollector(tracking::TrackerAssignmentSpec assignment,
+                   tracking::TrackerSolveConfig solve);
 
     // `frames` is a push's worth, as `TrackerFrameAssembler::Push` appended
     // them. `metadata` is stamped on the session rather than on each pose,
-    // which is where `HumanoidAnimation` carries it.
-    void Observe(const std::vector<vrmAdapterVrchatOsc::TrackerFrame>& frames,
-                 const motion::MotionSourceMetadata& metadata);
+    // which is where `MotionClip` carries it.
+    void Observe(const std::vector<vrchatOsc::TrackerFrame>& frames,
+                 const openstrata::motion::SourceMetadata& metadata);
 
     // How many poses are held, across every session.
     std::size_t
@@ -238,7 +241,7 @@ class TraceCollector
 
     // Valid after `Close`. Sessions that produced no pose are not among them,
     // and `GetHipsMotion()` is indexed alongside.
-    const std::vector<motion::HumanoidAnimation>&
+    const std::vector<openstrata::motion::MotionClip>&
     GetSessions() const noexcept
     {
         return _sessions;
@@ -258,10 +261,10 @@ class TraceCollector
   private:
     void _OpenSession();
 
-    motionTracking::TrackerAssignmentSpec _assignment;
-    motionTracking::TrackerSolveConfig _solve;
+    tracking::TrackerAssignmentSpec _assignment;
+    tracking::TrackerSolveConfig _solve;
 
-    std::vector<motion::HumanoidAnimation> _sessions;
+    std::vector<openstrata::motion::MotionClip> _sessions;
     std::vector<HipsMotion> _hips;
     SolveReport _report;
     std::size_t _poses = 0;

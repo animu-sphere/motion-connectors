@@ -9,15 +9,15 @@
 // excluding a claim (adapter plan §9.5).
 //
 // This binary carries **three** such names, and a runner forbidding sockets must
-// exclude all three: `vrmAdapterVrchatOsc_udpReceiver`,
-// `vrmAdapterVrchatOsc_udpReceiverTruncation`, and
-// `vrmAdapterVrchatOsc_loopbackCorpus` — the corpus replay at the bottom of this
+// exclude all three: `motionConnectorVrchatOsc_udpReceiver`,
+// `motionConnectorVrchatOsc_udpReceiverTruncation`, and
+// `motionConnectorVrchatOsc_loopbackCorpus` — the corpus replay at the bottom of this
 // file, which binds a loopback socket like everything else here. It is listed in
 // CMake beside a corpus pass that binds nothing, so it is the one an operator
 // building an exclusion list would miss.
 //
 // The sender is in this file rather than in the library. The adapter receives,
-// and a `UdpSender` in `vrmAdapterVrchatOsc` would be a class no consumer has a
+// and a `UdpSender` in `motionConnectorVrchatOsc` would be a class no consumer has a
 // use for — and, worse, the first half of an outbound path §12 excludes on
 // purpose.
 //
@@ -40,16 +40,16 @@
 // ## The one pass that reads a corpus, and what it can check without a decoder
 //
 // Given a corpus directory this binary runs a different check
-// (`vrmAdapterVrchatOsc_loopbackCorpus`): every committed capture is replayed
+// (`motionConnectorVrchatOsc_loopbackCorpus`): every committed capture is replayed
 // **through a real socket** and compared, datagram for datagram, against the
 // same file read straight off disk. The siblings' equivalent passes compare
 // poses, because they have decoders; this one compares bytes, which is the
 // strongest claim available at this milestone and is also the exact claim VRC-0
 // is asked for — a capture replays deterministically.
-#include "vrmAdapterVrchatOsc/UdpReceiver.h"
+#include "motionConnectorVrchatOsc/UdpReceiver.h"
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <algorithm>
 #include <cassert>
@@ -77,17 +77,19 @@
 #include <unistd.h>
 #endif
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::Diagnostic;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::PacketCapture;
-using vrmAdapterVrchatOsc::ReceivedDatagram;
-using vrmAdapterVrchatOsc::ReceiveStatus;
-using vrmAdapterVrchatOsc::RecordedDatagram;
-using vrmAdapterVrchatOsc::UdpReceiver;
-using vrmAdapterVrchatOsc::UdpReceiverConfig;
+using vrchatOsc::Diagnostic;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::PacketCapture;
+using vrchatOsc::ReceivedDatagram;
+using vrchatOsc::ReceiveStatus;
+using vrchatOsc::RecordedDatagram;
+using vrchatOsc::UdpReceiver;
+using vrchatOsc::UdpReceiverConfig;
 
 // Long enough that a loopback datagram which has been handed to the kernel is
 // certainly readable, short enough that a genuinely lost one fails the suite
@@ -320,14 +322,14 @@ TestTheDefaultPortIsTheOneTheApplicationDocuments()
 {
     // Not a socket test: it binds nothing. It pins the one number this adapter
     // adds to a transport that has no default port of its own, because a port
-    // is a protocol's property and `liveTransport` knows no protocol.
+    // is a protocol's property and `motionConnectorTransport` knows no protocol.
     //
     // 9001 is deliberately not here. That is the port VRChat *sends* from, and
     // an adapter that defaulted to it would be listening for the half of the
     // conversation §12 excludes.
     const UdpReceiverConfig config;
     assert(config.listenPort == 9000);
-    assert(vrmAdapterVrchatOsc::DefaultVrchatOscPort == 9000);
+    assert(vrchatOsc::DefaultVrchatOscPort == 9000);
     assert(config.listenAddress == "0.0.0.0");
     // Off by default, so the refusal above happens rather than a silent split.
     assert(!config.reuseAddress);
@@ -405,7 +407,7 @@ TestADatagramArrivesWholeWithItsSenderAndItsInstant()
     assert(receiver.Receive(&datagram, kLoopbackTimeout) == ReceiveStatus::Received);
     assert(datagram.bytes.empty());
 
-    const vrmAdapterVrchatOsc::UdpReceiverStats& stats = receiver.GetStats();
+    const vrchatOsc::UdpReceiverStats& stats = receiver.GetStats();
     assert(stats.datagramsReceived == 4);
     assert(stats.bytesReceived == small.size() * 2 + large.size());
     assert(stats.datagramsTruncated == 0);
@@ -575,7 +577,7 @@ CheckAnOverlongDatagramIsDroppedRatherThanHandedBackAsWhole()
     // Above the IPv4 bound the capture format enforces, below IPv6's own 65527
     // maximum. One byte over would do; a handful makes the intent legible.
     const std::vector<std::uint8_t> overlong =
-        Payload(vrmAdapterVrchatOsc::MaxDatagramBytes + 8, 0x00);
+        Payload(vrchatOsc::MaxDatagramBytes + 8, 0x00);
     if (!sender.Send(overlong))
     {
         std::puts("skipped: this host will not send an over-long datagram");
@@ -664,12 +666,12 @@ TestWhatCameOffTheSocketIsWhatACaptureKeeps()
     }
 
     std::ostringstream written;
-    assert(vrmAdapterVrchatOsc::WritePacketCapture(written, capture));
+    assert(vrchatOsc::WritePacketCapture(written, capture));
 
     PacketCapture reread;
     std::istringstream input(written.str());
-    vrmAdapterVrchatOsc::PacketCaptureError error;
-    if (!vrmAdapterVrchatOsc::ReadPacketCapture(input, &reread, &error))
+    vrchatOsc::PacketCaptureError error;
+    if (!vrchatOsc::ReadPacketCapture(input, &reread, &error))
     {
         std::fprintf(stderr, "line %zu: %s\n", error.line, error.message.c_str());
         assert(false);
@@ -686,7 +688,7 @@ TestWhatCameOffTheSocketIsWhatACaptureKeeps()
     // And re-emitting reproduces the file byte for byte, which is what will let
     // a committed capture be compared rather than merely parsed.
     std::ostringstream again;
-    assert(vrmAdapterVrchatOsc::WritePacketCapture(again, reread));
+    assert(vrchatOsc::WritePacketCapture(again, reread));
     assert(again.str() == written.str());
 }
 
@@ -708,8 +710,8 @@ ReplayOneCapture(const std::filesystem::path& path)
 {
     const std::string name = path.filename().string();
     PacketCapture fromFile;
-    vrmAdapterVrchatOsc::PacketCaptureError error;
-    if (!vrmAdapterVrchatOsc::ReadPacketCaptureFile(path.string(), &fromFile, &error))
+    vrchatOsc::PacketCaptureError error;
+    if (!vrchatOsc::ReadPacketCaptureFile(path.string(), &fromFile, &error))
     {
         std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
         return false;
@@ -858,6 +860,6 @@ main(int argc, char** argv)
     TestSilenceIsReportedOncePerEpisodeAndRearmedByADatagram();
     TestSilenceIsCountedEvenWhenNobodyAskedForTheDiagnostic();
     TestWhatCameOffTheSocketIsWhatACaptureKeeps();
-    std::puts("vrmAdapterVrchatOsc udp receiver tests passed");
+    std::puts("motionConnectorVrchatOsc udp receiver tests passed");
     return 0;
 }

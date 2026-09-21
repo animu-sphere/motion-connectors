@@ -75,15 +75,15 @@
 #include "SessionReport.h"
 #include "TraceExport.h"
 
-#include "vrmAdapterVrchatOsc/AddressInventory.h"
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/FrameAssembler.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
-#include "vrmAdapterVrchatOsc/TrackerMessage.h"
-#include "vrmAdapterVrchatOsc/UdpReceiver.h"
+#include "motionConnectorVrchatOsc/AddressInventory.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/FrameAssembler.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
+#include "motionConnectorVrchatOsc/UdpReceiver.h"
 
-#include "motionCore/Humanoid.h"
-#include "motionRuntime/CaptureTrace.h"
+#include "motionCore/MotionPose.h"
+#include "motionRecording/CaptureTrace.h"
 
 #include <algorithm>
 #include <csignal>
@@ -96,6 +96,8 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
 
 namespace
 {
@@ -124,15 +126,15 @@ constexpr double kProgressSeconds = 1.0;
 // that raises it, so a filter would suppress the only mid-session message an
 // operator actually waits for.
 void
-ReportDiagnostics(const std::vector<vrmAdapterVrchatOsc::Diagnostic>& log, bool quiet)
+ReportDiagnostics(const std::vector<vrchatOsc::Diagnostic>& log, bool quiet)
 {
     if (quiet)
     {
         return;
     }
-    for (const vrmAdapterVrchatOsc::Diagnostic& diagnostic : log)
+    for (const vrchatOsc::Diagnostic& diagnostic : log)
     {
-        std::cerr << "vrchat_osc_record: " << vrmAdapterVrchatOsc::FormatDiagnostic(diagnostic)
+        std::cerr << "vrchat_osc_record: " << vrchatOsc::FormatDiagnostic(diagnostic)
                   << "\n";
     }
 }
@@ -159,16 +161,16 @@ EndpointIsIpv6(const std::string& endpoint)
 // One row per address and type tag pair, because a sender that spells one
 // address two ways is the finding a table keyed on the address alone would hide.
 void
-PrintAddressInventory(std::FILE* out, const vrmAdapterVrchatOsc::PacketCapture& capture)
+PrintAddressInventory(std::FILE* out, const vrchatOsc::PacketCapture& capture)
 {
-    const vrmAdapterVrchatOsc::AddressInventory inventory =
-        vrmAdapterVrchatOsc::InventoryAddresses(capture);
+    const vrchatOsc::AddressInventory inventory =
+        vrchatOsc::InventoryAddresses(capture);
 
     std::fprintf(out,
                  "addresses: %zu (%zu message(s), %zu bundled datagram(s), "
                  "%zu refused)\n",
                  inventory.rows.size(), inventory.messages, inventory.bundled, inventory.refused);
-    for (const vrmAdapterVrchatOsc::AddressRow& row : inventory.rows)
+    for (const vrchatOsc::AddressRow& row : inventory.rows)
     {
         std::fprintf(out,
                      "  %s ,%s  %zu message(s) in %zu datagram(s)  "
@@ -178,9 +180,9 @@ PrintAddressInventory(std::FILE* out, const vrmAdapterVrchatOsc::PacketCapture& 
     }
     // Every refusal, not a count: a session half-refused is one an operator has
     // to be able to read the reason for, and a capture is a bounded file.
-    for (const vrmAdapterVrchatOsc::Diagnostic& diagnostic : inventory.diagnostics)
+    for (const vrchatOsc::Diagnostic& diagnostic : inventory.diagnostics)
     {
-        std::fprintf(out, "  %s\n", vrmAdapterVrchatOsc::FormatDiagnostic(diagnostic).c_str());
+        std::fprintf(out, "  %s\n", vrchatOsc::FormatDiagnostic(diagnostic).c_str());
     }
 }
 
@@ -197,7 +199,7 @@ PrintAddressInventory(std::FILE* out, const vrmAdapterVrchatOsc::PacketCapture& 
 // cost the only claim `--inspect` has.
 bool
 ExportTrace(const vrchatOscRecordTool::Options& options,
-            const vrmAdapterVrchatOsc::PacketCapture& capture)
+            const vrchatOsc::PacketCapture& capture)
 {
     // The second half of the refusal `ParseOptions` makes on the spelling. That
     // one catches `--inspect x --export-trace x`; this catches the same file
@@ -216,7 +218,7 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
         return false;
     }
 
-    vrmAdapterVrchatOsc::TrackerFrameAssembler assembler;
+    vrchatOsc::TrackerFrameAssembler assembler;
     // The capture's own peer, so a replayed session's diagnostics name what the
     // live one's would have named. A capture that recorded none falls back to
     // its path, which is what the corpus tests read.
@@ -224,45 +226,45 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
 
     // The provenance the adapter refuses to invent and the operator already
     // stated. `protocol` is this file's to fill because no type in the adapter
-    // holds one: `vrmAdapterVrchatOsc` produces no pose, so it carries no
-    // `MotionSourceMetadata` for a frame assembler to stamp — which is the
+    // holds one: `motionConnectorVrchatOsc` produces no pose, so it carries no
+    // `SourceMetadata` for a frame assembler to stamp — which is the
     // library's edge set showing through rather than an omission.
-    motion::MotionSourceMetadata metadata;
-    metadata.kind = motion::MotionSourceKind::LiveCapture;
+    openstrata::motion::SourceMetadata metadata;
+    metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
     metadata.protocol = "vrchat-osc";
     metadata.provider = capture.sender;
     metadata.sourceId = capture.sourceId;
 
     vrchatOscRecordTool::TraceCollector trace(options.assignment, options.solve);
-    std::vector<vrmAdapterVrchatOsc::TrackerFrame> frames;
-    std::vector<vrmAdapterVrchatOsc::Diagnostic> log;
+    std::vector<vrchatOsc::TrackerFrame> frames;
+    std::vector<vrchatOsc::Diagnostic> log;
     // First of each code, and how many there were. An eight-datagram frame that
     // is short one address raises one diagnostic per frame, so a 2000-frame
     // session with a strap off would otherwise write 2000 lines over the report
     // an operator ran this for.
-    std::map<vrmAdapterVrchatOsc::DiagnosticCode, std::pair<std::string, std::size_t>> seen;
+    std::map<vrchatOsc::DiagnosticCode, std::pair<std::string, std::size_t>> seen;
     const auto drain = [&seen, &log]()
     {
-        for (const vrmAdapterVrchatOsc::Diagnostic& diagnostic : log)
+        for (const vrchatOsc::Diagnostic& diagnostic : log)
         {
             auto& entry = seen[diagnostic.code];
             if (entry.second == 0)
             {
-                entry.first = vrmAdapterVrchatOsc::FormatDiagnostic(diagnostic);
+                entry.first = vrchatOsc::FormatDiagnostic(diagnostic);
             }
             ++entry.second;
         }
         log.clear();
     };
 
-    for (const vrmAdapterVrchatOsc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
     {
-        const vrmAdapterVrchatOsc::TrackerPacket packet =
-            vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram.bytes);
+        const vrchatOsc::TrackerPacket packet =
+            vrchatOsc::DecodeTrackerDatagram(datagram.bytes);
         // The decoder's own refusals, which it raises without a source or a
         // timestamp because it knows neither. Stamped here, where both are
         // known, exactly as `InventoryAddresses` stamps them.
-        for (vrmAdapterVrchatOsc::Diagnostic diagnostic : packet.diagnostics)
+        for (vrchatOsc::Diagnostic diagnostic : packet.diagnostics)
         {
             diagnostic.source = assembler.GetSource();
             diagnostic.timestamp = datagram.receiveTime;
@@ -292,7 +294,7 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
     trace.Observe(frames, metadata);
 
     trace.Close();
-    const std::vector<motion::HumanoidAnimation>& sessions = trace.GetSessions();
+    const std::vector<openstrata::motion::MotionClip>& sessions = trace.GetSessions();
 
     if (!options.quiet)
     {
@@ -302,7 +304,7 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
             if (entry.second.second > 1)
             {
                 std::cerr << " (and " << (entry.second.second - 1) << " more of "
-                          << vrmAdapterVrchatOsc::DiagnosticCodeString(entry.first) << ")";
+                          << vrchatOsc::DiagnosticCodeString(entry.first) << ")";
             }
             std::cerr << "\n";
         }
@@ -350,8 +352,8 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
         return false;
     }
 
-    const motion::HumanoidAnimation& session = sessions[index];
-    if (!motion::WriteCaptureTraceFile(options.traceExportPath, session))
+    const openstrata::motion::MotionClip& session = sessions[index];
+    if (!openstrata::motion::WriteCaptureTraceFile(options.traceExportPath, session))
     {
         // The writer refuses before its first byte when a value cannot be
         // spelled in that format, so a refusal here leaves the path untouched
@@ -391,9 +393,9 @@ ExportTrace(const vrchatOscRecordTool::Options& options,
 int
 RunInspect(const vrchatOscRecordTool::Options& options)
 {
-    vrmAdapterVrchatOsc::PacketCapture capture;
-    vrmAdapterVrchatOsc::PacketCaptureError captureError;
-    if (!vrmAdapterVrchatOsc::ReadPacketCaptureFile(options.inspectPath, &capture, &captureError))
+    vrchatOsc::PacketCapture capture;
+    vrchatOsc::PacketCaptureError captureError;
+    if (!vrchatOsc::ReadPacketCaptureFile(options.inspectPath, &capture, &captureError))
     {
         std::cerr << "vrchat_osc_record: " << options.inspectPath;
         if (captureError.line != 0)
@@ -405,7 +407,7 @@ RunInspect(const vrchatOscRecordTool::Options& options)
     }
 
     vrchatOscRecordTool::SessionReport report;
-    for (const vrmAdapterVrchatOsc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
     {
         // The record's own peer where the capture carries one, and the
         // header's where it does not. A capture written before the format
@@ -435,13 +437,13 @@ RunInspect(const vrchatOscRecordTool::Options& options)
 int
 RunRecord(const vrchatOscRecordTool::Options& options)
 {
-    vrmAdapterVrchatOsc::UdpReceiver receiver;
-    std::vector<vrmAdapterVrchatOsc::Diagnostic> log;
+    vrchatOsc::UdpReceiver receiver;
+    std::vector<vrchatOsc::Diagnostic> log;
     if (!receiver.Open(options.receiver, &log))
     {
-        for (const vrmAdapterVrchatOsc::Diagnostic& diagnostic : log)
+        for (const vrchatOsc::Diagnostic& diagnostic : log)
         {
-            std::cerr << "vrchat_osc_record: " << vrmAdapterVrchatOsc::FormatDiagnostic(diagnostic)
+            std::cerr << "vrchat_osc_record: " << vrchatOsc::FormatDiagnostic(diagnostic)
                       << "\n";
         }
         return 1;
@@ -476,7 +478,7 @@ RunRecord(const vrchatOscRecordTool::Options& options)
         }
     }
 
-    vrmAdapterVrchatOsc::PacketCapture capture;
+    vrchatOsc::PacketCapture capture;
     capture.sender = options.sender;
     capture.device = options.device;
     capture.sourceId = options.sourceId;
@@ -485,7 +487,7 @@ RunRecord(const vrchatOscRecordTool::Options& options)
     vrchatOscRecordTool::SessionReport report;
     report.SetStopReason(vrchatOscRecordTool::StopReason::Interrupted);
 
-    vrmAdapterVrchatOsc::ReceivedDatagram datagram;
+    vrchatOsc::ReceivedDatagram datagram;
     double lastArrival = 0.0;
     double lastProgress = 0.0;
     bool running = true;
@@ -497,17 +499,17 @@ RunRecord(const vrchatOscRecordTool::Options& options)
             break;
         }
 
-        const vrmAdapterVrchatOsc::ReceiveStatus status =
+        const vrchatOsc::ReceiveStatus status =
             receiver.Receive(&datagram, kPollSeconds, &log);
         switch (status)
         {
-        case vrmAdapterVrchatOsc::ReceiveStatus::Received:
+        case vrchatOsc::ReceiveStatus::Received:
         {
             // Recorded first. With no decoder in this process the rule costs
             // nothing to keep, and it is the rule the file's whole value rests
             // on: nothing anything here makes of a packet can change what was
             // recorded.
-            capture.datagrams.push_back(vrmAdapterVrchatOsc::RecordedDatagram{
+            capture.datagrams.push_back(vrchatOsc::RecordedDatagram{
                 datagram.receiveTime, datagram.peer, datagram.bytes});
             // The header names the first peer the session saw and the
             // records name every one of them. On this wire that is the
@@ -531,9 +533,9 @@ RunRecord(const vrchatOscRecordTool::Options& options)
             }
             break;
         }
-        case vrmAdapterVrchatOsc::ReceiveStatus::Idle:
+        case vrchatOsc::ReceiveStatus::Idle:
             break;
-        case vrmAdapterVrchatOsc::ReceiveStatus::Closed:
+        case vrchatOsc::ReceiveStatus::Closed:
             // Not folded into the arm below. `Closed` means no socket is open,
             // which is a different fact from a socket that reported an error —
             // and `GetLastErrorText()` is documented as empty until something
@@ -543,7 +545,7 @@ RunRecord(const vrchatOscRecordTool::Options& options)
             report.SetStopReason(vrchatOscRecordTool::StopReason::SocketClosed);
             running = false;
             break;
-        case vrmAdapterVrchatOsc::ReceiveStatus::Failed:
+        case vrchatOsc::ReceiveStatus::Failed:
             std::cerr << "vrchat_osc_record: the socket failed: " << receiver.GetLastErrorText()
                       << "\n";
             report.SetStopReason(vrchatOscRecordTool::StopReason::ReceiveFailed);
@@ -629,7 +631,7 @@ RunRecord(const vrchatOscRecordTool::Options& options)
         }
         else
         {
-            written = vrmAdapterVrchatOsc::WritePacketCaptureFile(options.outputPath, capture);
+            written = vrchatOsc::WritePacketCaptureFile(options.outputPath, capture);
             if (!written)
             {
                 std::cerr << "vrchat_osc_record: could not write " << options.outputPath << "\n";

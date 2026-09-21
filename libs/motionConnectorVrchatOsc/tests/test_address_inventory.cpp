@@ -14,10 +14,10 @@
 // The suite that describes OSC itself is `libs/osc`'s. What is checked here is
 // this adapter's two contributions: the grouping, and the map from a neutral
 // refusal onto `VRM_VRCHAT_OSC_PACKET_MALFORMED`.
-#include "vrmAdapterVrchatOsc/AddressInventory.h"
+#include "motionConnectorVrchatOsc/AddressInventory.h"
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <cassert>
 #include <cstdio>
@@ -26,14 +26,16 @@
 #include <string_view>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::AddressInventory;
-using vrmAdapterVrchatOsc::AddressRow;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::PacketCapture;
-using vrmAdapterVrchatOsc::RecordedDatagram;
+using vrchatOsc::AddressInventory;
+using vrchatOsc::AddressRow;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::PacketCapture;
+using vrchatOsc::RecordedDatagram;
 
 // ---------------------------------------------------------------------------
 // Byte assembly. Big-endian throughout, like the wire.
@@ -158,7 +160,7 @@ TestEveryAddressAppearsWhetherOrNotAnybodyExpectedIt()
                        Message("/an/address/nobody/documented", {1.0f})}));
     }
 
-    const AddressInventory inventory = vrmAdapterVrchatOsc::InventoryAddresses(capture);
+    const AddressInventory inventory = vrchatOsc::InventoryAddresses(capture);
 
     assert(inventory.datagrams == 3);
     assert(inventory.decoded == 3);
@@ -205,7 +207,7 @@ TestOneAddressWithTwoTypeTagsIsTwoRows()
     Record(&capture, 1.0, Message("/tracking/trackers/head/position", {1.7f}));
     Record(&capture, 2.0, Message("/tracking/trackers/head/position", {0.0f, 1.7f, 0.1f}));
 
-    const AddressInventory inventory = vrmAdapterVrchatOsc::InventoryAddresses(capture);
+    const AddressInventory inventory = vrchatOsc::InventoryAddresses(capture);
 
     assert(inventory.rows.size() == 2);
     const AddressRow* three = Find(inventory, "/tracking/trackers/head/position", "fff");
@@ -234,7 +236,7 @@ TestARepeatedAddressInOneBundleCountsOneDatagram()
            Bundle({Message("/tracking/trackers/2/position", {0.0f, 0.0f, 0.0f}),
                    Message("/tracking/trackers/2/position", {0.1f, 0.0f, 0.0f})}));
 
-    const AddressInventory inventory = vrmAdapterVrchatOsc::InventoryAddresses(capture);
+    const AddressInventory inventory = vrchatOsc::InventoryAddresses(capture);
 
     assert(inventory.rows.size() == 1);
     assert(inventory.rows.front().messages == 2);
@@ -260,7 +262,7 @@ TestARefusalArrivesAsThisAdaptersCode()
     Record(&capture, 1.0, Message("/tracking/trackers/1/position", {0.0f, 1.0f, 0.0f}));
     Record(&capture, 1.5, {0xde, 0xad, 0xbe, 0xef});
 
-    const AddressInventory inventory = vrmAdapterVrchatOsc::InventoryAddresses(capture);
+    const AddressInventory inventory = vrchatOsc::InventoryAddresses(capture);
 
     assert(inventory.datagrams == 3);
     assert(inventory.decoded == 1);
@@ -279,14 +281,14 @@ TestARefusalArrivesAsThisAdaptersCode()
     }
     assert(*inventory.diagnostics.front().timestamp == 0.5);
     assert(*inventory.diagnostics.back().timestamp == 1.5);
-    assert(vrmAdapterVrchatOsc::FormatDiagnostic(inventory.diagnostics.front())
+    assert(vrchatOsc::FormatDiagnostic(inventory.diagnostics.front())
                .find("[VRM_VRCHAT_OSC_PACKET_MALFORMED]") == 0);
 }
 
 void
 TestAnEmptyCaptureIsAnInventoryAndNotAnError()
 {
-    const AddressInventory inventory = vrmAdapterVrchatOsc::InventoryAddresses(PacketCapture());
+    const AddressInventory inventory = vrchatOsc::InventoryAddresses(PacketCapture());
     assert(inventory.datagrams == 0);
     assert(inventory.rows.empty());
     assert(inventory.diagnostics.empty());
@@ -296,7 +298,7 @@ TestAnEmptyCaptureIsAnInventoryAndNotAnError()
     PacketCapture noise;
     Record(&noise, 0.0, {1, 2, 3, 4});
     Record(&noise, 0.1, {});
-    const AddressInventory refused = vrmAdapterVrchatOsc::InventoryAddresses(noise);
+    const AddressInventory refused = vrchatOsc::InventoryAddresses(noise);
     assert(refused.datagrams == 2);
     assert(refused.decoded == 0);
     assert(refused.rows.empty());
@@ -313,6 +315,6 @@ main()
     TestARepeatedAddressInOneBundleCountsOneDatagram();
     TestARefusalArrivesAsThisAdaptersCode();
     TestAnEmptyCaptureIsAnInventoryAndNotAnError();
-    std::puts("vrmAdapterVrchatOsc address inventory tests passed");
+    std::puts("motionConnectorVrchatOsc address inventory tests passed");
     return 0;
 }

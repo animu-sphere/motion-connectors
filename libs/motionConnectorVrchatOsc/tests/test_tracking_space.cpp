@@ -22,11 +22,11 @@
 // per capture, because the generated corpus's numbers are this repository's own
 // invention and a fixture cannot verify a basis — only a labelled session can,
 // and that is what the constants above it are.
-#include "vrmAdapterVrchatOsc/TrackingSpace.h"
+#include "motionConnectorVrchatOsc/TrackingSpace.h"
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
-#include "vrmAdapterVrchatOsc/TrackerMessage.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
 
 #include "motionCore/Compare.h"
 
@@ -44,18 +44,20 @@
 #include <string_view>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::Diagnostic;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::MapTrackerPosition;
-using vrmAdapterVrchatOsc::MapTrackerRotation;
-using vrmAdapterVrchatOsc::PacketCapture;
-using vrmAdapterVrchatOsc::ToCanonicalPosition;
-using vrmAdapterVrchatOsc::ToCanonicalRotation;
-using vrmAdapterVrchatOsc::TrackerChannel;
-using vrmAdapterVrchatOsc::TrackerMessage;
+using vrchatOsc::Diagnostic;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::MapTrackerPosition;
+using vrchatOsc::MapTrackerRotation;
+using vrchatOsc::PacketCapture;
+using vrchatOsc::ToCanonicalPosition;
+using vrchatOsc::ToCanonicalRotation;
+using vrchatOsc::TrackerChannel;
+using vrchatOsc::TrackerMessage;
 
 // ---------------------------------------------------------------------------
 // What the 2026-08-30 session reported. Every number here was measured; none
@@ -271,8 +273,8 @@ TestASenderYawBecomesTheOppositeCanonicalYaw()
     assert(NearVector(facing, pxr::GfVec3f(-1.0f, 0.0f, 0.0f), 1e-5f));
     // The vertical axis is the mirror's fixed axis, so it is untouched.
     assert(NearVector(canonical.Transform(kCanonicalUp), kCanonicalUp, 1e-5f));
-    assert(motion::AngleBetween(canonical, AxisRotation(1, -90.0f)) <
-           motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(canonical, AxisRotation(1, -90.0f)) <
+           openstrata::motion::MotionTolerance{}.angle);
 }
 
 // **The Euler order, as far as this session measures it.** The head does not
@@ -309,20 +311,21 @@ void
 TestTheAngleUnitIsDegreesAndTheWrapIsNotADiscontinuity()
 {
     const pxr::GfQuatf identity = ToCanonicalRotation({{0.0f, 0.0f, 0.0f}});
-    assert(motion::AngleBetween(identity, pxr::GfQuatf::GetIdentity()) <
-           motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(identity, pxr::GfQuatf::GetIdentity()) <
+           openstrata::motion::MotionTolerance{}.angle);
 
     const pxr::GfQuatf justUnder = ToCanonicalRotation({{359.9942f, 359.9942f, 359.9942f}});
     const pxr::GfQuatf justOver = ToCanonicalRotation({{-0.0058f, -0.0058f, -0.0058f}});
-    assert(motion::AngleBetween(justUnder, justOver) < motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(justUnder, justOver) <
+           openstrata::motion::MotionTolerance{}.angle);
 
     // A radian reading of the same numbers would put this sample most of a full
     // turn away from where a degree reading puts it. 30 degrees is 0.52 rad, so
     // the two readings differ by 29.5 degrees of yaw and the check is that the
     // conversion lands on the first.
     const pxr::GfQuatf thirtyDegrees = ToCanonicalRotation({{0.0f, 30.0f, 0.0f}});
-    assert(motion::AngleBetween(thirtyDegrees, AxisRotation(1, -30.0f)) <
-           motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(thirtyDegrees, AxisRotation(1, -30.0f)) <
+           openstrata::motion::MotionTolerance{}.angle);
 }
 
 // Every rotation this layer produces is an orientation: unit length, for any
@@ -349,10 +352,10 @@ TestEveryRotationIsUnitLength()
 void
 TestThePublishedConstantsDescribeTheArithmetic()
 {
-    using vrmAdapterVrchatOsc::TrackingSpaceAngleUnitInDegrees;
-    using vrmAdapterVrchatOsc::TrackingSpaceDeterminant;
-    using vrmAdapterVrchatOsc::TrackingSpaceMirroredComponent;
-    using vrmAdapterVrchatOsc::TrackingSpaceUnitInMeters;
+    using vrchatOsc::TrackingSpaceAngleUnitInDegrees;
+    using vrchatOsc::TrackingSpaceDeterminant;
+    using vrchatOsc::TrackingSpaceMirroredComponent;
+    using vrchatOsc::TrackingSpaceUnitInMeters;
 
     // One unit along each axis converts to that many metres, and exactly the
     // named component comes back negated.
@@ -405,10 +408,10 @@ TestThePublishedConstantsDescribeTheArithmetic()
 void
 TestTheSubjectIsTheAddressTheMessageCameFrom()
 {
-    assert(vrmAdapterVrchatOsc::TrackerMessageAddress(
+    assert(vrchatOsc::TrackerMessageAddress(
                MakeMessage("head", TrackerChannel::Rotation, {{0, 0, 0}})) ==
            "/tracking/trackers/head/rotation");
-    assert(vrmAdapterVrchatOsc::TrackerMessageAddress(MakeMessage(
+    assert(vrchatOsc::TrackerMessageAddress(MakeMessage(
                "3", TrackerChannel::Position, {{0, 0, 0}})) == "/tracking/trackers/3/position");
 }
 
@@ -444,8 +447,8 @@ TestTheChannelGuardRefusesAValueItCouldNotTellApart()
     assert(MapTrackerPosition(position, &point));
     assert(NearVector(point, ToCanonicalPosition(kRestHips), 1e-6f));
     assert(MapTrackerRotation(rotationMessage, &rotation));
-    assert(motion::AngleBetween(rotation, ToCanonicalRotation(kHeadTurnedLeft)) <
-           motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(rotation, ToCanonicalRotation(kHeadTurnedLeft)) <
+           openstrata::motion::MotionTolerance{}.angle);
 }
 
 // The one refusal about a *value*, which the wire path cannot produce because
@@ -522,8 +525,8 @@ CheckCorpus(const std::filesystem::path& root)
     for (const std::filesystem::path& path : captures)
     {
         PacketCapture capture;
-        vrmAdapterVrchatOsc::PacketCaptureError error;
-        if (!vrmAdapterVrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vrchatOsc::PacketCaptureError error;
+        if (!vrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", path.string().c_str(), error.line,
                          error.message.c_str());
@@ -531,10 +534,10 @@ CheckCorpus(const std::filesystem::path& root)
             continue;
         }
 
-        for (const vrmAdapterVrchatOsc::RecordedDatagram& datagram : capture.datagrams)
+        for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
         {
-            const vrmAdapterVrchatOsc::TrackerPacket packet =
-                vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram.bytes);
+            const vrchatOsc::TrackerPacket packet =
+                vrchatOsc::DecodeTrackerDatagram(datagram.bytes);
             for (const TrackerMessage& message : packet.messages)
             {
                 Diagnostic diagnostic;
@@ -552,9 +555,9 @@ CheckCorpus(const std::filesystem::path& root)
                 {
                     pxr::GfQuatf rotation = pxr::GfQuatf::GetIdentity();
                     ok = MapTrackerRotation(message, &rotation, &diagnostic);
-                    if (ok && motion::AngleBetween(rotation, pxr::GfQuatf::GetIdentity()) >
-                                  motion::MotionTolerance{}.angle)
-                    {
+                    if (ok &&
+                        openstrata::motion::AngleBetween(rotation, pxr::GfQuatf::GetIdentity()) >
+                            openstrata::motion::MotionTolerance{}.angle) {
                         ++rotations;
                     }
                 }
@@ -562,7 +565,7 @@ CheckCorpus(const std::filesystem::path& root)
                 {
                     std::fprintf(stderr, "%s: %s refused a decoded message\n",
                                  path.string().c_str(),
-                                 vrmAdapterVrchatOsc::TrackerMessageAddress(message).c_str());
+                                 vrchatOsc::TrackerMessageAddress(message).c_str());
                     ++failures;
                     continue;
                 }
@@ -617,6 +620,6 @@ main(int argc, char** argv)
     TestTheChannelGuardRefusesAValueItCouldNotTellApart();
     TestANonFiniteComponentIsRefusedHereToo();
     TestTheStructuralGuardRefusesRatherThanDereference();
-    std::puts("vrmAdapterVrchatOsc tracking space tests passed");
+    std::puts("motionConnectorVrchatOsc tracking space tests passed");
     return 0;
 }

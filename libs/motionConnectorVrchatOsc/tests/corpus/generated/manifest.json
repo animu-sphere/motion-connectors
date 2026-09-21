@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "description": "Machine-readable provenance for the generated half of the VRChat OSC corpus. Every capture is assembled by adapters/liveCapture/vrchatOsc/tools/generate_packets.py from the OSC grammar - there is no third-party capture data here and therefore no redistribution gate. Field values are measured from the committed files, never guessed. The recorded half of this corpus lives one directory over and carries no bytes at all: a tracker stream is a real person's motion in a real room.",
+  "description": "Machine-readable provenance for the generated half of the VRChat OSC corpus. Every capture is assembled by libs/motionConnectorVrchatOsc/tools/generate_packets.py from the OSC grammar - there is no third-party capture data here and therefore no redistribution gate. Field values are measured from the committed files, never guessed. The recorded half of this corpus lives one directory over and carries no bytes at all: a tracker stream is a real person's motion in a real room.",
   "format": {
     "name": "vrchat-osc-packet-capture",
     "version": 1,
-    "spec": "adapters/liveCapture/vrchatOsc/include/vrmAdapterVrchatOsc/PacketCapture.h"
+    "spec": "libs/motionConnectorVrchatOsc/include/motionConnectorVrchatOsc/PacketCapture.h"
   },
   "provenance": {
     "origin": "synthetic",
-    "generator": "adapters/liveCapture/vrchatOsc/tools/generate_packets.py",
+    "generator": "libs/motionConnectorVrchatOsc/tools/generate_packets.py",
     "license": "Apache-2.0",
     "redistributionAllowed": true,
     "capturedFromRealSender": false,

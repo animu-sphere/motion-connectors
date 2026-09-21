@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
 
 #include <array>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
 {
 
-using liveTransport::DiagnosticCodeEntry;
+using transport::DiagnosticCodeEntry;
 
 // One table, in enum order. Severity and recoverability live here rather than at
 // each raise site so that two call sites cannot report the same code two ways --
@@ -18,7 +18,7 @@ using liveTransport::DiagnosticCodeEntry;
 //
 // The table is the whole of what this adapter contributes to the diagnostic
 // ring. Its rows are this protocol's failure modes and nothing else's, which is
-// exactly why a shared library may not hold one (liveTransport/Diagnostics.h).
+// exactly why a shared library may not hold one (motionConnectorTransport/Diagnostics.h).
 //
 // Exactly one code is fatal, and it is the same one both siblings make fatal: a
 // receiver that never bound has nothing to recover into. Everything else a live
@@ -53,7 +53,7 @@ constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
     {"VRM_VRCHAT_OSC_CALIBRATION_REQUIRED", DiagnosticSeverity::Warning, true},
 }};
 
-constexpr liveTransport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
+constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
 
 } // namespace
 
@@ -101,7 +101,7 @@ FormatDiagnostic(const Diagnostic& diagnostic)
     // improvement on agreement: an operator reading a session log with more than
     // one adapter in it does not have to learn a third line format to find out
     // which one complained.
-    return liveTransport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
+    return transport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

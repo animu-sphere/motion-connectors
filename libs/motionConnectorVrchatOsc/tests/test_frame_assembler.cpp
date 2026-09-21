@@ -17,9 +17,9 @@
 // went through both would fail for three reasons at once. The corpus pass at
 // the bottom is where this layer meets real bytes, and it reads the same
 // fixtures those two read.
-#include "vrmAdapterVrchatOsc/FrameAssembler.h"
+#include "motionConnectorVrchatOsc/FrameAssembler.h"
 
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <algorithm>
 #include <cassert>
@@ -31,18 +31,20 @@
 #include <string_view>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::Diagnostic;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::TrackerChannel;
-using vrmAdapterVrchatOsc::TrackerFrame;
-using vrmAdapterVrchatOsc::TrackerFrameAssembler;
-using vrmAdapterVrchatOsc::TrackerFrameConfig;
-using vrmAdapterVrchatOsc::TrackerMessage;
-using vrmAdapterVrchatOsc::TrackerPacket;
-using vrmAdapterVrchatOsc::TrackerSample;
+using vrchatOsc::Diagnostic;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::TrackerChannel;
+using vrchatOsc::TrackerFrame;
+using vrchatOsc::TrackerFrameAssembler;
+using vrchatOsc::TrackerFrameConfig;
+using vrchatOsc::TrackerMessage;
+using vrchatOsc::TrackerPacket;
+using vrchatOsc::TrackerSample;
 
 constexpr double kFrameSeconds = 0.017;
 constexpr double kBurstSeconds = 0.000008;
@@ -305,7 +307,7 @@ TestAPartialTrackerIsEmittedAndReported()
     // what this layer knows: it reports what the wire said, not a body part.
     const Diagnostic& partial = session.diagnostics.front();
     assert(partial.subject == "/tracking/trackers/1");
-    assert(partial.severity == vrmAdapterVrchatOsc::DiagnosticSeverity::Warning);
+    assert(partial.severity == vrchatOsc::DiagnosticSeverity::Warning);
     assert(partial.recoverable);
 }
 
@@ -749,9 +751,9 @@ CheckCorpus(const std::filesystem::path& directory)
             continue;
         }
 
-        vrmAdapterVrchatOsc::PacketCapture capture;
-        vrmAdapterVrchatOsc::PacketCaptureError error;
-        if (!vrmAdapterVrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vrchatOsc::PacketCapture capture;
+        vrchatOsc::PacketCaptureError error;
+        if (!vrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -762,12 +764,12 @@ CheckCorpus(const std::filesystem::path& directory)
         assembler.SetSource(name);
         std::vector<TrackerFrame> frames;
         std::vector<Diagnostic> diagnostics;
-        for (const vrmAdapterVrchatOsc::RecordedDatagram& datagram : capture.datagrams)
+        for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
         {
             // The record's own peer, which is what makes a restart readable
             // from a file at all: this wire marks one with a source port and
             // with nothing else.
-            const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram.bytes);
+            const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram.bytes);
             assembler.Push(packet, datagram.receiveTime, datagram.peer, &frames, &diagnostics);
         }
         assembler.Flush(&frames, &diagnostics);
@@ -852,6 +854,6 @@ main(int argc, char** argv)
     TestAFrameCarriesCanonicalValuesAndNotWireOnes();
     TestAnEmptyFrameIsNeverEmitted();
     TestACallerBuiltMessageWithNoChannelIsRefused();
-    std::puts("vrmAdapterVrchatOsc frame assembler tests passed");
+    std::puts("motionConnectorVrchatOsc frame assembler tests passed");
     return 0;
 }

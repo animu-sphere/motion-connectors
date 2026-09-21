@@ -43,11 +43,11 @@ capture rather than leaving it to be inferred. `observed` takes three values:
 Keeping that in a field rather than in a comment is what stops a later reader
 mistaking any of the eleven for a recording.
 
-The output must match the C++ writer byte for byte; `vrmAdapterVrchatOsc_corpus`
-enforces that, and `vrmAdapterVrchatOsc_packetGen` enforces that this file still
+The output must match the C++ writer byte for byte; `motionConnectorVrchatOsc_corpus`
+enforces that, and `motionConnectorVrchatOsc_packetGen` enforces that this file still
 reproduces the committed bytes. Run:
 
-    python adapters/liveCapture/vrchatOsc/tools/generate_packets.py
+    python libs/motionConnectorVrchatOsc/tools/generate_packets.py
 
 `manifest.json` is maintained from here too. Its measured fields (datagram
 counts, payload sizes, durations, the addresses present, digests) are re-derived
@@ -575,7 +575,7 @@ def capture_malformed_forms() -> Capture:
     a quaternion; reading its first three components as Euler angles is not a
     partial read of a longer form, it is a confident misreading of a different
     one, and it is the reason this adapter refuses arguments past the known form
-    where `vrmAdapterVmc` counts them.
+    where the VMC connector counts them.
     """
     capture = Capture("malformed-forms-01", "127.0.0.1:51673")
     capture.frame(0.0, MEASURED_TRACKERS, 0)
@@ -986,7 +986,7 @@ def main() -> int:
     if drifted:
         print("regenerated captures differ from the committed corpus: "
               + ", ".join(drifted), file=sys.stderr)
-        print("run: python adapters/liveCapture/vrchatOsc/tools/"
+        print("run: python libs/motionConnectorVrchatOsc/tools/"
               "generate_packets.py", file=sys.stderr)
         return 1
 
@@ -994,7 +994,7 @@ def main() -> int:
     if problems:
         for problem in problems:
             print(f"manifest drift: {problem}", file=sys.stderr)
-        print("run: python adapters/liveCapture/vrchatOsc/tools/"
+        print("run: python libs/motionConnectorVrchatOsc/tools/"
               "generate_packets.py", file=sys.stderr)
         return 1
     if not args.check:

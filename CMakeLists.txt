@@ -99,6 +99,12 @@ add_subdirectory("tools/vmcRecord")
 # is a CLI over it.
 add_subdirectory("libs/motionConnectorMocopi")
 add_subdirectory("tools/mocopiRecord")
+# The VRChat OSC connector and its recorder. The connector is the one that is
+# not a pose source -- it stops at tracker observations -- so it links motionCore
+# and the two leaves and no sampling or recording package; its recorder takes
+# the tracker layer and motionRecording instead.
+add_subdirectory("libs/motionConnectorVrchatOsc")
+add_subdirectory("tools/vrchatOscRecord")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)

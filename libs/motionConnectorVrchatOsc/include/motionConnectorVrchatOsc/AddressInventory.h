@@ -37,15 +37,15 @@
 // still asserts it against the built binary rather than against a comment.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
-#include "vrmAdapterVrchatOsc/api.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/api.h"
 
 #include <cstddef>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 // One address, with one type tag string.
@@ -105,6 +105,6 @@ struct AddressInventory
 // Inventories a capture. Never fails: an undecodable datagram is a row in
 // `diagnostics` and a session that carried nothing decodable is an inventory
 // with no rows, which is a finding rather than an error.
-VRMADAPTERVRCHATOSC_API AddressInventory InventoryAddresses(const PacketCapture& capture);
+MOTIONCONNECTORVRCHATOSC_API AddressInventory InventoryAddresses(const PacketCapture& capture);
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

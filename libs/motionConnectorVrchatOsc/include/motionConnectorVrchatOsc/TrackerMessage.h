@@ -73,10 +73,10 @@
 // that reported it would raise a warning about once a datagram forever.
 #pragma once
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/api.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/api.h"
 
-#include "osc/OscPacket.h"
+#include "motionConnectorOsc/OscPacket.h"
 
 #include <array>
 #include <cstddef>
@@ -85,7 +85,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 // The address family this adapter reads, with its trailing slash so that a
@@ -123,9 +123,9 @@ inline constexpr std::size_t TrackerChannelCount = static_cast<std::size_t>(Trac
 
 // The address segment the channel is spelled with, e.g. "position". Empty for
 // Count.
-VRMADAPTERVRCHATOSC_API std::string_view TrackerChannelString(TrackerChannel channel) noexcept;
+MOTIONCONNECTORVRCHATOSC_API std::string_view TrackerChannelString(TrackerChannel channel) noexcept;
 
-VRMADAPTERVRCHATOSC_API std::optional<TrackerChannel>
+MOTIONCONNECTORVRCHATOSC_API std::optional<TrackerChannel>
 FindTrackerChannel(std::string_view segment) noexcept;
 
 // Which tracker a message is about, as the address spelled it.
@@ -243,13 +243,13 @@ struct TrackerPacket
 // is load-bearing rather than defensive: the type tag check below establishes
 // that there are three tags, and the values loop indexes `arguments` on the
 // strength of it, which is sound only while the two agree.
-VRMADAPTERVRCHATOSC_API bool DecodeTrackerMessage(const osc::OscMessage& message,
+MOTIONCONNECTORVRCHATOSC_API bool DecodeTrackerMessage(const osc::OscMessage& message,
                                                   TrackerMessage* out, Diagnostic* error = nullptr);
 
 // Decodes every message in an already-decoded packet. Never fails: a packet of
 // nothing but unsupported addresses is a `TrackerPacket` with no messages,
 // which is a reading and not an error.
-VRMADAPTERVRCHATOSC_API TrackerPacket DecodeTrackerPacket(const osc::OscPacket& packet);
+MOTIONCONNECTORVRCHATOSC_API TrackerPacket DecodeTrackerPacket(const osc::OscPacket& packet);
 
 // Decodes one datagram, mapping the shared decoder's neutral refusal onto this
 // adapter's `VRM_VRCHAT_OSC_PACKET_MALFORMED`. That map is the adapter's half
@@ -260,7 +260,7 @@ VRMADAPTERVRCHATOSC_API TrackerPacket DecodeTrackerPacket(const osc::OscPacket& 
 // Neither overload stamps `source` or `timestamp` on a diagnostic: a decoder
 // knows neither where the bytes came from nor when they arrived. The caller
 // holding the capture or the socket fills both, as `InventoryAddresses` does.
-VRMADAPTERVRCHATOSC_API TrackerPacket DecodeTrackerDatagram(const std::uint8_t* bytes,
+MOTIONCONNECTORVRCHATOSC_API TrackerPacket DecodeTrackerDatagram(const std::uint8_t* bytes,
                                                             std::size_t size);
 
 inline TrackerPacket
@@ -275,4 +275,4 @@ DecodeTrackerDatagram(const std::vector<std::uint8_t>& datagram)
 // overload set would quietly re-open the hole it closed.
 TrackerPacket DecodeTrackerDatagram(std::vector<std::uint8_t>&& datagram) = delete;
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

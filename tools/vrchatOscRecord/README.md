@@ -188,7 +188,7 @@ solve: 12 of 12 frame(s)
 strap: the region's own tracker sent an orientation and a bone the assignment
 names above it did not, so the bone is held with its ancestor instead of being
 composed against a parent the consumer is not holding
-([`TrackerSolve.h`](../../../../../libs/motionTracking/include/motionTracking/TrackerSolve.h)).
+([`TrackerSolve.h`](../../libs/motionConnectorTracking/include/motionConnectorTracking/TrackerSolve.h)).
 A session with a count there and `withoutRotation: none` is one whose hips
 dropped out of some bundles, not one with a bad strap.
 

@@ -2,24 +2,26 @@
 #
 # vrchat_osc_record — the VRChat OSC adapter's CLI.
 #
-# Added from the adapter's own CMakeLists rather than from the repository root,
-# because the tool ships *with* the adapter: WORKSPACE.md §5 names one artifact
-# carrying the library together with its CLI. That also means a standalone
-# configure of `adapters/liveCapture/vrchatOsc` builds both, which is the
-# configuration the artifact would be built from.
+# A workspace member of its own, added from the repository root: WORKSPACE.md
+# §2.1 puts every tool under the root tools/, beside motion_connect. It still
+# ships *with* its connector -- §5 names one artifact carrying the library
+# together with its CLI -- and a standalone configure of this directory
+# resolves that library, the tracker layer and the recording package as
+# installed packages, which is the configuration the artifact would be built
+# from.
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION"
-         _vrchat_osc_record_version LIMIT_COUNT 1)
-    string(STRIP "${_vrchat_osc_record_version}" _vrchat_osc_record_version)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
+    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
+         _vrchatoscrecord_version LIMIT_COUNT 1)
+    string(STRIP "${_vrchatoscrecord_version}" _vrchatoscrecord_version)
 else()
-    set(_vrchat_osc_record_version "0.9.0")
+    set(_vrchatoscrecord_version "0.1.0")
 endif()
 
 project(vrchatOscRecordTool
-    VERSION ${_vrchat_osc_record_version}
+    VERSION ${_vrchatoscrecord_version}
     DESCRIPTION "VRChat OSC session recorder"
     LANGUAGES CXX)
 
@@ -30,40 +32,43 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT DEFINED VRCHATOSCRECORD_BUILD_TESTS)
-    if(DEFINED VRMADAPTERVRCHATOSC_BUILD_TESTS)
-        set(_vrchat_osc_record_tests_default
-            "${VRMADAPTERVRCHATOSC_BUILD_TESTS}")
+    if(DEFINED MOTIONCONNECTORVRCHATOSC_BUILD_TESTS)
+        set(_vrchatoscrecord_tests_default
+            "${MOTIONCONNECTORVRCHATOSC_BUILD_TESTS}")
     else()
-        set(_vrchat_osc_record_tests_default "${PROJECT_IS_TOP_LEVEL}")
+        set(_vrchatoscrecord_tests_default "${PROJECT_IS_TOP_LEVEL}")
     endif()
     option(VRCHATOSCRECORD_BUILD_TESTS "Build vrchat_osc_record tests"
-           ${_vrchat_osc_record_tests_default})
+           ${_vrchatoscrecord_tests_default})
 endif()
 
 # A standalone configure of this directory resolves each as an installed
 # package; the composed build already has the in-tree targets.
-if(NOT TARGET vrmAdapterVrchatOsc::vrmAdapterVrchatOsc)
-    find_package(vrmAdapterVrchatOsc REQUIRED CONFIG)
+if(NOT TARGET motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+    find_package(motionConnectorVrchatOsc REQUIRED CONFIG)
 endif()
-if(NOT TARGET motionTracking::motionTracking)
-    find_package(motionTracking REQUIRED CONFIG)
+if(NOT TARGET motionConnectorTracking::motionConnectorTracking)
+    find_package(motionConnectorTracking REQUIRED CONFIG)
 endif()
-if(NOT TARGET motionRuntime::motionRuntime)
-    find_package(motionRuntime REQUIRED CONFIG)
+# `WriteCaptureTraceFile` and nothing else: the hand-off to a consumer is a
+# `motion-capture-trace` file. That half of usd-vrm-plugins' motionRuntime is
+# motionRecording here.
+if(NOT TARGET motionRecording::motionRecording)
+    find_package(motionRecording REQUIRED CONFIG)
 endif()
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../cmake/UsdVrmUtf8CodePage.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vrchat_osc_record
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
     src/main.cpp)
-usdvrm_use_utf8_code_page(vrchat_osc_record)
+motionconnectors_use_utf8_code_page(vrchat_osc_record)
 
 target_compile_features(vrchat_osc_record PRIVATE cxx_std_17)
 # Three edges, and the second of them is the one WORKSPACE.md §2 wrote a
-# paragraph for. `motionTracking` is granted to an adapter's *tool* and refused
+# paragraph for. `motionConnectorTracking` is granted to an adapter's *tool* and refused
 # to its library, because which tracker is on which body region is an operator's
 # statement about a rig — an adapter that resolved it would have invented a
 # calibration and hidden it inside a decoder. VRC-6 is the first taker of that
@@ -79,9 +84,9 @@ target_compile_features(vrchat_osc_record PRIVATE cxx_std_17)
 # cheapest place to keep that true.
 target_link_libraries(vrchat_osc_record
     PRIVATE
-        vrmAdapterVrchatOsc::vrmAdapterVrchatOsc
-        motionTracking::motionTracking
-        motionRuntime::motionRuntime)
+        motionConnectorVrchatOsc::motionConnectorVrchatOsc
+        motionConnectorTracking::motionConnectorTracking
+        motionRecording::motionRecording)
 
 if(MSVC)
     target_compile_options(vrchat_osc_record PRIVATE /utf-8)

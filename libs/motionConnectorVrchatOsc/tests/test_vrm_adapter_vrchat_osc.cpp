@@ -2,9 +2,9 @@
 //
 // Scaffold-stage tests: the diagnostic table is a contract before it has any
 // caller, so it is tested before it has any caller.
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
 
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <cassert>
 #include <cstdio>
@@ -12,13 +12,16 @@
 #include <set>
 #include <string>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+namespace transport = openstrata::connectors::transport;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::Diagnostic;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::DiagnosticCodeCount;
-using vrmAdapterVrchatOsc::DiagnosticSeverity;
+using vrchatOsc::Diagnostic;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::DiagnosticCodeCount;
+using vrchatOsc::DiagnosticSeverity;
 
 // The ten codes roadmap/osc-and-vrchat-trackers.md §8 assigns to this adapter,
 // spelled exactly as that document spells them and in the order it lists them,
@@ -44,26 +47,26 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
     for (std::size_t i = 0; i < DiagnosticCodeCount; ++i)
     {
         const auto code = static_cast<DiagnosticCode>(i);
-        const std::string name(vrmAdapterVrchatOsc::DiagnosticCodeString(code));
+        const std::string name(vrchatOsc::DiagnosticCodeString(code));
 
         assert(name == kExpectedCodes[i]);
         assert(seen.insert(name).second);
 
-        const auto found = vrmAdapterVrchatOsc::FindDiagnosticCode(name);
+        const auto found = vrchatOsc::FindDiagnosticCode(name);
         assert(found && *found == code);
     }
 
-    assert(!vrmAdapterVrchatOsc::FindDiagnosticCode("VRM_VRCHAT_OSC_NOT_A_CODE"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRM_VRCHAT_OSC_NOT_A_CODE"));
     // The canonical layer's namespace is not this adapter's to emit (§8).
-    assert(!vrmAdapterVrchatOsc::FindDiagnosticCode("VRM_MOTION_NON_FINITE_TRANSFORM"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRM_MOTION_NON_FINITE_TRANSFORM"));
     // Neither is a sibling's, and this pair matters more here than the
     // equivalent assertion does in either sibling's suite: `vrmAdapterVmc`
     // decodes the *same wire format* one layer down, and §8's open question is
     // precisely which of these two namespaces a shared decoder will raise. Until
     // that is decided, the only thing keeping them apart is that neither answers
     // to the other's spelling.
-    assert(!vrmAdapterVrchatOsc::FindDiagnosticCode("VRM_VMC_PACKET_MALFORMED"));
-    assert(!vrmAdapterVrchatOsc::FindDiagnosticCode("VRM_MOCOPI_PACKET_MALFORMED"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRM_VMC_PACKET_MALFORMED"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRM_MOCOPI_PACKET_MALFORMED"));
 }
 
 void
@@ -84,19 +87,19 @@ TestOnlyABindFailureStopsTheSession()
     {
         const auto code = static_cast<DiagnosticCode>(i);
         const bool fatal = code == DiagnosticCode::SocketBindFailed;
-        assert(vrmAdapterVrchatOsc::DiagnosticIsRecoverable(code) == !fatal);
-        assert((vrmAdapterVrchatOsc::DiagnosticDefaultSeverity(code) ==
+        assert(vrchatOsc::DiagnosticIsRecoverable(code) == !fatal);
+        assert((vrchatOsc::DiagnosticDefaultSeverity(code) ==
                 DiagnosticSeverity::Error) == fatal);
     }
 
-    assert(vrmAdapterVrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::UnsupportedAddress));
-    assert(vrmAdapterVrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::SourceTimeout));
-    assert(vrmAdapterVrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::CalibrationRequired));
+    assert(vrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::UnsupportedAddress));
+    assert(vrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::SourceTimeout));
+    assert(vrchatOsc::DiagnosticIsRecoverable(DiagnosticCode::CalibrationRequired));
 
     // And the one code whose severity is neither of the obvious two: traffic
     // this adapter maps to nothing is information, because warning about it
     // would train an operator to ignore the warnings that mean something.
-    assert(vrmAdapterVrchatOsc::DiagnosticDefaultSeverity(DiagnosticCode::UnsupportedAddress) ==
+    assert(vrchatOsc::DiagnosticDefaultSeverity(DiagnosticCode::UnsupportedAddress) ==
            DiagnosticSeverity::Info);
 }
 
@@ -115,7 +118,7 @@ TestADefaultConstructedDiagnosticMeansWhatItSays()
 void
 TestMakeDiagnosticCannotDisagreeWithTheTable()
 {
-    const Diagnostic partial = vrmAdapterVrchatOsc::MakeDiagnostic(
+    const Diagnostic partial = vrchatOsc::MakeDiagnostic(
         DiagnosticCode::TrackerPartial, "a rotation arrived with no position");
     assert(partial.severity == DiagnosticSeverity::Warning);
     assert(partial.recoverable);
@@ -127,7 +130,7 @@ TestMakeDiagnosticCannotDisagreeWithTheTable()
 void
 TestFormattingIsDeterministicAndOmitsAbsentFields()
 {
-    Diagnostic full = vrmAdapterVrchatOsc::MakeDiagnostic(DiagnosticCode::TrackerPartial,
+    Diagnostic full = vrchatOsc::MakeDiagnostic(DiagnosticCode::TrackerPartial,
                                                           "a rotation arrived with no position");
     // The default listen endpoint, which is the port a session is observed on
     // rather than anything this test binds.
@@ -139,13 +142,13 @@ TestFormattingIsDeterministicAndOmitsAbsentFields()
     full.subject = "/tracking/trackers/4";
     full.sequence = 42;
 
-    assert(vrmAdapterVrchatOsc::FormatDiagnostic(full) ==
+    assert(vrchatOsc::FormatDiagnostic(full) ==
            "[VRM_VRCHAT_OSC_TRACKER_PARTIAL] warning recoverable"
            " source=0.0.0.0:9000 t=1.500000 subject=/tracking/trackers/4"
            " seq=42: a rotation arrived with no position");
 
-    const Diagnostic bare = vrmAdapterVrchatOsc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
-    assert(vrmAdapterVrchatOsc::FormatDiagnostic(bare) ==
+    const Diagnostic bare = vrchatOsc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
+    assert(vrchatOsc::FormatDiagnostic(bare) ==
            "[VRM_VRCHAT_OSC_SOCKET_BIND_FAILED] error fatal");
 }
 
@@ -168,12 +171,12 @@ TestFormattingSurvivesAHostileGlobalLocale()
     // a host that installs one -- a DCC calling setlocale is the realistic case
     // -- would otherwise turn `t=1.500000` into `t=1,500000` and make a
     // diagnostic disagree with the capture it refers to.
-    Diagnostic pinned = vrmAdapterVrchatOsc::MakeDiagnostic(DiagnosticCode::CoordinateInvalid);
+    Diagnostic pinned = vrchatOsc::MakeDiagnostic(DiagnosticCode::CoordinateInvalid);
     pinned.timestamp = 1.5;
 
     const std::locale previous =
         std::locale::global(std::locale(std::locale::classic(), new CommaDecimalPoint));
-    const std::string formatted = vrmAdapterVrchatOsc::FormatDiagnostic(pinned);
+    const std::string formatted = vrchatOsc::FormatDiagnostic(pinned);
     std::locale::global(previous);
 
     assert(formatted == "[VRM_VRCHAT_OSC_COORDINATE_INVALID] warning recoverable"
@@ -192,16 +195,16 @@ TestTheDeclaredDependencyEdgeIsReal()
     // VRC-0 produces no canonical value, so declaring them would be a claim
     // about a dependency that is not there. When a decoder arrives they will be
     // declared, and this test is where their arrival becomes visible.
-    liveTransport::PacketCapture capture;
+    transport::PacketCapture capture;
     capture.sourceId = "edge-01";
     // Field by field rather than braced: a `RecordedDatagram` grew a `peer`
     // between `receiveTime` and `bytes` on 2026-08-30, and the braced form
     // went on compiling with the payload read as a one-character peer.
-    liveTransport::RecordedDatagram datagram;
+    transport::RecordedDatagram datagram;
     datagram.bytes = {0x2f};
     capture.datagrams.push_back(datagram);
     assert(capture.datagrams.size() == 1);
-    assert(liveTransport::PacketCaptureGutter(capture.datagrams[0].bytes.data(),
+    assert(transport::PacketCaptureGutter(capture.datagrams[0].bytes.data(),
                                               capture.datagrams[0].bytes.size()) == "/");
 }
 
@@ -217,6 +220,6 @@ main()
     TestFormattingIsDeterministicAndOmitsAbsentFields();
     TestFormattingSurvivesAHostileGlobalLocale();
     TestTheDeclaredDependencyEdgeIsReal();
-    std::puts("vrmAdapterVrchatOsc unit tests passed");
+    std::puts("motionConnectorVrchatOsc unit tests passed");
     return 0;
 }

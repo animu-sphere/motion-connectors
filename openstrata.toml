@@ -20,4 +20,6 @@ members = [
     "tools/vmcRecord",
     "libs/motionConnectorMocopi",
     "tools/mocopiRecord",
+    "libs/motionConnectorVrchatOsc",
+    "tools/vrchatOscRecord",
 ]

@@ -12,7 +12,7 @@
 //
 // ## Why a third adapter tests a format it did not write
 //
-// The reader and the writer are `liveTransport`'s and have their own tests
+// The reader and the writer are `motionConnectorTransport`'s and have their own tests
 // there, so the obvious reading of this file is that it repeats them. It does
 // not, and the difference is the one thing this adapter contributes: the magic.
 // Every case below goes through *this adapter's* four inline functions, so what
@@ -25,7 +25,7 @@
 // and every address in it would come back unknown -- which is indistinguishable
 // from a sender using a small part of the surface. The magic is what makes that
 // confusion impossible before a byte of payload is read.
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <algorithm>
 #include <cassert>
@@ -37,12 +37,14 @@
 #include <string>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::PacketCapture;
-using vrmAdapterVrchatOsc::PacketCaptureError;
-using vrmAdapterVrchatOsc::RecordedDatagram;
+using vrchatOsc::PacketCapture;
+using vrchatOsc::PacketCaptureError;
+using vrchatOsc::RecordedDatagram;
 
 RecordedDatagram
 Datagram(double receiveTime, std::vector<std::uint8_t> bytes)
@@ -57,7 +59,7 @@ std::string
 Write(const PacketCapture& capture)
 {
     std::ostringstream output;
-    const bool ok = vrmAdapterVrchatOsc::WritePacketCapture(output, capture);
+    const bool ok = vrchatOsc::WritePacketCapture(output, capture);
     assert(ok);
     (void)ok;
     return output.str();
@@ -67,7 +69,7 @@ bool
 Read(const std::string& text, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
     std::istringstream input(text);
-    return vrmAdapterVrchatOsc::ReadPacketCapture(input, capture, error);
+    return vrchatOsc::ReadPacketCapture(input, capture, error);
 }
 
 // Sixteen bytes that are not a packet, and are not claimed to be one.
@@ -197,8 +199,8 @@ TestASiblingsCaptureIsRefusedAtTheFirstLine()
     mine.sourceId = "tag-01";
     mine.datagrams.push_back(Datagram(0.0, {0x2f}));
     const std::string written = Write(mine);
-    assert(written.compare(0, vrmAdapterVrchatOsc::PacketCaptureMagic.size(),
-                           vrmAdapterVrchatOsc::PacketCaptureMagic) == 0);
+    assert(written.compare(0, vrchatOsc::PacketCaptureMagic.size(),
+                           vrchatOsc::PacketCaptureMagic) == 0);
 }
 
 void
@@ -409,7 +411,7 @@ CheckCorpus(const std::filesystem::path& directory)
         PacketCapture parsed;
         PacketCaptureError error;
         std::istringstream input(original);
-        if (!vrmAdapterVrchatOsc::ReadPacketCapture(input, &parsed, &error))
+        if (!vrchatOsc::ReadPacketCapture(input, &parsed, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -417,7 +419,7 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         std::ostringstream rewritten;
-        if (!vrmAdapterVrchatOsc::WritePacketCapture(rewritten, parsed) ||
+        if (!vrchatOsc::WritePacketCapture(rewritten, parsed) ||
             rewritten.str() != original)
         {
             std::fprintf(stderr, "%s: does not round trip byte-identically\n", name.c_str());
@@ -472,6 +474,6 @@ main(int argc, char** argv)
     TestMalformedCapturesAreRefusedAndSayWhere();
     TestTheWriterSurvivesAHostileGlobalLocale();
     TestCommentsAndBlankLinesAreIgnored();
-    std::puts("vrmAdapterVrchatOsc packet capture tests passed");
+    std::puts("motionConnectorVrchatOsc packet capture tests passed");
     return 0;
 }

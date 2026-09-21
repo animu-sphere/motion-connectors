@@ -3,7 +3,7 @@
 Protocol shapes, written by
 [`tools/generate_packets.py`](../../../tools/generate_packets.py), committed, and
 runnable in CI with no hardware, no device and no VRChat client. Re-checked by
-`vrmAdapterVrchatOsc_packetGen`, so a hand-edited fixture cannot stay green
+`motionConnectorVrchatOsc_packetGen`, so a hand-edited fixture cannot stay green
 while the generator no longer reproduces it.
 
 **They are written from a measurement, not from the specification.** VRChat's
@@ -11,7 +11,7 @@ tracking surface is published, which made writing these from the document
 tempting and is exactly the reason not to: a specification says what a *receiver*
 must accept, and this corpus is evidence about what a *sender* sends. The
 shapes come from
-[report 02](../../../../../../docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md)
+[report 02](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md)
 — eight addresses, every one `,fff`, one message per datagram, no bundles,
 rotation before position with the head leading a fixed eight-datagram cycle,
 ~58 Hz emitted with about a third of the frames lost whole, and a single-address
@@ -91,4 +91,4 @@ never been recorded here and is never a test dependency.
    [`tests/test_frame_assembler.cpp`](../../test_frame_assembler.cpp). A capture
    with no expectation **fails** both rather than being skipped, which is what
    stops a fixture being added to the corpus and decoded by nobody.
-4. Run `python adapters/liveCapture/vrchatOsc/tools/generate_packets.py`.
+4. Run `python libs/motionConnectorVrchatOsc/tools/generate_packets.py`.

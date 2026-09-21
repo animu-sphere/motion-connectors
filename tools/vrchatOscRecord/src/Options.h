@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 
-#include "vrmAdapterVrchatOsc/UdpReceiver.h"
+#include "motionConnectorVrchatOsc/UdpReceiver.h"
 
-#include "motionTracking/TrackerAssignment.h"
-#include "motionTracking/TrackerSolve.h"
+#include "motionConnectorTracking/TrackerAssignment.h"
+#include "motionConnectorTracking/TrackerSolve.h"
 
 #include <cstddef>
 #include <string>
 #include <vector>
+
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+namespace tracking = openstrata::connectors::tracking;
 
 namespace vrchatOscRecordTool
 {
@@ -18,7 +21,7 @@ struct Options
     // The socket. `UdpReceiverConfig` is taken whole rather than copied field by
     // field, so a receiver setting added there reaches this tool by being parsed
     // rather than by being re-declared.
-    vrmAdapterVrchatOsc::UdpReceiverConfig receiver;
+    vrchatOsc::UdpReceiverConfig receiver;
 
     // The capture to write. Empty with --inspect or --dry-run.
     std::string outputPath;
@@ -57,8 +60,8 @@ struct Options
     // `solve` is the third decision's own configuration and carries exactly one
     // field today: whether an observed hips position becomes root motion.
     std::string traceExportPath;
-    motionTracking::TrackerAssignmentSpec assignment;
-    motionTracking::TrackerSolveConfig solve;
+    tracking::TrackerAssignmentSpec assignment;
+    tracking::TrackerSolveConfig solve;
     // Which of the capture's sessions to export, counting from 1. 0 is "the
     // capture holds one", and a capture that holds more is refused rather than
     // resolved -- the sibling tools' rule, for their reason (TraceExport.h).

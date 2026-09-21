@@ -392,7 +392,7 @@ def check_inspect_reads_a_restart(tool: pathlib.Path,
     A mocopi `VRChat (OSC)` session that stops and starts again resumes from a
     new ephemeral source port, and that port is the only restart marker this
     wire has -- no session identifier, no rest table, no handshake
-    ([report 02](../../../../../docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md) §4).
+    ([report 02](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/02-2026-08-30-vrchat-osc-address-inventory.md) §4).
     On 2026-08-30 the live session saw two peers and `--inspect` on the same
     capture reported one, because the header held the only peer a file could
     carry. This is that reading, from a file: two peers, and the dark window

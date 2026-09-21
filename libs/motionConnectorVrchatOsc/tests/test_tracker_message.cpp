@@ -18,10 +18,10 @@
 // have dropped the head silently and reported nothing wrong — which is what a
 // decoder written from the specification would have done, and what VRC-1's
 // session is what caught.
-#include "vrmAdapterVrchatOsc/TrackerMessage.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
 
-#include "vrmAdapterVrchatOsc/Diagnostics.h"
-#include "vrmAdapterVrchatOsc/PacketCapture.h"
+#include "motionConnectorVrchatOsc/Diagnostics.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
 
 #include <algorithm>
 #include <array>
@@ -37,16 +37,19 @@
 #include <string_view>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+namespace osc = openstrata::connectors::osc;
+
 namespace
 {
 
-using vrmAdapterVrchatOsc::Diagnostic;
-using vrmAdapterVrchatOsc::DiagnosticCode;
-using vrmAdapterVrchatOsc::PacketCapture;
-using vrmAdapterVrchatOsc::RecordedDatagram;
-using vrmAdapterVrchatOsc::TrackerChannel;
-using vrmAdapterVrchatOsc::TrackerMessage;
-using vrmAdapterVrchatOsc::TrackerPacket;
+using vrchatOsc::Diagnostic;
+using vrchatOsc::DiagnosticCode;
+using vrchatOsc::PacketCapture;
+using vrchatOsc::RecordedDatagram;
+using vrchatOsc::TrackerChannel;
+using vrchatOsc::TrackerMessage;
+using vrchatOsc::TrackerPacket;
 
 // ---------------------------------------------------------------------------
 // Byte assembly. Big-endian throughout, like the wire.
@@ -158,8 +161,8 @@ TestTheIdentityHoldsANumberAndAName()
         Message("/tracking/trackers/1/position", 0.5f, 1.0f, -0.25f);
     const std::vector<std::uint8_t> namedBytes =
         Message("/tracking/trackers/head/position", 0.5f, 1.0f, -0.25f);
-    const TrackerPacket numbered = vrmAdapterVrchatOsc::DecodeTrackerDatagram(numberedBytes);
-    const TrackerPacket named = vrmAdapterVrchatOsc::DecodeTrackerDatagram(namedBytes);
+    const TrackerPacket numbered = vrchatOsc::DecodeTrackerDatagram(numberedBytes);
+    const TrackerPacket named = vrchatOsc::DecodeTrackerDatagram(namedBytes);
 
     assert(numbered.messages.size() == 1);
     assert(named.messages.size() == 1);
@@ -192,27 +195,27 @@ TestEveryIdentityAndChannelTheSurfaceDefines()
             const std::string address =
                 "/tracking/trackers/" + segment + "/" + std::string(channel);
             const std::vector<std::uint8_t> datagram = Message(address, 1.0f, 2.0f, 3.0f);
-            const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+            const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
             assert(packet.messages.size() == 1);
             assert(packet.diagnostics.empty());
             assert(packet.messages[0].tracker.segment == segment);
             assert(*packet.messages[0].tracker.index == index);
-            assert(vrmAdapterVrchatOsc::TrackerChannelString(packet.messages[0].channel) ==
+            assert(vrchatOsc::TrackerChannelString(packet.messages[0].channel) ==
                    channel);
         }
     }
 
     // The channel table is whole and round-trips, so a channel added later
     // cannot be spelled two ways.
-    for (std::size_t slot = 0; slot < vrmAdapterVrchatOsc::TrackerChannelCount; ++slot)
+    for (std::size_t slot = 0; slot < vrchatOsc::TrackerChannelCount; ++slot)
     {
         const auto channel = static_cast<TrackerChannel>(slot);
-        const std::string_view name = vrmAdapterVrchatOsc::TrackerChannelString(channel);
+        const std::string_view name = vrchatOsc::TrackerChannelString(channel);
         assert(!name.empty());
-        assert(vrmAdapterVrchatOsc::FindTrackerChannel(name) == channel);
+        assert(vrchatOsc::FindTrackerChannel(name) == channel);
     }
-    assert(vrmAdapterVrchatOsc::TrackerChannelString(TrackerChannel::Count).empty());
-    assert(!vrmAdapterVrchatOsc::FindTrackerChannel("Position").has_value());
+    assert(vrchatOsc::TrackerChannelString(TrackerChannel::Count).empty());
+    assert(!vrchatOsc::FindTrackerChannel("Position").has_value());
 }
 
 // The claim no count can make: three floats arrive as three floats.
@@ -224,7 +227,7 @@ TestNothingIsConvertedOnTheWayThrough()
     // comparison rather than a tolerance.
     const std::vector<std::uint8_t> datagram =
         Message("/tracking/trackers/2/rotation", -90.0f, 0.5f, 45.25f);
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
     assert(packet.messages.size() == 1);
     const TrackerMessage& message = packet.messages[0];
     assert(message.channel == TrackerChannel::Rotation);
@@ -237,7 +240,7 @@ TestNothingIsConvertedOnTheWayThrough()
     // channel it did not read.
     const std::vector<std::uint8_t> restBytes =
         Message("/tracking/trackers/2/rotation", 0.0f, 0.0f, 0.0f);
-    const TrackerPacket rest = vrmAdapterVrchatOsc::DecodeTrackerDatagram(restBytes);
+    const TrackerPacket rest = vrchatOsc::DecodeTrackerDatagram(restBytes);
     assert(rest.messages.size() == 1);
     assert(rest.messages[0].values[0] == 0.0f);
     assert(rest.messages[0].values[1] == 0.0f);
@@ -266,7 +269,7 @@ TestUnimplementedAddressesAreUnsupportedNotMalformed()
     for (const std::string& address : addresses)
     {
         const std::vector<std::uint8_t> datagram = Message(address, 1.0f, 2.0f, 3.0f);
-        const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+        const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
         assert(packet.messages.empty());
         assert(packet.diagnostics.size() == 1);
         assert(packet.unsupported == 1);
@@ -274,7 +277,7 @@ TestUnimplementedAddressesAreUnsupportedNotMalformed()
         // Info and recoverable: a session carrying VRChat's wider surface
         // beside tracker data is the ordinary case, not a fault.
         assert(packet.diagnostics[0].recoverable);
-        assert(packet.diagnostics[0].severity == vrmAdapterVrchatOsc::DiagnosticSeverity::Info);
+        assert(packet.diagnostics[0].severity == vrchatOsc::DiagnosticSeverity::Info);
         // The subject is the address, because that is what this layer knows. A
         // bone name here would be a humanoid claim from a layer that has made
         // none.
@@ -306,7 +309,7 @@ TestAnIdentityThisAdapterCannotReadIsNotAnUnsupportedAddress()
     {
         const std::string address = "/tracking/trackers/" + segment + "/position";
         const std::vector<std::uint8_t> datagram = Message(address, 1.0f, 2.0f, 3.0f);
-        const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+        const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
         assert(packet.messages.empty());
         assert(packet.diagnostics.size() == 1);
         assert(packet.unsupported == 0);
@@ -325,7 +328,7 @@ TestAnIdentityThisAdapterCannotReadIsNotAnUnsupportedAddress()
     // a vague one, and this is the one input where the two readings differ.
     const std::vector<std::uint8_t> leadingZero =
         Message("/tracking/trackers/01/position", 1.0f, 2.0f, 3.0f);
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(leadingZero);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(leadingZero);
     assert(packet.diagnostics.size() == 1);
     assert(packet.diagnostics[0].detail.find("outside") == std::string::npos);
     assert(packet.diagnostics[0].detail.find("leading zero") != std::string::npos);
@@ -360,7 +363,7 @@ TestAKnownAddressWithTheWrongArgumentsIsAMismatch()
 
     for (const std::vector<std::uint8_t>& datagram : datagrams)
     {
-        const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+        const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
         assert(packet.messages.empty());
         assert(packet.diagnostics.size() == 1);
         assert(packet.diagnostics[0].code == DiagnosticCode::ArgumentMismatch);
@@ -372,7 +375,7 @@ TestAKnownAddressWithTheWrongArgumentsIsAMismatch()
 
     // The one that would be silently plausible: the refusal quotes what it saw.
     const TrackerPacket quaternionPacket =
-        vrmAdapterVrchatOsc::DecodeTrackerDatagram(quaternion.data);
+        vrchatOsc::DecodeTrackerDatagram(quaternion.data);
     assert(quaternionPacket.diagnostics[0].detail.find("\",ffff\"") != std::string::npos);
 }
 
@@ -394,7 +397,7 @@ TestANonFiniteComponentIsRefused()
             components[slot] = value;
             const std::vector<std::uint8_t> datagram =
                 Message(address, components[0], components[1], components[2]);
-            const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+            const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
             assert(packet.messages.empty());
             assert(packet.diagnostics.size() == 1);
             assert(packet.diagnostics[0].code == DiagnosticCode::CoordinateInvalid);
@@ -423,7 +426,7 @@ TestAPacketRefusesMessagesNotTheDatagram()
                 Message("/tracking/trackers/head/position", 4.0f, 5.0f, 6.0f), quaternion.data,
                 Message("/tracking/trackers/1/position", 7.0f, 8.0f, 9.0f),
                 Message("/avatar/parameters/VRCEmote", 1.0f, 0.0f, 0.0f)});
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
 
     assert(!packet.refused);
     assert(packet.bundled);
@@ -454,7 +457,7 @@ TestADatagramThatIsNotOscIsRefusedWhole()
 
     for (const std::vector<std::uint8_t>& datagram : datagrams)
     {
-        const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+        const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
         assert(packet.refused);
         assert(packet.messages.empty());
         assert(packet.messagesSeen == 0);
@@ -472,7 +475,7 @@ TestADatagramThatIsNotOscIsRefusedWhole()
         .U64(1)
         .U32(static_cast<std::uint32_t>(element.size() + 16))
         .Append(element);
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(overrun.data);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(overrun.data);
     assert(packet.refused);
     assert(packet.messages.empty());
 }
@@ -486,14 +489,14 @@ TestNoPartialIsRaisedByAMessageDecoder()
     // that code.
     const std::vector<std::uint8_t> datagram =
         Message("/tracking/trackers/1/position", 1.0f, 2.0f, 3.0f);
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
     assert(packet.messages.size() == 1);
     assert(packet.diagnostics.empty());
 
-    for (std::size_t slot = 0; slot < vrmAdapterVrchatOsc::DiagnosticCodeCount; ++slot)
+    for (std::size_t slot = 0; slot < vrchatOsc::DiagnosticCodeCount; ++slot)
     {
         const auto code = static_cast<DiagnosticCode>(slot);
-        assert(!vrmAdapterVrchatOsc::DiagnosticCodeString(code).empty());
+        assert(!vrchatOsc::DiagnosticCodeString(code).empty());
     }
 }
 
@@ -519,18 +522,18 @@ TestTheStructuralGuardsRefuseRatherThanDereference()
     // removed rather than about the message being unusable to begin with.
     TrackerMessage decoded;
     Diagnostic error;
-    assert(vrmAdapterVrchatOsc::DecodeTrackerMessage(message, &decoded, &error));
+    assert(vrchatOsc::DecodeTrackerMessage(message, &decoded, &error));
     assert(decoded.values[2] == 3.0f);
 
     // No output. Refused rather than written through.
-    assert(!vrmAdapterVrchatOsc::DecodeTrackerMessage(message, nullptr, &error));
+    assert(!vrchatOsc::DecodeTrackerMessage(message, nullptr, &error));
     assert(error.code == DiagnosticCode::PacketMalformed);
 
     // Three type tags and no arguments. The tag check below it would pass, and
     // the values loop would read three elements that are not there.
     osc::OscMessage starved = message;
     starved.arguments.clear();
-    assert(!vrmAdapterVrchatOsc::DecodeTrackerMessage(starved, &decoded, &error));
+    assert(!vrchatOsc::DecodeTrackerMessage(starved, &decoded, &error));
     assert(error.code == DiagnosticCode::PacketMalformed);
     assert(error.detail.find("3 argument(s) and 0 were given") != std::string::npos);
 
@@ -538,7 +541,7 @@ TestTheStructuralGuardsRefuseRatherThanDereference()
     // no OSC decoder produced.
     osc::OscMessage overfed = message;
     overfed.arguments.resize(4);
-    assert(!vrmAdapterVrchatOsc::DecodeTrackerMessage(overfed, &decoded, &error));
+    assert(!vrchatOsc::DecodeTrackerMessage(overfed, &decoded, &error));
     assert(error.code == DiagnosticCode::PacketMalformed);
 
     // A refusal leaves the caller's message untouched, so a decode loop that
@@ -551,9 +554,9 @@ TestTheFormattedLineNamesTheAddress()
 {
     const std::vector<std::uint8_t> datagram =
         Message("/tracking/trackers/1/velocity", 1.0f, 2.0f, 3.0f);
-    const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram);
+    const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
     assert(packet.diagnostics.size() == 1);
-    const std::string line = vrmAdapterVrchatOsc::FormatDiagnostic(packet.diagnostics[0]);
+    const std::string line = vrchatOsc::FormatDiagnostic(packet.diagnostics[0]);
     assert(line.find("[VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS]") == 0);
     assert(line.find("subject=/tracking/trackers/1/velocity") != std::string::npos);
 }
@@ -694,8 +697,8 @@ CheckCorpus(const std::filesystem::path& directory)
         covered.insert(name);
 
         PacketCapture capture;
-        vrmAdapterVrchatOsc::PacketCaptureError error;
-        if (!vrmAdapterVrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vrchatOsc::PacketCaptureError error;
+        if (!vrchatOsc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -706,7 +709,7 @@ CheckCorpus(const std::filesystem::path& directory)
         actual.datagrams = capture.datagrams.size();
         for (const RecordedDatagram& datagram : capture.datagrams)
         {
-            const TrackerPacket packet = vrmAdapterVrchatOsc::DecodeTrackerDatagram(datagram.bytes);
+            const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram.bytes);
             actual.refusedDatagrams += packet.refused ? 1 : 0;
             actual.bundledDatagrams += packet.bundled ? 1 : 0;
             actual.messagesSeen += packet.messagesSeen;
@@ -738,7 +741,7 @@ CheckCorpus(const std::filesystem::path& directory)
                 // Kept rather than printed as they arrive: a capture that is
                 // supposed to carry refusals would otherwise fill the log with
                 // its own expected output.
-                actual.refusals.push_back(vrmAdapterVrchatOsc::FormatDiagnostic(diagnostic));
+                actual.refusals.push_back(vrchatOsc::FormatDiagnostic(diagnostic));
             }
 
             for (const TrackerMessage& message : packet.messages)
@@ -974,6 +977,6 @@ main(int argc, char** argv)
     TestNoPartialIsRaisedByAMessageDecoder();
     TestTheStructuralGuardsRefuseRatherThanDereference();
     TestTheFormattedLineNamesTheAddress();
-    std::puts("vrmAdapterVrchatOsc tracker message tests passed");
+    std::puts("motionConnectorVrchatOsc tracker message tests passed");
     return 0;
 }

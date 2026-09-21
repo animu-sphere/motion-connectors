@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVrchatOsc/FrameAssembler.h"
+#include "motionConnectorVrchatOsc/FrameAssembler.h"
 
 #include <algorithm>
 #include <string>
 #include <utility>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
@@ -26,7 +26,7 @@ constexpr const char* kClosedByFlush = "flush";
 std::string
 Fixed(double value)
 {
-    return liveTransport::FormatSeconds(value);
+    return transport::FormatSeconds(value);
 }
 
 } // namespace
@@ -451,4 +451,4 @@ TrackerFrameAssembler::Flush(std::vector<TrackerFrame>* frames,
     return _Close(frames, diagnostics, kClosedByFlush) ? 1 : 0;
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

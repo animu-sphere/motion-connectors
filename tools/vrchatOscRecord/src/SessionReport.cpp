@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+namespace vrchatOsc = openstrata::connectors::vrchatOsc;
+
 namespace vrchatOscRecordTool
 {
 namespace
@@ -158,12 +160,12 @@ SessionReport::_ObservePrefix(const std::uint8_t* bytes, std::size_t count)
 }
 
 void
-SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterVrchatOsc::Diagnostic>& log)
+SessionReport::ObserveDiagnostics(const std::vector<vrchatOsc::Diagnostic>& log)
 {
-    for (const vrmAdapterVrchatOsc::Diagnostic& diagnostic : log)
+    for (const vrchatOsc::Diagnostic& diagnostic : log)
     {
         const auto index = static_cast<std::size_t>(diagnostic.code);
-        if (index >= vrmAdapterVrchatOsc::DiagnosticCodeCount)
+        if (index >= vrchatOsc::DiagnosticCodeCount)
         {
             continue;
         }
@@ -176,12 +178,12 @@ SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterVrchatOsc::Diagnos
 }
 
 void
-SessionReport::Print(std::FILE* out, const vrmAdapterVrchatOsc::UdpReceiver* receiver,
-                     const vrmAdapterVrchatOsc::PacketCapture* provenance) const
+SessionReport::Print(std::FILE* out, const vrchatOsc::UdpReceiver* receiver,
+                     const vrchatOsc::PacketCapture* provenance) const
 {
     if (receiver)
     {
-        const vrmAdapterVrchatOsc::UdpReceiverStats& socket = receiver->GetStats();
+        const vrchatOsc::UdpReceiverStats& socket = receiver->GetStats();
         // The loopback note is weaker here than in the mocopi tool's report, and
         // deliberately so: that product documents `localhost` as an unsupported
         // destination, so a loopback-only recorder there is guaranteed to hear
@@ -373,7 +375,7 @@ SessionReport::_PrintPrefix(std::FILE* out) const
     // the gutter is the whole point of the line: an OSC address is ASCII and
     // leads the packet, so a shared prefix reads as text without this tool
     // having parsed anything.
-    const std::size_t perLine = vrmAdapterVrchatOsc::PacketCaptureBytesPerLine;
+    const std::size_t perLine = vrchatOsc::PacketCaptureBytesPerLine;
     for (std::size_t offset = 0; offset < _prefix.size(); offset += perLine)
     {
         const std::size_t count = std::min(perLine, _prefix.size() - offset);
@@ -391,7 +393,7 @@ SessionReport::_PrintPrefix(std::FILE* out) const
         }
         std::fprintf(
             out, "  |%s|\n",
-            vrmAdapterVrchatOsc::PacketCaptureGutter(_prefix.data() + offset, count).c_str());
+            vrchatOsc::PacketCaptureGutter(_prefix.data() + offset, count).c_str());
     }
 }
 
@@ -409,13 +411,13 @@ SessionReport::_PrintDiagnostics(std::FILE* out) const
         return;
     }
 
-    for (std::size_t index = 0; index < vrmAdapterVrchatOsc::DiagnosticCodeCount; ++index)
+    for (std::size_t index = 0; index < vrchatOsc::DiagnosticCodeCount; ++index)
     {
         if (_diagnostics[index] == 0)
         {
             continue;
         }
-        const auto code = static_cast<vrmAdapterVrchatOsc::DiagnosticCode>(index);
+        const auto code = static_cast<vrchatOsc::DiagnosticCode>(index);
         // The severity the diagnostic was *raised* with, not the code's default.
         // Diagnostics.h contemplates a caller escalating one, and the whole
         // diagnostic is already kept here -- so recomputing the severity from
@@ -423,12 +425,12 @@ SessionReport::_PrintDiagnostics(std::FILE* out) const
         // printed immediately below it, which formats the real one.
         std::fprintf(out, "diagnostics: %llu x %s (%s)\n",
                      static_cast<unsigned long long>(_diagnostics[index]),
-                     std::string(vrmAdapterVrchatOsc::DiagnosticCodeString(code)).c_str(),
-                     std::string(vrmAdapterVrchatOsc::DiagnosticSeverityString(
+                     std::string(vrchatOsc::DiagnosticCodeString(code)).c_str(),
+                     std::string(vrchatOsc::DiagnosticSeverityString(
                                      _firstDiagnostic[index].severity))
                          .c_str());
         std::fprintf(out, "             first: %s\n",
-                     vrmAdapterVrchatOsc::FormatDiagnostic(_firstDiagnostic[index]).c_str());
+                     vrchatOsc::FormatDiagnostic(_firstDiagnostic[index]).c_str());
     }
 }
 

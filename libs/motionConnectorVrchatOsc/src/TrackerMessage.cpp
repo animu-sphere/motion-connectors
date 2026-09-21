@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVrchatOsc/TrackerMessage.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
 
 #include <cmath>
 #include <string>
 #include <utility>
 
-namespace vrmAdapterVrchatOsc
+namespace openstrata::connectors::vrchatOsc
 {
 
 namespace
@@ -304,4 +304,4 @@ DecodeTrackerDatagram(const std::uint8_t* bytes, std::size_t size)
     return DecodeTrackerPacket(packet);
 }
 
-} // namespace vrmAdapterVrchatOsc
+} // namespace openstrata::connectors::vrchatOsc

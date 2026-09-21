@@ -1,50 +1,48 @@
-# OpenStrata plain-library descriptor. vrmAdapterVrchatOsc is the third live
-# input leaf, and the first that is not a pose source: what arrives on this wire
-# is numbered tracker observations, which are pre-IK, so this library stops at a
-# tracker frame and the humanoid solve is a separate and generic boundary
-# (osc-and-vrchat-trackers.md §5).
+# OpenStrata plain-library descriptor. motionConnectorVrchatOsc is the tracker
+# input leaf, and the first connector here that is not a pose source: what
+# arrives on this wire is numbered tracker observations, which are pre-IK, so
+# this library stops at a tracker frame and the humanoid solve is a separate
+# and generic boundary.
 #
 # A library, not a plugin bundle, and deliberately so -- it registers nothing
-# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The four edges below
-# are the only ones it is allowed (WORKSPACE.md §2), and neither sibling adapter
-# is among them. That prohibition used to cost something real here: through
-# VRC-0 `vrmAdapterVmc` held the only OSC decoder in this repository, and
-# reaching across for it was the convenient thing to do the first time a datagram
-# started with a '/'. OSC-3 removed the temptation rather than the rule -- the
-# decoder is `libs/osc` and both adapters take it from there (§3.1).
+# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The three edges below
+# are the only ones it is allowed (WORKSPACE.md §2), and neither sibling
+# connector is among them.
 #
-# `liveTransport` and `osc` are the two shared leaves, and they are the reason
-# this adapter never copied anything: the socket, the capture format and the
-# diagnostic vehicle were extracted before this directory existed (§3.2), and
-# the wire format was extracted the moment this adapter became its second
-# consumer (§3.1).
+# `motionConnectorTransport` and `motionConnectorOsc` are the two shared
+# leaves, and they are the reason this connector never copied anything: the
+# socket, the capture format and the diagnostic vehicle were extracted before
+# this directory existed, and the wire format was extracted the moment this
+# connector became its second consumer.
 #
-# This library is *outside* the aggregate product, because it carries a
-# product's name in the library itself and not only in data beside it
-# (WORKSPACE.md §5).
+# There is no sampling or recording package here, and that absence is the
+# shape rather than an omission: a tracker observation is not a pose. Its CLI
+# takes those edges instead, with `motionConnectorTracking`, in its own
+# openstrata.tool.yaml under the root tools/.
 schema: openstrata.library/v1alpha1
 library:
-  id: vrmAdapterVrchatOsc
+  id: motionConnectorVrchatOsc
   # Mirrors VERSION; release preparation updates this in lockstep.
-  version: 0.9.0
-#
-# **Three edges, where §2 permits four, and the missing one is still the
-# milestone rather than an oversight.** `motionCore` arrived with VRC-3, which
-# is the first code here that produces a canonical value: the sender's axes into
-# the canonical basis, which is a `GfVec3f` and a `GfQuatf` and reaches them
-# through the library §2 routes an adapter's value types through.
-# `motionRuntime` is what an adapter reaches when it produces a *pose*, and a
-# tracker observation is not one — it is pre-IK, and the solve that makes it a
-# pose is VRC-5's and generic. A manifest declaring it now would claim a
-# dependency the library does not have.
+  version: 0.1.0
 requires:
   libraries:
     - id: motionCore
-      version: ">=0.9,<0.10"
-    - id: liveTransport
-      version: ">=0.9,<0.10"
-    - id: osc
-      version: ">=0.9,<0.10"
+      version: ">=0.5,<0.6"
+      artifact:
+        targets:
+          cy2026-linux-x86_64-py313-usd:
+            digest: sha256:2aa549d1d764ef99527f31b71533133ac1c98e48843c63feccf6c69cc551219d
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:32b6ba1bc4b155278fbc388e24a0e9130f19540be9a980cb48bf049637bfe9e7
+          cy2026-macos-arm64-py313-usd:
+            digest: sha256:0a2c796e1929abcca6b4bba75509b8139a1fd757cb1c4fe6f9a165eee55e8d49
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:54f62ff034b02babe2470a78d78aa18c44b4c2245d09d53ec7d7af0ccc6888e0
+          cy2026-windows-x86_64-py313-usd:
+            digest: sha256:f06fef790e19371c3d085c667e44805d738b63e8af77df2d8fafa6a41d5969a5
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:7e5c67b9ae5defa40887b7dbaccea0bb5258ae3e86b1e2d14e7c82ae13ce0564
+    - id: motionConnectorTransport
+      version: ">=0.1,<0.2"
+    - id: motionConnectorOsc
+      version: ">=0.1,<0.2"
 cmake:
-  package: vrmAdapterVrchatOsc
-  target: vrmAdapterVrchatOsc::vrmAdapterVrchatOsc
+  package: motionConnectorVrchatOsc
+  target: motionConnectorVrchatOsc::motionConnectorVrchatOsc
