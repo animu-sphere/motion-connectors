@@ -22,6 +22,8 @@ library:
   version: 0.1.0
 requires:
   libraries:
+    - id: motionConnectorCore
+      version: ">=0.1,<0.2"
     - id: motionCore
       version: ">=0.5,<0.6"
       artifact:

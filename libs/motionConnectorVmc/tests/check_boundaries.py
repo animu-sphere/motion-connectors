@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Enforce motionConnectorVmc's leaf boundary.
 
-WORKSPACE.md §2 gives an adapter library exactly four edges — motionCore,
-motionRuntime, motionConnectorTransport and osc — and forbids the rest: vrmSchema, every USD
+WORKSPACE.md §2 gives an adapter library the declared edges — motionConnectorCore,
+motionCore, motionRuntime, motionConnectorTransport and osc — and forbids the rest: vrmSchema, every USD
 file-format bundle, `vrmRetarget` (the library), OpenExec, `ExecIr`, and every
 sibling adapter. It also may not be a plugin bundle (§1), so a plugin manifest
 or a plugInfo.json anywhere under the adapter is a failure by itself.
@@ -32,7 +32,7 @@ a section summary and nothing else — so pointing this check at the library wou
 make it a gate that cannot fail, which is worse than no gate. The linked test
 executable is the first artifact in which the adapter's real transitive imports
 exist, so it is the first one worth inspecting. It links the adapter plus
-`motionCore` and `motionRuntime` and nothing else, which is exactly the closure
+`motionConnectorCore`, `motionCore` and `motionRuntime` and nothing else, which is exactly the closure
 this boundary is about.
 """
 
@@ -201,7 +201,7 @@ def main() -> int:
     # second group carries one `\w*` for the whole alternation rather than one
     # per name and a boundary for the rest.
     forbidden_neighbours = re.compile(
-        r"motionConnector(?:Mocopi|VrchatOsc|Tracking|Core|WebSocket|OpenXR)\w*|"
+        r"motionConnector(?:Mocopi|VrchatOsc|Tracking|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
         r"vrmAdapter|cgltf|ardy)\w*|"
         r"\b(?:mocopi|vrchat)\w*",
@@ -238,6 +238,7 @@ def main() -> int:
     # have to be argued for rather than silently permitted by removal.
     allowed_link = {
         "motionconnectorvmc", "public", "private", "interface",
+        "motionconnectorcore::motionconnectorcore",
         "motioncore::motioncore",
         "motionsampling::motionsampling", "motionrecording::motionrecording",
         "motionconnectortransport::motionconnectortransport",
@@ -249,7 +250,7 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "motionConnectorVmc may link only motionCore, "
+                    "motionConnectorVmc may link only motionConnectorCore, motionCore, "
                     "motionSampling, motionRecording, motionConnectorTransport "
                     f"and motionConnectorOsc; CMakeLists.txt links `{token}`")
 

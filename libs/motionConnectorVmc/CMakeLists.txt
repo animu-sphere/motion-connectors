@@ -51,6 +51,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
 if(NOT TARGET motionCore::motionCore)
     find_package(motionCore REQUIRED CONFIG)
 endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_package(motionConnectorCore REQUIRED CONFIG)
+endif()
 # What was one `motionRuntime` in usd-vrm-plugins is two packages here: the
 # frame assembler reads `motionSampling`'s source interface and the live source
 # writes `motionRecording`'s capture trace, so both are named rather than one
@@ -84,6 +87,7 @@ endif()
 # and a refusal-to-code map, which are the three things a shared library may not
 # hold.
 add_library(motionConnectorVmc STATIC
+    src/Connector.cpp
     src/Diagnostics.cpp
     src/FrameAssembler.cpp
     src/LiveSource.cpp
@@ -104,6 +108,7 @@ target_include_directories(motionConnectorVmc
         "$<INSTALL_INTERFACE:include>")
 target_link_libraries(motionConnectorVmc
     PUBLIC
+        motionConnectorCore::motionConnectorCore
         motionCore::motionCore
         motionSampling::motionSampling
         motionRecording::motionRecording

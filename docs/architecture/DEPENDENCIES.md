@@ -15,7 +15,7 @@ process.
 | | |
 | --- | --- |
 | Pin | OpenUSD **26.08**, exactly: the release `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins` pin. This repository opens no stage, but `motionCore` is built against one OpenUSD release, and a consumer built against another does not link |
-| planned `motionConnectorCore`, imported connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
+| `motionConnectorCore`, imported connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
 | tools, examples | whatever `usd-motion-plugins` library they call; `examples/usd_avatar_live` is the only place a stage appears |
 | Pin changes | coordinated: a new OpenUSD release is adopted here together with `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins`. Who releases first is open in `usd-vrm-plugins`' migration track |
 
@@ -51,7 +51,7 @@ Each is isolated to its connector and is off unless that connector is built
 | --- | --- | --- |
 | `motionConnectorTransport` | OS sockets | system |
 | `motionConnectorOsc` | none; the wire format is implemented here | — |
-| `motionConnectorVmc` | `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
+| `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
 | `motionConnectorMocopi` | `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
 | `motionConnectorVrchatOsc` | `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorWebSocket` | a WebSocket library, optional; TLS optional on top | third party, chosen with the connector |

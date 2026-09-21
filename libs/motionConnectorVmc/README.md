@@ -9,12 +9,13 @@ UDP datagram → OSC decode → VMC message decode → frame assembly
              → source joint mapping → shared MotionPose values → MotionFrame
 ```
 
-**Status: imported source implementation; shared-contract adaptation pending.**
+**Status: imported source implementation with the first shared-contract adapter.**
 The packet-capture format, OSC and VMC decoding, source joint map, frame
-assembler, live receiver and [`vmc_record`](../../tools/vmcRecord) are tested
-in this repository. Replay and loopback evidence are hardware-free. This
-library does not yet implement `IMotionConnector`; that work is tracked in the
-[current roadmap](../../docs/roadmap/current.md).
+assembler, live receiver, [`vmc_record`](../../tools/vmcRecord) and
+`VmcConnector` are tested in this repository. Replay and loopback evidence are
+hardware-free. The source-specific path remains intact beneath the shared
+adapter; mocopi and VRChat OSC adaptation are tracked in the [current
+roadmap](../../docs/roadmap/current.md).
 
 ## What this is, structurally
 
