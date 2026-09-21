@@ -1,10 +1,10 @@
 # Connector contract
 
 > Status: **core implemented, source convergence in progress**, 2026-09-21. This
-> document defines the shared connector contract. The VMC source now has an
-> `IMotionConnector` adapter; the remaining imported source-specific
-> implementations have not yet converged, and the capability matrix says what
-> is implemented.
+> document defines the shared connector contract. The VMC and mocopi sources
+> now have `IMotionConnector` adapters; the remaining imported source-specific
+> implementation has not yet converged, and the capability matrix says what is
+> implemented.
 > A section becomes **binding** when the code it describes lands here with its
 > tests.
 >

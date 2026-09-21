@@ -3,14 +3,14 @@
 # canonical motion values and stops there.
 #
 # A library, not a plugin bundle, and deliberately so -- it registers nothing
-# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The four edges below
+# with OpenUSD and has no plugInfo.json (WORKSPACE.md §1). The five edges below
 # are the only ones it is allowed (WORKSPACE.md §2), and the sibling connector
 # is emphatically not among them: a native decoder that reached
 # `motionConnectorVmc` would inherit a relay's assumptions about framing,
 # clocks and bone names, which is the one thing this connector exists to avoid.
 # The two are siblings, never a stack.
 #
-# `motionConnectorTransport` is the fourth and is not that edge wearing a hat:
+# `motionConnectorTransport` is the fifth and is not that edge wearing a hat:
 # it is a leaf under libs/ with an empty edge set of its own, holding the
 # socket and the capture format the connectors had written twice, and it knows
 # no protocol. `motionConnectorOsc` is absent on purpose -- this protocol is
@@ -28,6 +28,8 @@ library:
   version: 0.1.0
 requires:
   libraries:
+    - id: motionConnectorCore
+      version: ">=0.1,<0.2"
     - id: motionCore
       version: ">=0.5,<0.6"
       artifact:

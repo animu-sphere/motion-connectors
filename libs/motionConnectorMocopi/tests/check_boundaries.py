@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Enforce motionConnectorMocopi's leaf boundary.
 
-WORKSPACE.md §2 gives a connector library exactly four edges — motionCore,
-motionSampling, motionRecording and motionConnectorTransport — and forbids the
-rest: the consumer repositories' libraries, every USD file-format bundle,
+WORKSPACE.md §2 gives a connector library exactly five edges —
+motionConnectorCore, motionCore, motionSampling, motionRecording and
+motionConnectorTransport — and forbids the rest: the consumer repositories' libraries, every USD file-format bundle,
 OpenExec, `ExecIr`, and every sibling connector. It also may not be a plugin
 bundle (§1), so a plugin manifest or a plugInfo.json anywhere under the
 connector is a failure by itself.
@@ -45,8 +45,8 @@ make it a gate that cannot fail, which is worse than no gate. The linked test
 executable is the first artifact in which the adapter's real transitive imports
 exist, so it is the first one worth inspecting. It links the connector plus
 `motionCore`, `motionSampling`, `motionRecording` and
-`motionConnectorTransport` and nothing else, which is exactly the closure this
-boundary is about.
+`motionConnectorCore`, `motionConnectorTransport` and nothing else, which is
+exactly the closure this boundary is about.
 
 It is no longer the only enforcement there is. This library is a workspace
 member here, so `openstrata.library.yaml` beside it is loaded and the workspace
@@ -207,7 +207,7 @@ def main() -> int:
     # so the boundary the rule wanted is not there — the measurement the
     # sibling's import made, applied here before it can cost anything.
     forbidden_neighbours = re.compile(
-        r"motionConnector(?:Vmc|VrchatOsc|Tracking|Core|WebSocket|OpenXR)\w*|"
+        r"motionConnector(?:Vmc|VrchatOsc|Tracking|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
         r"vrmAdapter|cgltf|ardy)\w*|"
         r"\b(?:vmc|osc|vrchat)\w*",
@@ -252,6 +252,7 @@ def main() -> int:
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
     allowed_link = {
         "motionconnectormocopi", "public", "private", "interface",
+        "motionconnectorcore::motionconnectorcore",
         "motioncore::motioncore",
         "motionsampling::motionsampling", "motionrecording::motionrecording",
         "motionconnectortransport::motionconnectortransport",
@@ -262,7 +263,8 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "motionConnectorMocopi may link only motionCore, "
+                    "motionConnectorMocopi may link only motionConnectorCore, "
+                    "motionCore, "
                     "motionSampling, motionRecording, "
                     "motionConnectorTransport and the platform's own primitives; "
                     f"CMakeLists.txt links `{token}`")

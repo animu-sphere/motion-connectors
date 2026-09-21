@@ -32,8 +32,8 @@ into the shared layer.
 
 - 🚧 Adapt VMC first, then mocopi and VRChat OSC Trackers, to the shared
   connector contract without replacing their tested source-specific assembly.
-  `VmcConnector` now wraps the tested VMC source path; mocopi and VRChat OSC
-  remain pending.
+  `VmcConnector` and `MocopiConnector` now wrap their tested source paths;
+  VRChat OSC remains pending.
 - ⬜ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
   `vrchat-osc.trackers.v1`; keep target-avatar mapping outside this repository.
 - ⬜ Resolve the shared change-of-basis primitive and VMC translation-channel
