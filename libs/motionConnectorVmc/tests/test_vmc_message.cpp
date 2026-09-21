@@ -782,7 +782,7 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         // The sender's clock goes backwards in this capture and is decoded
-        // without complaint: VRM_VMC_TIMESTAMP_REGRESSION needs a memory of the
+        // without complaint: VMC_TIMESTAMP_REGRESSION needs a memory of the
         // previous frame, and this layer has none. Raising it here would make
         // every out-of-order datagram a decode failure.
         if (name == "sender-restart-30hz.vmcpackets")

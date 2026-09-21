@@ -1,0 +1,39 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "vrchat-osc.trackers.v1",
+  "source": "VRChat OSC Trackers",
+  "connector": "motionConnectorVrchatOsc",
+  "part": "trackers",
+  "observationKind": "trackers",
+  "assignment": "external",
+  "jointSet": [],
+  "trackers": [
+    {"source": "1", "channels": ["position", "rotation"]},
+    {"source": "2", "channels": ["position", "rotation"]},
+    {"source": "3", "channels": ["position", "rotation"]},
+    {"source": "4", "channels": ["position", "rotation"]},
+    {"source": "5", "channels": ["position", "rotation"]},
+    {"source": "6", "channels": ["position", "rotation"]},
+    {"source": "7", "channels": ["position", "rotation"]},
+    {"source": "8", "channels": ["position", "rotation"]},
+    {"source": "head", "channels": ["position", "rotation"]}
+  ],
+  "address": "/tracking/trackers/{tracker}/{channel}",
+  "basis": {
+    "handedness": "left",
+    "upAxis": "+Y",
+    "forwardAxis": "+Z",
+    "lengthUnit": "metres",
+    "rotation": {"kind": "euler", "order": "ZXY", "unit": "degrees"},
+    "transformSpace": "tracking-space",
+    "evidence": "measured"
+  },
+  "confidence": {"kind": "none"},
+  "capabilities": ["trackers"],
+  "clock": {
+    "domain": "None",
+    "unit": "seconds",
+    "timestamp": null,
+    "sequence": null
+  }
+}

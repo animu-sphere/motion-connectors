@@ -75,7 +75,7 @@ IsFinite(const std::array<float, 3>& translation) noexcept
 }
 
 // A transform that names an orientation: finite throughout, and a rotation with
-// a length to divide by. This is `VRM_MOCOPI_NON_FINITE_TRANSFORM`'s own
+// a length to divide by. This is `MOCOPI_NON_FINITE_TRANSFORM`'s own
 // definition, and it is the decoder's too — the two agree because they are
 // checking the same thing about the same seven floats.
 bool
@@ -109,7 +109,7 @@ JointDiagnostic(DiagnosticCode code, std::uint16_t boneId, std::string detail)
 // A rig this map cannot read, reported at a severity the code's own default does
 // not carry.
 //
-// `VRM_MOCOPI_UNSUPPORTED_JOINT` defaults to info, and for the case it was
+// `MOCOPI_UNSUPPORTED_JOINT` defaults to info, and for the case it was
 // frozen to describe that is right: one joint of many maps to nothing and the
 // session continues with the rest. This is the other case wearing the same code
 // — *no* joint maps to anything, so a session gets no pose at all — and an

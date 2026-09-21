@@ -1,8 +1,9 @@
 # Source profiles and joint naming
 
-> Status: **proposed**, 2026-09-19. The profile contract and identifiers are
-> defined here; the imported source implementations do not yet provide one
-> installed profile format. The capability matrix states current support.
+> Status: **adopted**, 2026-09-21. The profile contract, identifiers and the
+> installed JSON representation are defined here. The three v0.1.0 connector
+> profiles are installed beside their libraries and checked by the workspace
+> profile test and the installed-consumer lane.
 >
 > This document owns what a source *is*: its profile identifier, what the
 > profile declares, and how a source's joint names become the shared
@@ -45,8 +46,9 @@ meaning changes, never for an additive field.
 | `openxr.hand.v1` | OpenXR `XR_EXT_hand_tracking` | hand joints | `motionConnectorOpenXR` |
 
 The table reserves names; a profile exists when its connector lands, and the
-[capability matrix](../reference/CAPABILITY_MATRIX.md) says when. The naming
-scheme itself is `SP-O1`.
+[capability matrix](../reference/CAPABILITY_MATRIX.md) says when. Sender
+applications and relay identities belong in provenance, not in the profile
+identifier, so the three v0.1.0 IDs are the names above.
 
 ## 3. What a profile declares
 
@@ -98,15 +100,30 @@ target avatar joints          (a VRM node, a PMX bone, a UsdSkel joint)
 
 `usd-motion-plugins` keeps its producer profiles for recorded files as
 installed, declarative data (`profiles/motion/`), so that a BVH reader never
-names a producer in code. Whether connector profiles follow the same rule — a
-data file per profile, read by the connector — or stay compiled into each
-connector is `SP-O2`. Either way, the profile is the one place a source's facts
-are written, and the connector's tests read it.
+names a producer in code. Connector profiles follow the same rule: one JSON data
+file per profile, installed under `share/motion-connectors/profiles/`. The
+connector's runtime contract still carries the profile ID, while the profile
+data is the declarative source description consumed by tools and validation;
+the connector does not branch on profile contents.
+
+The representation is `openstrata.motion.source-profile/v1`. It uses the
+fields in §3, with `jointSet` entries carrying `source`, `parent` and
+`humanJoint` (or `null` for an intentional unmapped joint). Numbered sources
+add `sourceIndex`; tracker profiles use `trackers` and never invent a joint
+map. A profile declares its basis evidence, confidence, capabilities and clock
+even when the value is explicitly `none`.
 
 ## 6. Open questions
 
+SP-O1 and SP-O2 are resolved by the installed profiles above:
+
+| Id | Decision | Resolved |
+| --- | --- | --- |
+| SP-O1 | Use `<source>.<part>.v<major>`; `<part>` is optional, and sender applications and relays remain provenance rather than profile identity. | 2026-09-21 |
+| SP-O2 | Use one installed JSON data file per connector-owned profile under `share/motion-connectors/profiles/`, with `openstrata.motion.source-profile/v1`. | 2026-09-21 |
+
+The remaining profile question is postponed with the source that needs it:
+
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| SP-O1 | The identifier scheme of §2: whether `<part>` is mandatory, and whether a sender application (a VMC tool, a mocopi relay) is part of the id or of the provenance | v0.1.0 (`vmc.v1`) |
-| SP-O2 | Profiles as installed data files, as `usd-motion-plugins` does for recorded sources, or compiled into each connector | v0.1.0 |
 | SP-O3 | Landmark profiles (MediaPipe): a profile whose observation kind is positions has no rotation joint map; what its "joint map" is depends on CC-O2 | Connector Phase 4 |

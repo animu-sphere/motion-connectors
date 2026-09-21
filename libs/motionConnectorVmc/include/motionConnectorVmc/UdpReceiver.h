@@ -29,9 +29,9 @@
 // ## The silence timeout is still absent, and now for a visible reason
 //
 // The shared receiver has one; this adapter does not expose it, because
-// `VRM_VMC_*` has no code for silence and its own documentation argues it did
+// `VMC_*` has no code for silence and its own documentation argues it did
 // not need a ninth. Inventing a second spelling of the sibling's
-// `VRM_MOCOPI_DEVICE_UNAVAILABLE` would be a contract change, and it is the
+// `MOCOPI_DEVICE_UNAVAILABLE` would be a contract change, and it is the
 // adapter plan's §8 to make, not this file's. The difference used to be a
 // missing 30 lines of receiver; it is now a `UdpReceiverConfig` with four
 // fields instead of five, which is a difference a reader can see.
@@ -88,7 +88,7 @@ struct UdpReceiverConfig
 
     // Whether another socket may already hold this address and port. Off by
     // default, so a second receiver started against a port that is already
-    // serving reports `VRM_VMC_SOCKET_BIND_FAILED` instead of silently taking
+    // serving reports `VMC_SOCKET_BIND_FAILED` instead of silently taking
     // some fraction of the traffic — which is the failure an operator has no
     // way at all to see from the outside.
     bool reuseAddress = false;
@@ -104,7 +104,7 @@ struct UdpReceiverConfig
 //
 // Every member forwards to `transport::UdpReceiver`. The two that do more
 // than forward are `Open` and the constructor of `UdpReceiverConfig`: the first
-// turns a `TransportEvent` into a `VRM_VMC_*` diagnostic, and the second is
+// turns a `TransportEvent` into a `VMC_*` diagnostic, and the second is
 // where this adapter's port and its four-of-five configuration surface live.
 class MOTIONCONNECTORVMC_API UdpReceiver final
 {
@@ -123,7 +123,7 @@ class MOTIONCONNECTORVMC_API UdpReceiver final
     // whose re-`Open` was refused can still be asked what the session it had
     // did.
     //
-    // On failure the object is closed and `VRM_VMC_SOCKET_BIND_FAILED` is
+    // On failure the object is closed and `VMC_SOCKET_BIND_FAILED` is
     // appended — error, not recoverable, with the requested endpoint as its
     // subject and the platform's own message as its detail. That covers the
     // three causes worth telling apart: the port is already served, the address

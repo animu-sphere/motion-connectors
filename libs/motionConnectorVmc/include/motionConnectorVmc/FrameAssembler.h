@@ -39,7 +39,7 @@
 // **A repeat ends the frame — unless it arrived in the same datagram.** A bone
 // or a root the open frame already carries means the sender has moved on. That
 // is what closes an unbundled frame, whose clock arrives mid-stream and stays.
-// Inside *one* datagram the same repeat is read as `VRM_VMC_DUPLICATE_BONE`
+// Inside *one* datagram the same repeat is read as `VMC_DUPLICATE_BONE`
 // instead: a datagram is one indivisible delivery, and a sender that emitted a
 // bone twice in a single bundle is far likelier to have repeated itself than to
 // have packed two frames into one send. The clock rule above does not make that
@@ -89,8 +89,8 @@
 // Three different things, told apart by one comparison against the last
 // *accepted* frame — and the sender-restart capture records all three:
 //
-//     equal or slightly earlier  ->  VRM_VMC_TIMESTAMP_REGRESSION, refused
-//     earlier by more than the   ->  VRM_VMC_SOURCE_RESTARTED, accepted as the
+//     equal or slightly earlier  ->  VMC_TIMESTAMP_REGRESSION, refused
+//     earlier by more than the   ->  VMC_SOURCE_RESTARTED, accepted as the
 //       restart threshold             first frame of a new session
 //     later                      ->  accepted
 //

@@ -9,7 +9,7 @@
 // describing whichever bug was chased last. Every failure the VMC path can
 // report is one of the eight below.
 //
-// Two namespaces meet here and must not merge. `VRM_VMC_*` says the *protocol*
+// Two namespaces meet here and must not merge. `VMC_*` says the *protocol*
 // layer refused something — a datagram, an OSC type tag, a frame boundary.
 // `VRM_MOTION_*` says the *canonical* layer's contract was violated, and those
 // codes belong to the motion libraries rather than to any adapter, so that a
@@ -85,7 +85,7 @@ inline constexpr std::size_t DiagnosticCodeCount = static_cast<std::size_t>(Diag
 using DiagnosticSeverity = transport::DiagnosticSeverity;
 using transport::DiagnosticSeverityString;
 
-// The stable string, e.g. "VRM_VMC_PACKET_MALFORMED". This is the contract;
+// The stable string, e.g. "VMC_PACKET_MALFORMED". This is the contract;
 // the enumerator spelling is not.
 MOTIONCONNECTORVMC_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
 
@@ -114,7 +114,7 @@ MOTIONCONNECTORVMC_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::strin
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
-//     [VRM_VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539
+//     [VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539
 //     t=1.500000 subject=leftHand seq=42: no update for 0.5 s
 //
 // Absent optional fields are omitted rather than printed empty, and the field

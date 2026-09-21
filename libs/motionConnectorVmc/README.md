@@ -111,9 +111,9 @@ Three rules are decisions rather than details:
   never sends. Skipping an argument requires knowing its size, so a decoder that
   handled only `i`, `f` and `s` would have to refuse a valid message the moment
   a sender attached a `d` — blaming the sender for the decoder's gap.
-- **The only refusal is `VRM_VMC_PACKET_MALFORMED`.** This layer cannot tell an
+- **The only refusal is `VMC_PACKET_MALFORMED`.** This layer cannot tell an
   unimplemented address from any other one; `/foo/bar` and `/VMC/Ext/Midi/Note`
-  both decode cleanly here. `VRM_VMC_UNSUPPORTED_MESSAGE` belongs one layer up,
+  both decode cleanly here. `VMC_UNSUPPORTED_MESSAGE` belongs one layer up,
   where addresses have meanings.
 
 Diagnostics carry the offending address as their subject and a byte offset in
@@ -151,7 +151,7 @@ Four more decisions, each written down where it is enforced:
   malformed `/VMC/Ext/Bone/Pos` costs that bone and not the twenty-one that came
   with it. A frame missing one bone is the assembler's ordinary business.
 - **An unimplemented address is not a defect.** Every sender emits a headset
-  transform, a camera, a MIDI note. `VRM_VMC_UNSUPPORTED_MESSAGE` is info and
+  transform, a camera, a MIDI note. `VMC_UNSUPPORTED_MESSAGE` is info and
   recoverable, `DecodeVmcPacket` still returns true, and the mixed-traffic
   capture is in the corpus to hold the two codes apart — ten of its ninety-three
   messages take that path.
@@ -174,7 +174,7 @@ but not read — and checks three things counts cannot:
 - the neutral capture's rotations are all identity with its root at the origin,
   and its sender clock starts at 12.5 s where the receive clock starts at 0;
 - the sender-restart capture's backwards clock decodes without complaint,
-  because `VRM_VMC_TIMESTAMP_REGRESSION` needs a memory of the previous frame
+  because `VMC_TIMESTAMP_REGRESSION` needs a memory of the previous frame
   and this layer has none;
 - the malformed-forms capture's bad bone costs **that bone** — the datagram
   carrying it still yields the twenty-two messages that arrived with it, which
@@ -204,7 +204,7 @@ A map that lowercased the first letter would land every thumb rotation one joint
 out while every other bone in the hand arrived correctly, so the table is
 written out rather than derived and the tests state the thumb twice. The
 spelling is matched exactly: an unrecognised name is
-`VRM_VMC_UNSUPPORTED_MESSAGE` — info, recoverable, that bone ignored and the
+`VMC_UNSUPPORTED_MESSAGE` — info, recoverable, that bone ignored and the
 frame kept — for the same reason an unimplemented address is.
 
 **The basis change is VRM 1.0's, not VRM 0.x's.** Unity is left-handed with the
@@ -223,7 +223,7 @@ reversed sense of rotation, which is why a rotation about +X survives unchanged
 and one about +Z comes out about −Z. Quaternions are normalised on the way
 through — senders emit un-normalised ones and a retarget composing them would
 skew a joint. A zero-length or non-finite one is refused as
-`VRM_VMC_PACKET_MALFORMED` instead: it names no orientation, and the value that
+`VMC_PACKET_MALFORMED` instead: it names no orientation, and the value that
 would have to be invented to carry on is exactly the identity a reader could not
 tell from a real sample.
 
@@ -263,22 +263,22 @@ convention read as a rule produces one frame per two on the other sender — off
 by half a frame, with every rotation in it still individually correct. Two rules
 cover both: **a second clock ends the frame**, and **a repeat ends it unless it
 arrived in the same datagram**, where the same repetition is
-`VRM_VMC_DUPLICATE_BONE` instead. That exception is the only place a datagram
+`VMC_DUPLICATE_BONE` instead. That exception is the only place a datagram
 boundary is load-bearing anywhere in the adapter, and it is why the assembler
 consumes packets rather than a flattened message stream.
 
 A backwards clock means three things, told apart by one comparison against the
 last accepted frame: **equal or slightly earlier** is
-`VRM_VMC_TIMESTAMP_REGRESSION` and the frame is refused, which is what stops a
+`VMC_TIMESTAMP_REGRESSION` and the frame is refused, which is what stops a
 duplicated datagram from becoming a duplicated pose; **earlier by more than the
-restart threshold** is `VRM_VMC_SOURCE_RESTARTED`; anything later is accepted. A
+restart threshold** is `VMC_SOURCE_RESTARTED`; anything later is accepted. A
 restart is reported and not repaired — offsetting the stream to keep timestamps
 rising would manufacture continuity out of a discontinuity.
 
 The assembler **holds nothing forward**: a bone the session has observed and this
 frame did not carry is reported missing and the frame is still emitted, because
 `MissingJointPolicy` is the intake's answer. A bone missing past the staleness
-horizon is additionally `VRM_VMC_STALE_JOINT`, raised once per crossing rather
+horizon is additionally `VMC_STALE_JOINT`, raised once per crossing rather
 than per frame. Both are measured against the rig the session has actually
 observed — a sender that solves no fingers is complete, not incomplete forty
 times a second.
@@ -364,7 +364,7 @@ Four more decisions are written down where they are enforced:
   is impossible rather than configurable — a decision about blame, since a
   truncated datagram is indistinguishable at the OSC layer from a malformed one
   and a smaller buffer would let the receiver manufacture
-  `VRM_VMC_PACKET_MALFORMED` against a sender that did nothing wrong.
+  `VMC_PACKET_MALFORMED` against a sender that did nothing wrong.
 - **The clock is monotonic**, which the capture format requires rather than
   prefers: it forbids backwards receive times because arrival order is the whole
   point of it, and a wall clock steps backwards for reasons that have nothing to
@@ -372,7 +372,7 @@ Four more decisions are written down where they are enforced:
   `vmc-packet-capture` records against, so a recording tool copies the number
   instead of rebasing it.
 - **One transport code, because one transport failure is fatal.**
-  `VRM_VMC_SOCKET_BIND_FAILED` is the only socket failure a session cannot
+  `VMC_SOCKET_BIND_FAILED` is the only socket failure a session cannot
   continue past, so the frozen set needed no ninth code: a lost datagram, a
   transient error and an empty poll are counts in `UdpReceiverStats`, not
   diagnostics that would say "recoverable" on every line.
@@ -438,10 +438,10 @@ decoder exists so that the set describes the protocol rather than whichever bug
 was chased last:
 
 ```text
-VRM_VMC_PACKET_MALFORMED        VRM_VMC_UNSUPPORTED_MESSAGE
-VRM_VMC_TIMESTAMP_REGRESSION    VRM_VMC_DUPLICATE_BONE
-VRM_VMC_INCOMPLETE_FRAME        VRM_VMC_SOURCE_RESTARTED
-VRM_VMC_SOCKET_BIND_FAILED      VRM_VMC_STALE_JOINT
+VMC_PACKET_MALFORMED        VMC_UNSUPPORTED_MESSAGE
+VMC_TIMESTAMP_REGRESSION    VMC_DUPLICATE_BONE
+VMC_INCOMPLETE_FRAME        VMC_SOURCE_RESTARTED
+VMC_SOCKET_BIND_FAILED      VMC_STALE_JOINT
 ```
 
 `VRM_MOTION_*` is the canonical layer's namespace, not this one's: a reader can

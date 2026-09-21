@@ -12,13 +12,13 @@
 // subset of it. Every failure the mocopi path can report is one of the nine
 // below, and adding a tenth is a contract change and not a commit.
 //
-// Two namespaces meet here and must not merge. `VRM_MOCOPI_*` says *this*
+// Two namespaces meet here and must not merge. `MOCOPI_*` says *this*
 // protocol layer refused something — a datagram, a joint, a frame boundary.
 // `VRM_MOTION_*` says the canonical layer's contract was violated, and those
 // codes belong to the motion libraries rather than to any adapter, so a reader
 // can tell a decode failure from a motion-contract violation without knowing
 // which adapter produced it. Nothing here is a core code, and no core code is
-// emitted from here. The sibling adapter's `VRM_VMC_*` set is a third namespace
+// emitted from here. The sibling adapter's `VMC_*` set is a third namespace
 // again: one event, one spelling, per source.
 //
 // `recoverable` is load-bearing rather than decorative in a live session, and
@@ -102,7 +102,7 @@ inline constexpr std::size_t DiagnosticCodeCount = static_cast<std::size_t>(Diag
 using DiagnosticSeverity = transport::DiagnosticSeverity;
 using transport::DiagnosticSeverityString;
 
-// The stable string, e.g. "VRM_MOCOPI_PACKET_MALFORMED". This is the contract;
+// The stable string, e.g. "MOCOPI_PACKET_MALFORMED". This is the contract;
 // the enumerator spelling is not.
 MOTIONCONNECTORMOCOPI_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
 
@@ -140,7 +140,7 @@ MOTIONCONNECTORMOCOPI_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::st
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
-//     [VRM_MOCOPI_TRACKING_LOST] warning recoverable source=0.0.0.0:12351
+//     [MOCOPI_TRACKING_LOST] warning recoverable source=0.0.0.0:12351
 //     t=1.500000 subject=leftHand seq=42: the source stopped solving this joint
 //
 // Absent optional fields are omitted rather than printed empty, and the field

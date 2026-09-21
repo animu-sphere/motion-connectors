@@ -49,7 +49,7 @@
 // ## The sender that is not there yet is the ordinary case
 //
 // `--silence-timeout` is this tool's own flag and the reason
-// `VRM_VRCHAT_OSC_SOURCE_TIMEOUT` has no default threshold one layer down: how
+// `VRCHAT_OSC_SOURCE_TIMEOUT` has no default threshold one layer down: how
 // long a sender may reasonably take to start is a property of the session, and
 // this tool is where a session is stated. It reports and keeps listening;
 // `--idle-timeout` is the flag that stops.

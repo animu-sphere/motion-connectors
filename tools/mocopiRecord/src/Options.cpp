@@ -361,7 +361,7 @@ GetUsage()
            "  --dry-run              Listen and report, write nothing.\n"
            "\n"
            "Noticing a device that is not there:\n"
-           "  --silence-timeout S    Report VRM_MOCOPI_DEVICE_UNAVAILABLE after S\n"
+           "  --silence-timeout S    Report MOCOPI_DEVICE_UNAVAILABLE after S\n"
            "                         seconds with nothing arriving, once per\n"
            "                         episode, and keep listening. Off by default,\n"
            "                         because how long a device may take to start\n"

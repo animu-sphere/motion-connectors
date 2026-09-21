@@ -25,7 +25,7 @@
 // that element.
 //
 // **An address this adapter does not implement is not a defect.**
-// `VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS` is info and recoverable. VRChat's OSC
+// `VRCHAT_OSC_UNSUPPORTED_ADDRESS` is info and recoverable. VRChat's OSC
 // surface is far larger than the tracker subset read here — avatar parameters,
 // chatbox, eye tracking, input — and a session carrying them alongside tracker
 // data is the ordinary case rather than a fault. This is also the code that
@@ -68,7 +68,7 @@
 // tracker, and VRC-4 — which owns the window a frame is assembled over, and is
 // therefore the only layer that can say a position and a rotation belong
 // together — is where a `TrackerSample` is constructed and where
-// `VRM_VRCHAT_OSC_TRACKER_PARTIAL` is raised. That code is not raised anywhere
+// `VRCHAT_OSC_TRACKER_PARTIAL` is raised. That code is not raised anywhere
 // in this file, deliberately: a single message is *always* partial, and a layer
 // that reported it would raise a warning about once a datagram forever.
 #pragma once
@@ -252,7 +252,7 @@ MOTIONCONNECTORVRCHATOSC_API bool DecodeTrackerMessage(const osc::OscMessage& me
 MOTIONCONNECTORVRCHATOSC_API TrackerPacket DecodeTrackerPacket(const osc::OscPacket& packet);
 
 // Decodes one datagram, mapping the shared decoder's neutral refusal onto this
-// adapter's `VRM_VRCHAT_OSC_PACKET_MALFORMED`. That map is the adapter's half
+// adapter's `VRCHAT_OSC_PACKET_MALFORMED`. That map is the adapter's half
 // of OSC-3's split — a refusal carries no code, and the caller that knows which
 // adapter it is supplies one
 // ([§8](../../../../../docs/roadmap/osc-and-vrchat-trackers.md#8-diagnostics)).

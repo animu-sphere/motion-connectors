@@ -19,9 +19,9 @@
 // assembler's ordinary business, and a frame missing all of them is not.
 //
 // **An address this adapter does not implement is not a defect.**
-// `VRM_VMC_UNSUPPORTED_MESSAGE` is info and recoverable, and every real sender
+// `VMC_UNSUPPORTED_MESSAGE` is info and recoverable, and every real sender
 // emits traffic in that class — a headset transform, a camera, a MIDI note.
-// Holding it apart from `VRM_VMC_PACKET_MALFORMED` is the whole reason the
+// Holding it apart from `VMC_PACKET_MALFORMED` is the whole reason the
 // mixed-traffic capture is in the corpus.
 //
 // **A known address whose arguments disagree with the protocol is malformed.**
@@ -183,9 +183,9 @@ struct VmcPacket
 };
 
 // One message. Returns false and fills `diagnostic` when the address is not one
-// this adapter implements (`VRM_VMC_UNSUPPORTED_MESSAGE`, with the address as
+// this adapter implements (`VMC_UNSUPPORTED_MESSAGE`, with the address as
 // its subject) or when a known address carries arguments the protocol does not
-// describe (`VRM_VMC_PACKET_MALFORMED`). `out` is left untouched on either.
+// describe (`VMC_PACKET_MALFORMED`). `out` is left untouched on either.
 MOTIONCONNECTORVMC_API bool DecodeVmcMessage(const OscMessage& message, VmcMessage* out,
                                         Diagnostic* diagnostic = nullptr);
 
@@ -195,7 +195,7 @@ MOTIONCONNECTORVMC_API bool DecodeVmcMessage(const OscMessage& message, VmcMessa
 // not a failure. Either way `out` carries what did decode plus both tallies,
 // and `diagnostics`, when given, is appended to — never cleared, so a receive
 // loop can accumulate a datagram's worth or a session's. A null `out` is a
-// caller bug and is reported as `VRM_VMC_PACKET_MALFORMED` rather than
+// caller bug and is reported as `VMC_PACKET_MALFORMED` rather than
 // dereferenced.
 MOTIONCONNECTORVMC_API bool DecodeVmcPacket(const OscPacket& packet, VmcPacket* out,
                                        std::vector<Diagnostic>* diagnostics = nullptr);

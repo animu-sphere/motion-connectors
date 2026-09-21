@@ -169,7 +169,7 @@ ReadBoneTransform(const PacketChunk& chunk, BoneTransform* transform,
 }
 
 // A transform that names no orientation. Both halves are the frozen
-// `VRM_MOCOPI_NON_FINITE_TRANSFORM`'s description: a non-finite component, or a
+// `MOCOPI_NON_FINITE_TRANSFORM`'s description: a non-finite component, or a
 // rotation of zero length, whose only carry-on value is exactly the identity a
 // reader could not tell from a real sample.
 bool

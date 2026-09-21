@@ -286,7 +286,7 @@ def frame_loss() -> Capture:
     arrival = round(arrival + 1.0 / FRAME_RATE, PRECISION)
     # A restart: the counter and the stream clock both begin again. Nothing here
     # refuses it -- one packet cannot see it -- and it is the assembler's
-    # VRM_MOCOPI_SOURCE_RESTARTED when it arrives.
+    # MOCOPI_SOURCE_RESTARTED when it arrives.
     capture.add(frame_packet(1, 0.0, EPOCH + 30.0), arrival)
     return capture
 
@@ -492,7 +492,7 @@ def incomplete_frame() -> Capture:
     `refused-bones-60hz` deliberately declares none -- the skeleton map's corpus
     assertion needs a capture whose rig is undeclared, so to the frame assembler
     that file is two frames refused for having no rig rather than one incomplete
-    frame. This is the capture that lets `VRM_MOCOPI_FRAME_INCOMPLETE` be pinned
+    frame. This is the capture that lets `MOCOPI_FRAME_INCOMPLETE` be pinned
     by bytes instead of by a unit test holding structs.
 
     The clean frame after it is what makes the claim a frame's and not a

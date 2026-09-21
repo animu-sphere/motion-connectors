@@ -844,7 +844,7 @@ CheckAnOverlongDatagramIsDroppedRatherThanHandedBackAsWhole()
     // the buffer's length, and that is indistinguishable from a datagram which
     // happened to be exactly that long. A receiver whose buffer was the bound
     // itself would hand the half-read one to the decoder, which would refuse it
-    // as `VRM_VMC_PACKET_MALFORMED` -- this adapter blaming a sender for its own
+    // as `VMC_PACKET_MALFORMED` -- this adapter blaming a sender for its own
     // truncation, in the one diagnostic an operator has no way to check.
     UdpReceiverConfig config;
     config.listenAddress = "::1";

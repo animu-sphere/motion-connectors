@@ -287,7 +287,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
             {
                 if (_frame.rootPacket == _packetSerial)
                 {
-                    // `VRM_VMC_DUPLICATE_BONE` reads oddly for the root and is
+                    // `VMC_DUPLICATE_BONE` reads oddly for the root and is
                     // still the right code: the set is frozen (Diagnostics.h),
                     // and the root occupies the same one-per-frame slot a bone
                     // does, so a second one in a single delivery is the same

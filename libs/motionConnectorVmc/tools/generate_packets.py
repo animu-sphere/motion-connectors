@@ -338,7 +338,7 @@ def capture_mixed_traffic() -> Capture:
 
     A head-mounted display, a controller, a camera, an option string. None of it
     is malformed; all of it is unimplemented, which is a different diagnostic
-    (`VRM_VMC_UNSUPPORTED_MESSAGE`, info, recoverable) and the distinction is the
+    (`VMC_UNSUPPORTED_MESSAGE`, info, recoverable) and the distinction is the
     point of this fixture.
 
     The blend shapes were once in that list and are not any more: they become
@@ -380,7 +380,7 @@ def capture_malformed() -> Capture:
 
     Two of these are *not* refusals and belong here for the contrast: a
     well-formed message outside the VMC namespace, and a well-formed VMC message
-    this adapter does not implement. Both are `VRM_VMC_UNSUPPORTED_MESSAGE`, and
+    this adapter does not implement. Both are `VMC_UNSUPPORTED_MESSAGE`, and
     a decoder that reports them as malformed is blaming the sender for
     something the sender did correctly.
     """

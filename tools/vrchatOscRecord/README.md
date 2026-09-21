@@ -108,7 +108,7 @@ nothing could have arrived has lost the ten minutes.
 
 ## Waiting for a sender that is not running yet
 
-`--silence-timeout S` reports `VRM_VRCHAT_OSC_SOURCE_TIMEOUT` after S quiet
+`--silence-timeout S` reports `VRCHAT_OSC_SOURCE_TIMEOUT` after S quiet
 seconds, once per episode, and keeps listening. It has no default one layer down
 because how long a sender may reasonably take to start is a property of the
 session, and this tool is where a session is stated. It does not stop the

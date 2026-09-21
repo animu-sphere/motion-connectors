@@ -185,7 +185,7 @@ WORKSPACE.md §9.2), which this repository keeps from the receiving side:
    | `vrmAdapterMocopi` | `motionConnectorMocopi` |
    | `vrmAdapterVrchatOsc` | `motionConnectorVrchatOsc` |
    | `motionTracking` | `motionConnectorTracking` |
-   | `VRM_VMC_*`, `VRM_MOCOPI_*`, `VRM_VRCHAT_OSC_*` diagnostic codes | DIAG-O1 |
+   | source-owned `VMC_*`, `MOCOPI_*`, `VRCHAT_OSC_*` diagnostic codes | resolved 2026-09-21 |
 
 4. **Tests, the generated corpus and the recorded-session manifests come with
    it.** The replay evidence named for the move is reproduced here before the

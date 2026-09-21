@@ -139,6 +139,7 @@ install(TARGETS motionConnectorMocopi
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY profiles/ DESTINATION "${CMAKE_INSTALL_DATADIR}/motion-connectors/profiles")
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(

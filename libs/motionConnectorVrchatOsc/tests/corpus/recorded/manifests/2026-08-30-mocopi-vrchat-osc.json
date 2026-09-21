@@ -34,7 +34,7 @@
     "No BVH export accompanies any take, and that is a property of the product rather than of the session: this application records no BVH while it is sending `VRChat (OSC)` (observed on app 2.7.2 during this session), and its transfer format is exclusive so the native wire cannot run alongside either. The VRChat OSC path therefore cannot share a physical take with any other observation of the same motion.",
     "`peers` in the rows below is what `--inspect` reads from the capture *header*, which holds one endpoint. The `session-restart` take's live report named two -- 192.168.1.8:51662 and 192.168.1.8:50035 -- because the sender takes a new ephemeral source port when streaming restarts. That change is this wire's only restart marker and the format does not carry it; the 4.8452 s gap does survive, so a file shows that something happened and not that the identity changed.",
     "Nothing here is decoded. No coordinate, sign, unit or scale in any datagram was interpreted, so this manifest makes no claim about tracking space, Euler convention, what a tracker index means on a body, or whether body travel reaches this wire.",
-    "The application was calibrated before every take, so `VRM_VRCHAT_OSC_CALIBRATION_REQUIRED` has no recorded behaviour behind it.",
+    "The application was calibrated before every take, so `VRCHAT_OSC_CALIBRATION_REQUIRED` has no recorded behaviour behind it.",
     "About a third of the frames this sender emits do not arrive, and from the receiving end alone that is not attributable to the sender, the network or this host. The measurement and the one piece of evidence that points away from the receiver are in the report."
   ],
   "commonToEveryCapture": {
@@ -252,7 +252,7 @@
       "observations": {
         "peersLiveVersusInFile": "The live session reported two peers, 192.168.1.8:51662 and 192.168.1.8:50035; `--inspect` on the file reports one. The format holds a single header peer by design, so the restart marker this wire actually carries does not survive into a capture. The `peers: 1` above is the file's reading and is correct about the file.",
         "darkWindow": "4.8452 s from the last datagram of the old session to the first of the new, read as the maximum arrival interval. There is no in-band session identifier, no rest table and no handshake -- unlike the native wire, where a restarted session is dark for 3.88 s because it waits for the device to repeat its rest table. Here the stream simply resumes.",
-        "silenceWasReported": "`VRM_VRCHAT_OSC_SOURCE_TIMEOUT` fired during the recording, at the head of the take rather than in the gap: the operator's five seconds before streaming started exceeded the tool's `--silence-timeout 5`, and the 4.85 s gap did not. It is a receiver-level diagnostic and so is not in `expectedDiagnostics`, which lists what a decode of the file raises."
+        "silenceWasReported": "`VRCHAT_OSC_SOURCE_TIMEOUT` fired during the recording, at the head of the take rather than in the gap: the operator's five seconds before streaming started exceeded the tool's `--silence-timeout 5`, and the 4.85 s gap did not. It is a receiver-level diagnostic and so is not in `expectedDiagnostics`, which lists what a decode of the file raises."
       }
     }
   ]

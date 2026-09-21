@@ -37,7 +37,7 @@ is the measurement. It is a
 rotation arrive in **separate datagrams**: a message decoder that returned a
 sample would default the other half, and a defaulted rotation of (0, 0, 0) is
 bit-for-bit what a tracker at rest reports. Assembling the two, and raising
-`VRM_VRCHAT_OSC_TRACKER_PARTIAL` when only one arrives, is VRC-4's — a single
+`VRCHAT_OSC_TRACKER_PARTIAL` when only one arrives, is VRC-4's — a single
 message is always partial, so a layer that reported it would warn about once a
 datagram forever.
 
@@ -88,7 +88,7 @@ there are no bundles at all, so one datagram is one message and every frame
 boundary is inferred; the eight arrive as a fixed cycle inside a median 0.053 ms;
 and about a third of the frames never arrive, with the residual single-address
 loss falling 96 % on one address, which is what
-`VRM_VRCHAT_OSC_TRACKER_PARTIAL` is for.
+`VRCHAT_OSC_TRACKER_PARTIAL` is for.
 
 ## A tracker source is not a pose source
 
@@ -108,7 +108,7 @@ Two consequences shape everything above:
 - **The diagnostic set says things neither sibling's can.** A tracker can report
   half of itself, because position and rotation arrive on separate addresses; and
   a stream can be well-formed and unusable, because it has not been calibrated.
-  `VRM_VRCHAT_OSC_TRACKER_PARTIAL` and `VRM_VRCHAT_OSC_CALIBRATION_REQUIRED` are
+  `VRCHAT_OSC_TRACKER_PARTIAL` and `VRCHAT_OSC_CALIBRATION_REQUIRED` are
   states this wire has and those wires do not.
 
 ## Where a frame begins, on a wire with no clock
@@ -237,15 +237,15 @@ Ten codes, frozen in
 directory existed and before anything here decodes a byte:
 
 ```text
-VRM_VRCHAT_OSC_PACKET_MALFORMED     VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS
-VRM_VRCHAT_OSC_ARGUMENT_MISMATCH    VRM_VRCHAT_OSC_TRACKER_ID_INVALID
-VRM_VRCHAT_OSC_TRACKER_PARTIAL      VRM_VRCHAT_OSC_SOURCE_TIMEOUT
-VRM_VRCHAT_OSC_SOURCE_RESTARTED     VRM_VRCHAT_OSC_COORDINATE_INVALID
-VRM_VRCHAT_OSC_SOCKET_BIND_FAILED   VRM_VRCHAT_OSC_CALIBRATION_REQUIRED
+VRCHAT_OSC_PACKET_MALFORMED     VRCHAT_OSC_UNSUPPORTED_ADDRESS
+VRCHAT_OSC_ARGUMENT_MISMATCH    VRCHAT_OSC_TRACKER_ID_INVALID
+VRCHAT_OSC_TRACKER_PARTIAL      VRCHAT_OSC_SOURCE_TIMEOUT
+VRCHAT_OSC_SOURCE_RESTARTED     VRCHAT_OSC_COORDINATE_INVALID
+VRCHAT_OSC_SOCKET_BIND_FAILED   VRCHAT_OSC_CALIBRATION_REQUIRED
 ```
 
 Exactly one is fatal: a receiver that never bound has nothing to recover into.
-`VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS` is *information* rather than a warning,
+`VRCHAT_OSC_UNSUPPORTED_ADDRESS` is *information* rather than a warning,
 which is this set's one severity worth arguing about — VRChat's OSC surface is
 far larger than the tracker subset read here, so traffic this adapter maps to
 nothing is the ordinary case, and warning about it would train an operator to
@@ -257,7 +257,7 @@ and *no code at all* — not even a neutral event enum, which is where it differ
 from the transport ring. That library's receiver raises two events a caller must
 tell apart; a decoder makes one distinction, decodable or not. So each adapter
 maps one refusal onto one of its own codes, and here that is
-`VRM_VRCHAT_OSC_PACKET_MALFORMED`, raised from
+`VRCHAT_OSC_PACKET_MALFORMED`, raised from
 [`src/AddressInventory.cpp`](src/AddressInventory.cpp) and
 [`src/TrackerMessage.cpp`](src/TrackerMessage.cpp).
 

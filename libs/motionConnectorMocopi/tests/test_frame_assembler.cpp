@@ -23,7 +23,7 @@
 //
 // ## The two captures that differ by a rig
 //
-// `VRM_MOCOPI_FRAME_INCOMPLETE` is only meaningful against a rig, so pinning it
+// `MOCOPI_FRAME_INCOMPLETE` is only meaningful against a rig, so pinning it
 // took a capture the corpus did not have. `refused-bones-60hz` has the damaged
 // frames — the decoder drops three bone records and the map loses three canonical
 // bones to them — but it deliberately carries **no skeleton packet**, because
@@ -502,7 +502,7 @@ TestTheGrammarCarriesNoTrackingStateAndNoneIsInvented()
     assembler.Push(damaged, 0.0, &frames, &diagnostics);
     assembler.Push(FrameAt(3001, 1.0 / kFrameRate), 0.0, &frames, &diagnostics);
 
-    // `VRM_MOCOPI_TRACKING_LOST` is frozen and unraised: the measured grammar
+    // `MOCOPI_TRACKING_LOST` is frozen and unraised: the measured grammar
     // carries no per-joint confidence and no state field, so a bone that stopped
     // arriving is missing rather than untracked, and the two are not the same
     // claim.

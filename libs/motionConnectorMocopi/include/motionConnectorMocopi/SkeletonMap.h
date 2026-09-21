@@ -155,7 +155,7 @@
 //
 // ## The codes this layer raises
 //
-// `VRM_MOCOPI_UNSUPPORTED_JOINT` — a rig this map cannot read, or a joint in a
+// `MOCOPI_UNSUPPORTED_JOINT` — a rig this map cannot read, or a joint in a
 // longer rig whose meaning has not been measured. Raised while the map is being
 // built and never per frame: both are properties of the session, and a frame
 // that repeated them would say the same thing sixty times a second. Never for
@@ -163,15 +163,15 @@
 // known, deliberate, and on the path, so reporting them would be reporting a
 // decision as a surprise.
 //
-// `VRM_MOCOPI_NON_FINITE_TRANSFORM` — a transform that names no orientation.
+// `MOCOPI_NON_FINITE_TRANSFORM` — a transform that names no orientation.
 // The decoder refuses those before they reach here, so this is unreachable
 // through `DecodeMotionPacket`; it is checked anyway, because these functions
 // take structs rather than datagrams and nothing in the type system says where
 // a struct came from.
 //
-// Not `VRM_MOCOPI_FRAME_INCOMPLETE`: how many of the twenty-two bones make a
+// Not `MOCOPI_FRAME_INCOMPLETE`: how many of the twenty-two bones make a
 // usable frame is the assembler's question and its code. Not
-// `VRM_MOCOPI_TRACKING_LOST`: the measured grammar carries no per-joint
+// `MOCOPI_TRACKING_LOST`: the measured grammar carries no per-joint
 // confidence or state, so there is nothing here to decode into it.
 #pragma once
 
@@ -316,10 +316,10 @@ struct SkeletonMap
 // Returns false and leaves `out` untouched when the rig is not one this map can
 // read: fewer joints than the measured rig, or a leading joint whose id or
 // parent disagrees with the measured column. The diagnostic is
-// `VRM_MOCOPI_UNSUPPORTED_JOINT` and its subject is the first joint that
+// `MOCOPI_UNSUPPORTED_JOINT` and its subject is the first joint that
 // disagreed, because that is the joint a reader would have to look at — a rig
 // that is short says so at the id it stops at. A rest transform that names no
-// orientation refuses the rig too, as `VRM_MOCOPI_NON_FINITE_TRANSFORM`: a rest
+// orientation refuses the rig too, as `MOCOPI_NON_FINITE_TRANSFORM`: a rest
 // table with a hole in it leaves every bone below the hole unplaced.
 //
 // Returns true with one further diagnostic per joint beyond the measured rig:

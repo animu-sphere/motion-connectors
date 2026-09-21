@@ -221,7 +221,7 @@
     },
     {
       "file": "incomplete-frame-60hz.mocopipackets",
-      "pins": "VRM_MOCOPI_FRAME_INCOMPLETE, which is only meaningful against a rig: a skeleton packet, then the same three damaged bone records refused-bones-60hz carries, then a clean frame. The damaged frame is emitted rather than refused - whether 19 of 22 bones is usable is the intake policy's question one layer up - and the clean frame is what makes the incompleteness the datagram's property rather than the session's.",
+      "pins": "MOCOPI_FRAME_INCOMPLETE, which is only meaningful against a rig: a skeleton packet, then the same three damaged bone records refused-bones-60hz carries, then a clean frame. The damaged frame is emitted rather than refused - whether 19 of 22 bones is usable is the intake policy's question one layer up - and the clean frame is what makes the incompleteness the datagram's property rather than the session's.",
       "tags": [
         "partial-frame",
         "declared-rig",

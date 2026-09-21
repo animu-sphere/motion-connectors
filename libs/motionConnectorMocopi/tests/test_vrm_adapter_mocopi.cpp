@@ -29,11 +29,11 @@ using mocopi::DiagnosticSeverity;
 // two days before this directory existed, and a renamed, dropped or quietly
 // added code is a contract break that nothing else in the tree would notice.
 constexpr const char* kExpectedCodes[] = {
-    "VRM_MOCOPI_SOCKET_BIND_FAILED",   "VRM_MOCOPI_TRACKING_LOST",
-    "VRM_MOCOPI_DEVICE_UNAVAILABLE",   "VRM_MOCOPI_TIMESTAMP_INVALID",
-    "VRM_MOCOPI_UNSUPPORTED_JOINT",    "VRM_MOCOPI_SOURCE_RESTARTED",
-    "VRM_MOCOPI_PACKET_MALFORMED",     "VRM_MOCOPI_FRAME_INCOMPLETE",
-    "VRM_MOCOPI_NON_FINITE_TRANSFORM",
+    "MOCOPI_SOCKET_BIND_FAILED",   "MOCOPI_TRACKING_LOST",
+    "MOCOPI_DEVICE_UNAVAILABLE",   "MOCOPI_TIMESTAMP_INVALID",
+    "MOCOPI_UNSUPPORTED_JOINT",    "MOCOPI_SOURCE_RESTARTED",
+    "MOCOPI_PACKET_MALFORMED",     "MOCOPI_FRAME_INCOMPLETE",
+    "MOCOPI_NON_FINITE_TRANSFORM",
 };
 
 void
@@ -55,14 +55,15 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
         assert(found && *found == code);
     }
 
-    assert(!mocopi::FindDiagnosticCode("VRM_MOCOPI_NOT_A_CODE"));
+    assert(!mocopi::FindDiagnosticCode("MOCOPI_NOT_A_CODE"));
+    assert(!mocopi::FindDiagnosticCode("VRM_MOCOPI_PACKET_MALFORMED"));
     // The canonical layer's namespace is not this adapter's to emit (§8).
     assert(!mocopi::FindDiagnosticCode("VRM_MOTION_NON_FINITE_TRANSFORM"));
     // Neither is the other live adapter's, which matters more here than it
     // looks: this set and that one describe overlapping events on purpose, so
     // the only thing keeping them apart is that neither answers to the other's
     // spelling.
-    assert(!mocopi::FindDiagnosticCode("VRM_VMC_PACKET_MALFORMED"));
+    assert(!mocopi::FindDiagnosticCode("VMC_PACKET_MALFORMED"));
 }
 
 void
@@ -119,13 +120,13 @@ TestFormattingIsDeterministicAndOmitsAbsentFields()
     full.sequence = 42;
 
     assert(mocopi::FormatDiagnostic(full) ==
-           "[VRM_MOCOPI_TRACKING_LOST] warning recoverable"
+           "[MOCOPI_TRACKING_LOST] warning recoverable"
            " source=0.0.0.0:12351 t=1.500000 subject=leftHand seq=42:"
            " the source stopped solving this joint");
 
     const Diagnostic bare = mocopi::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
     assert(mocopi::FormatDiagnostic(bare) ==
-           "[VRM_MOCOPI_SOCKET_BIND_FAILED] error fatal");
+           "[MOCOPI_SOCKET_BIND_FAILED] error fatal");
 }
 
 // A locale whose decimal point is a comma, constructed in-process so this test
@@ -155,7 +156,7 @@ TestFormattingSurvivesAHostileGlobalLocale()
     const std::string formatted = mocopi::FormatDiagnostic(pinned);
     std::locale::global(previous);
 
-    assert(formatted == "[VRM_MOCOPI_TIMESTAMP_INVALID] warning recoverable t=1.500000");
+    assert(formatted == "[MOCOPI_TIMESTAMP_INVALID] warning recoverable t=1.500000");
 }
 
 void

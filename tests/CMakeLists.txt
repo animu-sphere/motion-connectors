@@ -17,6 +17,9 @@ add_test(NAME workspace_docs
 add_test(NAME workspace_docs_selftest
     COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}" "${PROJECT_SOURCE_DIR}/scripts/check_docs.py"
         --selftest)
+add_test(NAME workspace_source_profiles
+    COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
+        "${PROJECT_SOURCE_DIR}/scripts/check_source_profiles.py")
 
 # The OpenUSD install root, from where pxrConfig.cmake was found.
 set(_usd_root "")

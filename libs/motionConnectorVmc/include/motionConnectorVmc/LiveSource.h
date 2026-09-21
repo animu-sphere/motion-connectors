@@ -26,7 +26,7 @@
 // `stale` beside it as a *report*, and it is passed on exactly that way —
 // `MissingJointPolicy` then holds the bone or leaves it unbound, per the
 // caller's configuration. Nothing here fills a gap in, and nothing here unbinds
-// a bone the assembler called stale either: `VRM_VMC_STALE_JOINT` is what
+// a bone the assembler called stale either: `VMC_STALE_JOINT` is what
 // reaches an operator, because a second missing-bone policy inside the adapter
 // would disagree with the configured one invisibly.
 //

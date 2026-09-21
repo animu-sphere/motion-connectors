@@ -34,7 +34,7 @@
 // **The spelling is matched exactly.** A sender writing `leftUpperArm` is not
 // writing VMC, and accepting both spellings would leave the corpus unable to
 // pin which one the protocol uses. An unrecognised name is reported as
-// `VRM_VMC_UNSUPPORTED_MESSAGE` — info, recoverable, the bone ignored and the
+// `VMC_UNSUPPORTED_MESSAGE` — info, recoverable, the bone ignored and the
 // frame kept — for the same reason the message layer treats an unimplemented
 // address that way: this adapter cannot tell a sender's extension from a typo,
 // and refusing a frame over one unknown name would lose the twenty-one bones
@@ -60,7 +60,7 @@
 // that is arithmetic, not a decision. A zero-length or non-finite one is a
 // different thing: it names no orientation, and the value that would have to be
 // invented to carry on is exactly the identity a downstream reader could not
-// tell from a real sample. It is refused as `VRM_VMC_PACKET_MALFORMED`, per
+// tell from a real sample. It is refused as `VMC_PACKET_MALFORMED`, per
 // message and never per packet, the same way the layer below refuses an
 // argument form the protocol does not describe.
 //
@@ -131,9 +131,9 @@ struct VmcBoneSample
 };
 
 // `message` must be a `VmcMessageKind::BoneTransform`. Returns false and fills
-// `diagnostic` for an unrecognised bone name (`VRM_VMC_UNSUPPORTED_MESSAGE`,
+// `diagnostic` for an unrecognised bone name (`VMC_UNSUPPORTED_MESSAGE`,
 // with the name as its subject) or for a position or rotation that is not
-// finite, or a rotation of zero length (`VRM_VMC_PACKET_MALFORMED`). `out` is
+// finite, or a rotation of zero length (`VMC_PACKET_MALFORMED`). `out` is
 // left untouched on every failure.
 MOTIONCONNECTORVMC_API bool MapVmcBoneTransform(const VmcMessage& message, VmcBoneSample* out,
                                            Diagnostic* diagnostic = nullptr);

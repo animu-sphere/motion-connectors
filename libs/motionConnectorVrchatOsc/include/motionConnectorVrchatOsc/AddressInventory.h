@@ -29,7 +29,7 @@
 // decoder shaped like that caller, and the only proof that a surface is neutral
 // is a caller that never says `VMC` (osc-and-vrchat-trackers.md §3.1). This
 // file, and the map from an OSC refusal onto this adapter's own
-// `VRM_VRCHAT_OSC_PACKET_MALFORMED`, are what that came to.
+// `VRCHAT_OSC_PACKET_MALFORMED`, are what that came to.
 //
 // It costs this adapter one edge and no more: `osc` links nothing at all — not
 // even a socket — so the property VRC-0 measured survives it. This adapter's
@@ -96,7 +96,7 @@ struct AddressInventory
     std::size_t messages = 0;
 
     // One per refused datagram, in capture order, each carrying
-    // `VRM_VRCHAT_OSC_PACKET_MALFORMED` and the shared decoder's own subject
+    // `VRCHAT_OSC_PACKET_MALFORMED` and the shared decoder's own subject
     // and detail. Not capped: a capture is a bounded file, and an operator
     // reading why a session was half-refused needs all of them.
     std::vector<Diagnostic> diagnostics;

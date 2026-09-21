@@ -96,7 +96,7 @@ Five properties are deliberate and easy to lose:
   whose clocks both start at zero.
 - **Receive times never go backwards, sender times do.** Arrival order is what a
   recorder observes and a receive clock does not run backwards; disagreement
-  between the two clocks is what `VRM_VMC_TIMESTAMP_REGRESSION` is about, and it
+  between the two clocks is what `VMC_TIMESTAMP_REGRESSION` is about, and it
   lives in the payload.
 - **Bones arrive in Unity's `HumanBodyBones` order**, in which the legs precede
   the spine and `UpperChest` sorts *last* of all — it was added to that enum

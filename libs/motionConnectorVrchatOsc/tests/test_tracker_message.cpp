@@ -10,7 +10,7 @@
 //
 // What is checked here is this adapter's four contributions and nothing below
 // them. OSC's own grammar is `libs/osc`'s suite; the map from a neutral OSC
-// refusal onto `VRM_VRCHAT_OSC_PACKET_MALFORMED` is checked here because it is
+// refusal onto `VRCHAT_OSC_PACKET_MALFORMED` is checked here because it is
 // this adapter's half of that split.
 //
 // The first test is the one this milestone exists for. `head` and `1` occupy
@@ -557,7 +557,7 @@ TestTheFormattedLineNamesTheAddress()
     const TrackerPacket packet = vrchatOsc::DecodeTrackerDatagram(datagram);
     assert(packet.diagnostics.size() == 1);
     const std::string line = vrchatOsc::FormatDiagnostic(packet.diagnostics[0]);
-    assert(line.find("[VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS]") == 0);
+    assert(line.find("[VRCHAT_OSC_UNSUPPORTED_ADDRESS]") == 0);
     assert(line.find("subject=/tracking/trackers/1/velocity") != std::string::npos);
 }
 

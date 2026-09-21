@@ -40,7 +40,7 @@
 // ## The device that is not there yet is the ordinary case
 //
 // `--silence-timeout` is this tool's own flag and the reason
-// `VRM_MOCOPI_DEVICE_UNAVAILABLE` has no default threshold one layer down: how
+// `MOCOPI_DEVICE_UNAVAILABLE` has no default threshold one layer down: how
 // long a device may reasonably take to start is a property of the session, and
 // this tool is where a session is stated. An operator strapping on a phone
 // wants the message; a script waiting on a device that was switched off wants it

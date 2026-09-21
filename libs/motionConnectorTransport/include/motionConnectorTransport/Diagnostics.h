@@ -101,7 +101,7 @@ template <class Code, Code DefaultCode> struct Diagnostic : DiagnosticFields
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
-//     [VRM_VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539
+//     [VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539
 //     t=1.500000 subject=leftHand seq=42: no update for 0.5 s
 //
 // Absent optional fields are omitted rather than printed empty, and the field

@@ -675,7 +675,7 @@ TestTheMeasuredBoneCountIsNotARequirement()
     assert(mocopi::MeasuredBoneCount == 27);
 
     // And a frame with no bones at all decodes. Whether that is a usable frame
-    // is the assembler's question -- VRM_MOCOPI_FRAME_INCOMPLETE is its code --
+    // is the assembler's question -- MOCOPI_FRAME_INCOMPLETE is its code --
     // so this layer does not pre-empt it.
     const Bytes noBones = Frame(2, 0.0f, 1786492800.0, Bytes{});
     assert(Decode(noBones, &packet));
