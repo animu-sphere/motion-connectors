@@ -66,7 +66,7 @@ EXPECTED = {
     # onto the label above it.
     "mixed-traffic-30hz": {"datagrams": 13, "frames": 3,
                            "expressions": "3 name(s); 9 accepted, "
-                                          "0 duplicated A, Blink, Joy",
+                                          "0 duplicated vmc:A, vmc:Blink, vmc:Joy",
                            "sessions": [3]},
     "neutral-standing-30hz": {"datagrams": 6, "frames": 5, "expressions": None,
                               "sessions": [5]},

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // The whole of this adapter's receiver: the map from a transport event to a
-// `VRM_VRCHAT_OSC_*` code.
+// `VRCHAT_OSC_*` code.
 //
 // There is no socket in this file, and there never was one -- which is the
 // difference between this adapter and its two siblings. Each of those grew a

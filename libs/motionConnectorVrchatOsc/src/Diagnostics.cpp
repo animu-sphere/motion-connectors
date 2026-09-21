@@ -41,16 +41,16 @@ using transport::DiagnosticCodeEntry;
 // does, in the receiving application, while the stream is running. A session
 // that ended on it would end exactly when an operator was about to fix it.
 constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
-    {"VRM_VRCHAT_OSC_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS", DiagnosticSeverity::Info, true},
-    {"VRM_VRCHAT_OSC_ARGUMENT_MISMATCH", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_TRACKER_ID_INVALID", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_TRACKER_PARTIAL", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_SOURCE_TIMEOUT", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
-    {"VRM_VRCHAT_OSC_COORDINATE_INVALID", DiagnosticSeverity::Warning, true},
-    {"VRM_VRCHAT_OSC_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
-    {"VRM_VRCHAT_OSC_CALIBRATION_REQUIRED", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_UNSUPPORTED_ADDRESS", DiagnosticSeverity::Info, true},
+    {"VRCHAT_OSC_ARGUMENT_MISMATCH", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_TRACKER_ID_INVALID", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_TRACKER_PARTIAL", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_SOURCE_TIMEOUT", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
+    {"VRCHAT_OSC_COORDINATE_INVALID", DiagnosticSeverity::Warning, true},
+    {"VRCHAT_OSC_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
+    {"VRCHAT_OSC_CALIBRATION_REQUIRED", DiagnosticSeverity::Warning, true},
 }};
 
 constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};

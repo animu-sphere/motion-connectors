@@ -13,7 +13,7 @@
 //
 // The suite that describes OSC itself is `libs/osc`'s. What is checked here is
 // this adapter's two contributions: the grouping, and the map from a neutral
-// refusal onto `VRM_VRCHAT_OSC_PACKET_MALFORMED`.
+// refusal onto `VRCHAT_OSC_PACKET_MALFORMED`.
 #include "motionConnectorVrchatOsc/AddressInventory.h"
 
 #include "motionConnectorVrchatOsc/Diagnostics.h"
@@ -282,7 +282,7 @@ TestARefusalArrivesAsThisAdaptersCode()
     assert(*inventory.diagnostics.front().timestamp == 0.5);
     assert(*inventory.diagnostics.back().timestamp == 1.5);
     assert(vrchatOsc::FormatDiagnostic(inventory.diagnostics.front())
-               .find("[VRM_VRCHAT_OSC_PACKET_MALFORMED]") == 0);
+               .find("[VRCHAT_OSC_PACKET_MALFORMED]") == 0);
 }
 
 void

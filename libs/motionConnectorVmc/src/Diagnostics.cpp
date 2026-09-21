@@ -20,14 +20,14 @@ using transport::DiagnosticCodeEntry;
 // rows are this protocol's failure modes and nothing else's, which is exactly
 // why a shared library may not hold one (motionConnectorTransport/Diagnostics.h).
 constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
-    {"VRM_VMC_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
-    {"VRM_VMC_UNSUPPORTED_MESSAGE", DiagnosticSeverity::Info, true},
-    {"VRM_VMC_TIMESTAMP_REGRESSION", DiagnosticSeverity::Warning, true},
-    {"VRM_VMC_DUPLICATE_BONE", DiagnosticSeverity::Warning, true},
-    {"VRM_VMC_INCOMPLETE_FRAME", DiagnosticSeverity::Warning, true},
-    {"VRM_VMC_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
-    {"VRM_VMC_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
-    {"VRM_VMC_STALE_JOINT", DiagnosticSeverity::Warning, true},
+    {"VMC_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
+    {"VMC_UNSUPPORTED_MESSAGE", DiagnosticSeverity::Info, true},
+    {"VMC_TIMESTAMP_REGRESSION", DiagnosticSeverity::Warning, true},
+    {"VMC_DUPLICATE_BONE", DiagnosticSeverity::Warning, true},
+    {"VMC_INCOMPLETE_FRAME", DiagnosticSeverity::Warning, true},
+    {"VMC_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
+    {"VMC_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
+    {"VMC_STALE_JOINT", DiagnosticSeverity::Warning, true},
 }};
 
 constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};

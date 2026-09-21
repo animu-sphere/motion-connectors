@@ -30,15 +30,15 @@ using transport::DiagnosticCodeEntry;
 // it is warned about rather than errored on for the same reason the sibling
 // warns rather than errors when a bone goes stale.
 constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
-    {"VRM_MOCOPI_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
-    {"VRM_MOCOPI_TRACKING_LOST", DiagnosticSeverity::Warning, true},
-    {"VRM_MOCOPI_DEVICE_UNAVAILABLE", DiagnosticSeverity::Warning, true},
-    {"VRM_MOCOPI_TIMESTAMP_INVALID", DiagnosticSeverity::Warning, true},
-    {"VRM_MOCOPI_UNSUPPORTED_JOINT", DiagnosticSeverity::Info, true},
-    {"VRM_MOCOPI_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
-    {"VRM_MOCOPI_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
-    {"VRM_MOCOPI_FRAME_INCOMPLETE", DiagnosticSeverity::Warning, true},
-    {"VRM_MOCOPI_NON_FINITE_TRANSFORM", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_SOCKET_BIND_FAILED", DiagnosticSeverity::Error, false},
+    {"MOCOPI_TRACKING_LOST", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_DEVICE_UNAVAILABLE", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_TIMESTAMP_INVALID", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_UNSUPPORTED_JOINT", DiagnosticSeverity::Info, true},
+    {"MOCOPI_SOURCE_RESTARTED", DiagnosticSeverity::Info, true},
+    {"MOCOPI_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_FRAME_INCOMPLETE", DiagnosticSeverity::Warning, true},
+    {"MOCOPI_NON_FINITE_TRANSFORM", DiagnosticSeverity::Warning, true},
 }};
 
 constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};

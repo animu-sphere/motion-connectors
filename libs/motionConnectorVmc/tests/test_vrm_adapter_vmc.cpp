@@ -28,9 +28,9 @@ using vmc::DiagnosticSeverity;
 // reason to have a test at all: a renamed or dropped code is a contract break
 // that nothing else in the tree would notice.
 constexpr const char* kExpectedCodes[] = {
-    "VRM_VMC_PACKET_MALFORMED",   "VRM_VMC_UNSUPPORTED_MESSAGE", "VRM_VMC_TIMESTAMP_REGRESSION",
-    "VRM_VMC_DUPLICATE_BONE",     "VRM_VMC_INCOMPLETE_FRAME",    "VRM_VMC_SOURCE_RESTARTED",
-    "VRM_VMC_SOCKET_BIND_FAILED", "VRM_VMC_STALE_JOINT",
+    "VMC_PACKET_MALFORMED",   "VMC_UNSUPPORTED_MESSAGE", "VMC_TIMESTAMP_REGRESSION",
+    "VMC_DUPLICATE_BONE",     "VMC_INCOMPLETE_FRAME",    "VMC_SOURCE_RESTARTED",
+    "VMC_SOCKET_BIND_FAILED", "VMC_STALE_JOINT",
 };
 
 void
@@ -52,7 +52,8 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
         assert(found && *found == code);
     }
 
-    assert(!vmc::FindDiagnosticCode("VRM_VMC_NOT_A_CODE"));
+    assert(!vmc::FindDiagnosticCode("VMC_NOT_A_CODE"));
+    assert(!vmc::FindDiagnosticCode("VRM_VMC_PACKET_MALFORMED"));
     // The canonical layer's namespace is not this adapter's to emit (§8).
     assert(!vmc::FindDiagnosticCode("VRM_MOTION_SAMPLE_STALE"));
 }
@@ -98,11 +99,11 @@ TestFormattingIsDeterministicAndOmitsAbsentFields()
     full.sequence = 42;
 
     assert(vmc::FormatDiagnostic(full) ==
-           "[VRM_VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539"
+           "[VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539"
            " t=1.500000 subject=leftHand seq=42: no update for 0.5 s");
 
     const Diagnostic bare = vmc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
-    assert(vmc::FormatDiagnostic(bare) == "[VRM_VMC_SOCKET_BIND_FAILED] error fatal");
+    assert(vmc::FormatDiagnostic(bare) == "[VMC_SOCKET_BIND_FAILED] error fatal");
 }
 
 // A locale whose decimal point is a comma, constructed in-process so this test
@@ -132,7 +133,7 @@ TestFormattingSurvivesAHostileGlobalLocale()
     const std::string formatted = vmc::FormatDiagnostic(pinned);
     std::locale::global(previous);
 
-    assert(formatted == "[VRM_VMC_TIMESTAMP_REGRESSION] warning recoverable t=1.500000");
+    assert(formatted == "[VMC_TIMESTAMP_REGRESSION] warning recoverable t=1.500000");
 }
 
 void

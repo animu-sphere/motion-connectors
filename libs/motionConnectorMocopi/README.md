@@ -300,8 +300,8 @@ What the receiver may do is bounded by what it knows. It hands back every
 datagram exactly as it arrived, including the ones a decoder would refuse,
 because a receiver that filtered its own input would make a corpus a description
 of what the receiver let through rather than of what a source sent. It raises
-two of the nine frozen codes and no others: `VRM_MOCOPI_SOCKET_BIND_FAILED`,
-and `VRM_MOCOPI_DEVICE_UNAVAILABLE` against a silence threshold **the caller
+two of the nine frozen codes and no others: `MOCOPI_SOCKET_BIND_FAILED`,
+and `MOCOPI_DEVICE_UNAVAILABLE` against a silence threshold **the caller
 states** — how long a device may reasonably take to start is a property of the
 session, not of the socket, so there is no default and no threshold means no
 code.
@@ -323,7 +323,7 @@ lengths, and the leading bytes every datagram shares. Those last two are the
 first sentences about this protocol anything here has been able to say, and the
 line they stay on the right side of is argued in
 [`SessionReport.h`](../../tools/mocopiRecord/src/SessionReport.h). It is also where
-`--silence-timeout` states the threshold `VRM_MOCOPI_DEVICE_UNAVAILABLE` has no
+`--silence-timeout` states the threshold `MOCOPI_DEVICE_UNAVAILABLE` has no
 default for, and where the vendor's IPv4-only and no-`localhost` statements
 become warnings that fire *before* the first datagram — the receiver refuses
 neither, on the grounds that a socket should not invent a restriction on itself
@@ -382,14 +382,14 @@ Nine codes, frozen in `include/motionConnectorMocopi/Diagnostics.h` — and froz
 the protocol's failure modes rather than whichever bug was chased first:
 
 ```text
-VRM_MOCOPI_SOCKET_BIND_FAILED   VRM_MOCOPI_TRACKING_LOST
-VRM_MOCOPI_DEVICE_UNAVAILABLE   VRM_MOCOPI_TIMESTAMP_INVALID
-VRM_MOCOPI_UNSUPPORTED_JOINT    VRM_MOCOPI_SOURCE_RESTARTED
-VRM_MOCOPI_PACKET_MALFORMED     VRM_MOCOPI_FRAME_INCOMPLETE
-VRM_MOCOPI_NON_FINITE_TRANSFORM
+MOCOPI_SOCKET_BIND_FAILED   MOCOPI_TRACKING_LOST
+MOCOPI_DEVICE_UNAVAILABLE   MOCOPI_TIMESTAMP_INVALID
+MOCOPI_UNSUPPORTED_JOINT    MOCOPI_SOURCE_RESTARTED
+MOCOPI_PACKET_MALFORMED     MOCOPI_FRAME_INCOMPLETE
+MOCOPI_NON_FINITE_TRANSFORM
 ```
 
-`VRM_MOTION_*` is the canonical layer's namespace and `VRM_VMC_*` is the other
+`VRM_MOTION_*` is the canonical layer's namespace and `VMC_*` is the other
 connector's; neither is this one's. The `VRM_` prefix on all three is the
 sender's and is wrong here: renaming them is DIAG-O1 in
 [DIAGNOSTICS.md](../../docs/reference/DIAGNOSTICS.md), deliberately left for

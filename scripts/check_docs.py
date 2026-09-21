@@ -22,9 +22,10 @@ in admits it. The OpenUSD pin in cmake/PIN_MODULE is the release
 docs/architecture/DEPENDENCIES.md names and every CI cell requires. CHANGELOG.md
 has a section for VERSION or an `[Unreleased]` one.
 
-The diagnostic catalog is not checked yet: no component declares a code, and
-the code style is still open (DIAG-O1). The rule arrives with the first code,
-as usd-mmd-plugins' does.
+The diagnostic catalog is intentionally not checked here: code tables remain
+connector-owned, while their cross-connector naming decision is documented in
+DIAGNOSTICS.md (DIAG-O1 is resolved). This checker covers links, mirrors and
+dependency ranges; the adapter tests cover the catalog entries.
 
   check_docs.py             check the repository
   check_docs.py --selftest  check the slug and link rules against known cases

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // What is left of this adapter's receiver after the socket moved: the map from
-// a transport event to a `VRM_MOCOPI_*` code.
+// a transport event to a `MOCOPI_*` code.
 //
 // This is the only file in the pair that could not be shared, and the reason is
 // the whole of WORKSPACE.md §2's diagnostic split. `motionConnectorTransport` reports what
 // it observed; a code is frozen per adapter, before its decoder exists, so the
 // layer that knows which adapter it is has to be the one that names it.
 //
-// This adapter names both events. The sibling names one, because `VRM_VMC_*`
+// This adapter names both events. The sibling names one, because `VMC_*`
 // has no code for silence — and that is the entire remaining difference between
 // two receivers that had drifted by 210 lines.
 

@@ -309,7 +309,7 @@ def check_inspect(tool: pathlib.Path, workspace: pathlib.Path) -> None:
     if not lines.get("addresses", "").startswith(
             "0 (0 message(s), 0 bundled datagram(s), 3 refused)"):
         fail(f"--inspect: addresses line was '{lines.get('addresses')}'")
-    if text.count("[VRM_VRCHAT_OSC_PACKET_MALFORMED]") != len(records):
+    if text.count("[VRCHAT_OSC_PACKET_MALFORMED]") != len(records):
         fail("--inspect: a refused datagram must say why, once each")
 
 
@@ -381,7 +381,7 @@ def check_inspect_inventory(tool: pathlib.Path, workspace: pathlib.Path) -> None
 
     # The refused datagram is named with this adapter's own code, not the shared
     # decoder's -- which has none.
-    if text.count("[VRM_VRCHAT_OSC_PACKET_MALFORMED]") != 1:
+    if text.count("[VRCHAT_OSC_PACKET_MALFORMED]") != 1:
         fail("--inspect: the refused datagram was not reported once")
 
 
@@ -1170,10 +1170,10 @@ def check_silence(tool: pathlib.Path, workspace: pathlib.Path) -> None:
     if code != 0:
         fail(f"the recorder exited {code}\n" + "\n".join(session.stderr))
 
-    if "VRM_VRCHAT_OSC_SOURCE_TIMEOUT" not in stdout:
-        fail("a silent session did not report VRM_VRCHAT_OSC_SOURCE_TIMEOUT\n"
+    if "VRCHAT_OSC_SOURCE_TIMEOUT" not in stdout:
+        fail("a silent session did not report VRCHAT_OSC_SOURCE_TIMEOUT\n"
              + stdout)
-    if "VRM_VRCHAT_OSC_SOURCE_TIMEOUT" not in "\n".join(session.stderr):
+    if "VRCHAT_OSC_SOURCE_TIMEOUT" not in "\n".join(session.stderr):
         fail("the silence diagnostic never reached stderr, where an operator "
              "waiting for a sender would read it")
     lines = report_lines(stdout)
@@ -1192,8 +1192,8 @@ def check_bind_failure(tool: pathlib.Path, workspace: pathlib.Path) -> None:
                              "--output", str(workspace / "taken"),
                              "--listen", "127.0.0.1", "--port", str(port),
                              "--idle-timeout", "0.2")
-    if "VRM_VRCHAT_OSC_SOCKET_BIND_FAILED" not in result.stderr:
-        fail("a refused bind did not report VRM_VRCHAT_OSC_SOCKET_BIND_FAILED\n"
+    if "VRCHAT_OSC_SOCKET_BIND_FAILED" not in result.stderr:
+        fail("a refused bind did not report VRCHAT_OSC_SOCKET_BIND_FAILED\n"
              + result.stderr)
     if "error fatal" not in result.stderr:
         fail(f"the bind failure was not fatal: '{result.stderr}'")

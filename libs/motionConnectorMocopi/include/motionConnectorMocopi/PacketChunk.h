@@ -137,7 +137,7 @@ struct PacketChunk
 MOTIONCONNECTORMOCOPI_API std::string PacketChunkTagText(std::string_view tag);
 
 // Walks exactly one level. Returns false and fills `diagnostic`, when given,
-// with `VRM_MOCOPI_PACKET_MALFORMED` and a byte offset in its detail; `chunks`
+// with `MOCOPI_PACKET_MALFORMED` and a byte offset in its detail; `chunks`
 // is cleared either way, so a partial walk cannot be mistaken for a whole one.
 //
 // `context` names what is being walked ("datagram", "fram", "btdt") and appears
@@ -198,7 +198,7 @@ MOTIONCONNECTORMOCOPI_API std::size_t CountPacketChunks(const std::vector<Packet
 
 // Little-endian scalar reads of a leaf payload. Each returns false when the
 // payload's length is not exactly the type's width — which is
-// `VRM_MOCOPI_PACKET_MALFORMED` territory at the layer above, and the reason
+// `MOCOPI_PACKET_MALFORMED` territory at the layer above, and the reason
 // these do not read a *prefix* of a longer payload: a field that grew is a field
 // whose meaning this project has not measured, and reading its first four bytes
 // anyway is how a version change becomes a plausible number.

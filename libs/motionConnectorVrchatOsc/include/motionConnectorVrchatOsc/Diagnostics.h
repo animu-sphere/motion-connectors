@@ -16,7 +16,7 @@
 // ## What this set says that neither sibling's can
 //
 // Four of the ten are about a *tracker*, and they exist because a tracker
-// observation is not a pose (§5). `VRM_VMC_*` and `VRM_MOCOPI_*` can say a bone
+// observation is not a pose (§5). `VMC_*` and `MOCOPI_*` can say a bone
 // is missing or stale; neither can say that tracker 4 sent a rotation and no
 // position, because in those protocols a bone carries its whole transform or is
 // absent. Here the two arrive on separate addresses and either can be missing on
@@ -28,15 +28,15 @@
 // unusable, which is a distinct thing from a malformed packet and from a missing
 // tracker.
 //
-// `VRM_VRCHAT_OSC_SOCKET_BIND_FAILED` is here because both siblings needed one
+// `VRCHAT_OSC_SOCKET_BIND_FAILED` is here because both siblings needed one
 // and a set that omits it describes a decoder rather than a live adapter — the
-// same correction the `VRM_MOCOPI_*` set took on 2026-08-03, made in advance
+// same correction the `MOCOPI_*` set took on 2026-08-03, made in advance
 // this time.
 //
-// Three namespaces meet here and must not merge. `VRM_VRCHAT_OSC_*` says this
+// Three namespaces meet here and must not merge. `VRCHAT_OSC_*` says this
 // protocol layer refused something. `VRM_MOTION_*` says the canonical layer's
 // contract was violated, and belongs to the motion libraries rather than to any
-// adapter. `VRM_VMC_*` is a sibling's and is not this adapter's to raise — a
+// adapter. `VMC_*` is a sibling's and is not this adapter's to raise — a
 // distinction that costs something real here rather than being a formality,
 // since that adapter and this one speak the *same* wire format one layer down,
 // and the shared decoder that will serve both has not yet decided whose codes it
@@ -118,7 +118,7 @@ inline constexpr std::size_t DiagnosticCodeCount = static_cast<std::size_t>(Diag
 using DiagnosticSeverity = transport::DiagnosticSeverity;
 using transport::DiagnosticSeverityString;
 
-// The stable string, e.g. "VRM_VRCHAT_OSC_PACKET_MALFORMED". This is the
+// The stable string, e.g. "VRCHAT_OSC_PACKET_MALFORMED". This is the
 // contract; the enumerator spelling is not.
 MOTIONCONNECTORVRCHATOSC_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
 
@@ -150,7 +150,7 @@ MOTIONCONNECTORVRCHATOSC_API Diagnostic MakeDiagnostic(DiagnosticCode code,
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
-//     [VRM_VRCHAT_OSC_TRACKER_PARTIAL] warning recoverable
+//     [VRCHAT_OSC_TRACKER_PARTIAL] warning recoverable
 //     source=0.0.0.0:9000 t=1.500000 subject=/tracking/trackers/4 seq=42:
 //     a rotation arrived with no position
 //

@@ -592,7 +592,7 @@ def check_help_and_refusals(tool: pathlib.Path,
             text=True, encoding="utf-8", errors="replace",
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Exit 1 is allowed here and only here: a runner with no IPv6 cannot bind
-        # `[::1]` and reports VRM_MOCOPI_SOCKET_BIND_FAILED, which is the socket
+        # `[::1]` and reports MOCOPI_SOCKET_BIND_FAILED, which is the socket
         # answering rather than the parser refusing. Exit 2 is the parser, and
         # that is what must not happen.
         if result.returncode == 2:
@@ -961,7 +961,7 @@ def check_peer_count(tool: pathlib.Path, workspace: pathlib.Path) -> None:
 def check_silence(tool: pathlib.Path, workspace: pathlib.Path) -> None:
     """The device that is not there yet, which is this adapter's own code.
 
-    `VRM_MOCOPI_DEVICE_UNAVAILABLE` is the code the sibling's frozen set does not
+    `MOCOPI_DEVICE_UNAVAILABLE` is the code the sibling's frozen set does not
     have, the receiver is the only layer that can raise it, and it has no default
     threshold because a phone being strapped on and a phone switched off produce
     the same nothing. This tool is the caller that states the threshold, so this
@@ -997,10 +997,10 @@ def check_silence(tool: pathlib.Path, workspace: pathlib.Path) -> None:
              f"'{lines.get('stopped')}'")
 
     diagnostics = lines.get("diagnostics", "")
-    if "VRM_MOCOPI_DEVICE_UNAVAILABLE" not in diagnostics:
+    if "MOCOPI_DEVICE_UNAVAILABLE" not in diagnostics:
         fail(f"a session silent past its threshold did not report it: "
              f"'{diagnostics}'")
-    if not re.search(r"\b1 x VRM_MOCOPI_DEVICE_UNAVAILABLE", diagnostics):
+    if not re.search(r"\b1 x MOCOPI_DEVICE_UNAVAILABLE", diagnostics):
         # Once per episode, not once per poll -- at a 0.2 s poll and a 1.5 s
         # silence, a per-poll report would say seven.
         fail(f"the silence report is once per episode, report said "
@@ -1013,7 +1013,7 @@ def check_silence(tool: pathlib.Path, workspace: pathlib.Path) -> None:
     if recorded != payloads:
         fail(f"the session did not continue past the silence report: "
              f"{len(recorded)} datagram(s) recorded of {len(payloads)}")
-    if not any("VRM_MOCOPI_DEVICE_UNAVAILABLE" in line
+    if not any("MOCOPI_DEVICE_UNAVAILABLE" in line
                for line in session.stderr):
         fail("the operator waiting for a device was not told on stderr")
 

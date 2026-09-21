@@ -22,7 +22,7 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
-| v0.1.0: shared contract convergence | `motionConnectorCore`; source profiles; VMC, mocopi and VRChat OSC adaptation; diagnostics; `motion_connect dump`, `list`, `inspect`; replay and installed-package evidence | `usd-motion-plugins` motion contract decisions; SP-O1, SP-O2 and DIAG-O1 | 🚧 |
+| v0.1.0: shared contract convergence | `motionConnectorCore`; source profiles; VMC, mocopi and VRChat OSC adaptation; diagnostics; `motion_connect dump`, `list`, `inspect`; replay and installed-package evidence | `usd-motion-plugins` motion contract decisions | 🚧 |
 | v0.2.0: transport and bindings | `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | v0.1.0, CC-O7 and CC-O8 | ⬜ |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe`; JS/TS package; WASM-friendly data ABI | WS-O4 and CC-O2 | ⬜ |
 | v0.4.0: XR and integration | `motionConnectorWebXR`; integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
@@ -35,9 +35,6 @@ The owning document holds the question; this list only schedules it.
 
 | Id | Question | Owner | Blocks |
 | --- | --- | --- | --- |
-| SP-O1 | Profile identifier scheme | [PROFILES §6](../design/SOURCE_PROFILES.md#6-open-questions) | v0.1.0 |
-| SP-O2 | Profiles as data or code | [PROFILES §6](../design/SOURCE_PROFILES.md#6-open-questions) | v0.1.0 |
-| DIAG-O1 | Diagnostic code style, and renaming `VRM_VMC_*`, `VRM_MOCOPI_*` and `VRM_VRCHAT_OSC_*` | [DIAGNOSTICS §4](../reference/DIAGNOSTICS.md#4-open-questions) | v0.1.0 convergence |
 | CC-O3 | `MotionStream` shape (feeds `usd-motion-plugins` MC-O5) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.1.0 |
 | CS-O1 | Where the change-of-basis primitive lives | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | v0.1.0 convergence |
 | CS-O3 | Conversion as code or profile data | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | CS-O1 |

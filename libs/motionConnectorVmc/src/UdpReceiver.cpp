@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // What is left of this adapter's receiver after the socket moved: the map from
-// a transport event to a `VRM_VMC_*` code.
+// a transport event to a `VMC_*` code.
 //
 // This is the only file in the pair that could not be shared, and the reason is
 // the whole of WORKSPACE.md §2's diagnostic split. `motionConnectorTransport` reports what
@@ -20,7 +20,7 @@ namespace
 
 // One event, one code. `TransportEvent::Silence` is unreachable from here — the
 // configuration below never sets a threshold — and it is handled rather than
-// ignored so that a future `VRM_VMC_*` code for it is a table edit and not a
+// ignored so that a future `VMC_*` code for it is a table edit and not a
 // hunt for the raise site. Until that code exists a silence report is dropped,
 // which is exactly what an adapter with no vocabulary for an event must do:
 // inventing a second spelling of the sibling's is the contract change §8 has

@@ -45,7 +45,7 @@
 // `src/UdpReceiver.cpp`.
 //
 // This adapter maps both events, as `vrmAdapterMocopi` does and
-// `vrmAdapterVmc` does not: `VRM_VRCHAT_OSC_SOURCE_TIMEOUT` exists, so the
+// `vrmAdapterVmc` does not: `VRCHAT_OSC_SOURCE_TIMEOUT` exists, so the
 // silence threshold is a field in `UdpReceiverConfig` here. Nothing about that
 // was decided in this file — the code set was frozen in §8 before this directory
 // existed, and whether a threshold is exposed follows from whether the set has a
@@ -125,7 +125,7 @@ struct UdpReceiverConfig
 
     // Whether another socket may already hold this address and port. Off by
     // default, so a second receiver started against a port that is already
-    // serving reports `VRM_VRCHAT_OSC_SOCKET_BIND_FAILED` instead of silently
+    // serving reports `VRCHAT_OSC_SOCKET_BIND_FAILED` instead of silently
     // taking some fraction of the traffic — which is the failure an operator has
     // no way at all to see from the outside.
     //
@@ -141,7 +141,7 @@ struct UdpReceiverConfig
     std::size_t receiveBufferBytes = 0;
 
     // Seconds of silence after which `Receive` reports
-    // `VRM_VRCHAT_OSC_SOURCE_TIMEOUT`, measured from the last accepted datagram
+    // `VRCHAT_OSC_SOURCE_TIMEOUT`, measured from the last accepted datagram
     // or from `Open` when none has arrived yet. **0 disables it**, and that is
     // the default because this layer has no basis for a number: how long a
     // sender may reasonably take to start is a property of the session, not of
@@ -167,7 +167,7 @@ class MOTIONCONNECTORVRCHATOSC_API UdpReceiver final
     // the stats alone, so a receiver whose re-`Open` was refused can still be
     // asked what the session it had did.
     //
-    // On failure the object is closed and `VRM_VRCHAT_OSC_SOCKET_BIND_FAILED` is
+    // On failure the object is closed and `VRCHAT_OSC_SOCKET_BIND_FAILED` is
     // appended — error, not recoverable, with the requested endpoint as its
     // subject and the platform's own message as its detail. That covers the
     // three causes worth telling apart: the port is already served, the address
@@ -220,7 +220,7 @@ class MOTIONCONNECTORVRCHATOSC_API UdpReceiver final
     // rewritten, so a loop declares one of these outside it. On any status other
     // than `Received` the contents are unspecified and must not be read.
     //
-    // `diagnostics` is where `VRM_VRCHAT_OSC_SOURCE_TIMEOUT` is appended when a
+    // `diagnostics` is where `VRCHAT_OSC_SOURCE_TIMEOUT` is appended when a
     // silence threshold is configured and has been crossed. It is threaded
     // through the receive call rather than offered as a separate query because
     // this is the call that knows time passed — a caller that had to remember a

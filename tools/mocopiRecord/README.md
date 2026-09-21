@@ -177,7 +177,7 @@ measurement rather than a decision: nothing in this tool composes a
 ## A device that is not there yet is the ordinary state
 
 `--silence-timeout` is this tool's own flag, and it is why
-`VRM_MOCOPI_DEVICE_UNAVAILABLE` has no default threshold one layer down: how long
+`MOCOPI_DEVICE_UNAVAILABLE` has no default threshold one layer down: how long
 a device may reasonably take to start is a property of the session, and a session
 is what a command line states. A phone being strapped on and a phone switched
 off produce the same nothing.

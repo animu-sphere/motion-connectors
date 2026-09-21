@@ -30,7 +30,7 @@
 // that raises it, so it belongs to an adapter and never to a shared leaf
 // (WORKSPACE.md §2). What this layer knows is *which byte* and *which address*
 // — so that is what a refusal carries, and the caller that knows which adapter
-// it is turns that into `VRM_VMC_PACKET_MALFORMED` or whatever its own frozen
+// it is turns that into `VMC_PACKET_MALFORMED` or whatever its own frozen
 // set spells.
 //
 // It carries no neutral event *enum* either, where `motionConnectorTransport`

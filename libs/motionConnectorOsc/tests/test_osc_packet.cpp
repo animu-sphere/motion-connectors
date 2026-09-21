@@ -13,7 +13,7 @@
 // test below. A refusal is an `OscDecodeError` with no code in it, so what used
 // to assert `DiagnosticCode::PacketMalformed` now asserts that a refusal was
 // filled in at all — the code is the adapter's, and the adapter's own suite
-// still checks that `VRM_VMC_PACKET_MALFORMED` is what comes out. And every
+// still checks that `VMC_PACKET_MALFORMED` is what comes out. And every
 // address a payload uses is a made-up one: this layer must not carry a vendor's
 // address literal even as sample text (§4), because a decoder that "just knows"
 // one address is the exact failure the boundary check exists to catch. The

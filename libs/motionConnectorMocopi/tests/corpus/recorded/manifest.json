@@ -108,15 +108,15 @@
         ]
       },
       "expectedDiagnostics": [
-        "VRM_MOCOPI_SOURCE_RESTARTED",
-        "VRM_MOCOPI_FRAME_INCOMPLETE"
+        "MOCOPI_SOURCE_RESTARTED",
+        "MOCOPI_FRAME_INCOMPLETE"
       ],
       "observations": {
         "darkWindow": "A restarted session is dark until the device repeats its rest table, and this is the first measurement of how long that is on real hardware: 233 frames refused, and the new session's first *emitted* frame stamped 3.8833 s into its own stream clock. The two agree exactly -- 233/60 = 3.8833 -- which cross-checks the assembler's accounting against the device. The adapter plan's estimate of 'about 3.5 s' is therefore a little optimistic; 3.88 s is the measured cost of a restart on this application.",
-        "whichBranchFired": "The clock branch. `VRM_MOCOPI_SOURCE_RESTARTED` reports the stream clock beginning again 21.333313 s before the last accepted frame, which is far past any threshold. The counter branch that the corpus's `frame-loss-60hz` exists for -- a restart 0.1 s in, which no clock rule can see -- is still a shape only a generated capture has produced.",
+        "whichBranchFired": "The clock branch. `MOCOPI_SOURCE_RESTARTED` reports the stream clock beginning again 21.333313 s before the last accepted frame, which is far past any threshold. The counter branch that the corpus's `frame-loss-60hz` exists for -- a restart 0.1 s in, which no clock rule can see -- is still a shape only a generated capture has produced.",
         "sourcePortChanges": "The restart came from a new ephemeral port: the live report names 192.168.1.23:64949 and :59931, so the two sessions are distinguishable at the transport as well as by the stream clock.",
         "aPeerIsLostByTheFormat": "The capture header names one peer, so this file replays as a one-peer session and the live report's `peers: 2` exists nowhere in it. That is a limitation of `mocopi-packet-capture` rather than of this session, and the sibling format has it identically. A recording that spans a restart is exactly when it bites.",
-        "silenceWasReported": "`VRM_MOCOPI_DEVICE_UNAVAILABLE` fired during the gap -- 'the source stopped sending 8.2 s ago' -- which is the first time that code has been raised by a device rather than by a unit test. It is a receiver-level diagnostic and so is not in `expectedDiagnostics` above, which lists what a decode of the file raises."
+        "silenceWasReported": "`MOCOPI_DEVICE_UNAVAILABLE` fired during the gap -- 'the source stopped sending 8.2 s ago' -- which is the first time that code has been raised by a device rather than by a unit test. It is a receiver-level diagnostic and so is not in `expectedDiagnostics` above, which lists what a decode of the file raises."
       }
     },
     {
@@ -143,7 +143,7 @@
         "hipsPathMetres": 0.0125371,
         "hipsNetMetres": 0.00301416
       },
-      "expectedDiagnostics": ["VRM_MOCOPI_FRAME_INCOMPLETE"],
+      "expectedDiagnostics": ["MOCOPI_FRAME_INCOMPLETE"],
       "observations": {
         "noiseFloor": "Over 17.58 s of standing still the median per-frame change is 0.0183 degrees across all bones, and the largest excursion from the first pose is 3.68 degrees on `leftUpperArm` -- slow drift rather than per-frame noise. Several bones report a median per-frame change of exactly 0.0000 degrees, so the solver holds a still bone bit-identical from frame to frame more often than not.",
         "whyItMattersToTheCrossSourceResult": "The two paths of the cross-source session differ by a median 0.084 degrees, which is smaller than this device's disagreement with itself over the same seconds. Agreement between the paths is therefore tighter than the device's own repeatability.",

@@ -5,7 +5,7 @@
 // The decoder itself is `libs/osc` and knows nothing about VMC — not the
 // addresses, not the argument shapes, not the code it used to raise. What is
 // left here is the one thing a shared library may not hold: the map from *a
-// datagram was not decodable OSC* onto `VRM_VMC_PACKET_MALFORMED`, which is a
+// datagram was not decodable OSC* onto `VMC_PACKET_MALFORMED`, which is a
 // code this adapter froze before its decoder existed and which its golden tests
 // spell out in full.
 //
@@ -30,7 +30,7 @@
 // decoder underneath it does not know what an address means. `/foo/bar` and
 // `/VMC/Ext/Midi/Note` both decode cleanly; deciding that neither is
 // implemented is `VmcMessage`'s job, one step further up, as
-// `VRM_VMC_UNSUPPORTED_MESSAGE` — which is never raised from here.
+// `VMC_UNSUPPORTED_MESSAGE` — which is never raised from here.
 #pragma once
 
 #include "motionConnectorVmc/Diagnostics.h"
@@ -53,7 +53,7 @@ using osc::OscPacket;
 using osc::OscTimeTagImmediate;
 
 // Decodes one datagram. On failure `packet` is left untouched and `diagnostic`,
-// when given, carries `VRM_VMC_PACKET_MALFORMED` with the offending address as
+// when given, carries `VMC_PACKET_MALFORMED` with the offending address as
 // its subject where one was read, and a byte offset in its detail.
 //
 // The refusal's text is the shared decoder's verbatim; the code, the severity

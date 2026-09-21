@@ -9,7 +9,7 @@
 // rather than about OSC.
 //
 // **The map onto a frozen code.** `libs/osc` refuses a datagram with a subject
-// and a detail and no code at all. `VRM_VMC_PACKET_MALFORMED` is this adapter's
+// and a detail and no code at all. `VMC_PACKET_MALFORMED` is this adapter's
 // and is golden-tested in its formatted form, so the tests below check that the
 // code, its severity, its recoverability and its subject all still come out of
 // a refusal -- which is the whole of what the extraction could have broken
@@ -140,7 +140,7 @@ TestARefusalArrivesAsThisAdaptersCode()
 
     // And the string a golden test compares. This is the one assertion the
     // extraction existed to leave standing.
-    assert(vmc::FormatDiagnostic(diagnostic).find("[VRM_VMC_PACKET_MALFORMED]") == 0);
+    assert(vmc::FormatDiagnostic(diagnostic).find("[VMC_PACKET_MALFORMED]") == 0);
 
     // A refused datagram leaves the caller's packet as it was.
     assert(packet.messages.size() == 1);
@@ -155,7 +155,7 @@ TestAnUnimplementedVmcAddressIsNotThisLayersRefusal()
     // `/VMC/Ext/Midi/Note` is well-formed OSC that this adapter does not
     // implement, and the difference matters: refusing it here would blame the
     // sender for something it did correctly. Deciding it is unimplemented is
-    // `VmcMessage`'s, as VRM_VMC_UNSUPPORTED_MESSAGE, which is never raised
+    // `VmcMessage`'s, as VMC_UNSUPPORTED_MESSAGE, which is never raised
     // from this layer.
     Bytes three;
     three.U32(1).U32(60).U32(100);

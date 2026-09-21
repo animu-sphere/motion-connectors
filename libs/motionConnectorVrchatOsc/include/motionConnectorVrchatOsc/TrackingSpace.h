@@ -124,7 +124,7 @@
 // The two conversion functions check nothing: they are arithmetic, and a
 // non-finite input converts to a non-finite output. The two `Map` functions are
 // the boundary, exactly as `MapVmcBoneTransform` is one adapter over, and they
-// have a single refusal each — `VRM_VRCHAT_OSC_COORDINATE_INVALID` for a
+// have a single refusal each — `VRCHAT_OSC_COORDINATE_INVALID` for a
 // component that is not finite.
 //
 // **On the wire path that refusal cannot fire**, because `DecodeTrackerMessage`
@@ -202,8 +202,8 @@ MOTIONCONNECTORVRCHATOSC_API std::string TrackerMessageAddress(const TrackerMess
 
 // `message` must carry `TrackerChannel::Position`. Returns false and fills
 // `diagnostic` for a component that is not finite
-// (`VRM_VRCHAT_OSC_COORDINATE_INVALID`) or for a caller's own mistake — a null
-// `out`, or the other channel — which raise `VRM_VRCHAT_OSC_PACKET_MALFORMED`
+// (`VRCHAT_OSC_COORDINATE_INVALID`) or for a caller's own mistake — a null
+// `out`, or the other channel — which raise `VRCHAT_OSC_PACKET_MALFORMED`
 // as every caller-precondition guard in this adapter does. `out` is left
 // untouched on every failure.
 //

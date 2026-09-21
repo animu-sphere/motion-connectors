@@ -48,13 +48,13 @@
 // `MakeSkeletonMap` refuses one that disagrees with the measured column. So the
 // two cases are distinct from the first frame: a bone in `SkeletonMap::present`
 // that a frame did not carry is missing, full stop, and there is **no staleness
-// horizon here and no `VRM_MOCOPI_STALE_JOINT` in the frozen set** to report one
+// horizon here and no `MOCOPI_STALE_JOINT` in the frozen set** to report one
 // with. That absence is a consequence of a measurement rather than a gap.
 //
 // A frame that arrives before any skeleton packet cannot be interpreted at all:
 // a `bnid` is a position in a rig nothing has declared yet (SkeletonMap.h). Such
 // frames are refused, and reported **once per episode** rather than sixty times
-// a second — the same discipline `VRM_MOCOPI_DEVICE_UNAVAILABLE` uses one layer
+// a second — the same discipline `MOCOPI_DEVICE_UNAVAILABLE` uses one layer
 // down, and for the same reason. It is an ordinary way for a session to begin:
 // a capture started mid-stream waits up to 3.5 s for the rig, and an operator
 // who is told once that it is waiting has learned something, where one told
@@ -160,7 +160,7 @@
 // ## Incomplete, and what this layer will not decide about it
 //
 // A frame that formed fewer bones than the session's rig carries is emitted with
-// `VRM_MOCOPI_FRAME_INCOMPLETE` and its `missing` set filled. It is **not**
+// `MOCOPI_FRAME_INCOMPLETE` and its `missing` set filled. It is **not**
 // refused, and the line is worth stating because this is the code the two layers
 // below deferred to and a reader may expect it to be a rejection.
 //
@@ -193,7 +193,7 @@
 // asks for the shape that preceded it. The measurement stays on the frame under
 // either setting, so nothing that could read the placement before has lost it.
 //
-// **Tracking state.** `VRM_MOCOPI_TRACKING_LOST` is in the frozen set and is
+// **Tracking state.** `MOCOPI_TRACKING_LOST` is in the frozen set and is
 // **not raised anywhere in this adapter**. The measured grammar carries no
 // per-joint confidence and no state field, so there is nothing to decode into
 // one; it lives in `sndf/ipad` or `fram/tmcd`, both unidentified, or this
@@ -204,13 +204,13 @@
 //
 // ## The codes this layer raises
 //
-// `VRM_MOCOPI_FRAME_INCOMPLETE` — a frame short of the rig's bones, and a frame
-// that arrived with no rig declared yet. `VRM_MOCOPI_TIMESTAMP_INVALID` — a
+// `MOCOPI_FRAME_INCOMPLETE` — a frame short of the rig's bones, and a frame
+// that arrived with no rig declared yet. `MOCOPI_TIMESTAMP_INVALID` — a
 // duplicate delivery, or a clock that does not advance and does not restart.
-// `VRM_MOCOPI_SOURCE_RESTARTED` — the two restart shapes above. Three, bringing
+// `MOCOPI_SOURCE_RESTARTED` — the two restart shapes above. Three, bringing
 // the set to nine of nine paid for by a real caller.
 //
-// Not `VRM_MOCOPI_UNSUPPORTED_JOINT`: that is a property of the rig, raised once
+// Not `MOCOPI_UNSUPPORTED_JOINT`: that is a property of the rig, raised once
 // when the map is built, and `MakeSkeletonMap`'s diagnostics pass through this
 // class unchanged rather than being re-raised per frame.
 #pragma once

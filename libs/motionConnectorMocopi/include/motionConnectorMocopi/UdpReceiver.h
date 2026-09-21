@@ -55,8 +55,8 @@
 // below forwards, and the only thing it *does* is the translation in
 // `src/UdpReceiver.cpp`.
 //
-// This adapter maps both events, where the sibling maps one. `VRM_MOCOPI_*` has
-// a code for silence and `VRM_VMC_*` does not, which is why the silence
+// This adapter maps both events, where the sibling maps one. `MOCOPI_*` has
+// a code for silence and `VMC_*` does not, which is why the silence
 // threshold is in `UdpReceiverConfig` here and absent there. The difference used
 // to be thirty lines of receiver present in one copy and missing from the other;
 // it is now one configuration field and one `switch` arm, which is a difference
@@ -126,7 +126,7 @@ struct UdpReceiverConfig
 
     // Whether another socket may already hold this address and port. Off by
     // default, so a second receiver started against a port that is already
-    // serving reports `VRM_MOCOPI_SOCKET_BIND_FAILED` instead of silently
+    // serving reports `MOCOPI_SOCKET_BIND_FAILED` instead of silently
     // taking some fraction of the traffic — which is the failure an operator
     // has no way at all to see from the outside.
     bool reuseAddress = false;
@@ -138,7 +138,7 @@ struct UdpReceiverConfig
     std::size_t receiveBufferBytes = 0;
 
     // Seconds of silence after which `Receive` reports
-    // `VRM_MOCOPI_DEVICE_UNAVAILABLE`, measured from the last accepted datagram
+    // `MOCOPI_DEVICE_UNAVAILABLE`, measured from the last accepted datagram
     // or from `Open` when none has arrived yet. **0 disables it**, and that is
     // the default because this layer has no basis for a number: how long a
     // device may reasonably take to start is a property of the session, not of
@@ -164,7 +164,7 @@ class MOTIONCONNECTORMOCOPI_API UdpReceiver final
     // the stats alone, so a receiver whose re-`Open` was refused can still be
     // asked what the session it had did.
     //
-    // On failure the object is closed and `VRM_MOCOPI_SOCKET_BIND_FAILED` is
+    // On failure the object is closed and `MOCOPI_SOCKET_BIND_FAILED` is
     // appended — error, not recoverable, with the requested endpoint as its
     // subject and the platform's own message as its detail. That covers the
     // three causes worth telling apart: the port is already served, the address
@@ -219,7 +219,7 @@ class MOTIONCONNECTORMOCOPI_API UdpReceiver final
     // status other than `Received` the contents are unspecified and must not be
     // read.
     //
-    // `diagnostics` is where `VRM_MOCOPI_DEVICE_UNAVAILABLE` is appended when a
+    // `diagnostics` is where `MOCOPI_DEVICE_UNAVAILABLE` is appended when a
     // silence threshold is configured and has been crossed. It is threaded
     // through the receive call rather than offered as a separate query because
     // this is the call that knows time passed — a caller that had to remember a

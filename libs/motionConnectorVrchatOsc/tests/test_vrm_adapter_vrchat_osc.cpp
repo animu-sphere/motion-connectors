@@ -30,11 +30,11 @@ using vrchatOsc::DiagnosticSeverity;
 // quietly added code is a contract break that nothing else in the tree would
 // notice.
 constexpr const char* kExpectedCodes[] = {
-    "VRM_VRCHAT_OSC_PACKET_MALFORMED",   "VRM_VRCHAT_OSC_UNSUPPORTED_ADDRESS",
-    "VRM_VRCHAT_OSC_ARGUMENT_MISMATCH",  "VRM_VRCHAT_OSC_TRACKER_ID_INVALID",
-    "VRM_VRCHAT_OSC_TRACKER_PARTIAL",    "VRM_VRCHAT_OSC_SOURCE_TIMEOUT",
-    "VRM_VRCHAT_OSC_SOURCE_RESTARTED",   "VRM_VRCHAT_OSC_COORDINATE_INVALID",
-    "VRM_VRCHAT_OSC_SOCKET_BIND_FAILED", "VRM_VRCHAT_OSC_CALIBRATION_REQUIRED",
+    "VRCHAT_OSC_PACKET_MALFORMED",   "VRCHAT_OSC_UNSUPPORTED_ADDRESS",
+    "VRCHAT_OSC_ARGUMENT_MISMATCH",  "VRCHAT_OSC_TRACKER_ID_INVALID",
+    "VRCHAT_OSC_TRACKER_PARTIAL",    "VRCHAT_OSC_SOURCE_TIMEOUT",
+    "VRCHAT_OSC_SOURCE_RESTARTED",   "VRCHAT_OSC_COORDINATE_INVALID",
+    "VRCHAT_OSC_SOCKET_BIND_FAILED", "VRCHAT_OSC_CALIBRATION_REQUIRED",
 };
 
 void
@@ -56,7 +56,8 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
         assert(found && *found == code);
     }
 
-    assert(!vrchatOsc::FindDiagnosticCode("VRM_VRCHAT_OSC_NOT_A_CODE"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRCHAT_OSC_NOT_A_CODE"));
+    assert(!vrchatOsc::FindDiagnosticCode("VRM_VRCHAT_OSC_PACKET_MALFORMED"));
     // The canonical layer's namespace is not this adapter's to emit (§8).
     assert(!vrchatOsc::FindDiagnosticCode("VRM_MOTION_NON_FINITE_TRANSFORM"));
     // Neither is a sibling's, and this pair matters more here than the
@@ -65,8 +66,8 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
     // precisely which of these two namespaces a shared decoder will raise. Until
     // that is decided, the only thing keeping them apart is that neither answers
     // to the other's spelling.
-    assert(!vrchatOsc::FindDiagnosticCode("VRM_VMC_PACKET_MALFORMED"));
-    assert(!vrchatOsc::FindDiagnosticCode("VRM_MOCOPI_PACKET_MALFORMED"));
+    assert(!vrchatOsc::FindDiagnosticCode("VMC_PACKET_MALFORMED"));
+    assert(!vrchatOsc::FindDiagnosticCode("MOCOPI_PACKET_MALFORMED"));
 }
 
 void
@@ -143,13 +144,13 @@ TestFormattingIsDeterministicAndOmitsAbsentFields()
     full.sequence = 42;
 
     assert(vrchatOsc::FormatDiagnostic(full) ==
-           "[VRM_VRCHAT_OSC_TRACKER_PARTIAL] warning recoverable"
+           "[VRCHAT_OSC_TRACKER_PARTIAL] warning recoverable"
            " source=0.0.0.0:9000 t=1.500000 subject=/tracking/trackers/4"
            " seq=42: a rotation arrived with no position");
 
     const Diagnostic bare = vrchatOsc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
     assert(vrchatOsc::FormatDiagnostic(bare) ==
-           "[VRM_VRCHAT_OSC_SOCKET_BIND_FAILED] error fatal");
+           "[VRCHAT_OSC_SOCKET_BIND_FAILED] error fatal");
 }
 
 // A locale whose decimal point is a comma, constructed in-process so this test
@@ -179,7 +180,7 @@ TestFormattingSurvivesAHostileGlobalLocale()
     const std::string formatted = vrchatOsc::FormatDiagnostic(pinned);
     std::locale::global(previous);
 
-    assert(formatted == "[VRM_VRCHAT_OSC_COORDINATE_INVALID] warning recoverable"
+    assert(formatted == "[VRCHAT_OSC_COORDINATE_INVALID] warning recoverable"
                         " t=1.500000");
 }
 

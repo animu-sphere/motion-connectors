@@ -335,7 +335,7 @@ GetUsage()
            "  --dry-run              Listen and report, write nothing.\n"
            "\n"
            "Noticing a sender that is not there:\n"
-           "  --silence-timeout S    Report VRM_VRCHAT_OSC_SOURCE_TIMEOUT after S\n"
+           "  --silence-timeout S    Report VRCHAT_OSC_SOURCE_TIMEOUT after S\n"
            "                         seconds with nothing arriving, once per\n"
            "                         episode, and keep listening. Off by default,\n"
            "                         because how long a sender may take to start\n"

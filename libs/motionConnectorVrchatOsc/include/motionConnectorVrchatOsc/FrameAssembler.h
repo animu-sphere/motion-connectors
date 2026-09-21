@@ -70,7 +70,7 @@
 // fills one channel of one tracker and no message can fill both
 // (TrackerMessage.h). This is the layer that owns the window in which two
 // messages are one observation, and therefore the only layer that can say a
-// tracker reported **half** of itself: `VRM_VRCHAT_OSC_TRACKER_PARTIAL` is
+// tracker reported **half** of itself: `VRCHAT_OSC_TRACKER_PARTIAL` is
 // raised here and nowhere below.
 //
 // A partial sample is **emitted, not repaired**. `hasPosition` and `hasRotation`
@@ -100,8 +100,8 @@
 // | --- | --- | --- |
 // | missing | a tracker the session has seen did not arrive in this frame | `TrackerFrame::missing` |
 // | stale | it has not arrived for `stalenessSeconds` | `TrackerFrame::stale`, once per crossing |
-// | silent | *nothing* has arrived for `sourceTimeoutSeconds` | `VRM_VRCHAT_OSC_SOURCE_TIMEOUT` |
-// | restarted | a second session began | `VRM_VRCHAT_OSC_SOURCE_RESTARTED` |
+// | silent | *nothing* has arrived for `sourceTimeoutSeconds` | `VRCHAT_OSC_SOURCE_TIMEOUT` |
+// | restarted | a second session began | `VRCHAT_OSC_SOURCE_RESTARTED` |
 //
 // Missing and stale are measured against the trackers this session has actually
 // observed, never against the eight the surface defines: a three-point setup is
@@ -151,7 +151,7 @@
 // So the rule is simultaneity rather than size: when **every** observed tracker
 // that had a position in the previous frame moves further than
 // `calibrationJumpMeters` between consecutive frames, the frame is marked
-// `followsDiscontinuity` and `VRM_VRCHAT_OSC_CALIBRATION_REQUIRED` is raised.
+// `followsDiscontinuity` and `VRCHAT_OSC_CALIBRATION_REQUIRED` is raised.
 // Two trackers are required for the check to run at all, because with one there
 // is no simultaneity to observe and the rule would be a speed limit wearing a
 // calibration's name.

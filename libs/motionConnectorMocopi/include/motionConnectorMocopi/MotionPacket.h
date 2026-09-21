@@ -84,7 +84,7 @@
 // makes every following byte untrustworthy. Here it makes one joint
 // untrustworthy, and refusing the datagram to punish it would throw away a frame
 // the device sent correctly. Whether 26 of 27 bones is a usable frame is the
-// assembler's question — `VRM_MOCOPI_FRAME_INCOMPLETE` is its code, not this
+// assembler's question — `MOCOPI_FRAME_INCOMPLETE` is its code, not this
 // layer's — so the decode still succeeds and says what it dropped.
 //
 // **An unknown `vrsn` is refused, and this is the one place where blaming a
@@ -302,7 +302,7 @@ struct MotionPacket
 
     // Bone records dropped because their transform named no orientation: a
     // non-finite component anywhere in the seven floats, or a rotation of zero
-    // length. That is `VRM_MOCOPI_NON_FINITE_TRANSFORM`'s own definition, and it
+    // length. That is `MOCOPI_NON_FINITE_TRANSFORM`'s own definition, and it
     // covers the translation as well as the rotation.
     //
     // A tally rather than only a diagnostic: a live receiver reports "3 bones
@@ -327,8 +327,8 @@ struct MotionPacket
 // Returns true with `refusedBones` set and a diagnostic appended per bone when
 // the packet decoded but a bone record did not — see the header's first rule.
 //
-// The codes this layer raises, and no others: `VRM_MOCOPI_PACKET_MALFORMED`,
-// `VRM_MOCOPI_NON_FINITE_TRANSFORM`, `VRM_MOCOPI_TIMESTAMP_INVALID`.
+// The codes this layer raises, and no others: `MOCOPI_PACKET_MALFORMED`,
+// `MOCOPI_NON_FINITE_TRANSFORM`, `MOCOPI_TIMESTAMP_INVALID`.
 MOTIONCONNECTORMOCOPI_API bool DecodeMotionPacket(const std::uint8_t* bytes, std::size_t size,
                                              MotionPacket* packet,
                                              std::vector<Diagnostic>* diagnostics = nullptr);

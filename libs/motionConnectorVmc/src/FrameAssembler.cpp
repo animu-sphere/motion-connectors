@@ -287,7 +287,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
             {
                 if (_frame.rootPacket == _packetSerial)
                 {
-                    // `VRM_VMC_DUPLICATE_BONE` reads oddly for the root and is
+                    // `VMC_DUPLICATE_BONE` reads oddly for the root and is
                     // still the right code: the set is frozen (Diagnostics.h),
                     // and the root occupies the same one-per-frame slot a bone
                     // does, so a second one in a single delivery is the same
@@ -322,10 +322,9 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
 
         case VmcMessageKind::BlendValue:
         {
-            // The name is the sender's, and this layer has no vocabulary to
-            // check it against (motionCore/MotionPose.h): the only thing that can
-            // be wrong with it here is arriving twice.
-            const std::string name(message.name);
+            // The source profile makes channel names verbatim but namespaced,
+            // so the sender's name must not escape as an unqualified channel.
+            const std::string name = std::string("vmc:") + std::string(message.name);
             // `expressionPacket` is asked rather than `pose.channels`,
             // although a name is written to both: two containers that must
             // agree about which names are present is one invariant more than
@@ -351,7 +350,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
                     // the same one-per-frame slot a bone does.
                     ++_frame.duplicateBones;
                     ++_stats.expressionsDuplicated;
-                    _Report(diagnostics, DiagnosticCode::DuplicateBone, message.name,
+                    _Report(diagnostics, DiagnosticCode::DuplicateBone, name,
                             _frame.senderTime,
                             "already carried by this frame from the same "
                             "datagram; the first value stands");

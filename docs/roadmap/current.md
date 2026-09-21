@@ -22,11 +22,12 @@ into the shared layer.
   `Lossless` behavior.
 - ⬜ Agree on the `MotionStream` intake boundary with `usd-motion-plugins`
   (`CC-O3`).
-- ⬜ Decide the profile identifier and representation rules (`SP-O1`, `SP-O2`)
-- ⬜ Resolve `DIAG-O1` before v0.1.0: rename all three imported diagnostic
-  families (`VRM_VMC_*`, `VRM_MOCOPI_*`, `VRM_VRCHAT_OSC_*`) in one sweep,
-  including the catalog, tests and recorder output. `VRM_VRCHAT_OSC_*` is not
-  exempt; it is currently untouched like the other two families.
+- ✅ Resolve the profile identifier and representation rules (`SP-O1`, `SP-O2`)
+  with connector-owned JSON profiles installed under
+  `share/motion-connectors/profiles/`.
+- ✅ Resolve `DIAG-O1` before v0.1.0: all three imported diagnostic families
+  use `VMC_*`, `MOCOPI_*` and `VRCHAT_OSC_*` consistently in the catalog,
+  tests, recorders and recorded-session manifests.
 
 ### Source convergence
 
@@ -34,8 +35,9 @@ into the shared layer.
   without replacing their tested source-specific assembly. `VmcConnector`,
   `MocopiConnector` and `VrchatOscConnector` now wrap their tested source
   paths; tracker frames remain observations and are not assigned to an avatar.
-- ⬜ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
-  `vrchat-osc.trackers.v1`; keep target-avatar mapping outside this repository.
+- ✅ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
+  `vrchat-osc.trackers.v1`; profile IDs and JSON data are validated while
+  target-avatar mapping remains outside this repository.
 - ⬜ Resolve the shared change-of-basis primitive and VMC translation-channel
   evidence (`CS-O1`, `CS-O2`, `CS-O3`).
 - ⬜ Reconcile per-joint tracking loss and actor identity with the shared

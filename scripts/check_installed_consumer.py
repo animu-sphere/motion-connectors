@@ -37,6 +37,8 @@ import tempfile
 REPO = pathlib.Path(__file__).resolve().parents[1]
 CONSUMER = REPO / "tests" / "installed_consumer"
 DOC_DIR = pathlib.Path("share", "doc", "motion-connectors")
+PROFILE_DIR = pathlib.Path("share", "motion-connectors", "profiles")
+PROFILE_FILES = ("vmc.v1.json", "mocopi.body.v1.json", "vrchat-osc.trackers.v1.json")
 
 
 def run(command: list, **kwargs) -> subprocess.CompletedProcess:
@@ -55,6 +57,9 @@ def check_prefix(prefix: pathlib.Path, build_dir: pathlib.Path,
     for name in ("LICENSE", "README.md"):
         if not (prefix / DOC_DIR / name).is_file():
             errors.append(f"the prefix has no {(DOC_DIR / name).as_posix()}")
+    for name in PROFILE_FILES:
+        if not (prefix / PROFILE_DIR / name).is_file():
+            errors.append(f"the prefix has no {(PROFILE_DIR / name).as_posix()}")
 
     # Libraries install under CMAKE_INSTALL_LIBDIR, which GNUInstallDirs makes
     # lib64 on some Linux distributions.
@@ -142,6 +147,8 @@ def main() -> int:
             return 1
         print(f"the prefix holds the documentation and {len(packages)} "
               f"package(s), and names no build location")
+        run([sys.executable, str(REPO / "scripts" / "check_source_profiles.py"),
+             "--prefix", prefix])
 
         source = work / "consumer-src"
         shutil.copytree(CONSUMER, source)
