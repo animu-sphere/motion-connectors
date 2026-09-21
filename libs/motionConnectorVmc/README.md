@@ -1,35 +1,33 @@
 # motionConnectorVmc
 
-The VMC Protocol input adapter: OSC-over-UDP datagrams from any sender
-application, in; canonical humanoid motion, out.
+The VMC Protocol source adapter: OSC-over-UDP datagrams from any sender
+application in, source-normalized motion observations out. Its current API is
+source-specific; the v0.1.0 work adapts it to the shared `MotionFrame` contract.
 
 ```text
 UDP datagram → OSC decode → VMC message decode → frame assembly
-             → VRM bone mapping → MotionPose → LiveCaptureSource
+             → source joint mapping → shared MotionPose values → MotionFrame
 ```
 
-**Status: a live motion source with a CLI.** Every layer exists — the
-recorded-packet format and its corpus, the OSC layer, the VMC message layer, the
-skeleton map, the frame assembler, the bridge into `motionRuntime`, the socket,
-and [`vmc_record`](../../tools/vmcRecord) on top of them. A sender on the network
-drives a `openstrata::motion::LiveCaptureSource` that samples like any clip, and a recorded
-capture drives the same thing with no socket at all, so the decode path stays
-verifiable in CI from committed bytes. What is left is the evidence only a real
-sender can give — which is what the CLI exists to collect. See
-[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §5 for the
-implementation order and Milestone B for what remains.
+**Status: imported source implementation; shared-contract adaptation pending.**
+The packet-capture format, OSC and VMC decoding, source joint map, frame
+assembler, live receiver and [`vmc_record`](../../tools/vmcRecord) are tested
+in this repository. Replay and loopback evidence are hardware-free. This
+library does not yet implement `IMotionConnector`; that work is tracked in the
+[current roadmap](../../docs/roadmap/current.md).
 
 ## What this is, structurally
 
-A plain static CMake library with an `openstrata.library.yaml`, exactly like
-`motionRuntime` and `vrmRetarget` — **not** a plugin bundle. It registers
+A plain static CMake library with an `openstrata.library.yaml`, **not** a plugin
+bundle. It registers
 nothing with OpenUSD and ships no `plugInfo.json`, because
 [WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) keeps it away from
-`vrmSchema`, from every file-format bundle, and from OpenExec. It has exactly
-two dependencies, and they are the two its manifest declares:
+`vrmSchema`, from every file-format bundle, and from OpenExec. Its manifest
+declares the installed motion packages and the shared transport/wire leaves:
 
 ```text
-motionConnectorVmc -> motionCore, motionRuntime
+motionConnectorVmc -> motionCore, motionSampling, motionRecording,
+                      motionConnectorTransport, motionConnectorOsc
 ```
 
 `tests/check_boundaries.py` is what makes that a fact rather than an intention.
@@ -42,9 +40,9 @@ That last one inspects the **test executable**, not the adapter's own archive.
 A static `.lib`/`.a` records no imports at all — `dumpbin /dependents` on one
 prints a section summary and nothing else — so a check pointed at the library
 would be a gate that cannot fail. Pointed at the linked executable it has real
-teeth: run against `motion_retarget` it reports `usd_sdf`, `usd_usd`, and
-`usd_usdSkel`, which is exactly the class of import this boundary exists to
-refuse.
+teeth: run against the linked connector test executable, it rejects stage-layer
+imports such as `usd_sdf`, `usd_usd` and `usd_usdSkel`, which is exactly the
+class of import this boundary exists to refuse.
 
 ## What it is not allowed to do
 
@@ -54,15 +52,12 @@ or a dependency on a sibling adapter. Every one of those already exists once in
 this repository; a second copy inside an adapter is a forked pipeline that stays
 invisible until two inputs disagree about the same avatar.
 
-The adapter maps a VMC bone name to a `openstrata::motion::HumanJoint`, and stops. It never
-resolves a joint index in a target skeleton — that is `vrmRetarget`'s job, one
-layer down the pipeline and behind a `VrmHumanoidAPI` mapping.
+The adapter maps a VMC bone name to the shared motion vocabulary and stops. It
+never resolves a joint index in a target skeleton; retargeting belongs to
+`usd-motion-plugins` and avatar-format repositories downstream.
 
-One permission is easy to misread in the other direction: this adapter's **CLI**,
-[`tools/vmcRecord/`](../../tools/vmcRecord), *may* drive `vrmRetarget` and author a
-stage, exactly as `motion_retarget` does. The library may not. That is why the
-boundary check scans `include/` and `src/` only. The CLI as written needs
-neither, and links this adapter alone.
+The recorder CLI captures raw packets and reports source evidence. It does not
+retarget, author a stage or bind a capture to an avatar.
 
 ## Transport arrives last
 
@@ -184,13 +179,13 @@ but not read — and checks three things counts cannot:
   carrying it still yields the twenty-two messages that arrived with it, which
   is the first rule above stated as a number.
 
-## VMC's names and VMC's axes, into a humanoid
+## VMC's names and VMC's axes, into the shared motion vocabulary
 
 [`SkeletonMap.h`](include/motionConnectorVmc/SkeletonMap.h) is the one conversion the
-adapter exists to perform, and the first layer that knows a `openstrata::motion::HumanJoint`
-exists. It converts and it does not decide: frame boundaries, missing bones and
-sender restarts belong to the assembler, and resolving a target joint belongs to
-`vrmRetarget` two layers on.
+adapter exists to perform, and the first layer that knows the shared motion
+vocabulary exists. It converts and it does not decide: frame boundaries,
+missing bones and sender restarts belong to the assembler, and resolving a
+target joint belongs to downstream retargeting.
 
 **The vocabulary is Unity's `HumanBodyBones`, not VRM 1.0's.** A sender is a
 Unity application and writes PascalCase where VRM 1.0 writes lowerCamel. The two
@@ -234,8 +229,8 @@ tell from a real sample.
 Two things this layer deliberately does not answer. **What a VMC bone rotation
 means relative to rest** — it is the sender's local rotation, which equals the
 rotation away from rest only when the sender's humanoid rest is identity; a
-sender where it is not needs `vrmRetarget`'s `SourceRestPose`, and manufacturing
-one from the first frame seen would be a guess. And **where a bone's position
+sender where it is not needs a downstream source-rest pose policy, and
+manufacturing one from the first frame seen would be a guess. And **where a bone's position
 goes** — the canonical pose carries rotations plus one `RootMotion`, so a bone's
 local offset is the sender's rig geometry rather than motion. It is converted
 and handed on unread, because whether the hips offset composes with
@@ -311,71 +306,18 @@ it was sent. It also pins the blend shapes the mixed-traffic capture carries —
 corpus's record of the difference between a weight that is zero and a name that
 was never sent.
 
-## Into the runtime
+## Source-specific live path
 
-[`LiveSource.h`](include/motionConnectorVmc/LiveSource.h) is the last layer that is
-still this adapter's, and the thinnest. It hands assembled frames to
-`openstrata::motion::LiveCaptureSource` and answers `IMotionSource` by forwarding, so a
-consumer holds one object and samples poses off it like any clip:
+[`LiveSource.h`](include/motionConnectorVmc/LiveSource.h) is the source-specific
+bridge at the end of this adapter. It forwards assembled source observations to
+the installed motion packages; it does not own retargeting, filtering,
+resampling, avatar binding or stage authoring. Those responsibilities remain
+downstream, and the shared `motionConnectorCore` adapter is still pending.
 
-```cpp
-VmcLiveSource source;
-source.PushDatagram(bytes, size, receiveTime, &diagnostics);
-if (source.ConsumeSessionRestart()) {
-    source.GetIntake().AlignClock(now);
-}
-openstrata::motion::PoseSampleResult pose = source.Sample(now);
-```
-
-Buffering, interpolation, smoothing, confidence gating, missing-bone resolution
-and root-motion intake all exist exactly once, in `motionRuntime`, and this class
-contributes none of them: the assembler reports a gap, `MissingJointPolicy`
-decides what a gap means, and the tests run the same input under both policies to
-show the answer changing with the runtime's configuration rather than with the
-adapter.
-
-**The one decision it takes is what a sender restart costs.** The assembler emits
-the new session's clock verbatim, which for the intake is a frame arriving behind
-the newest it holds — refused, forever. So the policy is explicit: `Reset` drops
-the intake's history and admits the new session (the default, because the
-alternative is a stream that dies the first time an operator restarts their
-sender application), and `Refuse` hands the frame on and lets the session visibly
-stop. The third option — offsetting the new timestamps to splice the two
-sessions — is not offered anywhere in this adapter. A restart also invalidates
-the clock offset, which only the consumer can re-align, so it is latched and
-handed back rather than repaired.
-
-**What a pose cannot carry stays readable.** The hips offset, the `missing` and
-`stale` sets, and the session flag reach a `MotionPose` nowhere at all, so
-`GetFramesFromLastPush()` is a window on exactly what was just delivered — valid
-until the next push. Whether the hips offset is body translation or rig geometry
-is a question only a real sender's session answers, and a recording tool
-gathering that evidence should not have to drive the assembler separately.
-
-Two smaller properties are worth knowing. **Provenance applies from when the
-sender sent it**: `/VMC/Ext/VRM` may arrive mid-session, and poses buffered
-before it keep the bare `vmc` provenance rather than retroactively learning a
-title the session did not know yet. And **the datagram's lifetime stops here** —
-every string view a decoded packet holds has become a value before the push
-returns, so a receiver may hand this API the buffer it is about to overwrite,
-which is the hazard [`VmcMessage.h`](include/motionConnectorVmc/VmcMessage.h)
-describes and no overload can refuse.
-
-**Nothing here is thread-safe, and neither is what it wraps.** `motionRuntime`
-contains no mutex or atomic: `PoseBuffer` holds a deque and
-`LiveCaptureSource::Sample` writes its statistics as it answers, so a push and a
-sample may not run concurrently and neither may two samples. This class takes no
-private lock, because a mutex here would leave every `GetIntake()` caller racing
-on the same buffer and look like a fix. Where the lock actually went is the
-receiver's section below.
-
-`motionConnectorVmc_liveSourceCorpus` replays all seven captures from bytes and makes
-the cross-layer claim: **every frame the assembler emitted was admitted by the
-intake**, because the assembler emits strictly advancing frames within a session
-and that is exactly the ordering `LiveCaptureSource::Push` requires. The
-sender-restart capture is then replayed twice more to show that what a restart
-costs is a policy and not an accident — six frames under `Reset`, four under
-`Refuse`, on the same bytes.
+The live-source corpus replays all committed captures without hardware and
+checks the source-specific ordering, restart behavior and provenance. The
+future `MotionFrame` adapter must preserve that evidence rather than introduce
+a second VMC frame-assembly path.
 
 ## The socket, and the thread it does not create
 
@@ -387,16 +329,16 @@ refuse, because a receiver that filtered its own input would make the corpus a
 record of what the receiver let through rather than of what a sender sent.
 
 **The thread boundary sits before the decoder, not after it.** Motion policy
-§11.4 put a network thread on one side of a *thread-safe* pose buffer, and
-`motionRuntime` has none — so rather than locking the buffer the whole pipeline
-reads through, the hand-off moved one layer earlier:
+§11.4 put a network thread on one side of a *thread-safe* pose buffer, and the
+downstream motion intake has none — so rather than locking the buffer the whole
+pipeline reads through, the hand-off moved one layer earlier:
 
 ```text
 network thread → [ DatagramQueue ] → consumer thread → decode → pose
 ```
 
 `DatagramQueue` is the only synchronised object in this adapter. Everything
-downstream of `Drain` — all five layers above and all of `motionRuntime` — runs
+downstream of `Drain` — all five layers above and the downstream motion intake — runs
 on one thread exactly as its tests do. Overflow drops the **oldest** datagram,
 because for live motion the alternative is indefensible: holding a stale frame
 and refusing a fresh one adds latency the session never gets back.
@@ -522,11 +464,11 @@ Or through the runtime `ost` resolves for the workspace:
 ost build && ost test
 ```
 
-Standalone — this directory is its own CMake project, resolving `motionCore` and
-`motionRuntime` as installed packages rather than in-tree targets:
+Standalone — this directory is its own CMake project, resolving the installed
+motion packages rather than in-tree targets:
 
 ```sh
-cmake -S adapters/liveCapture/vmc -B build/vmc \
+cmake -S libs/motionConnectorVmc -B build/vmc \
       -DCMAKE_PREFIX_PATH="<usd-install>;<workspace-prefix>"
 cmake --build build/vmc
 ```

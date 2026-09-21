@@ -104,8 +104,7 @@ One edge, taken by the solve alone: `motionCore`, because a `MotionPose` is
 that library's type. Beyond it, nothing — no platform primitive, no socket, no
 file format, no address literal, no adapter identity, and no diagnostic code. A
 refusal names the **event**, and whoever knows which adapter it is supplies the
-code — `motionSource`'s `SourceProfileRefusal` and `osc`'s `OscDecodeError` are
-the same shape.
+code — a source-profile refusal and an OSC decode error are the same shape.
 
 The **assignment half keeps the empty edge set it was given**, and that is a
 per-file rule rather than a per-library one: `tests/check_boundaries.py` scans
@@ -117,15 +116,12 @@ chooses its rules deliberately or not at all.
 
 It is on the **product** side of
 [WORKSPACE.md §5](../../docs/architecture/WORKSPACE.md)'s split, and its first
-consumer arrived on 2026-08-31: `vrchat_osc_record --export-trace` takes the
-permission §2 grants — `adapters/*/tools/* -> motionConnectorTracking` — and turns a
-tracker frame into a canonical pose (VRC-6). It is an **adapter's CLI**, so a
-library on the product's side of that split currently travels only in an
-artifact the product excludes. Its absence from a product artifact therefore
-still says which tools exist rather than which side this library is on, and is
-not the exclusion the two shared leaves carry.
+consumer in this repository is `tools/vrchatOscRecord`. The imported
+`--export-trace` path takes an operator's assignment and produces a
+source-normalized pose for a downstream trace; it does not perform target-avatar
+IK. The trace export is a compatibility path under review, while the solve and
+its observation contract remain the responsibility of this library.
 
-No adapter *library* names it, and none may: an adapter that resolved an
-assignment would have invented a calibration and hidden it inside a decoder,
-which is why `adapters/* -> motionConnectorTracking` is a refused source token in all
-three adapters' boundary checks.
+No source *library* names it as a dependency, and none may: a decoder that
+resolved an assignment would have invented a calibration and hidden it inside a
+source adapter. Only the recorder tool may compose the assignment/solve path.

@@ -114,17 +114,20 @@ because how long a sender may reasonably take to start is a property of the
 session, and this tool is where a session is stated. It does not stop the
 recording — `--idle-timeout` is the flag that does.
 
-## Where a session leaves this adapter: `--export-trace`
+## Imported compatibility export: `--export-trace`
 
 ```text
 session.vrchatoscpackets → vrchat_osc_record --inspect --export-trace → session.trace
-                         → motion_capture → motion_retarget → a rig
+                         → usd-motion-plugins recording/retargeting → a rig
 ```
 
-The trace is the hand-off, and it is a *file* rather than a call: no tool in the
-aggregate product links an adapter, so `motion_capture` replays what this writes
-exactly as it replays a `.vrma`-derived clip and learns nothing about VRChat OSC —
-or about trackers — in the process (WORKSPACE.md §2).
+The imported implementation currently writes a downstream
+`motion-capture-trace` file after the operator's generic tracker assignment.
+That is a compatibility path, not a second canonical recording boundary:
+semantic motion recording belongs to `usd-motion-plugins`, while this
+repository owns raw capture and normalized `MotionFrame` evidence. The v0.1.0
+convergence work must decide whether to move this export downstream or
+redefine it as a diagnostic frame export.
 
 **It runs against a file, not against a socket**, and the refusal at the prompt
 says so. A recording here runs no decoder at all, which is what makes the capture

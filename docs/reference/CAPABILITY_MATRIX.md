@@ -4,28 +4,30 @@ This is the only document that says what this repository implements. A
 capability is listed as supported only when a test is behind it, and a source
 counts as supported only when the test needs no hardware.
 
+The source rows describe tested, source-specific decode, assembly and replay.
+They do **not** imply conformance to `IMotionConnector`; that shared contract
+is tracked separately in the Contract table.
+
 Vocabulary: **supported** · **approximated** · **unsupported** · **—**
 nothing implemented. The "Implemented elsewhere" column says where the
-behaviour exists today, before it moves here; it is not a claim about this
-repository.
+behaviour exists upstream when that context is relevant; it is not a second
+status source.
 
-Status (2026-09-19): **the transport and the OSC wire format are
-implemented** (`motionConnectorTransport`, `motionConnectorOsc`,
-`motionConnectorTracking`, imported from
-`usd-vrm-plugins`); no connector is.
+The tables below are authoritative. Dated status prose does not override a
+row's status.
 
 ## 1. Contract
 
 | Capability | Status | Contract | Implemented elsewhere | Release |
 | --- | --- | --- | --- | --- |
 | `IMotionConnector`, state, capabilities | — | [CONNECTOR §2, §5](../design/CONNECTOR_CONTRACT.md) | `usd-vrm-plugins` per adapter (`LiveSource`), not as one interface | v0.1.0 |
-| `MotionFrame`, `FrameTiming`, actors | — | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | nowhere | v0.1.0 |
+| `MotionFrame`, `FrameTiming`, actors | — | [CONNECTOR §3, §6, §11](../design/CONNECTOR_CONTRACT.md#3-motionframe) | source-specific frame types only; no shared envelope | v0.1.0 |
 | Bounded frame buffer, `Latest` / `Ordered` / `Lossless` | — | [CONNECTOR §8](../design/CONNECTOR_CONTRACT.md#8-buffering-push-and-pull) | only its datagram half, as `motionConnectorTransport`'s queue (imported 2026-09-19) | v0.1.0 |
 | Source profiles | — | [SOURCE_PROFILES](../design/SOURCE_PROFILES.md) | nowhere as one format | v0.1.0 |
 | The packet-capture file format, `p` peer lines included | supported — `motionConnectorTransport_packetCapture` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
 | The poll timeout mapping and wake-up predicate; the diagnostic vehicle | supported — `motionConnectorTransport_pollTimeout`, `_diagnostics` | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (imported 2026-09-19) | v0.1.0 |
-| UDP receive and the opt-in datagram queue on a socket | supported — the connectors' socket suites: `motionConnectorVmc_udpReceiver`, `_loopbackCorpus`, `motionConnectorMocopi_udpReceiver`, `_udpReceiverTruncation`, `_loopbackCorpus`, and both recorders' loopback names | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
-| Replay of a capture through a connector | supported — `motionConnectorVmc_liveSourceCorpus`, `motionConnectorMocopi_liveSourceCorpus` and the four other mocopi corpus readings | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
+| UDP receive and the opt-in datagram queue on a socket | supported — the VMC, mocopi and VRChat OSC receiver/loopback suites and their recorders' loopback names | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
+| Replay of a capture through a connector | supported — VMC and mocopi live-source corpus suites plus VRChat OSC frame/tracker corpus and loopback readings | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
 | OSC 1.0 wire format: packets, nested bundles in wire order, type tags, arguments, a refusal naming the byte | supported — `motionConnectorOsc_oscPacket` | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | — (imported 2026-09-19) | v0.1.0 |
 | `TrackerObservation`, assignment, tracker solve | supported — `motionConnectorTracking_trackerAssignment`, `_trackerSolve`, and end to end through `vrchat_osc_record_export` | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | — (imported 2026-09-20) | v0.1.0 |
 
@@ -50,7 +52,8 @@ An empty cell means that source cannot carry that part.
 | --- | --- | --- | --- |
 | `motion_connect dump` | — | nowhere | v0.1.0 |
 | `motion_connect list`, `inspect` | — | nowhere | v0.1.0 |
-| `motion_connect record`, `bridge` | — | `vmc_record` is here (imported 2026-09-21, record only); `mocopi_record` and `vrchat_osc_record` are still `usd-vrm-plugins`' | v0.2.0 |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` raw capture tools | supported — inspect/loopback evidence is listed in the source rows | — (imported 2026-09-21) | v0.1.0 |
+| `motion_connect record`, `bridge` | — | nowhere | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |
 | JS / TS package, WASM data ABI | — | nowhere | v0.3.0 |
 

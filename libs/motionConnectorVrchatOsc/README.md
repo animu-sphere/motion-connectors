@@ -1,12 +1,13 @@
 # motionConnectorVrchatOsc
 
-The third live input adapter: VRChat OSC tracking data in, and — eventually —
-canonical humanoid motion out. It is the first adapter here whose input is not a
-pose.
+The VRChat OSC tracker adapter: tracking observations in, a normalized tracker
+frame out. It is the first adapter here whose input is not a pose; it stops
+before target-avatar semantics and is still pending adaptation to the shared
+`MotionFrame` contract.
 
 ```text
 UDP datagram → OSC decode → tracker semantics → tracking-space normalisation
-             → tracker frame → (a generic humanoid solve) → MotionPose
+             → tracker frame → MotionFrame (optional generic tracking solve)
 ```
 
 **Status: a recorder, a measured inventory, a tracker decoder and a measured
@@ -167,7 +168,7 @@ third copy of a file is what that inheritance *is*.
 
 ## Edges
 
-Three: `motionCore`, `motionConnectorTransport` and `osc`.
+Three: `motionCore`, `motionConnectorTransport` and `motionConnectorOsc`.
 
 WORKSPACE.md §2 permits a connector four, and the fourth — the recording package — is
 what an adapter takes when it produces a **pose**. This one produces none: a
@@ -180,7 +181,8 @@ rather than an accident of layout: `tools/vrchatOscRecord` links `motionConnecto
 to solve and `motionRecording` to write the trace. A *tool* may, because an
 assignment is an operator's statement about a rig; a library may not, because a
 decoder that resolved one would have invented a calibration and hidden it inside
-itself. `adapters/* -> motionConnectorTracking` is a refused source token in
+itself. `motionConnectorVrchatOsc -> motionConnectorTracking` is a refused
+source edge in
 [`tests/check_boundaries.py`](tests/check_boundaries.py) for that reason, and it
 is the one name on that list with no link line to fail on — this package is enums
 and a policy over them, so an include and a `TrackerRegion` would compile.

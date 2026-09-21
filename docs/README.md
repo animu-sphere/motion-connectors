@@ -5,11 +5,9 @@ class of question. The layout is the one `usd-motion-plugins`,
 `usd-vrm-plugins` and `usd-mmd-plugins` use, so the repositories read the same
 way.
 
-**The tree holds documentation and an empty build scaffold (2026-09-19).**
-The design policy is accepted and the focused contracts are proposed. The first connectors arrive
-from `usd-vrm-plugins`, where they are implemented and measured today.
-[reference/](reference/) is the only place that says what is implemented
-here. So far, nothing is.
+The [capability matrix](reference/CAPABILITY_MATRIX.md) is the sole source of
+truth for what is currently implemented. Other documents describe intent,
+structure, evidence or incomplete work according to the ownership table below.
 
 | Category | Answers | Start here |
 | --- | --- | --- |
@@ -20,18 +18,13 @@ here. So far, nothing is.
 | [guides/](guides/) | How to build and test the tree. | [building.md](guides/building.md) |
 | [contributing/](contributing/) | How to maintain these documents. | [documentation.md](contributing/documentation.md) |
 
-`releases/` and `reports/` are each created with their first real content:
-`releases/` with the first release record, at the first tag; `reports/` with
-the first dated session, recorded here or imported with a connector.
-
 ## Canonical documents
 
 - [design/DESIGN_POLICY.md](design/DESIGN_POLICY.md) is the **design policy**.
-  It covers what the repository is for and not for; the boundaries with
-  `usd-motion-plugins`, the avatar-format repositories and the runtime
-  (§20–§24); security (§27); the release plan (§30–§34); the design rules
-  (§42); and how the policy was reconciled with the sibling contracts on
-  adoption (§46). Sibling repositories cite it by section number.
+  It covers the repository boundary, the ecosystem split, security, design
+  rules and the decisions made when the policy was adopted. Release scope and
+  ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
+  the policy by section number.
 - Three focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the
@@ -55,6 +48,8 @@ the first dated session, recorded here or imported with a connector.
 - Code is authoritative for implemented behaviour; `architecture/` and
   `reference/` record it and change with it.
 - `design/` defines intended contracts and labels what is not implemented.
+- The capability matrix is the only document that states current capability
+  status; other pages link to it instead of copying a status snapshot.
 - Which release carries what is stated only in the
   [roadmap status table](roadmap/README.md#status-at-a-glance).
 - The details are in [contributing/documentation.md](contributing/documentation.md).

@@ -59,8 +59,8 @@ identified by prefix and number (`CC-O1`, `CS-O1`, `SP-O1`, `WS-O1`,
 - Shared motion names are `usd-motion-plugins`' (`MotionPose`, `HumanJoint`,
   `MotionChannelSet`). A sibling's old name (`HumanoidPose`, `vrmAdapterVmc`)
   appears only where the text is about the sibling or the import.
-- Phases are always qualified: **Connector Phase 1–8**, **Migration Phase
-  A–F** ([DESIGN_POLICY.md §46.6](../design/DESIGN_POLICY.md#466-phases-are-always-qualified)).
+- When phases are mentioned, qualify them by their owning repository or
+  document ([DESIGN_POLICY.md §46.6](../design/DESIGN_POLICY.md#466-phases-are-always-qualified)).
 - Product and protocol names appear in a connector's own documents and in
   provenance, never as a condition in a shared contract.
 

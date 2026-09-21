@@ -1,11 +1,15 @@
 # Diagnostics
 
 The catalog of diagnostic codes this repository raises. Status (2026-09-21):
-**three imported families, none renamed yet**. The codes the arrived
-connectors raise are listed by their own `Diagnostics.h` and are tabulated here
+**three imported families, none renamed yet**. The codes raised by the imported
+connectors are listed by their own `Diagnostics.h` and are tabulated here
 once DIAG-O1 gives them their names — one change over every connector, rather
 than a rename per import. A code that is *new* here is added to §2 in the
 change that first raises it.
+
+`VRM_VRCHAT_OSC_*` is still untouched, just like `VRM_VMC_*` and
+`VRM_MOCOPI_*`. The rename is an explicit cross-connector cleanup task, not an
+implicit part of any individual import.
 
 ## 1. The record
 
@@ -58,4 +62,4 @@ the connector that links them.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| DIAG-O1 | Code style and the renaming of the imported codes. Deferred past the first two imports on purpose (2026-09-21): renaming a family per import would spend the same review twice and leave the ecosystem inconsistent in between. The `VRM_` prefix is wrong here, because nothing in this repository is VRM's. Candidates: `VMC_*` / `MOCOPI_*` per connector with `CONNECTOR_*` for the core; or numbered codes, as `usd-motion-plugins`' design policy §29 proposes and its DIAG-O1 leaves open. Decide together with `usd-motion-plugins`, so the ecosystem has one style | now: every connector has arrived, before v0.1.0 |
+| DIAG-O1 | Code style and the renaming of all imported codes: `VRM_VMC_*`, `VRM_MOCOPI_*` and `VRM_VRCHAT_OSC_*`. Rename the three families in one cross-connector sweep, update the catalog/tests/tools together, and decide the style with `usd-motion-plugins` so the ecosystem has one convention. Candidates are `VMC_*` / `MOCOPI_*` / `VRCHAT_OSC_*` with `CONNECTOR_*` for the core, or numbered codes as `usd-motion-plugins`' design policy §29 proposes. Until that change lands, the imported names remain the compatibility names | every connector has arrived, before v0.1.0 |

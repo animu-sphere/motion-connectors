@@ -4,7 +4,9 @@
 > rules are `usd-motion-plugins`' `MOTION_CONTRACT.md` §3, carried rather than
 > re-derived; this document adds what is a connector's: how a source's basis is
 > declared, who converts it, and what each known source was measured to be.
-> Nothing here is implemented in this repository yet.
+> The rules are proposed. The known-source rows include measured evidence from
+> the imported source implementations; the capability matrix states whether a
+> source is integrated with the shared connector contract.
 >
 > This document owns source bases and their conversion. On that area it wins
 > over [DESIGN_POLICY.md](DESIGN_POLICY.md) §5.1 ("Required behavior") and §6.
@@ -107,6 +109,6 @@ expectation until a labelled session measures it.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| CS-O1 | Where the change-of-basis primitive lives. `usd-vrm-plugins` holds three copies (the VMC adapter's hard-coded X flip, the BVH layer's general signed permutation, the VRChat adapter's Euler composition) and did not extract it, because the right home is the shared core and that is a contract change. The proposal is `usd-motion-plugins`' `motionCore`, with all three copies as consumers; the alternative is `motionConnectorCore`, which the BVH reader could not reach | before the VRChat OSC import, which would otherwise carry a third copy into this repository |
+| CS-O1 | Where the change-of-basis primitive lives. `usd-vrm-plugins` holds three copies (the VMC adapter's hard-coded X flip, the BVH layer's general signed permutation, the VRChat adapter's Euler composition) and did not extract it, because the right home is the shared core and that is a contract change. The proposal is `usd-motion-plugins`' `motionCore`, with all three copies as consumers; the alternative is `motionConnectorCore`, which the BVH reader could not reach | v0.1.0 convergence |
 | CS-O2 | VMC senders have two candidate translation channels (root position, hips offset). Which is body translation is a fact about each sender, measured per sender (`usd-motion-plugins` MC-O3, "operator work in `motion-connectors`") | one recorded session from each of two VMC senders |
 | CS-O3 | Whether a connector's conversion is code, or data in its profile that one shared converter applies. The BVH layer already does the latter | CS-O1 |

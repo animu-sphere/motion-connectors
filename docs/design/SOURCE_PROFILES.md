@@ -1,7 +1,8 @@
 # Source profiles and joint naming
 
-> Status: **proposed**, 2026-09-19. Nothing here is implemented in this
-> repository yet.
+> Status: **proposed**, 2026-09-19. The profile contract and identifiers are
+> defined here; the imported source implementations do not yet provide one
+> installed profile format. The capability matrix states current support.
 >
 > This document owns what a source *is*: its profile identifier, what the
 > profile declares, and how a source's joint names become the shared

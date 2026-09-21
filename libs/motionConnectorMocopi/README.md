@@ -1,17 +1,18 @@
 # motionConnectorMocopi
 
-The native live input adapter for one capture product: that product's own UDP
-packets from the device's application, in; canonical humanoid motion, out. No
-third-party sender application anywhere in the path.
+The native source adapter for one capture product: that product's own UDP
+packets from the device's application in, source-normalized motion observations
+out. No third-party sender application is involved. Its source-specific API is
+not yet adapted to the shared `MotionFrame` contract.
 
 ```text
 UDP datagram → packet decode → joint mapping → coordinate conversion
-             → frame assembly → MotionPose → LiveCaptureSource
+             → frame assembly → shared MotionPose values → MotionFrame
 ```
 
-**Status: through the runtime bridge — the library is code-complete.** What
-exists is the library's identity
-and its two edges, the frozen diagnostic set, the recorded-packet format, the
+**Status: imported source implementation; shared-contract adaptation pending.**
+The source-specific library and its two edges, the frozen diagnostic set, the
+recorded-packet format, the
 **UDP receiver**, [**`mocopi_record`**](../../tools/mocopiRecord/README.md) — the CLI
 that turns a source aimed at this machine into a capture file — the **packet
 decoder** ([container](include/motionConnectorMocopi/PacketChunk.h) and
@@ -22,9 +23,9 @@ which is the first layer here that knows a humanoid exists, then
 [**frame assembly**](include/motionConnectorMocopi/FrameAssembler.h) — the layer that
 decides whether a datagram is a frame, whether it is complete, and whether the
 source restarted — and finally the
-[**live-source bridge**](include/motionConnectorMocopi/LiveSource.h), where a frame
-becomes a pose a consumer samples through the unchanged
-`motionRecording`.
+[**live-source bridge**](include/motionConnectorMocopi/LiveSource.h). The
+imported replay and loopback evidence is hardware-free; adaptation to
+`IMotionConnector` is tracked in the [current roadmap](../../docs/roadmap/current.md).
 
 **What does not exist is a session that met a device.** Every layer above is
 exercised, and by committed bytes that never met a sensor. Tracking state and

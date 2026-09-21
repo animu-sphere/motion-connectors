@@ -1,8 +1,8 @@
 # motion-connectors — Design and Implementation Policy
 
-> Status: **accepted** as the repository's design policy, 2026-09-19. Nothing
-> it describes is implemented yet; [reference/CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md)
-> is the only document that says what is.  
+> Status: **accepted** as the repository's design policy, 2026-09-19. This
+> document defines intended boundaries; [reference/CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md)
+> is the only document that states current implementation status.
 > Repository: `animu-sphere/motion-connectors`  
 > Scope: connectivity to external motion sources, and their normalization into the shared motion contract  
 > Upstream: `usd-motion-plugins` (the motion values this repository produces)  
@@ -35,8 +35,9 @@ Its primary role is not to define motion representation itself, nor to own retar
 
 Instead, `motion-connectors` should:
 
-- connect to devices, browsers, SDKs, files, streams, and remote services;
-- normalize their data into a small runtime-neutral motion contract;
+- connect to devices, browsers, SDKs, recorded transport captures, replay
+  sources, streams and remote services;
+- normalize their data into the shared, stage-independent motion contract;
 - expose that data to `usd-motion-plugins`;
 - avoid embedding VRM-, MMD-, or renderer-specific logic;
 - remain usable independently from any single avatar format.
@@ -50,7 +51,7 @@ External World
     v
 motion-connectors
     |
-    |  MotionPose / MotionStream
+    |  MotionFrame (shared MotionPose, tracker observations)
     v
 usd-motion-plugins
     |
@@ -87,11 +88,11 @@ The core principle is:
 - OSC
 - VMC Protocol
 - UDP / TCP / WebSocket streams
-- BVH live sources
+- recorded transport captures and replay sources
 - camera-based body tracking
 - hand tracking
 - face tracking
-- game controllers
+- tracked spatial controllers and 6DoF controller poses
 - IMU / sensor suits
 - remote motion services
 
@@ -133,7 +134,8 @@ Examples:
 | OpenXR body / hand input | `motion-connectors` |
 | VMC / OSC transport | `motion-connectors` |
 | WebSocket motion transport | `motion-connectors` |
-| MotionPose data contract | shared contract, preferably `usd-motion-plugins` or a tiny dependency-neutral core |
+| MotionFrame envelope and connector contract | `motion-connectors` |
+| MotionPose data contract | `usd-motion-plugins` `motionCore` |
 | Skeleton retargeting | `usd-motion-plugins` |
 | BVH representation | `usd-motion-plugins` |
 | NPZ motion representation | `usd-motion-plugins` |
@@ -148,18 +150,21 @@ Examples:
 
 The connector should terminate at a **canonical motion boundary**.
 
-Recommended logical contracts:
+The logical flow is:
 
 ```text
 MotionSource
     -> MotionFrame
-    -> MotionPose
-    -> MotionStream
+  -> usd-motion-plugins MotionPose intake
+  -> MotionStream
 ```
 
-These should remain independent from USD where possible.
+`MotionFrame` is the connector boundary. `MotionPose` and `MotionStream` are
+owned by `usd-motion-plugins`; this repository does not define a second pose or
+stream type. The boundary is independent of stage authoring and avatar-format
+semantics, even though `motionCore` may provide OpenUSD foundation value types.
 
-USD should be integrated one layer later.
+USD stage authoring is integrated one layer later.
 
 This avoids coupling device/network APIs to:
 
@@ -185,118 +190,37 @@ That separation is important for reuse in:
 
 ### 5.1 MotionPose
 
-`MotionPose` represents one logical pose.
+`MotionPose` is the shared motion value owned by `usd-motion-plugins`
+`motionCore`. This repository carries it inside `MotionFrame`; it does not
+define a local `JointPose` or `MotionPose` substitute. The complete pose
+semantics, vocabulary and stream intake rules are in
+`usd-motion-plugins`' `MOTION_CONTRACT.md`.
 
-Example conceptual shape:
-
-```cpp
-struct JointPose {
-    std::string joint;
-    Vec3 translation;
-    Quat rotation;
-    Vec3 scale;
-    float confidence;
-};
-
-struct MotionPose {
-    double timestamp;
-    std::string skeletonProfile;
-    std::vector<JointPose> joints;
-};
-```
-
-The actual API may differ, but the important properties are:
-
-- named joints;
-- local transforms by default;
-- explicit timestamp;
-- optional confidence;
-- optional skeleton profile / source profile;
-- deterministic coordinate-system conversion.
-
-#### Required behavior
-
-A connector must state:
-
-- source coordinate system;
-- handedness;
-- up axis;
-- length unit;
-- transform space;
-- timestamp origin;
-- tracking confidence semantics.
-
-The connector is responsible for converting these to the canonical contract.
+The connector-side requirements are limited to declaring the source basis,
+transform space, timestamp origin, confidence semantics and source profile, then
+converting the observation before it enters `MotionFrame`. The focused
+contracts own those details: [CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md),
+[COORDINATE_SYSTEMS.md](COORDINATE_SYSTEMS.md) and
+[SOURCE_PROFILES.md](SOURCE_PROFILES.md).
 
 ---
 
 ### 5.2 MotionStream
 
-`MotionStream` represents an ordered flow of poses.
-
-Conceptually:
-
-```cpp
-class MotionStream {
-public:
-    bool Poll(MotionPose& pose);
-};
-```
-
-Potential future forms:
-
-```cpp
-subscribe(callback)
-async iterator
-generator
-ring buffer
-shared-memory stream
-```
-
-The abstraction should not require a particular threading model.
+`MotionStream` and its intake semantics belong to `usd-motion-plugins`. A
+connector exposes the connector-side pull operation over `MotionFrame`; the
+stream decides how shared poses are admitted, ordered, resampled or consumed.
+This repository does not prescribe a second stream API.
 
 ---
 
 ### 5.3 Additional Channels
 
-The system should allow optional channels beyond skeletal body motion.
-
-Possible channels:
-
-```text
-body
-hand.left
-hand.right
-face
-eyes
-camera
-controller
-root
-tracker.*
-blendshape.*
-```
-
-Do not force every connector into a single monolithic skeleton.
-
-A packet may therefore contain:
-
-```text
-MotionFrame
- ├─ BodyPose
- ├─ HandPose[]
- ├─ FacePose
- ├─ RootTransform
- └─ Metadata
-```
-
-This becomes especially important for:
-
-- MediaPipe;
-- WebXR;
-- OpenXR;
-- VRM expressions;
-- Apple / ARKit-style blendshapes;
-- full-body tracker systems.
+Connectors may emit sparse shared poses for body, hands, eyes or root motion,
+and namespaced expression channels through the shared motion contract. Tracker
+observations remain beside the pose in `MotionFrame`; they are not body joints.
+The focused connector contract owns the envelope and capability rules, while
+`usd-motion-plugins` owns the motion value types.
 
 ---
 
@@ -691,7 +615,8 @@ Initial implementations may support one actor, but the core API should avoid pre
 
 ## 16. Recommended Connector Modules
 
-Initial repository structure:
+The repository structure follows the sibling workspaces and the binding layout
+in [WORKSPACE.md](../architecture/WORKSPACE.md):
 
 ```text
 motion-connectors/
@@ -699,23 +624,25 @@ motion-connectors/
 ├─ README.md
 ├─ LICENSE
 ├─ docs/
-│  ├─ architecture.md
-│  ├─ motion-contract.md
-│  ├─ coordinate-systems.md
-│  └─ connectors.md
+│  ├─ design/
+│  ├─ architecture/
+│  ├─ reference/
+│  └─ roadmap/
 │
-├─ src/
-│  ├─ motionConnectorCore/
-│  │  ├─ include/
-│  │  └─ src/
-│  │
+├─ libs/
+│  ├─ motionConnectorCore/       reserved until the shared contract lands
+│  ├─ motionConnectorTransport/
 │  ├─ motionConnectorOsc/
+│  ├─ motionConnectorTracking/
 │  ├─ motionConnectorVmc/
-│  ├─ motionConnectorWebSocket/
 │  ├─ motionConnectorMocopi/
-│  ├─ motionConnectorMediaPipe/
-│  ├─ motionConnectorOpenXR/
-│  └─ motionConnectorWebXR/
+│  └─ motionConnectorVrchatOsc/
+│
+├─ tools/
+│  ├─ motionConnect/             reserved unified CLI
+│  ├─ vmcRecord/
+│  ├─ mocopiRecord/
+│  └─ vrchatOscRecord/
 │
 ├─ bindings/
 │  ├─ python/
@@ -726,11 +653,12 @@ motion-connectors/
 │  ├─ record_stream/
 │  └─ usd_avatar_live/
 │
-├─ tests/
-└─ third_party/
+└─ tests/
 ```
 
-Not every connector has to be compiled into every runtime.
+Web modules and language bindings remain later modules with their own layout;
+they are not part of the native build by accident. Not every connector has to
+be compiled into every runtime.
 
 They should be optional modules.
 
@@ -846,21 +774,22 @@ Potential applications:
 
 This boundary is critical.
 
-`motion-connectors` produces:
+`motion-connectors` produces and carries:
 
 ```text
 MotionFrame
-MotionPose
-MotionStream
+  ├─ shared MotionPose values from motionCore
+  └─ TrackerObservation values where applicable
 ```
 
-`usd-motion-plugins` consumes them and provides:
+`usd-motion-plugins` consumes the frame and owns:
 
 ```text
+MotionPose and MotionStream intake
 retarget
 resample
 filter
-record
+semantic recording
 playback
 motion-file integration
 USD animation bridging
@@ -915,7 +844,7 @@ MediaPipe
     |
 motion-connectors
     |
-MotionPose
+  MotionFrame
     |
 usd-motion-plugins
     |
@@ -1010,7 +939,7 @@ Preferred:
 
 ```cpp
 connector.Poll(frame);
-motionRuntime.Apply(frame, target);
+motionSemantics.Apply(frame, target);
 ```
 
 USD is the scene/representation layer, not the external-device transport abstraction.
@@ -1028,7 +957,9 @@ Recommended pipeline:
 ```text
 connector
     |
-MotionStream
+raw packet/session capture or MotionFrame diagnostic capture
+  |
+usd-motion-plugins intake
     |
 usd-motion-plugins recorder
     |
@@ -1100,13 +1031,10 @@ WebSocket and remote-stream integrations should not implicitly expose listening 
 
 Keep `motionConnectorCore` very small.
 
-Prefer:
-
-```text
-C++ standard library
-small math abstraction
-minimal threading primitives
-```
+`motionConnectorCore` may consume the foundation value types exposed by
+`usd-motion-plugins` `motionCore` (`gf`, `tf`, `vt`), but it must not open or
+mutate a stage. It should add only the connector contract, small buffering and
+minimal threading primitives.
 
 Connector-specific dependencies should remain isolated.
 
@@ -1117,7 +1045,7 @@ OpenXR -> OpenXR loader
 OSC -> small OSC library
 WebSocket -> optional transport library
 MediaPipe -> browser/package dependency
-mocopi -> SDK or protocol-specific module
+mocopi -> protocol-specific module
 ```
 
 A user requiring only VMC should not need to build OpenXR or MediaPipe.
@@ -1156,210 +1084,49 @@ Start simple.
 
 ## 30. Recommended Initial Implementation Order
 
-### Phase 1 — Contract
+Implementation order is a design constraint, not a second status or release
+table. The current incomplete order is maintained in
+[roadmap/current.md](../roadmap/current.md). The constraints are:
 
-Implement:
+1. Complete the shared connector contract before adding another source.
+2. Adapt the imported VMC, mocopi and VRChat OSC implementations without
+   replacing their protocol-specific assembly or replay evidence.
+3. Add later transports, bindings, browser and XR sources only through the
+   same `MotionFrame` boundary.
 
-```text
-MotionFrame
-MotionPose
-JointPose
-ConnectorCapabilities
-IMotionConnector
-```
-
-plus:
-
-- timestamp rules;
-- coordinate convention;
-- joint naming rules;
-- unit tests.
-
-This is the most important step.
-
-### Phase 2 — Simple network connector
-
-Implement:
-
-```text
-OSC / VMC
-```
-
-Reasons:
-
-- relatively simple;
-- easy to test;
-- no hardware requirement;
-- useful for existing VTuber tooling.
-
-### Phase 3 — WebSocket
-
-Implement:
-
-```text
-MotionFrame <-> JSON / binary WebSocket bridge
-```
-
-This creates a useful transport between:
-
-```text
-browser
-native runtime
-remote mocap source
-```
-
-### Phase 4 — MediaPipe
-
-Implement browser-first MediaPipe integration.
-
-Targets:
-
-```text
-body
-hands
-face
-```
-
-Convert to canonical MotionFrame.
-
-### Phase 5 — WebXR
-
-Support:
-
-```text
-head
-controllers
-hands
-reference spaces
-```
-
-This is especially useful for browser-based avatar interaction.
-
-### Phase 6 — mocopi
-
-Add mocopi source integration once the canonical contracts are stable.
-
-Avoid allowing mocopi-specific assumptions to define the core API.
-
-### Phase 7 — OpenXR
-
-Add native XR integration.
-
-Possible sources:
-
-```text
-head
-controllers
-hands
-trackers
-body tracking extensions
-```
-
-### Phase 8 — advanced devices
-
-Examples:
-
-```text
-IMU suits
-optical mocap
-depth-camera tracking
-specialized face tracking
-```
+No source-specific implementation may define the shared core by accident.
 
 ---
 
 ## 31. Suggested First Release Scope
 
-A realistic `v0.1.0` should stay small.
-
-Recommended scope:
-
-```text
-motionConnectorCore
-motionConnectorOsc
-motionConnectorVmc
-```
-
-with:
-
-- canonical MotionFrame;
-- body joint transforms;
-- timestamps;
-- confidence;
-- source profile;
-- example CLI;
-- unit tests.
-
-Example CLI:
-
-```bash
-motion-connect dump --source vmc --port 39539
-```
-
-Output:
-
-```text
-frame=1024
-timestamp=...
-actor=0
-hips ...
-head ...
-leftHand ...
-rightHand ...
-```
-
-This validates the architecture without requiring USD integration.
+Release scope is owned by [roadmap/README.md](../roadmap/README.md). The
+original recommendation for v0.1.0 was deliberately small; after the imports,
+the accepted scope is shared-contract convergence around those existing
+sources. This policy defines the boundary, not the checklist.
 
 ---
 
 ## 32. Suggested `v0.2.x`
 
-Add:
-
-```text
-WebSocket transport
-record-stream example
-Python bindings
-```
-
-This enables:
-
-```text
-browser/service
-      |
-   websocket
-      |
-native connector
-      |
-MotionStream
-```
+The later release sequence is maintained in the roadmap. WebSocket transport,
+capture/bridge tooling and language bindings must continue to carry
+`MotionFrame`; they do not move semantic recording or retargeting upstream.
 
 ---
 
 ## 33. Suggested `v0.3.x`
 
-Add:
-
-```text
-MediaPipe connector
-JS/TS package
-WASM-friendly data ABI
-```
-
-Then browser tracking becomes a first-class source.
+The roadmap schedules browser tracking and the JS/WASM boundary here. The
+browser adapter still owns acquisition and normalization; avatar semantics
+remain downstream.
 
 ---
 
 ## 34. Suggested `v0.4.x`
 
-Add:
-
-```text
-WebXR
-mocopi
-```
-
-and integration examples with `usd-motion-plugins`.
+The roadmap schedules WebXR and integration examples here. mocopi is already
+part of the v0.1.0 convergence scope; it is not a future source addition.
 
 ---
 
@@ -1403,22 +1170,25 @@ Small diagnostic tools will be highly valuable.
 Recommended utilities:
 
 ```text
-motion-connect list
-motion-connect dump
-motion-connect record
-motion-connect bridge
-motion-connect inspect
+motion_connect list
+motion_connect dump
+motion_connect record
+motion_connect bridge
+motion_connect inspect
 ```
 
 Examples:
 
 ```bash
-motion-connect dump --source vmc
-motion-connect bridge --source vmc --output websocket
-motion-connect record --source mediapipe --output capture.jsonl
+motion_connect dump --source vmc
+motion_connect bridge --source vmc --output websocket
+motion_connect record --source mediapipe --output capture.jsonl
 ```
 
-These tools should operate on MotionFrame rather than avatar-specific data.
+The v0.1.0 commands are `dump`, `list` and `inspect`. `record` captures raw
+transport/session data or diagnostic `MotionFrame` data; semantic motion
+recording remains in `usd-motion-plugins`. `bridge` may forward a
+`MotionFrame`, but it must not retarget it to an avatar.
 
 ---
 
@@ -1554,8 +1324,8 @@ Conceptually:
 
 ```text
 ost compose
-  + motion-connectors-core
-  + motion-connectors-vmc
+  + motionConnectorCore
+  + motionConnectorVmc
   + usd-motion-plugins
   + usd-vrm-plugins
 ```
@@ -1632,11 +1402,10 @@ The recommended final shape is:
                               |
                        motion-connectors
                               |
-                         MotionFrame
-                         MotionPose
-                         MotionStream
+                        MotionFrame
                               |
                        usd-motion-plugins
+                      MotionPose / MotionStream intake
               +---------------+---------------+
               |               |               |
            filter          retarget          record
@@ -1663,22 +1432,16 @@ The recommended final shape is:
 
 Recommended next implementation tasks:
 
-1. Define `MotionFrame`, `MotionPose`, and `JointPose`.
-2. Freeze canonical coordinate and unit conventions.
-3. Define timestamp semantics.
-4. Define source profile metadata.
-5. Implement a minimal `IMotionConnector`.
-6. Implement OSC/VMC as the first real connector.
-7. Add a deterministic packet corpus for CI.
-8. Add `motion-connect dump`.
-9. Define the bridge API consumed by `usd-motion-plugins`.
-10. Add WebSocket transport.
-11. Add MediaPipe browser adapter.
-12. Add WebXR adapter.
-13. Add mocopi.
-14. Add OpenXR.
+1. Implement `motionConnectorCore` and resolve its poll, buffer and state semantics.
+2. Freeze the source profile and diagnostic identifier rules.
+3. Adapt VMC, mocopi and VRChat OSC to the shared contract.
+4. Add `motion_connect dump`, `list` and `inspect`.
+5. Re-run the imported replay corpus through the unified path.
+6. Verify clean installed-package consumption and sibling cleanup.
+7. Add WebSocket transport, bindings and later browser/XR sources.
 
-The most important architectural decision is to stabilize the **MotionPose / MotionStream boundary before adding many device integrations**.
+The most important architectural decision is to stabilize the **MotionFrame /
+MotionPose intake boundary** before adding more source integrations.
 
 Once that boundary is stable, new sources become relatively inexpensive adapters rather than new motion systems.
 
@@ -1695,7 +1458,7 @@ connect
 normalize
 timestamp
 identify
-stream
+deliver MotionFrame
 ```
 
 Its job is not:
@@ -1716,9 +1479,11 @@ External Source
       ↓
 motion-connectors
       ↓
-MotionPose / MotionStream
+MotionFrame
       ↓
 usd-motion-plugins
+  ↓
+MotionPose / MotionStream intake
       ↓
 VRM / MMD / UsdSkel
       ↓
@@ -1743,8 +1508,8 @@ stays as the motivation and this section is the rule.
 §3's table leaves the `MotionPose` contract "preferably `usd-motion-plugins`
 or a tiny dependency-neutral core". It is `usd-motion-plugins`: its
 `MOTION_CONTRACT.md` defines `MotionPose`, `RootMotion`, `MotionChannelSet`,
-`SourceMetadata` and the `MotionStream` intake rules, its §11 says a live pose
-sender in `motion-connectors` stops at `MotionPose` pushed into a stream, and
+`SourceMetadata` and the `MotionStream` intake rules. A source in
+`motion-connectors` delivers those shared values in a `MotionFrame`, and
 its workspace contract already records the edge `motion-connectors →
 usd-motion-plugins` (`motion-core`, `motion-recording`).
 
@@ -1783,11 +1548,12 @@ destination, under its moving rules §9.2 — history comes with the code, one
 identity per move, the reverse edge refused — in its migration milestone
 MIG-4, which serves **Migration Phase E**.
 
-They are renamed on arrival and lose the `vrm` prefix
+They were renamed on arrival and lost the `vrm` prefix
 ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)). They
-arrive **after** the connector contract of §30 Connector Phase 1 is written,
-so that none of them defines the core API by having been first — which is §30
-Phase 6's concern about mocopi, applied to all three.
+arrived after the connector contract was documented, but before the planned
+`motionConnectorCore` was implemented. Their source-specific APIs therefore
+remain separate until the current v0.1.0 convergence work adapts them to one
+shared connector interface.
 
 ### 46.4 A tracker observation is not a pose
 
@@ -1813,13 +1579,13 @@ a connector declares (§9), not as types
 
 ### 46.6 Phases are always qualified
 
-This policy's §30 phases are written **Connector Phase 1–8**, because the
-ecosystem already has `usd-motion-plugins`' Migration Phase A–F,
-`usd-vrm-plugins`' Motion Phase A–H and `usd-mmd-plugins`' Phase 0–9.
+When implementation phases are named, they are qualified by their owner. The
+roadmap owns the current delivery order; sibling repositories' migration and
+motion phases are cited only when describing an import or dependency.
 
 ### 46.7 The release order follows the imports
 
-§31–§34 put mocopi in v0.4.x. The mocopi and VRChat OSC connectors and
+§31–§34 originally put mocopi in v0.4.x. The mocopi and VRChat OSC connectors and
 `motionTracking` are imports of measured code, not new designs, and
 `usd-vrm-plugins` cannot finish its migration (MIG-5) while they wait here;
 each is frozen there until it moves. They were first scheduled for v0.2.0,
@@ -1827,13 +1593,13 @@ after v0.1.0 had fixed the contract. On 2026-09-19 WS-O7 moved them into
 v0.1.0, beside VMC: `liveTransport` and `osc` are linked by all three
 connectors, so importing them ahead of mocopi and VRChat OSC would have left
 `usd-vrm-plugins` either two copies for a release or an undeclared edge to
-this repository. The contract still comes first. `motionConnectorCore` exists
-before any import, and each connector adapts to it in a change of its own
-after it moves ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)).
+this repository. The contract documents came first, but
+`motionConnectorCore` is still reserved: the import PRs did not implement it.
+Each connector now needs a separate adaptation to that core
+([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)).
 So §30's concern, that mocopi should not define the core API, still holds. The
-mapping, and every other departure from
-§31–§34, is in the [roadmap status table](../roadmap/README.md#status-at-a-glance),
-which is the single source of truth for which release carries what.
+current release mapping is in the [roadmap status table](../roadmap/README.md#status-at-a-glance),
+which is the single source of truth for incomplete delivery scope.
 
 ### 46.8 §16's documentation files take the sibling layout
 

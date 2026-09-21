@@ -4,9 +4,9 @@ What `motion-connectors` builds against and what it refuses. Edges between
 this repository's own components are
 [WORKSPACE.md §2](WORKSPACE.md#2-dependency-directions)'s.
 
-Status (2026-09-19): **adopted by the scaffold.** The OpenUSD pin and the
-toolchain below are what the root project enforces. The per-connector rows
-apply as each connector arrives. Every value is taken from the sibling
+Status (2026-09-21): **adopted by the current workspace.** The OpenUSD pin and
+the toolchain below are what the root project enforces. The per-connector rows
+describe the imported connectors and the reserved modules. Every value is taken from the sibling
 repositories so that `usd-avatar-runtime` can compose all of them into one
 process.
 
@@ -15,7 +15,7 @@ process.
 | | |
 | --- | --- |
 | Pin | OpenUSD **26.08**, exactly: the release `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins` pin. This repository opens no stage, but `motionCore` is built against one OpenUSD release, and a consumer built against another does not link |
-| `motionConnectorCore`, connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
+| planned `motionConnectorCore`, imported connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
 | tools, examples | whatever `usd-motion-plugins` library they call; `examples/usd_avatar_live` is the only place a stage appears |
 | Pin changes | coordinated: a new OpenUSD release is adopted here together with `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins`. Who releases first is open in `usd-vrm-plugins`' migration track |
 
@@ -37,7 +37,7 @@ Whether the web path can avoid this closure is
 | Language | C++20 for native libraries; TypeScript for web modules |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
-| OpenStrata | `ost` 0.22.10, pinned in `openstrata.ci.yaml`, as `usd-motion-plugins` and `usd-mmd-plugins` pin it |
+| OpenStrata | `ost` 0.23.2, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
 | Python | the interpreter OpenUSD was built against, for bindings and tooling (v0.2.0) |
 | Node | an LTS release, for the JS / TS package (v0.3.0) |
@@ -51,8 +51,9 @@ Each is isolated to its connector and is off unless that connector is built
 | --- | --- | --- |
 | `motionConnectorTransport` | OS sockets | system |
 | `motionConnectorOsc` | none; the wire format is implemented here | — |
-| `motionConnectorVmc`, `motionConnectorVrchatOsc` | none beyond the transport and the wire format | — |
-| `motionConnectorMocopi` | none: the native UDP protocol is decoded here, with no vendor SDK | — |
+| `motionConnectorVmc` | `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
+| `motionConnectorMocopi` | `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
+| `motionConnectorVrchatOsc` | `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorWebSocket` | a WebSocket library, optional; TLS optional on top | third party, chosen with the connector |
 | `motionConnectorOpenXR` | the OpenXR loader | third party |
 | `motionConnectorMediaPipe` | the MediaPipe Tasks package | npm |
