@@ -1,0 +1,25 @@
+# OpenStrata workspace-tool descriptor. `mocopi_record` is the mocopi
+# connector's CLI: the one part of this connector a user runs, and the only
+# part that meets a real device (WORKSPACE.md §1 -- "each connector may also
+# carry one CLI").
+#
+# It requires the connector and nothing else. §2 *permits* a connector tool to
+# author a stage, which is what separates a tool from its library -- this one
+# does not, because recording datagrams and reporting on them needs no avatar.
+# Turning a canonical session into a clip is `usd-motion-plugins`'
+# `motion_record`, and duplicating that here would be the fork §2 forbids.
+#
+# The tool is a workspace member of its own, under the root tools/ where §2.1's
+# dependency diagram puts every tool, so `ost` discovers this file directly.
+schema: openstrata.tool/v1alpha1
+tool:
+  id: mocopi_record
+  # Mirrors VERSION; release preparation updates this in lockstep.
+  version: 0.1.0
+  license: Apache-2.0
+executables: [mocopi_record]
+directories: [bin]
+requires:
+  libraries:
+    - id: motionConnectorMocopi
+      version: ">=0.1,<0.2"

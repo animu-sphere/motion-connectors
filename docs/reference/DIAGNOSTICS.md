@@ -1,8 +1,11 @@
 # Diagnostics
 
-The catalog of diagnostic codes this repository raises. Status (2026-09-19):
-**empty**. Nothing raises a diagnostic yet. A code is added here in the change
-that first raises it.
+The catalog of diagnostic codes this repository raises. Status (2026-09-21):
+**two imported families, neither renamed yet**. The codes the arrived
+connectors raise are listed by their own `Diagnostics.h` and are tabulated here
+once DIAG-O1 gives them their names — one change over every connector, rather
+than a rename per import. A code that is *new* here is added to §2 in the
+change that first raises it.
 
 ## 1. The record
 
@@ -44,8 +47,8 @@ connectors. Their final names are DIAG-O1.
 
 | Family today | Codes | Arrives with |
 | --- | --- | --- |
-| `VRM_VMC_*` | 8: packet malformed, unsupported message, timestamp regression, duplicate bone, incomplete frame, source restarted, socket bind failed, stale joint | `motionConnectorVmc` |
-| `VRM_MOCOPI_*` | 9: socket bind failed, device unavailable, unsupported joint, packet malformed, tracking lost, timestamp invalid, source restarted, frame incomplete, non-finite transform | `motionConnectorMocopi` |
+| `VRM_VMC_*` | 8: packet malformed, unsupported message, timestamp regression, duplicate bone, incomplete frame, source restarted, socket bind failed, stale joint | `motionConnectorVmc` — **arrived 2026-09-21**, unrenamed |
+| `VRM_MOCOPI_*` | 9: socket bind failed, device unavailable, unsupported joint, packet malformed, tracking lost, timestamp invalid, source restarted, frame incomplete, non-finite transform | `motionConnectorMocopi` — **arrived 2026-09-21**, unrenamed |
 | `VRM_VRCHAT_OSC_*` | 10 | `motionConnectorVrchatOsc` |
 
 `liveTransport` and `osc` hold no code enum of their own: they report through
@@ -55,4 +58,4 @@ the connector that links them.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| DIAG-O1 | Code style and the renaming of the imported codes. The `VRM_` prefix is wrong here, because nothing in this repository is VRM's. Candidates: `VMC_*` / `MOCOPI_*` per connector with `CONNECTOR_*` for the core; or numbered codes, as `usd-motion-plugins`' design policy §29 proposes and its DIAG-O1 leaves open. Decide together with `usd-motion-plugins`, so the ecosystem has one style | the first import (`motionConnectorVmc`, v0.1.0) |
+| DIAG-O1 | Code style and the renaming of the imported codes. Deferred past the first two imports on purpose (2026-09-21): renaming a family per import would spend the same review twice and leave the ecosystem inconsistent in between. The `VRM_` prefix is wrong here, because nothing in this repository is VRM's. Candidates: `VMC_*` / `MOCOPI_*` per connector with `CONNECTOR_*` for the core; or numbered codes, as `usd-motion-plugins`' design policy §29 proposes and its DIAG-O1 leaves open. Decide together with `usd-motion-plugins`, so the ecosystem has one style | the last connector import, before v0.1.0 |

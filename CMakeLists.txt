@@ -93,6 +93,12 @@ add_subdirectory("libs/motionConnectorTracking")
 # usd-motion-plugins packages and both leaves; the recorder is a CLI over it.
 add_subdirectory("libs/motionConnectorVmc")
 add_subdirectory("tools/vmcRecord")
+# The mocopi connector and its recorder. Same shape as the VMC pair above: the
+# connector links three usd-motion-plugins packages and the transport leaf --
+# and not the wire format, because this protocol is not OSC -- and the recorder
+# is a CLI over it.
+add_subdirectory("libs/motionConnectorMocopi")
+add_subdirectory("tools/mocopiRecord")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)
