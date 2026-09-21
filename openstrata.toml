@@ -13,6 +13,7 @@ profile = "usd"
 # because older `ost` releases refused an empty one.
 [workspace]
 members = [
+    "libs/motionConnectorCore",
     "libs/motionConnectorTransport",
     "libs/motionConnectorOsc",
     "libs/motionConnectorTracking",
