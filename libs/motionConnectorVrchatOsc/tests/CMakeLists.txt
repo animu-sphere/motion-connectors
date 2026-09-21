@@ -15,6 +15,16 @@ target_compile_options(motionConnectorVrchatOsc_connector
 add_test(NAME motionConnectorVrchatOsc_connector
          COMMAND motionConnectorVrchatOsc_connector)
 
+add_executable(motionConnectorVrchatOsc_connector_corpus_tests
+    test_connector_corpus.cpp)
+target_link_libraries(motionConnectorVrchatOsc_connector_corpus_tests
+    PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+target_compile_options(motionConnectorVrchatOsc_connector_corpus_tests
+    PRIVATE ${_vrchatosc_assertions})
+add_test(NAME motionConnectorVrchatOsc_connectorCorpus
+         COMMAND motionConnectorVrchatOsc_connector_corpus_tests
+                 "${CMAKE_CURRENT_SOURCE_DIR}/corpus")
+
 add_executable(motionConnectorVrchatOsc_tests test_vrm_adapter_vrchat_osc.cpp)
 target_link_libraries(motionConnectorVrchatOsc_tests
     PRIVATE motionConnectorVrchatOsc::motionConnectorVrchatOsc)
@@ -145,7 +155,8 @@ file(GLOB _vrchatosc_captures CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/corpus/*/*.vrchatoscpackets"
      "${CMAKE_CURRENT_SOURCE_DIR}/corpus/*/*/*.vrchatoscpackets")
 set(_vrchatosc_tests
-    motionConnectorVrchatOsc_connector motionConnectorVrchatOsc_unit
+    motionConnectorVrchatOsc_connector motionConnectorVrchatOsc_connectorCorpus
+    motionConnectorVrchatOsc_unit
     motionConnectorVrchatOsc_packetCapture
     motionConnectorVrchatOsc_addressInventory motionConnectorVrchatOsc_trackerMessage
     motionConnectorVrchatOsc_trackingSpace motionConnectorVrchatOsc_frameAssembler

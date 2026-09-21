@@ -18,6 +18,18 @@ if(MSVC)
 endif()
 add_test(NAME motionConnectorVmc_connector COMMAND motionConnectorVmc_connector_tests)
 
+add_executable(motionConnectorVmc_connector_corpus_tests test_connector_corpus.cpp)
+target_link_libraries(motionConnectorVmc_connector_corpus_tests
+    PRIVATE motionConnectorVmc::motionConnectorVmc)
+target_compile_options(motionConnectorVmc_connector_corpus_tests
+    PRIVATE ${_vmc_assertions})
+if(MSVC)
+    target_compile_options(motionConnectorVmc_connector_corpus_tests PRIVATE /utf-8)
+endif()
+add_test(NAME motionConnectorVmc_connectorCorpus
+         COMMAND motionConnectorVmc_connector_corpus_tests
+                 "${CMAKE_CURRENT_SOURCE_DIR}/corpus")
+
 add_executable(motionConnectorVmc_tests test_vrm_adapter_vmc.cpp)
 target_link_libraries(motionConnectorVmc_tests PRIVATE motionConnectorVmc::motionConnectorVmc)
 target_compile_options(motionConnectorVmc_tests
@@ -109,7 +121,8 @@ set_tests_properties(motionConnectorVmc_udpReceiverTruncation PROPERTIES
     SKIP_RETURN_CODE 77)
 
 set(_vmc_tests
-    motionConnectorVmc_connector motionConnectorVmc_unit motionConnectorVmc_packetCapture motionConnectorVmc_oscPacket
+    motionConnectorVmc_connector motionConnectorVmc_connectorCorpus
+    motionConnectorVmc_unit motionConnectorVmc_packetCapture motionConnectorVmc_oscPacket
     motionConnectorVmc_vmcMessage motionConnectorVmc_skeletonMap
     motionConnectorVmc_frameAssembler motionConnectorVmc_liveSource
     motionConnectorVmc_udpReceiver motionConnectorVmc_udpReceiverTruncation)

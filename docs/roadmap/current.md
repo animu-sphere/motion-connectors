@@ -47,8 +47,12 @@ into the shared layer.
 
 - ✅ Add `motion_connect dump`, `list` and `inspect` over `MotionFrame`; the
   remaining CLI work is the later `record` / `bridge` scope.
-- ⬜ Re-run the imported capture/replay evidence through the unified contract
-  and verify the packages from a clean installed prefix.
+- ✅ Re-run the imported capture/replay evidence through the unified contract
+  and verify the packages from a clean installed prefix. The three connector
+  corpus tests exercise `Open` → `PushDatagram` → `Poll` for every committed
+  capture, using each protocol's required end-of-capture handling, and
+  `workspace_installed_consumer` consumes the installed package set outside
+  the repository.
 - ⬜ Confirm that `usd-vrm-plugins` no longer consumes the imported libraries
   after its migration cleanup.
 - ⬜ Audit the imported `--export-trace` paths. Keep raw packet/session capture

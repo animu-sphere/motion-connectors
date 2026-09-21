@@ -12,10 +12,9 @@
 #       cmake --build build --config Release
 #       ctest --test-dir build -C Release
 #
-# The scaffold holds no component yet. Each identity WORKSPACE.md §1 reserves
-# arrives as a self-contained CMake project (so `ost` can build it standalone)
-# that is also add_subdirectory()-able from here, and is named below in full,
-# in the dependency order of WORKSPACE.md §2.1.
+# Each identity in WORKSPACE.md §1 arrives as a self-contained CMake project
+# (so `ost` can build it standalone) that is also add_subdirectory()-able from
+# here, and is named below in the dependency order of WORKSPACE.md §2.1.
 #
 # Every connector is optional (WORKSPACE.md §4): each gets a
 # MOTIONCONNECTORS_BUILD_<NAME> option, OFF unless asked for, in the change that
