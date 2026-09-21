@@ -56,6 +56,11 @@ add_test(NAME motion_connect_dump_vrchat_osc
             --tool "$<TARGET_FILE:motion_connect>"
             --mode dump
             --source vrchat-osc)
+add_test(NAME motion_connect_arguments
+    COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_motion_connect.py"
+            --tool "$<TARGET_FILE:motion_connect>"
+            --mode arguments)
 
 if(WIN32)
     if(TARGET gf)
@@ -75,6 +80,7 @@ if(WIN32)
                          motion_connect_inspect_vrchat_osc
                          motion_connect_dump_vmc
                          motion_connect_dump_mocopi
-                         motion_connect_dump_vrchat_osc PROPERTIES
+                         motion_connect_dump_vrchat_osc
+                         motion_connect_arguments PROPERTIES
         ENVIRONMENT_MODIFICATION "${_motionconnect_test_path}")
 endif()

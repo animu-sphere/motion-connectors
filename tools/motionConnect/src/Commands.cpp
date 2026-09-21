@@ -107,6 +107,10 @@ TakeValue(int argc, char** argv, int* index, std::string_view flag, std::string*
 bool
 ParseCount(std::string_view text, std::size_t* value)
 {
+    if (text.empty() || text.front() == '-')
+    {
+        return false;
+    }
     try
     {
         std::size_t consumed = 0;

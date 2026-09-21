@@ -68,10 +68,26 @@ def check_dump(tool: pathlib.Path, source: str) -> None:
     print(f"motion_connect dump: {source} opened a loopback receiver")
 
 
+def check_arguments(tool: pathlib.Path) -> None:
+    result = subprocess.run(
+        [str(tool), "dump", "--source", "vmc", "--max-frames", "-1"],
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 2 or "whole number" not in result.stderr:
+        fail("negative --max-frames was not rejected:\n"
+             f"exit={result.returncode}\n{result.stderr}")
+    print("motion_connect arguments: negative frame counts are rejected")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tool", type=pathlib.Path, required=True)
-    parser.add_argument("--mode", choices=("list", "inspect", "dump"), required=True)
+    parser.add_argument("--mode", choices=("list", "inspect", "dump", "arguments"),
+                        required=True)
     parser.add_argument("--source")
     parser.add_argument("--capture", type=pathlib.Path)
     parser.add_argument("--profile")
@@ -84,10 +100,12 @@ def main() -> int:
             fail("inspect requires --source, --capture, and --profile")
         check_inspect(arguments.tool, arguments.source, arguments.capture,
                       arguments.profile)
-    else:
+    elif arguments.mode == "dump":
         if not arguments.source:
             fail("dump requires --source")
         check_dump(arguments.tool, arguments.source)
+    else:
+        check_arguments(arguments.tool)
     return 0
 
 
