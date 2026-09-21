@@ -10,3 +10,16 @@
 # USDA fixtures check out with LF everywhere: a CRLF smudge changes the content
 # of a multi-line string (usd-vrm-plugins, PR #42).
 *.usda text eol=lf
+
+# Recorded capture traces, for the same reason as the captures above: a trace
+# is re-emitted through usd-motion-plugins' writer and compared as bytes. The
+# rule is declared here so an import that brings traces does not have to
+# remember it.
+#
+# These fixtures must stay `binary` and NOT `text eol=lf`: a later `text` rule
+# overrides `binary`, which re-enables CRLF -> LF normalization on `git add`
+# and silently strips 0x0D bytes out of a datagram that happens to contain the
+# pair 0x0D 0x0A. `binary` already suppresses every smudge and clean filter,
+# which is the whole of what a byte-compare corpus needs on a Windows
+# checkout.
+*.trace binary

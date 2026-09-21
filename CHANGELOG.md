@@ -8,6 +8,45 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorVmc` and `vmc_record`, imported from `usd-vrm-plugins`'
+  `vrmAdapterVmc` with their history** (that repository's MIG-4). VMC Protocol
+  decode, frame assembly and `vmc.v1`, under `openstrata::connectors::vmc`,
+  with the recorder at `tools/vmcRecord/` — the root `tools/`, where
+  [WORKSPACE.md §2.1](docs/architecture/WORKSPACE.md#21-inside-the-repository)'s
+  diagram puts every tool. New CTest names: `motionConnectorVmc_vmcMessage`,
+  `_frameAssembler`, `_liveSource`, `_skeletonMap`, `_oscPacket`,
+  `_packetCapture`, `_udpReceiver`, `_corpus`, `_boundaries`, and
+  `vmc_record_inspect`, `_loopback`.
+  - **What was one `motionRuntime` is two packages here.** The frame assembler
+    reads `motionSampling`'s source interface and the live source writes
+    `motionRecording`'s capture trace, so the descriptor pins both beside
+    `motionCore` — three digest-pinned artifacts and the two leaves already
+    here.
+  - The pose's provenance changed shape with the move, not meaning: an absent
+    optional said "this stamped nothing" and the default `SourceMetadata` says
+    it now.
+  - **The VMC → rig end-to-end leg is deliberately not here.** Its last step
+    bakes a session onto an avatar with a retarget CLI, and this repository has
+    neither and will have neither — §2.3 points every edge at
+    `usd-motion-plugins` and none at a consumer. The leg stays in
+    `usd-vrm-plugins`, as `motion_record_replay`'s bake did.
+  - `cmake/MotionConnectorsUtf8CodePage.cmake` arrives with the recorder: a
+    Windows CLI handed a non-ASCII path needs its process code page to be
+    UTF-8, or it passes OpenUSD bytes it cannot decode.
+  - `.gitattributes` gains `*.trace binary`, beside the `*.vmcpackets` and
+    `*.mocopipackets` rules already here. A byte-compare fixture must not be
+    normalized on a Windows checkout, and `binary` is what says so: a later
+    `text eol=lf` rule overrides it and puts CRLF → LF back on `git add`, which
+    strips a 0x0D out of any datagram carrying the pair 0x0D 0x0A.
+
+### Fixed
+
+- **The imported boundary check had a hole, and it was measured.** Its
+  forbidden-neighbour rule asked for `mocopi`, so a symbol named
+  `motionConnectorMocopiProbe` — word characters on both sides — walked
+  straight through it. A forbidden name matches as a prefix now, and the
+  mutation that exposed it fails the check by file.
+
 - **`motionConnectorTracking`, imported from `usd-vrm-plugins`' `motionTracking`
   with its history** (that repository's MIG-4). Tracker regions, assignment and
   the tracker solve, under `openstrata::connectors::tracking`. New CTest names:

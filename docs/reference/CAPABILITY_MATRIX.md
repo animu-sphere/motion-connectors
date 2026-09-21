@@ -33,7 +33,7 @@ implemented** (`motionConnectorTransport`, `motionConnectorOsc`,
 
 | Source | Profile | Body | Hands | Face | Root | Trackers | Status | Implemented elsewhere | Release |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| VMC Protocol | `vmc.v1` | — | — | — | — | | — | `usd-vrm-plugins` `vrmAdapterVmc` | v0.1.0 |
+| VMC Protocol | `vmc.v1` | ✅ | ✅ | ✅ | ✅ | | supported — `motionConnectorVmc_vmcMessage`, `_frameAssembler`, `_liveSource`, `_skeletonMap`, `_corpus`, `_udpReceiver`, `_packetCapture`, and `vmc_record`'s inspect and loopback | — (imported 2026-09-21) | v0.1.0 |
 | mocopi native UDP | `mocopi.body.v1` | — | | | — | | — | `usd-vrm-plugins` `vrmAdapterMocopi` | v0.1.0 |
 | VRChat OSC Trackers | `vrchat-osc.trackers.v1` | | | | | — | — | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | v0.1.0 |
 | WebSocket (`MotionFrame`) | — | — | — | — | — | — | — | nowhere | v0.2.0 |
@@ -50,7 +50,7 @@ An empty cell means that source cannot carry that part.
 | --- | --- | --- | --- |
 | `motion_connect dump` | — | nowhere | v0.1.0 |
 | `motion_connect list`, `inspect` | — | nowhere | v0.1.0 |
-| `motion_connect record`, `bridge` | — | `usd-vrm-plugins` `vmc_record`, `mocopi_record`, `vrchat_osc_record` (record only) | v0.2.0 |
+| `motion_connect record`, `bridge` | — | `vmc_record` is here (imported 2026-09-21, record only); `mocopi_record` and `vrchat_osc_record` are still `usd-vrm-plugins`' | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |
 | JS / TS package, WASM data ABI | — | nowhere | v0.3.0 |
 

@@ -89,6 +89,10 @@ add_subdirectory("libs/motionConnectorOsc")
 # on CMAKE_PREFIX_PATH before the build, so the find_package below resolves
 # against a materialized package rather than a sibling.
 add_subdirectory("libs/motionConnectorTracking")
+# The VMC connector and its recorder. The connector links three
+# usd-motion-plugins packages and both leaves; the recorder is a CLI over it.
+add_subdirectory("libs/motionConnectorVmc")
+add_subdirectory("tools/vmcRecord")
 
 # Workspace-level tests: the documentation, and the installed-consumer lane.
 if(MOTIONCONNECTORS_BUILD_TESTS)
