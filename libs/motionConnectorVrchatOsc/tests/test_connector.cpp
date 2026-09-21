@@ -43,6 +43,42 @@ PositionOnlyPacket(float x)
     return packet;
 }
 
+void
+TestReplayContextSurvivesTheConnectorBoundary(
+    const openstrata::connectors::core::ConnectorConfig& config)
+{
+    using namespace openstrata::connectors;
+    using core::ConnectorState;
+    using vrchatOsc::DiagnosticCode;
+    using vrchatOsc::VrchatOscConnector;
+
+    VrchatOscConnector replay;
+    assert(replay.Open(config));
+    assert(replay.PushPacket(CompletePacket(0.0f), 0.0, "peer-a") == 0);
+    assert(replay.PushPacket(CompletePacket(0.0f), 0.02, "peer-b") == 1);
+    assert(replay.GetState() == ConnectorState::Connected);
+    assert(!replay.GetDiagnostics().empty());
+    const auto& restart = replay.GetDiagnostics().back();
+    assert(restart.code == DiagnosticCode::SourceRestarted);
+    assert(restart.timestamp.has_value());
+    assert(*restart.timestamp == 0.02);
+    assert(restart.sequence.has_value());
+    assert(*restart.sequence == 2);
+
+    VrchatOscConnector malformed;
+    assert(malformed.Open(config));
+    const std::uint8_t bytes[] = {0x00};
+    assert(malformed.PushDatagram(bytes, sizeof(bytes), 0.25) == 0);
+    assert(malformed.GetDiagnostics().size() == 1);
+    const auto& refusal = malformed.GetDiagnostics().front();
+    assert(refusal.code == DiagnosticCode::PacketMalformed);
+    assert(refusal.source.rfind("127.0.0.1:", 0) == 0);
+    assert(refusal.timestamp.has_value());
+    assert(*refusal.timestamp == 0.25);
+    assert(refusal.sequence.has_value());
+    assert(*refusal.sequence == 1);
+}
+
 } // namespace
 
 int
@@ -115,6 +151,10 @@ main()
     assert(connector.GetState() == ConnectorState::Connected);
     assert(!connector.GetDiagnostics().empty());
     assert(connector.GetDiagnostics().back().code == DiagnosticCode::TrackerPartial);
+    assert(connector.GetDiagnostics().back().timestamp.has_value());
+    assert(*connector.GetDiagnostics().back().timestamp == 0.04);
+
+    TestReplayContextSurvivesTheConnectorBoundary(config);
 
     connector.Close();
     assert(connector.GetState() == ConnectorState::Disconnected);

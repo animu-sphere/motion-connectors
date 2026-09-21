@@ -36,9 +36,15 @@ class MOTIONCONNECTORVRCHATOSC_API VrchatOscConnector final
 
     // Hardware-free input paths used by replay and connector tests. Both paths
     // enqueue the same MotionFrame values that Poll returns after UDP receive.
+    // The peer overloads preserve per-datagram source identity from a capture,
+    // which is required for source-restart detection.
     std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size,
                              double receiveTimestamp);
+    std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size,
+                             double receiveTimestamp, std::string_view peer);
     std::size_t PushPacket(const TrackerPacket& packet, double receiveTimestamp);
+    std::size_t PushPacket(const TrackerPacket& packet, double receiveTimestamp,
+                           std::string_view peer);
 
     const std::vector<Diagnostic>&
     GetDiagnostics() const noexcept
@@ -59,6 +65,8 @@ class MOTIONCONNECTORVRCHATOSC_API VrchatOscConnector final
                             std::string_view peer);
     std::size_t _EnqueueFrames();
     void _StampDiagnostics(std::size_t from);
+    void _StampPacketDiagnostics(std::size_t from, std::size_t to,
+                                 double receiveTimestamp);
     openstrata::connectors::core::MotionFrame _MakeFrame(const TrackerFrame& frame);
 
     UdpReceiver _receiver;

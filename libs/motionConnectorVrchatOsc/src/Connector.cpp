@@ -124,13 +124,27 @@ std::size_t
 VrchatOscConnector::PushDatagram(const std::uint8_t* bytes, std::size_t size,
                                  double receiveTimestamp)
 {
-    return _PushPacket(DecodeTrackerDatagram(bytes, size), receiveTimestamp, {});
+    return PushDatagram(bytes, size, receiveTimestamp, {});
+}
+
+std::size_t
+VrchatOscConnector::PushDatagram(const std::uint8_t* bytes, std::size_t size,
+                                 double receiveTimestamp, std::string_view peer)
+{
+    return _PushPacket(DecodeTrackerDatagram(bytes, size), receiveTimestamp, peer);
 }
 
 std::size_t
 VrchatOscConnector::PushPacket(const TrackerPacket& packet, double receiveTimestamp)
 {
-    return _PushPacket(packet, receiveTimestamp, {});
+    return PushPacket(packet, receiveTimestamp, {});
+}
+
+std::size_t
+VrchatOscConnector::PushPacket(const TrackerPacket& packet, double receiveTimestamp,
+                               std::string_view peer)
+{
+    return _PushPacket(packet, receiveTimestamp, peer);
 }
 
 std::size_t
@@ -144,6 +158,8 @@ VrchatOscConnector::_PushPacket(const TrackerPacket& packet, double receiveTimes
     {
         _diagnostics.push_back(std::move(diagnostic));
     }
+    const std::size_t packetDiagnosticsEnd = _diagnostics.size();
+    _StampPacketDiagnostics(diagnosticsBefore, packetDiagnosticsEnd, receiveTimestamp);
 
     _source.Push(packet, receiveTimestamp, peer, &_frames, &_diagnostics);
     _StampDiagnostics(diagnosticsBefore);
@@ -156,6 +172,18 @@ VrchatOscConnector::_StampDiagnostics(std::size_t from)
     for (std::size_t index = from; index < _diagnostics.size(); ++index)
     {
         _diagnostics[index].source = _source.GetSource();
+        _diagnostics[index].sequence = _datagramSerial;
+    }
+}
+
+void
+VrchatOscConnector::_StampPacketDiagnostics(std::size_t from, std::size_t to,
+                                            double receiveTimestamp)
+{
+    for (std::size_t index = from; index < to; ++index)
+    {
+        _diagnostics[index].source = _source.GetSource();
+        _diagnostics[index].timestamp = receiveTimestamp;
         _diagnostics[index].sequence = _datagramSerial;
     }
 }
