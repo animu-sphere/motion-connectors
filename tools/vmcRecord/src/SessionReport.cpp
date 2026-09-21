@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "SessionReport.h"
 
-#include "motionRuntime/LiveCaptureSource.h"
+#include "motionRecording/LiveCaptureSource.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <string>
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace vmcRecordTool
 {
@@ -102,9 +104,9 @@ SessionReport::ObserveDatagram(const std::string& peer, std::size_t bytes, doubl
 }
 
 void
-SessionReport::ObserveFrames(const std::vector<vrmAdapterVmc::VmcFrame>& frames)
+SessionReport::ObserveFrames(const std::vector<vmc::VmcFrame>& frames)
 {
-    for (const vrmAdapterVmc::VmcFrame& frame : frames)
+    for (const vmc::VmcFrame& frame : frames)
     {
         ++_frames;
         if (frame.missing.any())
@@ -123,7 +125,7 @@ SessionReport::ObserveFrames(const std::vector<vrmAdapterVmc::VmcFrame>& frames)
         // The union across the session, because the vocabulary is the sender's
         // and an operator judging a capture wants to know which names it holds
         // -- not merely that some arrived.
-        for (const motion::ExpressionWeight& weight : frame.pose.expressions.entries)
+        for (const openstrata::motion::MotionChannel& weight : frame.pose.channels.entries)
         {
             _expressionNames.insert(weight.name);
         }
@@ -193,13 +195,13 @@ SessionReport::ObserveFrames(const std::vector<vrmAdapterVmc::VmcFrame>& frames)
 }
 
 void
-SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterVmc::Diagnostic>& log,
+SessionReport::ObserveDiagnostics(const std::vector<vmc::Diagnostic>& log,
                                   std::size_t from)
 {
     for (std::size_t i = from; i < log.size(); ++i)
     {
         const auto index = static_cast<std::size_t>(log[i].code);
-        if (index >= vrmAdapterVmc::DiagnosticCodeCount)
+        if (index >= vmc::DiagnosticCodeCount)
         {
             continue;
         }
@@ -212,16 +214,16 @@ SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterVmc::Diagnostic>& 
 }
 
 void
-SessionReport::Print(std::FILE* out, const vrmAdapterVmc::VmcLiveSource& source,
-                     const vrmAdapterVmc::UdpReceiver* receiver) const
+SessionReport::Print(std::FILE* out, const vmc::VmcLiveSource& source,
+                     const vmc::UdpReceiver* receiver) const
 {
-    const vrmAdapterVmc::VmcLiveSourceStats& bridge = source.GetStats();
-    const vrmAdapterVmc::VmcFrameStats& assembly = source.GetAssembler().GetStats();
-    const motion::LiveCaptureStats& intake = source.GetIntake().GetStats();
+    const vmc::VmcLiveSourceStats& bridge = source.GetStats();
+    const vmc::VmcFrameStats& assembly = source.GetAssembler().GetStats();
+    const openstrata::motion::LiveCaptureStats& intake = source.GetIntake().GetStats();
 
     if (receiver)
     {
-        const vrmAdapterVmc::UdpReceiverStats& socket = receiver->GetStats();
+        const vmc::UdpReceiverStats& socket = receiver->GetStats();
         std::fprintf(out, "listen:      %s%s, receive buffer %zu bytes\n",
                      receiver->GetBoundEndpoint().c_str(),
                      receiver->IsLoopbackOnly() ? " (loopback only: no other machine can reach it)"
@@ -286,7 +288,7 @@ SessionReport::Print(std::FILE* out, const vrmAdapterVmc::VmcLiveSource& source,
     std::fprintf(out,
                  "bones:       %zu of %zu observed; %llu accepted, "
                  "%llu duplicated, %llu unsupported, %llu malformed\n",
-                 _observed.count(), motion::HumanBoneCount,
+                 _observed.count(), openstrata::motion::HumanJointCount,
                  static_cast<unsigned long long>(assembly.bonesAccepted),
                  static_cast<unsigned long long>(assembly.bonesDuplicated),
                  static_cast<unsigned long long>(assembly.bonesUnsupported),
@@ -347,7 +349,7 @@ SessionReport::Print(std::FILE* out, const vrmAdapterVmc::VmcLiveSource& source,
     _PrintEvidence(out);
     _PrintDiagnostics(out);
 
-    const motion::MotionSourceMetadata& metadata = source.GetAssembler().GetSourceMetadata();
+    const openstrata::motion::SourceMetadata& metadata = source.GetAssembler().GetSourceMetadata();
     if (!metadata.sourceId.empty())
     {
         // Said rather than used. The title is in the recorded payload whatever
@@ -411,21 +413,21 @@ SessionReport::_PrintDiagnostics(std::FILE* out) const
         return;
     }
 
-    for (std::size_t index = 0; index < vrmAdapterVmc::DiagnosticCodeCount; ++index)
+    for (std::size_t index = 0; index < vmc::DiagnosticCodeCount; ++index)
     {
         if (_diagnostics[index] == 0)
         {
             continue;
         }
-        const auto code = static_cast<vrmAdapterVmc::DiagnosticCode>(index);
+        const auto code = static_cast<vmc::DiagnosticCode>(index);
         std::fprintf(out, "diagnostics: %llu x %s (%s)\n",
                      static_cast<unsigned long long>(_diagnostics[index]),
-                     std::string(vrmAdapterVmc::DiagnosticCodeString(code)).c_str(),
-                     std::string(vrmAdapterVmc::DiagnosticSeverityString(
-                                     vrmAdapterVmc::DiagnosticDefaultSeverity(code)))
+                     std::string(vmc::DiagnosticCodeString(code)).c_str(),
+                     std::string(vmc::DiagnosticSeverityString(
+                                     vmc::DiagnosticDefaultSeverity(code)))
                          .c_str());
         std::fprintf(out, "             first: %s\n",
-                     vrmAdapterVmc::FormatDiagnostic(_firstDiagnostic[index]).c_str());
+                     vmc::FormatDiagnostic(_firstDiagnostic[index]).c_str());
     }
 }
 

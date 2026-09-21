@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/OscPacket.h"
+#include "motionConnectorVmc/OscPacket.h"
 
 #include <utility>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // One refusal, one code. The shared decoder makes a single distinction -- a
@@ -37,4 +37,4 @@ DecodeOscPacket(const std::uint8_t* bytes, std::size_t size, OscPacket* packet,
     return false;
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

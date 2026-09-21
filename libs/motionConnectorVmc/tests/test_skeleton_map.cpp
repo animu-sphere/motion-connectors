@@ -14,15 +14,15 @@
 // stays a neutral pose through the basis change, and the arm-raise capture's
 // rotations about Unity's -Z come out about the canonical +Z, at the angles the
 // generator wrote.
-#include "vrmAdapterVmc/SkeletonMap.h"
+#include "motionConnectorVmc/SkeletonMap.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/OscPacket.h"
-#include "vrmAdapterVmc/PacketCapture.h"
-#include "vrmAdapterVmc/VmcMessage.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/OscPacket.h"
+#include "motionConnectorVmc/PacketCapture.h"
+#include "motionConnectorVmc/VmcMessage.h"
 
 #include "motionCore/Compare.h"
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <algorithm>
 #include <array>
@@ -37,23 +37,25 @@
 #include <string_view>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using motion::HumanBone;
-using motion::HumanBoneCount;
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::DiagnosticSeverity;
-using vrmAdapterVmc::FindVmcHumanBone;
-using vrmAdapterVmc::MapVmcBoneTransform;
-using vrmAdapterVmc::MapVmcRootTransform;
-using vrmAdapterVmc::ToCanonicalPosition;
-using vrmAdapterVmc::ToCanonicalRotation;
-using vrmAdapterVmc::VmcBoneSample;
-using vrmAdapterVmc::VmcHumanBoneName;
-using vrmAdapterVmc::VmcMessage;
-using vrmAdapterVmc::VmcMessageKind;
+using openstrata::motion::HumanJoint;
+using openstrata::motion::HumanJointCount;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::DiagnosticSeverity;
+using vmc::FindVmcHumanBone;
+using vmc::MapVmcBoneTransform;
+using vmc::MapVmcRootTransform;
+using vmc::ToCanonicalPosition;
+using vmc::ToCanonicalRotation;
+using vmc::VmcBoneSample;
+using vmc::VmcHumanBoneName;
+using vmc::VmcMessage;
+using vmc::VmcMessageKind;
 
 constexpr double kPi = 3.14159265358979323846;
 
@@ -102,9 +104,9 @@ void
 TestTheVocabularyIsWholeAndRoundTrips()
 {
     std::set<std::string_view> seen;
-    for (std::size_t index = 0; index != HumanBoneCount; ++index)
+    for (std::size_t index = 0; index != HumanJointCount; ++index)
     {
-        const HumanBone bone = static_cast<HumanBone>(index);
+        const HumanJoint bone = static_cast<HumanJoint>(index);
         const std::string_view name = VmcHumanBoneName(bone);
         assert(!name.empty());
         // Unity's spelling is PascalCase throughout, which is the cheap
@@ -113,8 +115,8 @@ TestTheVocabularyIsWholeAndRoundTrips()
         assert(seen.insert(name).second);
         assert(FindVmcHumanBone(name) == bone);
     }
-    assert(seen.size() == HumanBoneCount);
-    assert(VmcHumanBoneName(HumanBone::Count).empty());
+    assert(seen.size() == HumanJointCount);
+    assert(VmcHumanBoneName(HumanJoint::Count).empty());
     assert(!FindVmcHumanBone(""));
     assert(!FindVmcHumanBone("Hips "));
     assert(!FindVmcHumanBone("LastBone"));
@@ -127,23 +129,23 @@ TestTheThumbIsRenamedAndNotJustRecased()
     // incomplete: VRM 1.0 moved the thumb chain one joint down, so Unity's
     // "Proximal" is VRM 1.0's metacarpal and Unity's "Intermediate" is VRM
     // 1.0's proximal. Both directions, both hands.
-    assert(FindVmcHumanBone("LeftThumbProximal") == HumanBone::LeftThumbMetacarpal);
-    assert(FindVmcHumanBone("LeftThumbIntermediate") == HumanBone::LeftThumbProximal);
-    assert(FindVmcHumanBone("LeftThumbDistal") == HumanBone::LeftThumbDistal);
-    assert(FindVmcHumanBone("RightThumbProximal") == HumanBone::RightThumbMetacarpal);
-    assert(FindVmcHumanBone("RightThumbIntermediate") == HumanBone::RightThumbProximal);
-    assert(VmcHumanBoneName(HumanBone::LeftThumbMetacarpal) == "LeftThumbProximal");
-    assert(VmcHumanBoneName(HumanBone::LeftThumbProximal) == "LeftThumbIntermediate");
+    assert(FindVmcHumanBone("LeftThumbProximal") == HumanJoint::LeftThumbMetacarpal);
+    assert(FindVmcHumanBone("LeftThumbIntermediate") == HumanJoint::LeftThumbProximal);
+    assert(FindVmcHumanBone("LeftThumbDistal") == HumanJoint::LeftThumbDistal);
+    assert(FindVmcHumanBone("RightThumbProximal") == HumanJoint::RightThumbMetacarpal);
+    assert(FindVmcHumanBone("RightThumbIntermediate") == HumanJoint::RightThumbProximal);
+    assert(VmcHumanBoneName(HumanJoint::LeftThumbMetacarpal) == "LeftThumbProximal");
+    assert(VmcHumanBoneName(HumanJoint::LeftThumbProximal) == "LeftThumbIntermediate");
 
     // Unity has no name for the joint VRM 1.0 calls a metacarpal, and VRM 1.0
     // has none for the one Unity calls intermediate. A map that fell back to
     // case folding would resolve both and shift the chain by a joint.
     assert(!FindVmcHumanBone("LeftThumbMetacarpal"));
-    assert(!motion::FindHumanBone("leftThumbIntermediate"));
+    assert(!openstrata::motion::FindHumanJoint("leftThumbIntermediate"));
 
     // The fingers that were *not* renamed, so the thumb's shift is visibly the
     // exception rather than the rule.
-    assert(FindVmcHumanBone("LeftIndexIntermediate") == HumanBone::LeftIndexIntermediate);
+    assert(FindVmcHumanBone("LeftIndexIntermediate") == HumanJoint::LeftIndexIntermediate);
 }
 
 void
@@ -153,11 +155,11 @@ TestTheVrm10SpellingIsNotAccepted()
     // leave the corpus unable to say which spelling the protocol uses -- and
     // for the thumb the two vocabularies disagree about more than case, so
     // "accept either" is not even well defined.
-    for (std::size_t index = 0; index != HumanBoneCount; ++index)
+    for (std::size_t index = 0; index != HumanJointCount; ++index)
     {
-        const HumanBone bone = static_cast<HumanBone>(index);
-        assert(!FindVmcHumanBone(motion::HumanBoneName(bone)));
-        assert(!motion::FindHumanBone(VmcHumanBoneName(bone)));
+        const HumanJoint bone = static_cast<HumanJoint>(index);
+        assert(!FindVmcHumanBone(openstrata::motion::HumanJointName(bone)));
+        assert(!openstrata::motion::FindHumanJoint(VmcHumanBoneName(bone)));
     }
 }
 
@@ -195,7 +197,7 @@ TestRotationsReflectThroughXAndReverseSense()
     assert(Near(aboutZ.GetImaginary()[0], 0.0f));
     assert(Near(aboutZ.GetImaginary()[1], 0.0f));
     assert(Near(aboutZ.GetImaginary()[2], -sixtyHalf));
-    assert(Near(motion::AngleBetween(aboutZ, pxr::GfQuatf(1.0f, pxr::GfVec3f(0.0f))),
+    assert(Near(openstrata::motion::AngleBetween(aboutZ, pxr::GfQuatf(1.0f, pxr::GfVec3f(0.0f))),
                 static_cast<float>(kPi / 3.0)));
 
     // About +Y, the same flip.
@@ -240,7 +242,7 @@ TestRotationsAreNormalised()
     // component -- and how far apart float rounding leaves them is a platform's
     // business, not a claim this test should be making. What it claims is that
     // they are the same orientation by the measure `motionCore` defines.
-    assert(motion::AngleBetween(a, b) < motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(a, b) < openstrata::motion::MotionTolerance{}.angle);
 }
 
 void
@@ -255,8 +257,8 @@ TestARotationTooSmallToSquareIsStillNormalised()
     const float tiny = 1e-23f;
     const pxr::GfQuatf converted = ToCanonicalRotation({tiny, tiny, tiny, tiny});
     assert(Near(converted.GetLength(), 1.0f));
-    assert(motion::AngleBetween(converted, ToCanonicalRotation({1.0f, 1.0f, 1.0f, 1.0f})) <
-           motion::MotionTolerance{}.angle);
+    assert(openstrata::motion::AngleBetween(converted, ToCanonicalRotation({1.0f, 1.0f, 1.0f, 1.0f})) <
+           openstrata::motion::MotionTolerance{}.angle);
 
     // And it survives the layer, rather than only the arithmetic: this is the
     // magnitude `CheckTransform` admits, so the mapping is where an
@@ -270,7 +272,7 @@ TestARotationTooSmallToSquareIsStillNormalised()
 
     // The root goes through the same conversion and is worth naming, because it
     // is the one whose orientation multiplies into every bone below it.
-    motion::RootMotion root;
+    openstrata::motion::RootMotion root;
     assert(MapVmcRootTransform(RootMessage({0.0f, 0.0f, 0.0f}, {0.0f, tiny, 0.0f, tiny}), &root,
                                &diagnostic));
     assert(Near(root.worldOrientation.GetLength(), 1.0f));
@@ -288,7 +290,7 @@ TestABoneTransformBecomesCanonical()
     assert(MapVmcBoneTransform(
         BoneMessage("LeftUpperArm", {0.12f, 0.0f, 0.0f}, UnityAbout({0.0f, 0.0f, 1.0f}, 30.0)),
         &sample, &diagnostic));
-    assert(sample.bone == HumanBone::LeftUpperArm);
+    assert(sample.bone == HumanJoint::LeftUpperArm);
     assert(Near(sample.localPosition[0], -0.12f));
     assert(sample.localRotation.GetImaginary()[2] < 0.0f);
     assert(Near(sample.localRotation.GetLength(), 1.0f));
@@ -302,7 +304,7 @@ TestAnUnknownBoneIsUnsupportedNotMalformed()
     // costs that bone and keeps the frame.
     Diagnostic diagnostic;
     VmcBoneSample sample;
-    sample.bone = HumanBone::Head;
+    sample.bone = HumanJoint::Head;
     assert(
         !MapVmcBoneTransform(BoneMessage("LeftPinkyProximal", {0.0f, 0.0f, 0.0f}, kUnityIdentity),
                              &sample, &diagnostic));
@@ -312,7 +314,7 @@ TestAnUnknownBoneIsUnsupportedNotMalformed()
     assert(diagnostic.subject == "LeftPinkyProximal");
     // Untouched on failure, so a caller reusing one sample across a frame
     // cannot mistake the previous bone for this one.
-    assert(sample.bone == HumanBone::Head);
+    assert(sample.bone == HumanJoint::Head);
 }
 
 void
@@ -346,7 +348,7 @@ TestTheGuardsRefuseRatherThanDereference()
 {
     Diagnostic diagnostic;
     VmcBoneSample sample;
-    motion::RootMotion root;
+    openstrata::motion::RootMotion root;
 
     // A message of the wrong kind, and a null destination: both are caller
     // bugs, and both are reported rather than trusted.
@@ -369,7 +371,7 @@ TestTheGuardsRefuseRatherThanDereference()
 void
 TestARootTransformCarriesNoVelocity()
 {
-    motion::RootMotion root;
+    openstrata::motion::RootMotion root;
     // Pre-filled with a velocity from a previous frame: the mapping defines the
     // whole value, so nothing stale survives it.
     root.linearVelocity = pxr::GfVec3f(1.0f, 2.0f, 3.0f);
@@ -476,9 +478,9 @@ CheckCorpus(const std::filesystem::path& directory)
         }
         covered.insert(name);
 
-        vrmAdapterVmc::PacketCapture capture;
-        vrmAdapterVmc::PacketCaptureError error;
-        if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vmc::PacketCapture capture;
+        vmc::PacketCaptureError error;
+        if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -486,15 +488,15 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         Mapped actual;
-        for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+        for (const vmc::RecordedDatagram& datagram : capture.datagrams)
         {
-            vrmAdapterVmc::OscPacket osc;
-            if (!vrmAdapterVmc::DecodeOscPacket(datagram.bytes, &osc))
+            vmc::OscPacket osc;
+            if (!vmc::DecodeOscPacket(datagram.bytes, &osc))
             {
                 continue;
             }
-            vrmAdapterVmc::VmcPacket vmc;
-            vrmAdapterVmc::DecodeVmcPacket(osc, &vmc);
+            vmc::VmcPacket vmc;
+            vmc::DecodeVmcPacket(osc, &vmc);
 
             for (const VmcMessage& message : vmc.messages)
             {
@@ -530,20 +532,20 @@ CheckCorpus(const std::filesystem::path& directory)
                                      static_cast<double>(sample.localPosition[0]));
                         ++failures;
                     }
-                    if (motion::AngleBetween(sample.localRotation,
+                    if (openstrata::motion::AngleBetween(sample.localRotation,
                                              pxr::GfQuatf(1.0f, pxr::GfVec3f(0.0f))) >
-                        motion::MotionTolerance{}.angle)
+                        openstrata::motion::MotionTolerance{}.angle)
                     {
                         actual.everyRotationIsIdentity = false;
                     }
-                    if (sample.bone == HumanBone::LeftUpperArm)
+                    if (sample.bone == HumanJoint::LeftUpperArm)
                     {
                         actual.leftUpperArm.push_back(sample.localRotation);
                     }
                 }
                 else if (message.kind == VmcMessageKind::RootTransform)
                 {
-                    motion::RootMotion root;
+                    openstrata::motion::RootMotion root;
                     if (!MapVmcRootTransform(message, &root, &diagnostic))
                     {
                         ++actual.refused;
@@ -602,7 +604,7 @@ CheckCorpus(const std::filesystem::path& directory)
                 const float expected = static_cast<float>(15.0 * index * kPi / 180.0);
                 ok = rotation.GetImaginary()[0] == 0.0f && rotation.GetImaginary()[1] == 0.0f &&
                      rotation.GetImaginary()[2] >= 0.0f &&
-                     std::abs(motion::AngleBetween(rotation, identity) - expected) < 1e-4f;
+                     std::abs(openstrata::motion::AngleBetween(rotation, identity) - expected) < 1e-4f;
             }
             if (!ok)
             {
@@ -669,6 +671,6 @@ main(int argc, char** argv)
     TestAValueThatIsNotATransformIsRefused();
     TestTheGuardsRefuseRatherThanDereference();
     TestARootTransformCarriesNoVelocity();
-    std::puts("vrmAdapterVmc skeleton map tests passed");
+    std::puts("motionConnectorVmc skeleton map tests passed");
     return 0;
 }

@@ -16,4 +16,6 @@ members = [
     "libs/motionConnectorTransport",
     "libs/motionConnectorOsc",
     "libs/motionConnectorTracking",
+    "libs/motionConnectorVmc",
+    "tools/vmcRecord",
 ]

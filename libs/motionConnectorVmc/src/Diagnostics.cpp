@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/Diagnostics.h"
+#include "motionConnectorVmc/Diagnostics.h"
 
 #include <array>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 namespace
 {
 
-using liveTransport::DiagnosticCodeEntry;
+using transport::DiagnosticCodeEntry;
 
 // One table, in enum order. Severity and recoverability live here rather than
 // at each raise site so that two call sites cannot report the same code two
@@ -18,7 +18,7 @@ using liveTransport::DiagnosticCodeEntry;
 //
 // The table is what stayed in this adapter when everything around it moved. Its
 // rows are this protocol's failure modes and nothing else's, which is exactly
-// why a shared library may not hold one (liveTransport/Diagnostics.h).
+// why a shared library may not hold one (motionConnectorTransport/Diagnostics.h).
 constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
     {"VRM_VMC_PACKET_MALFORMED", DiagnosticSeverity::Warning, true},
     {"VRM_VMC_UNSUPPORTED_MESSAGE", DiagnosticSeverity::Info, true},
@@ -30,7 +30,7 @@ constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
     {"VRM_VMC_STALE_JOINT", DiagnosticSeverity::Warning, true},
 }};
 
-constexpr liveTransport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
+constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
 
 } // namespace
 
@@ -74,7 +74,7 @@ FormatDiagnostic(const Diagnostic& diagnostic)
 {
     // Resolving the code is the one step only this adapter can take, so it is
     // the one argument the shared formatter cannot supply itself.
-    return liveTransport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
+    return transport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Enforce vrmAdapterVmc's leaf boundary.
+"""Enforce motionConnectorVmc's leaf boundary.
 
 WORKSPACE.md §2 gives an adapter library exactly four edges — motionCore,
-motionRuntime, liveTransport and osc — and forbids the rest: vrmSchema, every USD
+motionRuntime, motionConnectorTransport and osc — and forbids the rest: vrmSchema, every USD
 file-format bundle, `vrmRetarget` (the library), OpenExec, `ExecIr`, and every
 sibling adapter. It also may not be a plugin bundle (§1), so a plugin manifest
 or a plugInfo.json anywhere under the adapter is a failure by itself.
@@ -14,7 +14,7 @@ deliberate, and all three come straight from the contract:
 * **Transport is allowed here.** A socket in `motionRuntime` is a violation; a
   socket in an adapter is the adapter's job (motion policy §8.2). This script
   therefore does not scan for one. Since OSC-2 the adapter reaches one through
-  `liveTransport` rather than opening it here, which narrows what this file
+  `motionConnectorTransport` rather than opening it here, which narrows what this file
   contains but not what it is permitted to contain.
 * **An address literal is allowed here, and only here.** `libs/osc` is refused
   one anywhere in its sources, tests included, because a decoder that knows one
@@ -134,7 +134,7 @@ def _report(errors: list[str]) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print("vrmAdapterVmc boundary check passed")
+    print("motionConnectorVmc boundary check passed")
     return 0
 
 
@@ -185,10 +185,20 @@ def main() -> int:
     # adapter's TOOL and not on the adapter, and this is the only place that
     # prohibition is enforceable -- which is the same argument, read from the
     # other end, that `motionTracking`'s own check makes about the bone enum.
+    # Every neighbour this connector may not name: the sibling connectors here,
+    # the other protocols' vocabulary, and the consumer repositories' libraries.
+    #
+    # A forbidden name matches as a PREFIX and not as a whole word. The
+    # imported pattern asked for `\bmocopi\b`, and a symbol named
+    # `motionConnectorMocopiProbe` has word characters on both sides of the
+    # name, so the boundary the rule wanted is not there and the symbol walked
+    # straight through. Measured: a probe exactly like that passed this check
+    # until the trailing boundary came off.
     forbidden_neighbours = re.compile(
+        r"motionConnector(?:Mocopi|VrchatOsc|Tracking|Core|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm\w*|execMotion|execVrm|"
-        r"vrmAdapterMocopi|vrmAdapterVrchatOsc|vrmAdapterArdy|cgltf|mocopi|"
-        r"vrchat|ardy|motionTracking)\b",
+        r"vrmAdapter\w*|cgltf|ardy)\b|"
+        r"\b(?:mocopi|vrchat)\w*",
         re.IGNORECASE)
     for area in (source / "include", source / "src"):
         for path in area.rglob("*"):
@@ -211,14 +221,21 @@ def main() -> int:
     # which *workspace* libraries an adapter may reach, and motion policy §8.2
     # puts the socket inside the adapter layer deliberately. They stay on this
     # list although OSC-2 removed both link lines -- they now arrive through
-    # `liveTransport`'s exported target -- because the permission is the
+    # `motionConnectorTransport`'s exported target -- because the permission is the
     # contract's and not this file's to withdraw. They are named individually
     # rather than by a pattern, so a third platform library still has to be
     # argued for here before it can be linked.
+    # What one `motionRuntime` was in usd-vrm-plugins is two packages here, and
+    # the two leaves have this repository's names. The socket primitives stay
+    # allowed by name even though this connector no longer links them: the
+    # transport's exported target carries them, and a future direct link should
+    # have to be argued for rather than silently permitted by removal.
     allowed_link = {
-        "vrmadaptervmc", "public", "private", "interface",
-        "motioncore::motioncore", "motionruntime::motionruntime",
-        "livetransport::livetransport", "osc::osc",
+        "motionconnectorvmc", "public", "private", "interface",
+        "motioncore::motioncore",
+        "motionsampling::motionsampling", "motionrecording::motionrecording",
+        "motionconnectortransport::motionconnectortransport",
+        "motionconnectorosc::motionconnectorosc",
         "ws2_32", "threads::threads",
     }
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
@@ -226,15 +243,16 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "vrmAdapterVmc may link only motionCore, motionRuntime, "
-                    f"liveTransport and osc; CMakeLists.txt links `{token}`")
+                    "motionConnectorVmc may link only motionCore, "
+                    "motionSampling, motionRecording, motionConnectorTransport "
+                    f"and motionConnectorOsc; CMakeLists.txt links `{token}`")
 
     # An exported edge the package **config** does not resolve.
     #
     # The two checks above are about what may be linked; this one is about
     # whether a consumer of the *installed* package can link it at all. A
     # `PUBLIC` dependency lands in the exported target's
-    # `INTERFACE_LINK_LIBRARIES`, so `find_package(vrmAdapterVmc)` re-creates a target
+    # `INTERFACE_LINK_LIBRARIES`, so `find_package(motionConnectorVmc)` re-creates a target
     # naming `X::Y` — and if the config never called `find_dependency(X)`,
     # CMake fails at generate time with "the target was not found". It does not
     # search for it, even when that package's config is sitting in the same
@@ -246,14 +264,14 @@ def main() -> int:
     # library build` does the same. The path that breaks is a standalone
     # configure of this adapter or of its CLI — which is a stated PR
     # requirement (roadmap §12) and a manual step. Measured 2026-08-29: both
-    # `vrmAdapterVmc` and `vrmAdapterVrchatOsc` grew a `PUBLIC osc::osc` and
+    # `motionConnectorVmc` and `vrmAdapterVrchatOsc` grew a `PUBLIC osc::osc` and
     # neither config gained a `find_dependency(osc)`; all 17 CI lanes were
     # green and a two-line consumer project could not configure.
     #
     # One direction only. Every linked package must be resolved; a resolved
     # package that is not linked is not an error — `pxr` is exactly that here,
     # guarded and present because a transitive Gf target needs it.
-    config_path = source / "cmake" / "vrmAdapterVmcConfig.cmake.in"
+    config_path = source / "cmake" / "motionConnectorVmcConfig.cmake.in"
     config = config_path.read_text(encoding="utf-8")
     resolved = set(re.findall(r"find_dependency\s*\(\s*([A-Za-z0-9_]+)", config))
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
@@ -262,7 +280,7 @@ def main() -> int:
             if "::" not in token:
                 continue
             package = token.split("::")[0]
-            if package == "vrmAdapterVmc":
+            if package == "motionConnectorVmc":
                 continue
             if package not in resolved:
                 errors.append(

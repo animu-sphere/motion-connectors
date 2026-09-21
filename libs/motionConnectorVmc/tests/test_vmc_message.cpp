@@ -12,11 +12,11 @@
 // Corpus mode then runs both layers over every committed capture, which is
 // where the composition is checked: recorded bytes in, VMC messages out,
 // against counts derived from the generator's structure.
-#include "vrmAdapterVmc/VmcMessage.h"
+#include "motionConnectorVmc/VmcMessage.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/OscPacket.h"
-#include "vrmAdapterVmc/PacketCapture.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/OscPacket.h"
+#include "motionConnectorVmc/PacketCapture.h"
 
 #include <algorithm>
 #include <array>
@@ -29,19 +29,21 @@
 #include <string_view>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::DiagnosticSeverity;
-using vrmAdapterVmc::OscArgument;
-using vrmAdapterVmc::OscMessage;
-using vrmAdapterVmc::OscPacket;
-using vrmAdapterVmc::VmcMessage;
-using vrmAdapterVmc::VmcMessageKind;
-using vrmAdapterVmc::VmcMessageKindCount;
-using vrmAdapterVmc::VmcPacket;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::DiagnosticSeverity;
+using vmc::OscArgument;
+using vmc::OscMessage;
+using vmc::OscPacket;
+using vmc::VmcMessage;
+using vmc::VmcMessageKind;
+using vmc::VmcMessageKindCount;
+using vmc::VmcPacket;
 
 // ---------------------------------------------------------------------------
 // Building an OSC message by hand
@@ -136,7 +138,7 @@ Transform(const char* name, double px, double py, double pz, double qx, double q
 bool
 Decode(const Built& built, VmcMessage* out, Diagnostic* diagnostic = nullptr)
 {
-    return vrmAdapterVmc::DecodeVmcMessage(built.Get(), out, diagnostic);
+    return vmc::DecodeVmcMessage(built.Get(), out, diagnostic);
 }
 
 // ---------------------------------------------------------------------------
@@ -147,17 +149,17 @@ TestTheKindTableIsWholeAndAddressesRoundTrip()
     for (std::size_t index = 0; index < VmcMessageKindCount; ++index)
     {
         const auto kind = static_cast<VmcMessageKind>(index);
-        const std::string_view address = vrmAdapterVmc::VmcMessageKindAddress(kind);
+        const std::string_view address = vmc::VmcMessageKindAddress(kind);
         assert(!address.empty());
         assert(address.rfind("/VMC/Ext/", 0) == 0);
-        const auto found = vrmAdapterVmc::FindVmcMessageKind(address);
+        const auto found = vmc::FindVmcMessageKind(address);
         assert(found && *found == kind);
     }
     // Count is the "no message" value and names nothing.
-    assert(vrmAdapterVmc::VmcMessageKindAddress(VmcMessageKind::Count).empty());
-    assert(vrmAdapterVmc::VmcMessageKindTypeTags(VmcMessageKind::Count).empty());
-    assert(vrmAdapterVmc::VmcMessageKindTypeTags(VmcMessageKind::BoneTransform) == "sfffffff");
-    assert(vrmAdapterVmc::VmcMessageKindTypeTags(VmcMessageKind::BlendApply).empty());
+    assert(vmc::VmcMessageKindAddress(VmcMessageKind::Count).empty());
+    assert(vmc::VmcMessageKindTypeTags(VmcMessageKind::Count).empty());
+    assert(vmc::VmcMessageKindTypeTags(VmcMessageKind::BoneTransform) == "sfffffff");
+    assert(vmc::VmcMessageKindTypeTags(VmcMessageKind::BlendApply).empty());
 }
 
 void
@@ -168,7 +170,7 @@ TestEachKnownAddressDecodes()
     Diagnostic diagnostic;
     if (!Decode(availability, &message, &diagnostic))
     {
-        std::fprintf(stderr, "%s\n", vrmAdapterVmc::FormatDiagnostic(diagnostic).c_str());
+        std::fprintf(stderr, "%s\n", vmc::FormatDiagnostic(diagnostic).c_str());
         assert(false);
     }
     assert(message.kind == VmcMessageKind::Availability);
@@ -219,7 +221,7 @@ TestEachKnownAddressDecodes()
                      Transform("LeftUpperArm", 0.12, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));
     assert(Decode(bone, &message));
     assert(message.kind == VmcMessageKind::BoneTransform);
-    // Plain text. Whether "LeftUpperArm" is a `motion::HumanBone` is a question
+    // Plain text. Whether "LeftUpperArm" is a `openstrata::motion::HumanJoint` is a question
     // this layer must not be able to answer.
     assert(message.name == "LeftUpperArm");
     assert(message.transform.position[0] == 0.12f);
@@ -362,8 +364,8 @@ TestAKnownAddressWithTheWrongArgumentsIsMalformed()
         // Both tag strings, so a sender-compatibility surprise reads as "this
         // sender writes X where VMC says Y" rather than as a bare refusal.
         const std::string expected =
-            std::string(",") + std::string(vrmAdapterVmc::VmcMessageKindTypeTags(
-                                   *vrmAdapterVmc::FindVmcMessageKind(testCase.address)));
+            std::string(",") + std::string(vmc::VmcMessageKindTypeTags(
+                                   *vmc::FindVmcMessageKind(testCase.address)));
         if (diagnostic.detail.find(expected) == std::string::npos ||
             diagnostic.detail.find(testCase.carried) == std::string::npos)
         {
@@ -444,13 +446,13 @@ TestAPacketRefusesMessagesNotTheDatagram()
     // Seeded, because a receive loop accumulates across a session and a decoder
     // that cleared the vector would erase the frame before this one.
     std::vector<Diagnostic> diagnostics;
-    diagnostics.push_back(vrmAdapterVmc::MakeDiagnostic(DiagnosticCode::SourceRestarted, "seed"));
+    diagnostics.push_back(vmc::MakeDiagnostic(DiagnosticCode::SourceRestarted, "seed"));
 
     VmcPacket decoded;
     // False because one message was malformed -- the other five are in
     // `decoded` regardless, which is the difference from the OSC layer's
     // all-or-nothing.
-    assert(!vrmAdapterVmc::DecodeVmcPacket(packet, &decoded, &diagnostics));
+    assert(!vmc::DecodeVmcPacket(packet, &decoded, &diagnostics));
     assert(decoded.messages.size() == 4);
     assert(decoded.malformed == 1);
     assert(decoded.unsupported == 1);
@@ -478,7 +480,7 @@ TestAPacketRefusesMessagesNotTheDatagram()
     ignorable.messages.push_back(headset.Get());
     ignorable.messages.push_back(headset.Get());
     VmcPacket nothing;
-    assert(vrmAdapterVmc::DecodeVmcPacket(ignorable, &nothing));
+    assert(vmc::DecodeVmcPacket(ignorable, &nothing));
     assert(nothing.messages.empty());
     assert(nothing.unsupported == 2);
     assert(nothing.malformed == 0);
@@ -489,7 +491,7 @@ TestTheArgumentGuardsRefuseRatherThanDereference()
 {
     const Built bone("/VMC/Ext/Bone/Pos", Transform("Hips", 0.0, 0.9, 0.0, 0.0, 0.0, 0.0, 1.0));
     Diagnostic diagnostic;
-    assert(!vrmAdapterVmc::DecodeVmcMessage(bone.Get(), nullptr, &diagnostic));
+    assert(!vmc::DecodeVmcMessage(bone.Get(), nullptr, &diagnostic));
     assert(diagnostic.code == DiagnosticCode::PacketMalformed);
 
     // The OSC layer emits one argument per type tag. A message where the two
@@ -498,19 +500,19 @@ TestTheArgumentGuardsRefuseRatherThanDereference()
     OscMessage truncated = bone.Get();
     truncated.arguments.resize(3);
     VmcMessage message;
-    assert(!vrmAdapterVmc::DecodeVmcMessage(truncated, &message, &diagnostic));
+    assert(!vmc::DecodeVmcMessage(truncated, &message, &diagnostic));
     assert(diagnostic.code == DiagnosticCode::PacketMalformed);
     assert(diagnostic.detail.find("8 argument(s) and 3 were given") != std::string::npos);
     assert(message.kind == VmcMessageKind::Count);
 
     OscPacket packet;
     packet.messages.push_back(bone.Get());
-    assert(!vrmAdapterVmc::DecodeVmcPacket(packet, nullptr));
+    assert(!vmc::DecodeVmcPacket(packet, nullptr));
 
     // No diagnostic is the documented default, and it must not crash either.
-    assert(!vrmAdapterVmc::DecodeVmcMessage(truncated, &message));
+    assert(!vmc::DecodeVmcMessage(truncated, &message));
     VmcPacket decoded;
-    assert(vrmAdapterVmc::DecodeVmcPacket(packet, &decoded));
+    assert(vmc::DecodeVmcPacket(packet, &decoded));
     assert(decoded.messages.size() == 1);
 }
 
@@ -551,7 +553,7 @@ constexpr Expected kExpected[] = {
     // the capture exists.
     {"malformed-forms.vmcpackets", 47, 0, 8, 0, {1, 2, 1, 2, 41, 0, 0}},
     // Eight of its ten datagrams never reach this layer -- the OSC decoder
-    // refuses them, which `vrmAdapterVmc_oscCorpus` is what pins. The two that
+    // refuses them, which `motionConnectorVmc_oscCorpus` is what pins. The two that
     // do are valid OSC outside what this adapter implements.
     {"malformed-packets.vmcpackets", 0, 2, 0, 0, {0, 0, 0, 0, 0, 0, 0}},
     {"mixed-traffic-30hz.vmcpackets", 83, 10, 0, 0, {1, 3, 1, 3, 63, 9, 3}},
@@ -581,7 +583,7 @@ struct Decoded
 };
 
 bool
-IsIdentity(const vrmAdapterVmc::VmcTransform& transform)
+IsIdentity(const vmc::VmcTransform& transform)
 {
     return transform.rotation[0] == 0.0f && transform.rotation[1] == 0.0f &&
            transform.rotation[2] == 0.0f && transform.rotation[3] == 1.0f;
@@ -641,9 +643,9 @@ CheckCorpus(const std::filesystem::path& directory)
         }
         covered.insert(name);
 
-        vrmAdapterVmc::PacketCapture capture;
-        vrmAdapterVmc::PacketCaptureError error;
-        if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vmc::PacketCapture capture;
+        vmc::PacketCaptureError error;
+        if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -651,21 +653,21 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         Decoded actual;
-        for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+        for (const vmc::RecordedDatagram& datagram : capture.datagrams)
         {
             OscPacket osc;
             // A datagram the OSC layer refuses never reaches this one. Which
             // eight of the malformed capture's ten those are is a claim
-            // `vrmAdapterVmc_oscCorpus` already makes; repeating it here would
+            // `motionConnectorVmc_oscCorpus` already makes; repeating it here would
             // move it rather than strengthen it.
-            if (!vrmAdapterVmc::DecodeOscPacket(datagram.bytes, &osc))
+            if (!vmc::DecodeOscPacket(datagram.bytes, &osc))
             {
                 continue;
             }
 
             VmcPacket vmc;
             std::vector<Diagnostic> diagnostics;
-            vrmAdapterVmc::DecodeVmcPacket(osc, &vmc, &diagnostics);
+            vmc::DecodeVmcPacket(osc, &vmc, &diagnostics);
             actual.decoded += vmc.messages.size();
             actual.unsupported += vmc.unsupported;
             actual.malformed += vmc.malformed;
@@ -681,7 +683,7 @@ CheckCorpus(const std::filesystem::path& directory)
             {
                 if (diagnostic.code == DiagnosticCode::PacketMalformed)
                 {
-                    actual.refusals.push_back(vrmAdapterVmc::FormatDiagnostic(diagnostic));
+                    actual.refusals.push_back(vmc::FormatDiagnostic(diagnostic));
                 }
             }
 
@@ -845,6 +847,6 @@ main(int argc, char** argv)
     TestArgumentsPastTheKnownFormAreCountedNotRead();
     TestAPacketRefusesMessagesNotTheDatagram();
     TestTheArgumentGuardsRefuseRatherThanDereference();
-    std::puts("vrmAdapterVmc VMC message tests passed");
+    std::puts("motionConnectorVmc VMC message tests passed");
     return 0;
 }

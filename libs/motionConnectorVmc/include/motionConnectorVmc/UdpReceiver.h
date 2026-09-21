@@ -13,7 +13,7 @@
 //
 // ## What is left in this file, and why it is not the socket
 //
-// The socket is `liveTransport`'s (liveTransport/UdpReceiver.h). This adapter
+// The socket is `motionConnectorTransport`'s (motionConnectorTransport/UdpReceiver.h). This adapter
 // and its sibling wrote the same receiver twice and had drifted by 210 lines
 // and four defects by the time the third live adapter arrived; the four were
 // merged into both copies first, and then the class moved
@@ -29,7 +29,7 @@
 // ## The silence timeout is still absent, and now for a visible reason
 //
 // The shared receiver has one; this adapter does not expose it, because
-// `VRM_VMC_*` has no code for silence and its own documentation argues it did
+// `MOTION_VMC_*` has no code for silence and its own documentation argues it did
 // not need a ninth. Inventing a second spelling of the sibling's
 // `VRM_MOCOPI_DEVICE_UNAVAILABLE` would be a contract change, and it is the
 // adapter plan's §8 to make, not this file's. The difference used to be a
@@ -43,22 +43,22 @@
 // including the ones a decoder would refuse. An over-long datagram is detected
 // and dropped rather than passed on half-read. `receiveTime` is seconds since
 // `Open` on a steady clock, which is the origin `vmc-packet-capture` records
-// against. All three are `liveTransport`'s to keep now, and its header is where
+// against. All three are `motionConnectorTransport`'s to keep now, and its header is where
 // each is argued.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/PacketCapture.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/PacketCapture.h"
+#include "motionConnectorVmc/api.h"
 
-#include "liveTransport/UdpReceiver.h"
+#include "motionConnectorTransport/UdpReceiver.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // The port VMC senders use unless they are told otherwise. Named rather than
@@ -70,12 +70,12 @@ inline constexpr std::uint16_t DefaultVmcPort = 39539;
 // The datagram, the status, the tally, and the opt-in queue are all the shared
 // library's. Only the configuration is restated, and only because this adapter
 // exposes four of its five fields (see the header).
-using liveTransport::DatagramQueue;
-using liveTransport::DatagramQueueConfig;
-using liveTransport::DatagramQueueStats;
-using liveTransport::ReceivedDatagram;
-using liveTransport::ReceiveStatus;
-using liveTransport::UdpReceiverStats;
+using transport::DatagramQueue;
+using transport::DatagramQueueConfig;
+using transport::DatagramQueueStats;
+using transport::ReceivedDatagram;
+using transport::ReceiveStatus;
+using transport::UdpReceiverStats;
 
 struct UdpReceiverConfig
 {
@@ -102,11 +102,11 @@ struct UdpReceiverConfig
 
 // A bound UDP socket, reporting this adapter's codes.
 //
-// Every member forwards to `liveTransport::UdpReceiver`. The two that do more
+// Every member forwards to `transport::UdpReceiver`. The two that do more
 // than forward are `Open` and the constructor of `UdpReceiverConfig`: the first
-// turns a `TransportEvent` into a `VRM_VMC_*` diagnostic, and the second is
+// turns a `TransportEvent` into a `MOTION_VMC_*` diagnostic, and the second is
 // where this adapter's port and its four-of-five configuration surface live.
-class VRMADAPTERVMC_API UdpReceiver final
+class MOTIONCONNECTORVMC_API UdpReceiver final
 {
   public:
     UdpReceiver() = default;
@@ -217,7 +217,7 @@ class VRMADAPTERVMC_API UdpReceiver final
     }
 
   private:
-    liveTransport::UdpReceiver _receiver;
+    transport::UdpReceiver _receiver;
 };
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

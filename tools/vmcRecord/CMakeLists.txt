@@ -12,14 +12,14 @@ cmake_minimum_required(VERSION 3.22)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION")
     file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION"
-         _vmc_record_version LIMIT_COUNT 1)
-    string(STRIP "${_vmc_record_version}" _vmc_record_version)
+         _vmcrecord_version LIMIT_COUNT 1)
+    string(STRIP "${_vmcrecord_version}" _vmcrecord_version)
 else()
-    set(_vmc_record_version "0.9.0")
+    set(_vmcrecord_version "0.1.0")
 endif()
 
 project(vmcRecordTool
-    VERSION ${_vmc_record_version}
+    VERSION ${_vmcrecord_version}
     DESCRIPTION "VMC session recorder"
     LANGUAGES CXX)
 
@@ -30,36 +30,36 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT DEFINED VMCRECORD_BUILD_TESTS)
-    if(DEFINED VRMADAPTERVMC_BUILD_TESTS)
-        set(_vmc_record_tests_default "${VRMADAPTERVMC_BUILD_TESTS}")
+    if(DEFINED MOTIONCONNECTORVMC_BUILD_TESTS)
+        set(_vmcrecord_tests_default "${MOTIONCONNECTORVMC_BUILD_TESTS}")
     else()
-        set(_vmc_record_tests_default "${PROJECT_IS_TOP_LEVEL}")
+        set(_vmcrecord_tests_default "${PROJECT_IS_TOP_LEVEL}")
     endif()
     option(VMCRECORD_BUILD_TESTS "Build vmc_record tests"
-           ${_vmc_record_tests_default})
+           ${_vmcrecord_tests_default})
 endif()
 
 # A standalone configure of this directory resolves the adapter as an installed
 # package; the composed build already has the in-tree target.
-if(NOT TARGET vrmAdapterVmc::vrmAdapterVmc)
-    find_package(vrmAdapterVmc REQUIRED CONFIG)
+if(NOT TARGET motionConnectorVmc::motionConnectorVmc)
+    find_package(motionConnectorVmc REQUIRED CONFIG)
 endif()
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../cmake/UsdVrmUtf8CodePage.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vmc_record
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
     src/main.cpp)
-usdvrm_use_utf8_code_page(vmc_record)
+motionconnectors_use_utf8_code_page(vmc_record)
 
 target_compile_features(vmc_record PRIVATE cxx_std_17)
 # The adapter, and deliberately nothing else. §2 would permit this target to
 # link `vrmRetarget` and OpenUSD's stage libraries the way `motion_retarget`
 # does; it does not need them, and a link line is the cheapest place to keep
 # that true.
-target_link_libraries(vmc_record PRIVATE vrmAdapterVmc::vrmAdapterVmc)
+target_link_libraries(vmc_record PRIVATE motionConnectorVmc::motionConnectorVmc)
 
 if(MSVC)
     target_compile_options(vmc_record PRIVATE /utf-8)

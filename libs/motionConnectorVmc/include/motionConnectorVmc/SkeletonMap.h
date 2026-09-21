@@ -3,13 +3,13 @@
 // VMC's names and VMC's axes, turned into canonical humanoid semantics. This is
 // the one conversion the adapter exists to perform
 // (roadmap/adapters-mocopi-vmc-ardy.md §2), and it is the first layer that
-// knows a `motion::HumanBone` exists.
+// knows a `openstrata::motion::HumanJoint` exists.
 //
 // It converts and it does not decide. A `VmcMessage` goes in, canonical values
 // come out; which of them belong to one frame, what a missing bone means, and
 // how the root and the hips combine are the frame assembler's business (§5.2)
 // and are deliberately not answered here. Nor does anything below resolve a
-// target joint: a bone becomes a `HumanBone` and stops, because the map from
+// target joint: a bone becomes a `HumanJoint` and stops, because the map from
 // there to `/Asset/skel/Skeleton` belongs to `vrmRetarget` and to the avatar's
 // own `vrm:humanBones` bindings (§5.1).
 //
@@ -21,7 +21,7 @@
 // bones and — for every bone but three — the same word in a different case. The
 // exception is the thumb, which VRM 1.0 renamed one joint down the chain:
 //
-//     Unity / VRM 0.x            VRM 1.0 / motion::HumanBone
+//     Unity / VRM 0.x            VRM 1.0 / openstrata::motion::HumanJoint
 //     LeftThumbProximal      ->  leftThumbMetacarpal
 //     LeftThumbIntermediate  ->  leftThumbProximal
 //     LeftThumbDistal        ->  leftThumbDistal
@@ -75,11 +75,11 @@
 // Milestone B collects and this layer stays out of.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/VmcMessage.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/VmcMessage.h"
+#include "motionConnectorVmc/api.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/quatf.h"
 #include "pxr/base/gf/vec3f.h"
@@ -88,31 +88,31 @@
 #include <optional>
 #include <string_view>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // The Unity `HumanBodyBones` spelling a VMC sender writes for `bone`, e.g.
-// "LeftUpperArm". Empty for `HumanBone::Count`.
-VRMADAPTERVMC_API std::string_view VmcHumanBoneName(motion::HumanBone bone) noexcept;
+// "LeftUpperArm". Empty for `HumanJoint::Count`.
+MOTIONCONNECTORVMC_API std::string_view VmcHumanBoneName(openstrata::motion::HumanJoint bone) noexcept;
 
 // The bone a VMC name denotes. Exact match on the Unity spelling; nullopt for
 // anything else, including the VRM 1.0 spelling of the same bone.
-VRMADAPTERVMC_API std::optional<motion::HumanBone> FindVmcHumanBone(std::string_view name) noexcept;
+MOTIONCONNECTORVMC_API std::optional<openstrata::motion::HumanJoint> FindVmcHumanBone(std::string_view name) noexcept;
 
 // The sender's axes into the canonical ones, with no validity check: a
 // non-finite input converts to a non-finite output rather than being caught
 // here, because these are the arithmetic and the mapping functions below are
 // the boundary.
-VRMADAPTERVMC_API pxr::GfVec3f ToCanonicalPosition(const std::array<float, 3>& position) noexcept;
+MOTIONCONNECTORVMC_API pxr::GfVec3f ToCanonicalPosition(const std::array<float, 3>& position) noexcept;
 
 // Also normalises. NaN components stay NaN, and a zero-length quaternion
 // converts to a zero-length one — neither is repaired here.
-VRMADAPTERVMC_API pxr::GfQuatf ToCanonicalRotation(const std::array<float, 4>& rotation) noexcept;
+MOTIONCONNECTORVMC_API pxr::GfQuatf ToCanonicalRotation(const std::array<float, 4>& rotation) noexcept;
 
 // One `/VMC/Ext/Bone/Pos` in canonical terms.
 struct VmcBoneSample
 {
-    motion::HumanBone bone = motion::HumanBone::Count;
+    openstrata::motion::HumanJoint bone = openstrata::motion::HumanJoint::Count;
 
     // Local to the bone's parent in the sender's rig — see the header comment
     // on what that does and does not promise about rest.
@@ -120,7 +120,7 @@ struct VmcBoneSample
 
     // The sender's local offset for this bone, converted. For every bone but
     // the hips this is the sender's own rig geometry rather than motion, and
-    // the canonical pose has nowhere to put it: `HumanoidPose` carries
+    // the canonical pose has nowhere to put it: `MotionPose` carries
     // rotations and one `RootMotion`, by the Phase A rule that only hips
     // translation is body translation. It is converted and handed on anyway,
     // because deciding what to do with the hips offset — drop it, or compose it
@@ -135,10 +135,10 @@ struct VmcBoneSample
 // with the name as its subject) or for a position or rotation that is not
 // finite, or a rotation of zero length (`VRM_VMC_PACKET_MALFORMED`). `out` is
 // left untouched on every failure.
-VRMADAPTERVMC_API bool MapVmcBoneTransform(const VmcMessage& message, VmcBoneSample* out,
+MOTIONCONNECTORVMC_API bool MapVmcBoneTransform(const VmcMessage& message, VmcBoneSample* out,
                                            Diagnostic* diagnostic = nullptr);
 
-// `/VMC/Ext/Root/Pos` into `motion::RootMotion`: position and orientation are
+// `/VMC/Ext/Root/Pos` into `openstrata::motion::RootMotion`: position and orientation are
 // set and flagged, and the two velocity fields are left absent. VMC reports no
 // velocity, and deriving one from consecutive frames is `LiveCaptureSource`'s
 // `DeriveVelocity` intake policy — an adapter that did it here would be a
@@ -146,7 +146,7 @@ VRMADAPTERVMC_API bool MapVmcBoneTransform(const VmcMessage& message, VmcBoneSam
 //
 // `message` must be a `VmcMessageKind::RootTransform`; the failures are the
 // bone function's, minus the name.
-VRMADAPTERVMC_API bool MapVmcRootTransform(const VmcMessage& message, motion::RootMotion* out,
+MOTIONCONNECTORVMC_API bool MapVmcRootTransform(const VmcMessage& message, openstrata::motion::RootMotion* out,
                                            Diagnostic* diagnostic = nullptr);
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

@@ -11,20 +11,20 @@
 //
 // The sender is in this file rather than in the library. §9.3 asks for a "test
 // sender", and that is what it is: the adapter receives, and a `UdpSender` in
-// `vrmAdapterVmc` would be a class no consumer of the adapter has a use for.
+// `motionConnectorVmc` would be a class no consumer of the adapter has a use for.
 //
 // Corpus mode makes the claim the whole layer is for: every committed capture,
 // replayed *through a socket*, produces exactly the poses the same bytes produce
 // when read from the file — and the arrival clock is the only thing the wire is
 // allowed to have changed.
-#include "vrmAdapterVmc/UdpReceiver.h"
+#include "motionConnectorVmc/UdpReceiver.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/FrameAssembler.h"
-#include "vrmAdapterVmc/LiveSource.h"
-#include "vrmAdapterVmc/PacketCapture.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/LiveSource.h"
+#include "motionConnectorVmc/PacketCapture.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <bitset>
 #include <cassert>
@@ -52,22 +52,25 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 #endif
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace
 {
 
-using vrmAdapterVmc::DatagramQueue;
-using vrmAdapterVmc::DatagramQueueConfig;
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::DiagnosticSeverity;
-using vrmAdapterVmc::ReceivedDatagram;
-using vrmAdapterVmc::ReceiveStatus;
-using vrmAdapterVmc::UdpReceiver;
-using vrmAdapterVmc::UdpReceiverConfig;
-using vrmAdapterVmc::VmcFrame;
-using vrmAdapterVmc::VmcLiveSource;
+using vmc::DatagramQueue;
+using vmc::DatagramQueueConfig;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::DiagnosticSeverity;
+using vmc::ReceivedDatagram;
+using vmc::ReceiveStatus;
+using vmc::UdpReceiver;
+using vmc::UdpReceiverConfig;
+using vmc::VmcFrame;
+using vmc::VmcLiveSource;
 
 // Long enough that a loopback datagram which has been handed to the kernel is
 // certainly readable, short enough that a genuinely lost one fails the suite
@@ -397,7 +400,7 @@ TestADatagramArrivesWholeWithItsSenderAndItsInstant()
     assert(receiver.Receive(&datagram, kLoopbackTimeout) == ReceiveStatus::Received);
     assert(datagram.bytes.empty());
 
-    const vrmAdapterVmc::UdpReceiverStats& stats = receiver.GetStats();
+    const vmc::UdpReceiverStats& stats = receiver.GetStats();
     assert(stats.datagramsReceived == 4);
     assert(stats.bytesReceived == small.size() * 2 + large.size());
     assert(stats.datagramsTruncated == 0);
@@ -554,11 +557,11 @@ TestAQueueAlwaysHoldsTheDatagramItWasLastGiven()
 
 struct Delivered
 {
-    motion::HumanoidPose pose;
+    openstrata::motion::MotionPose pose;
     bool beginsNewSession = false;
     bool timestampFromSender = false;
-    std::bitset<motion::HumanBoneCount> missing;
-    std::bitset<motion::HumanBoneCount> stale;
+    std::bitset<openstrata::motion::HumanJointCount> missing;
+    std::bitset<openstrata::motion::HumanJointCount> stale;
     std::size_t duplicateBones = 0;
 };
 
@@ -581,14 +584,14 @@ Collect(const VmcLiveSource& source, std::vector<Delivered>* out)
 // Replays a capture straight from the file, which is what every other corpus
 // test in this adapter does.
 std::vector<Delivered>
-ReplayFromFile(const vrmAdapterVmc::PacketCapture& capture, std::vector<DiagnosticCode>* codes)
+ReplayFromFile(const vmc::PacketCapture& capture, std::vector<DiagnosticCode>* codes)
 {
     VmcLiveSource source;
     source.SetSource("file");
 
     std::vector<Delivered> delivered;
     std::vector<Diagnostic> diagnostics;
-    for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vmc::RecordedDatagram& datagram : capture.datagrams)
     {
         source.PushDatagram(datagram.bytes, datagram.receiveTime, &diagnostics);
         Collect(source, &delivered);
@@ -608,7 +611,7 @@ ReplayFromFile(const vrmAdapterVmc::PacketCapture& capture, std::vector<Diagnost
 // the loss behaviour of a kernel receive buffer inside the assertion, which is
 // not what this test is about.
 bool
-ReplayFromWire(const vrmAdapterVmc::PacketCapture& capture, std::vector<Delivered>* delivered,
+ReplayFromWire(const vmc::PacketCapture& capture, std::vector<Delivered>* delivered,
                std::vector<DiagnosticCode>* codes)
 {
     UdpReceiver receiver;
@@ -632,7 +635,7 @@ ReplayFromWire(const vrmAdapterVmc::PacketCapture& capture, std::vector<Delivere
     // the shape the bridge says a receiver should have, and is checked here by
     // the poses coming out identical rather than by an assertion about bytes.
     ReceivedDatagram received;
-    for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vmc::RecordedDatagram& datagram : capture.datagrams)
     {
         if (!sender.Send(datagram.bytes))
         {
@@ -663,14 +666,14 @@ CheckTheWireChangesNothing(const std::filesystem::path& path)
 {
     const std::string name = path.filename().string();
 
-    vrmAdapterVmc::PacketCapture capture;
-    vrmAdapterVmc::PacketCaptureError error;
+    vmc::PacketCapture capture;
+    vmc::PacketCaptureError error;
     // Qualified, as the other 27 packet-capture call sites in this tree already
     // are. It used to reach this adapter by argument-dependent lookup, because
     // `PacketCapture` was declared in this namespace; the type is now
-    // `liveTransport`'s and ADL follows it there, where the reader takes a magic
+    // `motionConnectorTransport`'s and ADL follows it there, where the reader takes a magic
     // line as its first argument.
-    if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+    if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
     {
         std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
         return 1;
@@ -722,7 +725,7 @@ CheckTheWireChangesNothing(const std::filesystem::path& path)
         // point of `operator==` being *is this the same recorded value*
         // (MOTION_CONTRACT.md), which is a stronger claim than `NearlyEqual`
         // and the right one here, because both paths decoded the same bytes.
-        motion::HumanoidPose expected = file.pose;
+        openstrata::motion::MotionPose expected = file.pose;
         if (!file.timestampFromSender)
         {
             expected.timestamp = wire.pose.timestamp;
@@ -802,7 +805,7 @@ TestAReopenedReceiverCountsTheNewSessionAndNotTheLastOne()
     // sender and re-bound has.
     receiver.Close();
     assert(receiver.Open(LoopbackConfig()));
-    const vrmAdapterVmc::UdpReceiverStats& stats = receiver.GetStats();
+    const vmc::UdpReceiverStats& stats = receiver.GetStats();
     assert(stats.datagramsReceived == 0);
     assert(stats.bytesReceived == 0);
     assert(stats.idleReceives == 0);
@@ -863,7 +866,7 @@ CheckAnOverlongDatagramIsDroppedRatherThanHandedBackAsWhole()
 
     // Above the IPv4 bound the capture format enforces, below IPv6's own 65527
     // maximum. One byte over would do; a handful makes the intent legible.
-    const std::vector<std::uint8_t> overlong = Payload(vrmAdapterVmc::MaxDatagramBytes + 8, 0x00);
+    const std::vector<std::uint8_t> overlong = Payload(vmc::MaxDatagramBytes + 8, 0x00);
     if (!sender.Send(overlong))
     {
         std::puts("skipped: this host will not send an over-long datagram");
@@ -973,6 +976,6 @@ main(int argc, char** argv)
     TestAFullQueueDropsTheOldestAndCountsIt();
     TestTheQueueIsBoundedByBytesAsWellAsByCount();
     TestAQueueAlwaysHoldsTheDatagramItWasLastGiven();
-    std::puts("vrmAdapterVmc udp receiver tests passed");
+    std::puts("motionConnectorVmc udp receiver tests passed");
     return 0;
 }

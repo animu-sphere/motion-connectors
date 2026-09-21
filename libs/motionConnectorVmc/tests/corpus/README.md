@@ -2,20 +2,20 @@
 
 The fixtures the VMC decoder replays. Each `.vmcpackets` file is a recorded
 session in the format documented on
-[`PacketCapture.h`](../../include/vrmAdapterVmc/PacketCapture.h): line-oriented
+[`PacketCapture.h`](../../include/motionConnectorVmc/PacketCapture.h): line-oriented
 text, one `d` record per datagram, hex bytes with an ASCII gutter, deterministic
 to six decimals.
 
 **[`manifest.json`](manifest.json)** is the machine-readable source of truth
 (provenance, licence, datagram counts, the address patterns present, and the
 phenomenon each capture pins). Its measured fields are derived from the captures
-by `tools/generate_packets.py` and re-checked by `vrmAdapterVmc_packetGen`, so
+by `tools/generate_packets.py` and re-checked by `motionConnectorVmc_packetGen`, so
 they cannot drift out of agreement with the fixtures; its prose fields (`pins`,
 `tags`) are hand-written. This file is the operator's guide.
 
 ## Why packets and not traces
 
-A [`motion-capture-trace`](../../../../../libs/motionRuntime/include/motionRuntime/CaptureTrace.h)
+A [`motion-capture-trace`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/libs/motionRecording/include/motionRecording/CaptureTrace.h)
 records what an adapter *produced*. This records what it was *given*:
 
 ```text
@@ -32,7 +32,7 @@ formats exist because the adapter has two ends.
 
 A recording made from a commercial sender application carries that application's
 avatar, and the VRM corpus is already licence-gated for exactly that reason
-([CORPUS.md](../../../../../plugins/usdVrmFileFormat/tests/corpus/CORPUS.md)). A
+([CORPUS.md](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/plugins/usdVrmFileFormat/tests/corpus/CORPUS.md)). A
 fixture nobody outside the project may redistribute is a fixture CI cannot run —
 and the point of recording packets at all is that the adapter is verifiable with
 no hardware and no socket.
@@ -49,7 +49,7 @@ agree with the decoder by construction rather than by the protocol.
 protocol produces, not any particular application's quirks. Two real sender
 applications and a capture device relayed through one are Milestone B's, recorded
 with the record tool and added here as they are measured
-([the plan](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) §10).
+([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §10).
 
 ## The set
 
@@ -77,7 +77,7 @@ Five properties are deliberate and easy to lose:
   boundary from the clock's position. A corpus carrying only one of the two would
   let either convention pass as a rule, and the sender it did not record would
   come out off by half a frame with every rotation in it still correct —
-  which is why `vrmAdapterVmc_frameAssemblerCorpus` compares the two captures'
+  which is why `motionConnectorVmc_frameAssemblerCorpus` compares the two captures'
   frame counts and cadence against each other rather than each against a number.
 
 - **Every number is in the sender's axes, which are Unity's.** Left-handed, +Y
@@ -108,15 +108,15 @@ Five properties are deliberate and easy to lose:
 Every check runs under `ctest`:
 
 ```sh
-ctest -R vrmAdapterVmc_corpus            # every capture parses and round trips byte-identically
-ctest -R vrmAdapterVmc_packetGen         # the committed captures still match the generator
-ctest -R vrmAdapterVmc_oscCorpus         # what the datagrams decode to as OSC
-ctest -R vrmAdapterVmc_vmcCorpus         # what those OSC messages mean as VMC
-ctest -R vrmAdapterVmc_skeletonMapCorpus # what those VMC messages are in canonical terms
-ctest -R vrmAdapterVmc_frameAssemblerCorpus # which of those samples belong to one frame
+ctest -R motionConnectorVmc_corpus            # every capture parses and round trips byte-identically
+ctest -R motionConnectorVmc_packetGen         # the committed captures still match the generator
+ctest -R motionConnectorVmc_oscCorpus         # what the datagrams decode to as OSC
+ctest -R motionConnectorVmc_vmcCorpus         # what those OSC messages mean as VMC
+ctest -R motionConnectorVmc_skeletonMapCorpus # what those VMC messages are in canonical terms
+ctest -R motionConnectorVmc_frameAssemblerCorpus # which of those samples belong to one frame
 ```
 
-`vrmAdapterVmc_corpus` is the load-bearing one. It re-emits each committed
+`motionConnectorVmc_corpus` is the load-bearing one. It re-emits each committed
 capture through `WritePacketCapture` and compares bytes, so a fixture can never
 drift from the writer without turning a test red — which is what lets everything
 downstream compare a golden result rather than merely parse one. The two are not
@@ -136,5 +136,5 @@ canonical (a flipped payload byte, say) fails the second and not the first.
    capture and fills in every measured field of the manifest entry (datagrams,
    payload bytes, duration, address patterns, digest); `--check` then holds both
    to what it produced.
-4. Run `ctest -R vrmAdapterVmc_` and check the new capture appears in the corpus
+4. Run `ctest -R motionConnectorVmc_` and check the new capture appears in the corpus
    test's output.

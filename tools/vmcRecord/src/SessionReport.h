@@ -25,12 +25,12 @@
 // per frame and holds no reference into the source.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/FrameAssembler.h"
-#include "vrmAdapterVmc/LiveSource.h"
-#include "vrmAdapterVmc/UdpReceiver.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/LiveSource.h"
+#include "motionConnectorVmc/UdpReceiver.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <array>
 #include <bitset>
@@ -40,6 +40,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace vmcRecordTool
 {
@@ -70,12 +72,12 @@ class SessionReport
     // The frames one push produced. Called with the source's window straight
     // after every push, including the empty ones — a push that completes no
     // frame is the normal case for a per-message sender.
-    void ObserveFrames(const std::vector<vrmAdapterVmc::VmcFrame>& frames);
+    void ObserveFrames(const std::vector<vmc::VmcFrame>& frames);
 
     // The diagnostics one push appended. The caller's list is passed as the
     // slice this push added, so a caller accumulating a whole session's list
     // does not re-count it.
-    void ObserveDiagnostics(const std::vector<vrmAdapterVmc::Diagnostic>& log, std::size_t from);
+    void ObserveDiagnostics(const std::vector<vmc::Diagnostic>& log, std::size_t from);
 
     void
     SetStopReason(StopReason reason) noexcept
@@ -116,8 +118,8 @@ class SessionReport
     // Prints the block. `receiver` is null when the session came off a file:
     // the socket lines are then omitted rather than printed as zeroes, because
     // a bound endpoint a replay never had is not a fact about the replay.
-    void Print(std::FILE* out, const vrmAdapterVmc::VmcLiveSource& source,
-               const vrmAdapterVmc::UdpReceiver* receiver) const;
+    void Print(std::FILE* out, const vmc::VmcLiveSource& source,
+               const vmc::UdpReceiver* receiver) const;
 
   private:
     void _PrintEvidence(std::FILE* out) const;
@@ -156,11 +158,11 @@ class SessionReport
     // The union across restarts, which is deliberately not the assembler's
     // `GetObservedBones()`: that one is reset by a restart, and a report of
     // what a sender sends should not shrink because the operator restarted it.
-    std::bitset<motion::HumanBoneCount> _observed;
+    std::bitset<openstrata::motion::HumanJointCount> _observed;
 
     // The same union for expression names, which cannot be a bitset because the
     // vocabulary is the sender's model's rather than a fixed one
-    // (motionCore/Humanoid.h). Sorted, so two runs of the same capture report
+    // (motionCore/MotionPose.h). Sorted, so two runs of the same capture report
     // the names in the same order.
     std::set<std::string> _expressionNames;
 
@@ -178,10 +180,10 @@ class SessionReport
     float _rootMaxDeviation = 0.0f;
     pxr::GfVec3f _firstRoot = pxr::GfVec3f(0.0f);
 
-    std::array<std::uint64_t, vrmAdapterVmc::DiagnosticCodeCount> _diagnostics{};
+    std::array<std::uint64_t, vmc::DiagnosticCodeCount> _diagnostics{};
     // The first of each code, kept whole. A count says a session had 400
     // malformed packets; the first line says which address and which byte.
-    std::array<vrmAdapterVmc::Diagnostic, vrmAdapterVmc::DiagnosticCodeCount> _firstDiagnostic{};
+    std::array<vmc::Diagnostic, vmc::DiagnosticCodeCount> _firstDiagnostic{};
 
     StopReason _stop = StopReason::EndOfCapture;
 };

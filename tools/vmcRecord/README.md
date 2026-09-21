@@ -10,7 +10,7 @@ vmc_record --inspect adapters/liveCapture/vmc/tests/corpus/arm-raise-30hz.vmcpac
 This is the VMC adapter's CLI, and the one part of it that meets a real sender.
 Every layer beneath it is verifiable from committed bytes — which is the whole
 point of the adapter's build order
-([the plan](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) §5) and also
+([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §5) and also
 its limit: the corpus is *generated*, so it reproduces the protocol's shapes and
 not what any real application emits. The rest of Milestone B is the same shape —
 two sender applications validated, a capture device through a relay, a recorded
@@ -30,7 +30,7 @@ That order is the one rule here. A recorder whose decoder could refuse a
 datagram would record what this adapter *already understands*, and the sessions
 worth recording are exactly the ones it might not: a sender emitting a form no
 fixture pins, a device dropping a joint, a restart mid-frame.
-[`UdpReceiver.h`](../../include/vrmAdapterVmc/UdpReceiver.h) makes the same
+[`UdpReceiver.h`](../../libs/motionConnectorVmc/include/motionConnectorVmc/UdpReceiver.h) makes the same
 argument one layer down about filtering, and this is where it finishes — nothing
 the decode path does or fails to do can change a byte of what was written.
 
@@ -72,11 +72,11 @@ that never decoded, so the report is the one place they are read together.
 ## The two lines that are not statistics
 
 `hips offset` and `root` are the evidence the adapter deliberately does not have.
-A `HumanoidPose` carries rotations and one `RootMotion`, so fifty-four of a
+A `MotionPose` carries rotations and one `RootMotion`, so fifty-four of a
 frame's fifty-five local positions are the sender's rig geometry — but the
 fifty-fifth could be body translation instead, and whether it is depends on what
 a real sender puts in each field
-([`FrameAssembler.h`](../../include/vrmAdapterVmc/FrameAssembler.h)). A hips
+([`FrameAssembler.h`](../../libs/motionConnectorVmc/include/motionConnectorVmc/FrameAssembler.h)). A hips
 offset that never moves is rig geometry; one that tracks the body is
 translation. Neither this tool nor the adapter decides which — it reports the
 numbers that decide it, which is why the line says how far the value moved and
@@ -129,7 +129,7 @@ vmc_record_loopback   one capture through a real socket and back
 The second makes the claim the tool exists for: the datagrams that came out of
 the socket are byte-identical to the ones that went in, and the recorded file
 reports the same motion as the file it was replayed from. That is
-`vrmAdapterVmc_loopbackCorpus`'s claim raised to the CLI — the library test
+`motionConnectorVmc_loopbackCorpus`'s claim raised to the CLI — the library test
 compares poses, this one compares the artifact an operator actually keeps. It is
 a separate CTest name for the same reason the library's socket tests are: a
 runner that forbids binding excludes it and loses nothing else.
@@ -137,7 +137,7 @@ runner that forbids binding excludes it and loses nothing else.
 ## What it does not do
 
 It does not retarget, author a stage, or open an avatar.
-[WORKSPACE.md](../../../../../docs/architecture/WORKSPACE.md) §2 *permits* an
+[WORKSPACE.md](../../docs/architecture/WORKSPACE.md) §2 *permits* an
 adapter tool to do all three — that permission is what separates a tool from its
 library — and this one needs none of them. `motion_capture` is where a VMC
 session becomes a clip (Milestone C), and a second path to an avatar from here

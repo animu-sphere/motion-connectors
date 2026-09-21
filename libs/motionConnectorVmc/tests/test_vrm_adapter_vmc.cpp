@@ -2,10 +2,10 @@
 //
 // Scaffold-stage tests: the diagnostic table is a contract before it has any
 // caller, so it is tested before it has any caller.
-#include "vrmAdapterVmc/Diagnostics.h"
+#include "motionConnectorVmc/Diagnostics.h"
 
-#include "motionCore/Humanoid.h"
-#include "motionRuntime/LiveCaptureSource.h"
+#include "motionCore/MotionPose.h"
+#include "motionRecording/LiveCaptureSource.h"
 
 #include <cassert>
 #include <cstdio>
@@ -13,13 +13,15 @@
 #include <set>
 #include <string>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::DiagnosticCodeCount;
-using vrmAdapterVmc::DiagnosticSeverity;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::DiagnosticCodeCount;
+using vmc::DiagnosticSeverity;
 
 // The eight codes roadmap/adapters-mocopi-vmc-ardy.md §8 assigns to this
 // adapter, spelled exactly as that document spells them. This list is the
@@ -41,18 +43,18 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
     for (std::size_t i = 0; i < DiagnosticCodeCount; ++i)
     {
         const auto code = static_cast<DiagnosticCode>(i);
-        const std::string name(vrmAdapterVmc::DiagnosticCodeString(code));
+        const std::string name(vmc::DiagnosticCodeString(code));
 
         assert(name == kExpectedCodes[i]);
         assert(seen.insert(name).second);
 
-        const auto found = vrmAdapterVmc::FindDiagnosticCode(name);
+        const auto found = vmc::FindDiagnosticCode(name);
         assert(found && *found == code);
     }
 
-    assert(!vrmAdapterVmc::FindDiagnosticCode("VRM_VMC_NOT_A_CODE"));
+    assert(!vmc::FindDiagnosticCode("VRM_VMC_NOT_A_CODE"));
     // The canonical layer's namespace is not this adapter's to emit (§8).
-    assert(!vrmAdapterVmc::FindDiagnosticCode("VRM_MOTION_SAMPLE_STALE"));
+    assert(!vmc::FindDiagnosticCode("VRM_MOTION_SAMPLE_STALE"));
 }
 
 void
@@ -65,8 +67,8 @@ TestOnlyABindFailureStopsTheSession()
     {
         const auto code = static_cast<DiagnosticCode>(i);
         const bool fatal = code == DiagnosticCode::SocketBindFailed;
-        assert(vrmAdapterVmc::DiagnosticIsRecoverable(code) == !fatal);
-        assert((vrmAdapterVmc::DiagnosticDefaultSeverity(code) == DiagnosticSeverity::Error) ==
+        assert(vmc::DiagnosticIsRecoverable(code) == !fatal);
+        assert((vmc::DiagnosticDefaultSeverity(code) == DiagnosticSeverity::Error) ==
                fatal);
     }
 }
@@ -75,7 +77,7 @@ void
 TestMakeDiagnosticCannotDisagreeWithTheTable()
 {
     const Diagnostic stale =
-        vrmAdapterVmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
+        vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
     assert(stale.severity == DiagnosticSeverity::Warning);
     assert(stale.recoverable);
     assert(stale.detail == "no update for 0.5 s");
@@ -87,20 +89,20 @@ void
 TestFormattingIsDeterministicAndOmitsAbsentFields()
 {
     Diagnostic full =
-        vrmAdapterVmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
+        vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
     full.source = "127.0.0.1:39539";
     full.timestamp = 1.5;
     // A humanoid bone name, spelled the way motionCore spells it -- the adapter
     // reports semantics, never a target joint index (§5.1).
-    full.subject = std::string(motion::HumanBoneName(motion::HumanBone::LeftHand));
+    full.subject = std::string(openstrata::motion::HumanJointName(openstrata::motion::HumanJoint::LeftHand));
     full.sequence = 42;
 
-    assert(vrmAdapterVmc::FormatDiagnostic(full) ==
+    assert(vmc::FormatDiagnostic(full) ==
            "[VRM_VMC_STALE_JOINT] warning recoverable source=127.0.0.1:39539"
            " t=1.500000 subject=leftHand seq=42: no update for 0.5 s");
 
-    const Diagnostic bare = vrmAdapterVmc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
-    assert(vrmAdapterVmc::FormatDiagnostic(bare) == "[VRM_VMC_SOCKET_BIND_FAILED] error fatal");
+    const Diagnostic bare = vmc::MakeDiagnostic(DiagnosticCode::SocketBindFailed);
+    assert(vmc::FormatDiagnostic(bare) == "[VRM_VMC_SOCKET_BIND_FAILED] error fatal");
 }
 
 // A locale whose decimal point is a comma, constructed in-process so this test
@@ -122,12 +124,12 @@ TestFormattingSurvivesAHostileGlobalLocale()
     // so a host that installs one — a DCC calling setlocale is the realistic
     // case — would otherwise turn `t=1.500000` into `t=1,500000` and make a
     // diagnostic disagree with the capture trace it refers to.
-    Diagnostic pinned = vrmAdapterVmc::MakeDiagnostic(DiagnosticCode::TimestampRegression);
+    Diagnostic pinned = vmc::MakeDiagnostic(DiagnosticCode::TimestampRegression);
     pinned.timestamp = 1.5;
 
     const std::locale previous =
         std::locale::global(std::locale(std::locale::classic(), new CommaDecimalPoint));
-    const std::string formatted = vrmAdapterVmc::FormatDiagnostic(pinned);
+    const std::string formatted = vmc::FormatDiagnostic(pinned);
     std::locale::global(previous);
 
     assert(formatted == "[VRM_VMC_TIMESTAMP_REGRESSION] warning recoverable t=1.500000");
@@ -139,10 +141,10 @@ TestTheDeclaredDependencyEdgesAreReal()
     // Both of the two edges this adapter's manifest declares -- and the only
     // two WORKSPACE.md §2 permits it -- are exercised here, so the manifest
     // cannot claim a dependency the library does not actually have.
-    motion::LiveCaptureSource source;
-    motion::HumanoidPose pose;
+    openstrata::motion::LiveCaptureSource source;
+    openstrata::motion::MotionPose pose;
     pose.timestamp = 0.0;
-    pose.validRotations.set(static_cast<std::size_t>(motion::HumanBone::Hips));
+    pose.validRotations.set(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips));
 
     assert(source.Push(pose));
     assert(!source.IsEmpty());
@@ -159,6 +161,6 @@ main()
     TestFormattingIsDeterministicAndOmitsAbsentFields();
     TestFormattingSurvivesAHostileGlobalLocale();
     TestTheDeclaredDependencyEdgesAreReal();
-    std::puts("vrmAdapterVmc unit tests passed");
+    std::puts("motionConnectorVmc unit tests passed");
     return 0;
 }

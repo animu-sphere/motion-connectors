@@ -13,7 +13,7 @@
 // smooth anything, interpolate anything, or derive a velocity: those are
 // `LiveCaptureSource`'s intake policies and `motionRuntime`'s arithmetic, and an
 // adapter that grew a second copy would be a second motion runtime (§2). What
-// comes out is a `motion::HumanoidPose` carrying exactly the bones the frame
+// comes out is a `openstrata::motion::MotionPose` carrying exactly the bones the frame
 // carried, plus the report of what was missing — so the policy layer can apply
 // its own answer instead of inheriting one baked in here.
 //
@@ -112,7 +112,7 @@
 //
 // A bone the session has seen and this frame did not carry is *missing*: the
 // frame reports it and is still emitted, because whether a gap becomes a held
-// pose or an unbound joint is `MissingBonePolicy`'s answer and not this layer's.
+// pose or an unbound joint is `MissingJointPolicy`'s answer and not this layer's.
 // A bone missing for longer than the staleness horizon is *stale*, which is a
 // stronger claim — the value a downstream holder is still showing is no longer
 // being reported as current — and it is raised once, when the horizon is
@@ -123,11 +123,11 @@
 // against the full 55-bone humanoid. A sender that solves no fingers is not
 // sending an incomplete frame forty times a second; it is sending a complete
 // frame from a rig with no fingers, and the difference is the whole reason
-// `HumanoidPose::validRotations` exists.
+// `MotionPose::validRotations` exists.
 //
 // ## Blend shapes
 //
-// `/VMC/Ext/Blend/Val` becomes `HumanoidPose::expressions` under the name the
+// `/VMC/Ext/Blend/Val` becomes `MotionPose::expressions` under the name the
 // sender used. It is treated exactly as a bone is — it joins the open frame, it
 // opens one when none is open, and a name the frame already carries closes the
 // frame unless it arrived in the same datagram, where it is a duplicate. Giving
@@ -136,7 +136,7 @@
 //
 // **A frame carrying only expressions is emitted.** The emptiness check used to
 // read "neither a bone nor a root", from a time when a blend value was not
-// something a `HumanoidPose` could hold. It can now, so a frame carrying
+// something a `MotionPose` could hold. It can now, so a frame carrying
 // expressions carries content, and refusing it would discard motion this layer
 // is able to represent. Nothing in the corpus sends one today; the alternative
 // was to drop those values silently, which is worse than emitting a frame whose
@@ -149,17 +149,17 @@
 //
 // What this layer does *not* do for expressions is the missing/stale reporting
 // it does for bones. That is measured against a rig the session learned, and
-// the expression vocabulary is open (`motionCore/Humanoid.h`) — "the sender has
+// the expression vocabulary is open (`motionCore/MotionPose.h`) — "the sender has
 // stopped reporting `Joy`" is not the same claim as "the rig solves no fingers",
 // and inventing the stronger one here would be the kind of decision §2 forbids.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/SkeletonMap.h"
-#include "vrmAdapterVmc/VmcMessage.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/SkeletonMap.h"
+#include "motionConnectorVmc/VmcMessage.h"
+#include "motionConnectorVmc/api.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/vec3f.h"
 
@@ -173,7 +173,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 struct VmcFrameConfig
@@ -208,7 +208,7 @@ struct VmcFrame
     // reports neither, and `source` is absent because the session's metadata
     // belongs on the source once rather than on thirty poses a second (see
     // `GetSourceMetadata`).
-    motion::HumanoidPose pose;
+    openstrata::motion::MotionPose pose;
 
     // Whether the sender's clock restarted immediately before this frame, making
     // it the first of a new session. See the header: the assembler reports this
@@ -222,11 +222,11 @@ struct VmcFrame
     // Bones the session has observed that this frame did not carry, and the
     // subset of those whose last report is now older than the staleness horizon.
     // `stale` is always a subset of `missing`.
-    std::bitset<motion::HumanBoneCount> missing;
-    std::bitset<motion::HumanBoneCount> stale;
+    std::bitset<openstrata::motion::HumanJointCount> missing;
+    std::bitset<openstrata::motion::HumanJointCount> stale;
 
     // The sender's hips offset, converted, and deliberately not composed with
-    // `/VMC/Ext/Root/Pos`. A `HumanoidPose` carries rotations and one
+    // `/VMC/Ext/Root/Pos`. A `MotionPose` carries rotations and one
     // `RootMotion` (MOTION_CONTRACT.md), so fifty-four of a frame's fifty-five
     // local positions are the sender's rig geometry and have nowhere canonical
     // to go; this one could be body translation instead, and whether it is
@@ -294,7 +294,7 @@ struct VmcFrameStats
 // load-bearing here and nowhere else: it is what tells a duplicated bone from a
 // new frame. A caller that flattened its packets into a message stream would
 // lose that distinction before this class could use it.
-class VRMADAPTERVMC_API VmcFrameAssembler
+class MOTIONCONNECTORVMC_API VmcFrameAssembler
 {
   public:
     explicit VmcFrameAssembler(const VmcFrameConfig& config = {});
@@ -346,7 +346,7 @@ class VRMADAPTERVMC_API VmcFrameAssembler
     // The model *path* is deliberately not carried. It names a file on the
     // sender's own machine, which this adapter may not resolve (§2) and has no
     // reason to propagate.
-    const motion::MotionSourceMetadata&
+    const openstrata::motion::SourceMetadata&
     GetSourceMetadata() const noexcept
     {
         return _metadata;
@@ -356,7 +356,7 @@ class VRMADAPTERVMC_API VmcFrameAssembler
     // completeness and staleness checks are measured against, and it is learned
     // from the stream rather than configured: a capture rig that solves no
     // fingers should not be reported as sending an incomplete frame forever.
-    const std::bitset<motion::HumanBoneCount>&
+    const std::bitset<openstrata::motion::HumanJointCount>&
     GetObservedBones() const noexcept
     {
         return _observed;
@@ -387,17 +387,17 @@ class VRMADAPTERVMC_API VmcFrameAssembler
         bool open = false;
         double receiveTime = 0.0;
         std::optional<double> senderTime;
-        motion::HumanoidPose pose;
+        openstrata::motion::MotionPose pose;
         std::optional<pxr::GfVec3f> hipsOffset;
         bool hasRoot = false;
         std::size_t duplicateBones = 0;
         // Which packet contributed each bone, so a repeat can be told from a
         // boundary. Only meaningful where `pose.validRotations` is set.
-        std::array<std::uint64_t, motion::HumanBoneCount> bonePacket{};
+        std::array<std::uint64_t, openstrata::motion::HumanJointCount> bonePacket{};
         std::uint64_t rootPacket = 0;
         // The same, for expressions. A map rather than a parallel array because
         // the names are the sender's and there is no fixed slot to index: the
-        // key is the name exactly as `pose.expressions` holds it.
+        // key is the name exactly as `pose.channels` holds it.
         std::map<std::string, std::uint64_t> expressionPacket;
     };
 
@@ -410,20 +410,20 @@ class VRMADAPTERVMC_API VmcFrameAssembler
 
     VmcFrameConfig _config;
     std::string _source;
-    motion::MotionSourceMetadata _metadata;
+    openstrata::motion::SourceMetadata _metadata;
 
     OpenFrame _frame;
     std::uint64_t _packetSerial = 0;
 
-    std::bitset<motion::HumanBoneCount> _observed;
+    std::bitset<openstrata::motion::HumanJointCount> _observed;
     // The timestamp of the last accepted frame that carried each observed bone.
-    std::array<double, motion::HumanBoneCount> _lastSeen{};
+    std::array<double, openstrata::motion::HumanJointCount> _lastSeen{};
     // Bones already reported stale, so the crossing is reported once rather than
     // on every frame until the bone comes back.
-    std::bitset<motion::HumanBoneCount> _reportedStale;
+    std::bitset<openstrata::motion::HumanJointCount> _reportedStale;
 
     std::optional<double> _lastAccepted;
     VmcFrameStats _stats;
 };
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

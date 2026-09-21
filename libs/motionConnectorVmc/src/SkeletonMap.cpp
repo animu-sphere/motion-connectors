@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/SkeletonMap.h"
+#include "motionConnectorVmc/SkeletonMap.h"
 
 #include <cmath>
 #include <cstddef>
 #include <string>
 #include <utility>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 namespace
 {
 
-// Unity's `HumanBodyBones` spelling, in `motion::HumanBone` order. Written out
+// Unity's `HumanBodyBones` spelling, in `openstrata::motion::HumanJoint` order. Written out
 // rather than derived from the VRM 1.0 names, because three of the entries are
 // not the same word: the thumb chain (see SkeletonMap.h). A generated table
 // would be right for fifty-two bones and silently wrong for the other three,
 // which is the worst of the two failure modes available here.
-constexpr std::array<std::string_view, motion::HumanBoneCount> kVmcBoneNames = {
+constexpr std::array<std::string_view, openstrata::motion::HumanJointCount> kVmcBoneNames = {
     "Hips",
     "Spine",
     "Chest",
@@ -82,7 +82,7 @@ constexpr std::array<std::string_view, motion::HumanBoneCount> kVmcBoneNames = {
     "RightLittleDistal",
 };
 
-static_assert(kVmcBoneNames.size() == motion::HumanBoneCount,
+static_assert(kVmcBoneNames.size() == openstrata::motion::HumanJointCount,
               "the VMC bone vocabulary must cover the complete humanoid");
 
 bool
@@ -140,23 +140,23 @@ CheckTransform(const VmcTransform& transform, std::string_view subject, Diagnost
 } // namespace
 
 std::string_view
-VmcHumanBoneName(motion::HumanBone bone) noexcept
+VmcHumanBoneName(openstrata::motion::HumanJoint bone) noexcept
 {
-    if (!motion::IsValidHumanBone(bone))
+    if (!openstrata::motion::IsValidHumanJoint(bone))
     {
         return {};
     }
     return kVmcBoneNames[static_cast<std::size_t>(bone)];
 }
 
-std::optional<motion::HumanBone>
+std::optional<openstrata::motion::HumanJoint>
 FindVmcHumanBone(std::string_view name) noexcept
 {
     for (std::size_t index = 0; index != kVmcBoneNames.size(); ++index)
     {
         if (kVmcBoneNames[index] == name)
         {
-            return static_cast<motion::HumanBone>(index);
+            return static_cast<openstrata::motion::HumanJoint>(index);
         }
     }
     return std::nullopt;
@@ -211,7 +211,7 @@ MapVmcBoneTransform(const VmcMessage& message, VmcBoneSample* out, Diagnostic* d
                       VmcMessageKindAddress(VmcMessageKind::BoneTransform),
                       "not a bone transform, or no place to put one");
     }
-    const std::optional<motion::HumanBone> bone = FindVmcHumanBone(message.name);
+    const std::optional<openstrata::motion::HumanJoint> bone = FindVmcHumanBone(message.name);
     if (!bone)
     {
         return Refuse(diagnostic, DiagnosticCode::UnsupportedMessage, message.name,
@@ -228,7 +228,7 @@ MapVmcBoneTransform(const VmcMessage& message, VmcBoneSample* out, Diagnostic* d
 }
 
 bool
-MapVmcRootTransform(const VmcMessage& message, motion::RootMotion* out, Diagnostic* diagnostic)
+MapVmcRootTransform(const VmcMessage& message, openstrata::motion::RootMotion* out, Diagnostic* diagnostic)
 {
     if (message.kind != VmcMessageKind::RootTransform || out == nullptr)
     {
@@ -247,7 +247,7 @@ MapVmcRootTransform(const VmcMessage& message, motion::RootMotion* out, Diagnost
     // Assigned whole rather than field by field, so "the velocity fields are
     // left absent" stays true when a caller reuses one `RootMotion` across a
     // session instead of default-constructing per frame.
-    motion::RootMotion root;
+    openstrata::motion::RootMotion root;
     root.worldPosition = ToCanonicalPosition(message.transform.position);
     root.hasPosition = true;
     root.worldOrientation = ToCanonicalRotation(message.transform.rotation);
@@ -256,4 +256,4 @@ MapVmcRootTransform(const VmcMessage& message, motion::RootMotion* out, Diagnost
     return true;
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

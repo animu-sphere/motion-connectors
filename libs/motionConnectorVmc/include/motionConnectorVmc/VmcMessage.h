@@ -4,7 +4,7 @@
 //
 // One layer above OSC: this knows that `/VMC/Ext/Bone/Pos` carries a name and a
 // transform and that `/VMC/Ext/T` carries the sender's clock. It does not know
-// that "LeftUpperArm" is a `motion::HumanBone`, which way the sender's +X
+// that "LeftUpperArm" is a `openstrata::motion::HumanJoint`, which way the sender's +X
 // points, or where a frame begins — those belong to the skeleton map and the
 // frame assembler (roadmap/adapters-mocopi-vmc-ardy.md §5), and keeping them
 // out is what lets a wire-format question be answered without a rig.
@@ -42,9 +42,9 @@
 // what it is believed to mean.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/OscPacket.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/OscPacket.h"
+#include "motionConnectorVmc/api.h"
 
 #include <array>
 #include <cstddef>
@@ -53,7 +53,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // The VMC messages this adapter implements. Values are stable array indices;
@@ -75,16 +75,16 @@ inline constexpr std::size_t VmcMessageKindCount = static_cast<std::size_t>(VmcM
 
 // The address pattern the kind decodes, e.g. "/VMC/Ext/Bone/Pos". Empty for
 // Count.
-VRMADAPTERVMC_API std::string_view VmcMessageKindAddress(VmcMessageKind kind) noexcept;
+MOTIONCONNECTORVMC_API std::string_view VmcMessageKindAddress(VmcMessageKind kind) noexcept;
 
 // The type tag string the kind's required arguments must begin with, without
 // its leading comma — "sfffffff" for a bone. Optional arguments are not in it;
 // `unreadArguments` covers everything past the known form.
-VRMADAPTERVMC_API std::string_view VmcMessageKindTypeTags(VmcMessageKind kind) noexcept;
+MOTIONCONNECTORVMC_API std::string_view VmcMessageKindTypeTags(VmcMessageKind kind) noexcept;
 
 // Exact match on the whole address. `/VMC/Ext/Bone` and `/VMC/Ext/Bone/Pos/2`
 // are not bone poses, and a prefix test would make both into one.
-VRMADAPTERVMC_API std::optional<VmcMessageKind>
+MOTIONCONNECTORVMC_API std::optional<VmcMessageKind>
 FindVmcMessageKind(std::string_view address) noexcept;
 
 // A transform exactly as the wire carries it: the sender's own axes and units,
@@ -186,7 +186,7 @@ struct VmcPacket
 // this adapter implements (`VRM_VMC_UNSUPPORTED_MESSAGE`, with the address as
 // its subject) or when a known address carries arguments the protocol does not
 // describe (`VRM_VMC_PACKET_MALFORMED`). `out` is left untouched on either.
-VRMADAPTERVMC_API bool DecodeVmcMessage(const OscMessage& message, VmcMessage* out,
+MOTIONCONNECTORVMC_API bool DecodeVmcMessage(const OscMessage& message, VmcMessage* out,
                                         Diagnostic* diagnostic = nullptr);
 
 // Every message in a decoded datagram, in wire order. Returns false when at
@@ -197,7 +197,7 @@ VRMADAPTERVMC_API bool DecodeVmcMessage(const OscMessage& message, VmcMessage* o
 // loop can accumulate a datagram's worth or a session's. A null `out` is a
 // caller bug and is reported as `VRM_VMC_PACKET_MALFORMED` rather than
 // dereferenced.
-VRMADAPTERVMC_API bool DecodeVmcPacket(const OscPacket& packet, VmcPacket* out,
+MOTIONCONNECTORVMC_API bool DecodeVmcPacket(const OscPacket& packet, VmcPacket* out,
                                        std::vector<Diagnostic>* diagnostics = nullptr);
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

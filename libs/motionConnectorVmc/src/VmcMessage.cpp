@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/VmcMessage.h"
+#include "motionConnectorVmc/VmcMessage.h"
 
 #include <cassert>
 #include <string>
 #include <utility>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 namespace
@@ -273,4 +273,4 @@ DecodeVmcPacket(const OscPacket& packet, VmcPacket* out, std::vector<Diagnostic>
     return ok;
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

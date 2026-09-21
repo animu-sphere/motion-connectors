@@ -2,8 +2,8 @@
 //
 // A recorded VMC packet capture: the on-disk form of what the socket received.
 //
-// The format, its reader and its writer are `liveTransport`'s
-// (liveTransport/PacketCapture.h). What is this adapter's is one string — the
+// The format, its reader and its writer are `motionConnectorTransport`'s
+// (motionConnectorTransport/PacketCapture.h). What is this adapter's is one string — the
 // magic line — and that is the whole of what stayed behind.
 //
 // It is deliberately *not* a `motion-capture-trace`. The two formats sit at
@@ -41,44 +41,44 @@
 // changed.
 #pragma once
 
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/api.h"
 
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <iosfwd>
 #include <string>
 #include <string_view>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // The first token of every capture this adapter reads or writes. A fixture's
 // type tag, in the sense above.
 inline constexpr std::string_view PacketCaptureMagic = "!vmc-packet-capture";
 
-using liveTransport::MaxDatagramBytes;
-using liveTransport::PacketCaptureBytesPerLine;
-using liveTransport::PacketCaptureFormatVersion;
+using transport::MaxDatagramBytes;
+using transport::PacketCaptureBytesPerLine;
+using transport::PacketCaptureFormatVersion;
 
-using liveTransport::PacketCapture;
-using liveTransport::PacketCaptureError;
-using liveTransport::RecordedDatagram;
+using transport::PacketCapture;
+using transport::PacketCaptureError;
+using transport::RecordedDatagram;
 
-using liveTransport::PacketCaptureGutter;
+using transport::PacketCaptureGutter;
 
 // Parses a capture. On failure `capture` is left untouched and `error`, when
 // given, names the line and the reason.
 inline bool
 ReadPacketCapture(std::istream& input, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
-    return liveTransport::ReadPacketCapture(PacketCaptureMagic, input, capture, error);
+    return transport::ReadPacketCapture(PacketCaptureMagic, input, capture, error);
 }
 
 inline bool
 ReadPacketCaptureFile(const std::string& path, PacketCapture* capture,
                       PacketCaptureError* error = nullptr)
 {
-    return liveTransport::ReadPacketCaptureFile(PacketCaptureMagic, path, capture, error);
+    return transport::ReadPacketCaptureFile(PacketCaptureMagic, path, capture, error);
 }
 
 // Writes `capture`. Emission is deterministic, so re-reading and rewriting a
@@ -87,13 +87,13 @@ ReadPacketCaptureFile(const std::string& path, PacketCapture* capture,
 inline bool
 WritePacketCapture(std::ostream& output, const PacketCapture& capture)
 {
-    return liveTransport::WritePacketCapture(PacketCaptureMagic, output, capture);
+    return transport::WritePacketCapture(PacketCaptureMagic, output, capture);
 }
 
 inline bool
 WritePacketCaptureFile(const std::string& path, const PacketCapture& capture)
 {
-    return liveTransport::WritePacketCaptureFile(PacketCaptureMagic, path, capture);
+    return transport::WritePacketCaptureFile(PacketCaptureMagic, path, capture);
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

@@ -1,22 +1,22 @@
-# vrmAdapterVmc
+# motionConnectorVmc
 
 The VMC Protocol input adapter: OSC-over-UDP datagrams from any sender
 application, in; canonical humanoid motion, out.
 
 ```text
 UDP datagram → OSC decode → VMC message decode → frame assembly
-             → VRM bone mapping → HumanoidPose → LiveCaptureSource
+             → VRM bone mapping → MotionPose → LiveCaptureSource
 ```
 
 **Status: a live motion source with a CLI.** Every layer exists — the
 recorded-packet format and its corpus, the OSC layer, the VMC message layer, the
 skeleton map, the frame assembler, the bridge into `motionRuntime`, the socket,
-and [`vmc_record`](tools/vmcRecord/) on top of them. A sender on the network
-drives a `motion::LiveCaptureSource` that samples like any clip, and a recorded
+and [`vmc_record`](../../tools/vmcRecord) on top of them. A sender on the network
+drives a `openstrata::motion::LiveCaptureSource` that samples like any clip, and a recorded
 capture drives the same thing with no socket at all, so the decode path stays
 verifiable in CI from committed bytes. What is left is the evidence only a real
 sender can give — which is what the CLI exists to collect. See
-[the plan](../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) §5 for the
+[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §5 for the
 implementation order and Milestone B for what remains.
 
 ## What this is, structurally
@@ -24,12 +24,12 @@ implementation order and Milestone B for what remains.
 A plain static CMake library with an `openstrata.library.yaml`, exactly like
 `motionRuntime` and `vrmRetarget` — **not** a plugin bundle. It registers
 nothing with OpenUSD and ships no `plugInfo.json`, because
-[WORKSPACE.md §2](../../../docs/architecture/WORKSPACE.md) keeps it away from
+[WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) keeps it away from
 `vrmSchema`, from every file-format bundle, and from OpenExec. It has exactly
 two dependencies, and they are the two its manifest declares:
 
 ```text
-vrmAdapterVmc -> motionCore, motionRuntime
+motionConnectorVmc -> motionCore, motionRuntime
 ```
 
 `tests/check_boundaries.py` is what makes that a fact rather than an intention.
@@ -54,12 +54,12 @@ or a dependency on a sibling adapter. Every one of those already exists once in
 this repository; a second copy inside an adapter is a forked pipeline that stays
 invisible until two inputs disagree about the same avatar.
 
-The adapter maps a VMC bone name to a `motion::HumanBone`, and stops. It never
+The adapter maps a VMC bone name to a `openstrata::motion::HumanJoint`, and stops. It never
 resolves a joint index in a target skeleton — that is `vrmRetarget`'s job, one
 layer down the pipeline and behind a `VrmHumanoidAPI` mapping.
 
 One permission is easy to misread in the other direction: this adapter's **CLI**,
-[`tools/vmcRecord/`](tools/vmcRecord/), *may* drive `vrmRetarget` and author a
+[`tools/vmcRecord/`](../../tools/vmcRecord), *may* drive `vrmRetarget` and author a
 stage, exactly as `motion_retarget` does. The library may not. That is why the
 boundary check scans `include/` and `src/` only. The CLI as written needs
 neither, and links this adapter alone.
@@ -75,7 +75,7 @@ in CI from committed fixtures, with no hardware and no socket.
 ## Recorded input
 
 `vmc-packet-capture` v1 — spec on
-[`PacketCapture.h`](include/vrmAdapterVmc/PacketCapture.h) — is what makes that
+[`PacketCapture.h`](include/motionConnectorVmc/PacketCapture.h) — is what makes that
 order possible: the datagrams a session delivered, verbatim, with the instant
 each arrived. Line-oriented text, so a fixture diffs; hex with an ASCII gutter,
 so an address pattern is legible without a decoder ring:
@@ -93,14 +93,14 @@ restart mid-frame — which is to say, only the second can test a decoder.
 
 The corpus lives in [`tests/corpus/`](tests/corpus/) and is generated, never
 recorded off a commercial sender, because a fixture carrying someone's avatar is
-one CI cannot redistribute. Two tests hold it: `vrmAdapterVmc_corpus` re-emits
+one CI cannot redistribute. Two tests hold it: `motionConnectorVmc_corpus` re-emits
 every committed capture through the C++ writer and compares bytes, and
-`vrmAdapterVmc_packetGen` re-runs the generator and compares against that. A
+`motionConnectorVmc_packetGen` re-runs the generator and compares against that. A
 hand-edited fixture that is still canonical fails the second, not the first.
 
 ## OSC, and only OSC
 
-[`OscPacket.h`](include/vrmAdapterVmc/OscPacket.h) decodes a datagram into
+[`OscPacket.h`](include/motionConnectorVmc/OscPacket.h) decodes a datagram into
 messages: addresses, type tags, arguments, bundles flattened into wire order. It
 does not know that `/VMC/Ext/Bone/Pos` means anything, and that is what makes
 both layers testable — OSC has its own malformed-input cases, and a decoder that
@@ -126,7 +126,7 @@ found in a committed capture rather than bisected.
 
 ## VMC, and not yet a humanoid
 
-[`VmcMessage.h`](include/vrmAdapterVmc/VmcMessage.h) is the layer where an
+[`VmcMessage.h`](include/motionConnectorVmc/VmcMessage.h) is the layer where an
 address means something. Seven messages decode; everything else is reported and
 skipped:
 
@@ -145,7 +145,7 @@ BlendApply    | /VMC/Ext/Blend/Apply | ,          | —
 A bone name stays plain text and a quaternion stays in the sender's
 `(x, y, z, w)` order. Nothing is converted, normalised, or resolved against a
 rig — handedness, up axis, units, and the map from "LeftUpperArm" to a
-`motion::HumanBone` belong to the next layer, which is the one that knows what
+`openstrata::motion::HumanJoint` belong to the next layer, which is the one that knows what
 the numbers are for.
 
 Four more decisions, each written down where it is enforced:
@@ -171,7 +171,7 @@ Four more decisions, each written down where it is enforced:
   by what they are believed to mean. Each moves into the table above when a
   capture of it exists.
 
-`vrmAdapterVmc_vmcCorpus` runs both layers over all seven recorded captures —
+`motionConnectorVmc_vmcCorpus` runs both layers over all seven recorded captures —
 568 decoded messages, twelve ignored, eight refused and nine arguments counted
 but not read — and checks three things counts cannot:
 
@@ -186,8 +186,8 @@ but not read — and checks three things counts cannot:
 
 ## VMC's names and VMC's axes, into a humanoid
 
-[`SkeletonMap.h`](include/vrmAdapterVmc/SkeletonMap.h) is the one conversion the
-adapter exists to perform, and the first layer that knows a `motion::HumanBone`
+[`SkeletonMap.h`](include/motionConnectorVmc/SkeletonMap.h) is the one conversion the
+adapter exists to perform, and the first layer that knows a `openstrata::motion::HumanJoint`
 exists. It converts and it does not decide: frame boundaries, missing bones and
 sender restarts belong to the assembler, and resolving a target joint belongs to
 `vrmRetarget` two layers on.
@@ -198,7 +198,7 @@ have the same 55 bones — but for the thumb they disagree about more than case,
 because VRM 1.0 renamed the chain one joint down:
 
 ```text
-Unity / VRM 0.x            VRM 1.0 / motion::HumanBone
+Unity / VRM 0.x            VRM 1.0 / openstrata::motion::HumanJoint
 LeftThumbProximal      ->  leftThumbMetacarpal
 LeftThumbIntermediate  ->  leftThumbProximal
 LeftThumbDistal        ->  leftThumbDistal
@@ -241,7 +241,7 @@ local offset is the sender's rig geometry rather than motion. It is converted
 and handed on unread, because whether the hips offset composes with
 `/VMC/Ext/Root/Pos` needs the frame the assembler owns.
 
-`vrmAdapterVmc_skeletonMapCorpus` maps every transform in all seven captures —
+`motionConnectorVmc_skeletonMapCorpus` maps every transform in all seven captures —
 493 bones and 24 roots, none unsupported and none refused, 232 of them reflected
 off the X axis — and checks two claims counts cannot: a neutral pose is still a
 neutral pose after the basis change, and the arm-raise capture's five rotations
@@ -252,7 +252,7 @@ that dropped the flip would lower it.
 
 ## Where a frame begins
 
-[`FrameAssembler.h`](include/vrmAdapterVmc/FrameAssembler.h) is the first layer
+[`FrameAssembler.h`](include/motionConnectorVmc/FrameAssembler.h) is the first layer
 that *decides* rather than converts, and the decision the protocol forces is
 where a frame begins — VMC promises nothing about one datagram being one frame.
 The corpus already holds two sender shapes that disagree about it:
@@ -281,14 +281,14 @@ rising would manufacture continuity out of a discontinuity.
 
 The assembler **holds nothing forward**: a bone the session has observed and this
 frame did not carry is reported missing and the frame is still emitted, because
-`MissingBonePolicy` is the intake's answer. A bone missing past the staleness
+`MissingJointPolicy` is the intake's answer. A bone missing past the staleness
 horizon is additionally `VRM_VMC_STALE_JOINT`, raised once per crossing rather
 than per frame. Both are measured against the rig the session has actually
 observed — a sender that solves no fingers is complete, not incomplete forty
 times a second.
 
 **Blend shapes are assembled exactly as bones are.** `/VMC/Ext/Blend/Val`
-becomes `HumanoidPose::expressions` under the sender's own name — the same
+becomes `MotionPose::expressions` under the sender's own name — the same
 repeat rule, the same duplicate reading, the same one-per-frame slot. Giving
 expressions a rule of their own would be a third framing convention in a layer
 whose argument is that two are already one too many. Two consequences are
@@ -303,7 +303,7 @@ rather than a fixed one — "the sender stopped reporting `Joy`" is not the same
 claim as "this rig solves no fingers", and inventing the stronger one here is
 the kind of decision this adapter does not take.
 
-`vrmAdapterVmc_frameAssemblerCorpus` assembles all seven captures and makes the
+`motionConnectorVmc_frameAssemblerCorpus` assembles all seven captures and makes the
 claim this layer exists for: **both sender shapes yield five frames at the same
 30 Hz cadence**, with the unbundled one's arm rising 15° per frame in the order
 it was sent. It also pins the blend shapes the mixed-traffic capture carries —
@@ -313,9 +313,9 @@ was never sent.
 
 ## Into the runtime
 
-[`LiveSource.h`](include/vrmAdapterVmc/LiveSource.h) is the last layer that is
+[`LiveSource.h`](include/motionConnectorVmc/LiveSource.h) is the last layer that is
 still this adapter's, and the thinnest. It hands assembled frames to
-`motion::LiveCaptureSource` and answers `IMotionSource` by forwarding, so a
+`openstrata::motion::LiveCaptureSource` and answers `IMotionSource` by forwarding, so a
 consumer holds one object and samples poses off it like any clip:
 
 ```cpp
@@ -324,12 +324,12 @@ source.PushDatagram(bytes, size, receiveTime, &diagnostics);
 if (source.ConsumeSessionRestart()) {
     source.GetIntake().AlignClock(now);
 }
-motion::PoseSampleResult pose = source.Sample(now);
+openstrata::motion::PoseSampleResult pose = source.Sample(now);
 ```
 
 Buffering, interpolation, smoothing, confidence gating, missing-bone resolution
 and root-motion intake all exist exactly once, in `motionRuntime`, and this class
-contributes none of them: the assembler reports a gap, `MissingBonePolicy`
+contributes none of them: the assembler reports a gap, `MissingJointPolicy`
 decides what a gap means, and the tests run the same input under both policies to
 show the answer changing with the runtime's configuration rather than with the
 adapter.
@@ -346,7 +346,7 @@ the clock offset, which only the consumer can re-align, so it is latched and
 handed back rather than repaired.
 
 **What a pose cannot carry stays readable.** The hips offset, the `missing` and
-`stale` sets, and the session flag reach a `HumanoidPose` nowhere at all, so
+`stale` sets, and the session flag reach a `MotionPose` nowhere at all, so
 `GetFramesFromLastPush()` is a window on exactly what was just delivered — valid
 until the next push. Whether the hips offset is body translation or rig geometry
 is a question only a real sender's session answers, and a recording tool
@@ -358,7 +358,7 @@ before it keep the bare `vmc` provenance rather than retroactively learning a
 title the session did not know yet. And **the datagram's lifetime stops here** —
 every string view a decoded packet holds has become a value before the push
 returns, so a receiver may hand this API the buffer it is about to overwrite,
-which is the hazard [`VmcMessage.h`](include/vrmAdapterVmc/VmcMessage.h)
+which is the hazard [`VmcMessage.h`](include/motionConnectorVmc/VmcMessage.h)
 describes and no overload can refuse.
 
 **Nothing here is thread-safe, and neither is what it wraps.** `motionRuntime`
@@ -369,7 +369,7 @@ private lock, because a mutex here would leave every `GetIntake()` caller racing
 on the same buffer and look like a fix. Where the lock actually went is the
 receiver's section below.
 
-`vrmAdapterVmc_liveSourceCorpus` replays all seven captures from bytes and makes
+`motionConnectorVmc_liveSourceCorpus` replays all seven captures from bytes and makes
 the cross-layer claim: **every frame the assembler emitted was admitted by the
 intake**, because the assembler emits strictly advancing frames within a session
 and that is exactly the ordering `LiveCaptureSource::Push` requires. The
@@ -379,7 +379,7 @@ costs is a policy and not an accident — six frames under `Reset`, four under
 
 ## The socket, and the thread it does not create
 
-[`UdpReceiver.h`](include/vrmAdapterVmc/UdpReceiver.h) is the last layer written
+[`UdpReceiver.h`](include/motionConnectorVmc/UdpReceiver.h) is the last layer written
 and the first one a live session touches. It owns a socket, a bind address, a
 receive clock and a size limit, and it owns no decoding at all: `Receive` hands
 back the bytes exactly as they arrived, including the ones the layers above will
@@ -439,7 +439,7 @@ Four more decisions are written down where they are enforced:
   megabytes, silently getting the default, and then losing datagrams between two
   slow ticks is the hardest failure in this class to see from the outside.
 
-`vrmAdapterVmc_loopbackCorpus` replays all seven captures **through a real
+`motionConnectorVmc_loopbackCorpus` replays all seven captures **through a real
 socket** — 168 datagrams sent to a bound port and read back off it — and makes
 the claim this layer exists for: the 22 poses that come out are `operator==`
 identical to the ones the same bytes produce read from the file, with the arrival
@@ -448,14 +448,14 @@ for the whole replay, so the bridge's lifetime claim is checked by the poses
 matching rather than by an assertion about bytes.
 
 These are the only tests here that open a socket, which is why they are their own
-CTest names (`vrmAdapterVmc_udpReceiver`, `vrmAdapterVmc_loopbackCorpus`): a
+CTest names (`motionConnectorVmc_udpReceiver`, `motionConnectorVmc_loopbackCorpus`): a
 runner that forbids one excludes two names and loses no coverage of the decode
 path. They bind loopback on an OS-assigned port, never 39539 — a suite that
 claimed the real VMC port would fight a developer's own sender for it.
 
 ## The CLI, and what it is for
 
-[`tools/vmcRecord/`](tools/vmcRecord/) is `vmc_record`: the one part of this
+[`tools/vmcRecord/`](../../tools/vmcRecord) is `vmc_record`: the one part of this
 adapter that meets a real sender.
 
 ```sh
@@ -484,13 +484,13 @@ asked when a session is not working. Two of its lines are not statistics:
 assembler left to a real sender, reported as how far each value moved and never
 as what it means. `--inspect` prints the same block from a file with no socket,
 which is what makes the CLI testable in CI — and `vmc_record_loopback` raises
-`vrmAdapterVmc_loopbackCorpus`'s claim to the artifact an operator keeps: what
+`motionConnectorVmc_loopbackCorpus`'s claim to the artifact an operator keeps: what
 comes off the socket is byte-identical to what went in, and reports the same
 motion as the file it was replayed from.
 
 ## Diagnostics
 
-Eight codes, frozen in `include/vrmAdapterVmc/Diagnostics.h` before the first
+Eight codes, frozen in `include/motionConnectorVmc/Diagnostics.h` before the first
 decoder exists so that the set describes the protocol rather than whichever bug
 was chased last:
 
@@ -513,7 +513,7 @@ Composed with the rest of the workspace:
 ```sh
 cmake -S . -B build -DCMAKE_PREFIX_PATH=<usd-install>
 cmake --build build --config Release
-ctest --test-dir build -R vrmAdapterVmc
+ctest --test-dir build -R motionConnectorVmc
 ```
 
 Or through the runtime `ost` resolves for the workspace:

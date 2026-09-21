@@ -3,7 +3,7 @@
 // The bridge: assembled frames into the runtime's live-capture intake.
 //
 // Most of these tests are about what this layer *does not* do, because that is
-// what it is for. A gap is resolved by `MissingBonePolicy` and not here, which
+// what it is for. A gap is resolved by `MissingJointPolicy` and not here, which
 // is checked by running the same input under both policies and watching the
 // result change with the runtime's configuration rather than with the adapter.
 // A pose is interpolated by `PoseBuffer` and not here. The one thing this layer
@@ -19,18 +19,18 @@
 // cross-layer claim this pairing exists for: every frame the assembler emitted
 // was admitted by the intake, because the assembler's ordering contract is
 // exactly the one the intake requires.
-#include "vrmAdapterVmc/LiveSource.h"
+#include "motionConnectorVmc/LiveSource.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/FrameAssembler.h"
-#include "vrmAdapterVmc/PacketCapture.h"
-#include "vrmAdapterVmc/SkeletonMap.h"
-#include "vrmAdapterVmc/VmcMessage.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/PacketCapture.h"
+#include "motionConnectorVmc/SkeletonMap.h"
+#include "motionConnectorVmc/VmcMessage.h"
 
 #include "motionCore/Compare.h"
-#include "motionCore/Humanoid.h"
-#include "motionRuntime/LiveCaptureSource.h"
-#include "motionRuntime/MotionSource.h"
+#include "motionCore/MotionPose.h"
+#include "motionRecording/LiveCaptureSource.h"
+#include "motionSampling/MotionSource.h"
 
 #include <algorithm>
 #include <array>
@@ -46,27 +46,29 @@
 #include <string_view>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using motion::HumanBone;
-using motion::PoseSampleStatus;
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::SessionRestartPolicy;
-using vrmAdapterVmc::VmcHumanBoneName;
-using vrmAdapterVmc::VmcLiveSource;
-using vrmAdapterVmc::VmcLiveSourceConfig;
-using vrmAdapterVmc::VmcMessage;
-using vrmAdapterVmc::VmcMessageKind;
-using vrmAdapterVmc::VmcPacket;
+using openstrata::motion::HumanJoint;
+using openstrata::motion::PoseSampleStatus;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::SessionRestartPolicy;
+using vmc::VmcHumanBoneName;
+using vmc::VmcLiveSource;
+using vmc::VmcLiveSourceConfig;
+using vmc::VmcMessage;
+using vmc::VmcMessageKind;
+using vmc::VmcPacket;
 
 constexpr std::array<float, 4> kUnityIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
 
 // The same short rig the assembler's tests use, so a claim here names four
 // bones rather than looping over fifty-five.
-constexpr std::array<HumanBone, 4> kRig = {HumanBone::Hips, HumanBone::Spine, HumanBone::Chest,
-                                           HumanBone::Head};
+constexpr std::array<HumanJoint, 4> kRig = {HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest,
+                                           HumanJoint::Head};
 
 VmcMessage
 TimeMessage(double seconds)
@@ -78,7 +80,7 @@ TimeMessage(double seconds)
 }
 
 VmcMessage
-BoneMessage(HumanBone bone)
+BoneMessage(HumanJoint bone)
 {
     VmcMessage message;
     message.kind = VmcMessageKind::BoneTransform;
@@ -92,7 +94,7 @@ BoneMessage(HumanBone bone)
 VmcMessage
 RootMessage()
 {
-    VmcMessage message = BoneMessage(HumanBone::Hips);
+    VmcMessage message = BoneMessage(HumanJoint::Hips);
     message.kind = VmcMessageKind::RootTransform;
     message.name = "root";
     return message;
@@ -110,13 +112,13 @@ ModelMessage()
 
 VmcPacket
 BundledFrame(double seconds,
-             std::initializer_list<HumanBone> bones = {HumanBone::Hips, HumanBone::Spine,
-                                                       HumanBone::Chest, HumanBone::Head})
+             std::initializer_list<HumanJoint> bones = {HumanJoint::Hips, HumanJoint::Spine,
+                                                       HumanJoint::Chest, HumanJoint::Head})
 {
     VmcPacket packet;
     packet.messages.push_back(TimeMessage(seconds));
     packet.messages.push_back(RootMessage());
-    for (const HumanBone bone : bones)
+    for (const HumanJoint bone : bones)
     {
         packet.messages.push_back(BoneMessage(bone));
     }
@@ -237,13 +239,13 @@ TestFramesReachTheIntakeAndAreSampledByTheRuntime()
 
     // Provenance is on the source before a sender has named its model.
     assert(source.GetSourceMetadata().protocol == "vmc");
-    assert(source.GetSourceMetadata().kind == motion::MotionSourceKind::LiveCapture);
+    assert(source.GetSourceMetadata().kind == openstrata::motion::MotionSourceKind::LiveCapture);
 
     // The sender's clock and the consumer's share no origin, which is what
     // `AlignClock` exists to bridge — and after it the source answers on the
     // consumer's timeline, not on VMC's.
     assert(source.GetIntake().AlignClock(100.0));
-    motion::PoseSampleResult head = source.Sample(100.0);
+    openstrata::motion::PoseSampleResult head = source.Sample(100.0);
     assert(head.status == PoseSampleStatus::Sampled);
     assert(head.IsValid());
     assert(Near(head.pose->timestamp, 100.0));
@@ -267,29 +269,29 @@ TestAGapIsResolvedByThePolicyAndNotByTheAdapter()
     // The same input under both missing-bone policies. The assembler reported
     // the gap and held nothing forward; what happens next is the runtime's, and
     // the proof is that the answer changes without the adapter changing.
-    for (const motion::MissingBonePolicy policy :
-         {motion::MissingBonePolicy::HoldLast, motion::MissingBonePolicy::LeaveUnbound})
+    for (const openstrata::motion::MissingJointPolicy policy :
+         {openstrata::motion::MissingJointPolicy::HoldLast, openstrata::motion::MissingJointPolicy::LeaveUnbound})
     {
         VmcLiveSourceConfig config;
-        config.intake.missingBones = policy;
+        config.intake.missingJoints = policy;
         VmcLiveSource source(config);
 
         source.PushPacket(BundledFrame(1.0), 0.0);
-        source.PushPacket(BundledFrame(1.0 + 1.0 / 30.0, {HumanBone::Hips, HumanBone::Spine}),
+        source.PushPacket(BundledFrame(1.0 + 1.0 / 30.0, {HumanJoint::Hips, HumanJoint::Spine}),
                           0.033);
         source.Flush();
 
         assert(source.GetStats().framesAdmitted == 2);
-        const motion::HumanoidPose& newest = source.GetIntake().GetBuffer().GetNewest();
-        if (policy == motion::MissingBonePolicy::HoldLast)
+        const openstrata::motion::MotionPose& newest = source.GetIntake().GetBuffer().GetNewest();
+        if (policy == openstrata::motion::MissingJointPolicy::HoldLast)
         {
             assert(newest.validRotations.count() == kRig.size());
-            assert(source.GetIntake().GetStats().bonesHeld == 2);
+            assert(source.GetIntake().GetStats().jointsHeld == 2);
         }
         else
         {
             assert(newest.validRotations.count() == 2);
-            assert(!newest.validRotations.test(static_cast<std::size_t>(HumanBone::Chest)));
+            assert(!newest.validRotations.test(static_cast<std::size_t>(HumanJoint::Chest)));
         }
     }
 }
@@ -309,7 +311,7 @@ TestAStaleBoneIsReportedAndNotUnbound()
     source.PushPacket(BundledFrame(1.0), 0.0, &diagnostics);
     for (int index = 1; index != 5; ++index)
     {
-        source.PushPacket(BundledFrame(1.0 + index * 0.05, {HumanBone::Hips, HumanBone::Spine}),
+        source.PushPacket(BundledFrame(1.0 + index * 0.05, {HumanJoint::Hips, HumanJoint::Spine}),
                           0.0, &diagnostics);
     }
     source.Flush(&diagnostics);
@@ -408,17 +410,21 @@ TestProvenanceAppliesFromWhenTheSenderSentIt()
     source.Flush();
     assert(source.GetIntake().GetBuffer().GetSize() == 3);
 
-    const motion::HumanoidPose& first = source.GetIntake().GetBuffer().GetOldest();
-    const motion::HumanoidPose& last = source.GetIntake().GetBuffer().GetNewest();
-    assert(first.source.has_value() && last.source.has_value());
+    const openstrata::motion::MotionPose& first = source.GetIntake().GetBuffer().GetOldest();
+    const openstrata::motion::MotionPose& last = source.GetIntake().GetBuffer().GetNewest();
+    // `metadata` is not an optional in the consumed motionCore: a pose always
+    // carries provenance, and a producer that recorded none says so with the
+    // default value (usd-motion-plugins' MOTION_CONTRACT.md §5.1). What this
+    // suite asserted through `has_value()` it asserts through the fields.
+    //
     // Poses recorded before the sender named its model do not retroactively
     // learn it: re-stamping them would claim they were recorded knowing
     // something the session did not know yet.
-    assert(first.source->sourceId.empty());
-    assert(last.source->sourceId == "Example Avatar");
-    assert(first.source->protocol == "vmc" && last.source->protocol == "vmc");
+    assert(first.metadata.sourceId.empty());
+    assert(last.metadata.sourceId == "Example Avatar");
+    assert(first.metadata.protocol == "vmc" && last.metadata.protocol == "vmc");
     // The model path names a file on the sender's machine and is not carried.
-    assert(last.source->provider.empty());
+    assert(last.metadata.provider.empty());
     assert(source.GetSourceMetadata().sourceId == "Example Avatar");
 }
 
@@ -430,7 +436,7 @@ void
 TestTheFrameDetailStaysReadableAfterTheHandOff()
 {
     // The hips offset, the missing set, and the session flag reach a
-    // `HumanoidPose` nowhere at all. Milestone B has to settle what the first of
+    // `MotionPose` nowhere at all. Milestone B has to settle what the first of
     // them means with a real sender's session in front of it, so the hand-off
     // must not be where they stop being visible.
     VmcLiveSource source;
@@ -438,18 +444,18 @@ TestTheFrameDetailStaysReadableAfterTheHandOff()
     VmcPacket opening;
     opening.messages.push_back(TimeMessage(1.0));
     opening.messages.push_back(RootMessage());
-    VmcMessage hips = BoneMessage(HumanBone::Hips);
+    VmcMessage hips = BoneMessage(HumanJoint::Hips);
     hips.transform.position = {0.2f, 0.9f, 0.0f};
     opening.messages.push_back(hips);
-    opening.messages.push_back(BoneMessage(HumanBone::Spine));
+    opening.messages.push_back(BoneMessage(HumanJoint::Spine));
     assert(source.PushPacket(opening, 0.0) == 0);
     // Nothing was delivered, so the window is empty rather than showing the
     // previous push's frames.
     assert(source.GetFramesFromLastPush().empty());
 
-    assert(source.PushPacket(BundledFrame(2.0, {HumanBone::Hips}), 0.0) == 1);
+    assert(source.PushPacket(BundledFrame(2.0, {HumanJoint::Hips}), 0.0) == 1);
     assert(source.GetFramesFromLastPush().size() == 1);
-    const vrmAdapterVmc::VmcFrame& first = source.GetFramesFromLastPush()[0];
+    const vmc::VmcFrame& first = source.GetFramesFromLastPush()[0];
     assert(first.hipsOffset.has_value());
     // Converted — the reflection through X is the skeleton map's — and still
     // uncomposed with the root, which is the open question itself.
@@ -458,9 +464,9 @@ TestTheFrameDetailStaysReadableAfterTheHandOff()
     assert(!first.beginsNewSession);
 
     assert(source.Flush() == 1);
-    const vrmAdapterVmc::VmcFrame& second = source.GetFramesFromLastPush()[0];
+    const vmc::VmcFrame& second = source.GetFramesFromLastPush()[0];
     assert(second.missing.count() == 1);
-    assert(second.missing.test(static_cast<std::size_t>(HumanBone::Spine)));
+    assert(second.missing.test(static_cast<std::size_t>(HumanJoint::Spine)));
 
     // Replaced by the next push rather than appended to, or a receive loop
     // would grow the window into the history this class does not keep.
@@ -484,7 +490,7 @@ TestEveryDiagnosticOfOneDatagramCarriesItsNumber()
     const std::vector<std::uint8_t> junk = {0xde, 0xad, 0xbe, 0xef};
     source.PushDatagram(junk, 0.001, &diagnostics);
     // 2 and 3: a bone and a clock, decoding cleanly and raising nothing.
-    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanBone::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
+    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
                         0.002, &diagnostics);
     source.PushDatagram(TimeDatagram(1.0f), 0.003, &diagnostics);
     // 4: refused by the VMC layer, which knows an address and not a session.
@@ -492,7 +498,7 @@ TestEveryDiagnosticOfOneDatagramCarriesItsNumber()
     // 5: refused by the skeleton map and passed through the assembler, which
     //    stamps its own packet serial — 4 by now, because the OSC layer's
     //    refusal was never handed to it.
-    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanBone::Spine), 0.0f, 0.0f, 0.0f, 0.0f),
+    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Spine), 0.0f, 0.0f, 0.0f, 0.0f),
                         0.005, &diagnostics);
 
     assert(diagnostics.size() == 3);
@@ -530,7 +536,7 @@ TestARefusedDatagramCostsItselfAndIsCounted()
     assert(diagnostics[0].source == "127.0.0.1:39539");
 
     // A refused datagram is not a refused session.
-    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanBone::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
+    source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
                         0.002, &diagnostics);
     source.PushDatagram(TimeDatagram(1.0f), 0.003, &diagnostics);
     assert(source.Flush(&diagnostics) == 1);
@@ -563,7 +569,7 @@ TestTheDatagramNeedNotOutliveThePush()
     // canonical +Z. The value is checked after the bytes are gone.
     const float half = 0.3826834324f;
     const float rest = 0.9238795325f;
-    buffer = BoneDatagram(VmcHumanBoneName(HumanBone::LeftUpperArm), 0.0f, 0.0f, -half, rest);
+    buffer = BoneDatagram(VmcHumanBoneName(HumanJoint::LeftUpperArm), 0.0f, 0.0f, -half, rest);
     source.PushDatagram(buffer, 0.001);
     buffer = TimeDatagram(2.0f);
     source.PushDatagram(buffer, 0.002);
@@ -573,12 +579,12 @@ TestTheDatagramNeedNotOutliveThePush()
     buffer.shrink_to_fit();
 
     assert(source.Flush() == 1);
-    const motion::HumanoidPose& pose = source.GetIntake().GetBuffer().GetNewest();
-    const std::size_t arm = static_cast<std::size_t>(HumanBone::LeftUpperArm);
+    const openstrata::motion::MotionPose& pose = source.GetIntake().GetBuffer().GetNewest();
+    const std::size_t arm = static_cast<std::size_t>(HumanJoint::LeftUpperArm);
     assert(pose.validRotations.test(arm));
     assert(Near(pose.timestamp, 2.0));
     const pxr::GfQuatf identity(1.0f, pxr::GfVec3f(0.0f));
-    assert(std::abs(motion::AngleBetween(pose.localRotations[arm], identity) - 0.7853981634f) <=
+    assert(std::abs(openstrata::motion::AngleBetween(pose.localRotations[arm], identity) - 0.7853981634f) <=
            1e-4f);
     assert(pose.localRotations[arm].GetImaginary()[2] > 0.0f);
 }
@@ -679,16 +685,16 @@ bool
 Replay(const std::filesystem::path& path, VmcLiveSource* source,
        std::vector<Diagnostic>* diagnostics)
 {
-    vrmAdapterVmc::PacketCapture capture;
-    vrmAdapterVmc::PacketCaptureError error;
-    if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+    vmc::PacketCapture capture;
+    vmc::PacketCaptureError error;
+    if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
     {
         std::fprintf(stderr, "%s:%zu: %s\n", path.filename().string().c_str(), error.line,
                      error.message.c_str());
         return false;
     }
     source->SetSource(capture.sourceId);
-    for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vmc::RecordedDatagram& datagram : capture.datagrams)
     {
         source->PushDatagram(datagram.bytes, datagram.receiveTime, diagnostics);
     }
@@ -792,7 +798,7 @@ CheckCorpus(const std::filesystem::path& directory)
             continue;
         }
 
-        const vrmAdapterVmc::VmcLiveSourceStats& stats = source.GetStats();
+        const vmc::VmcLiveSourceStats& stats = source.GetStats();
         if (stats.datagramsDecoded != entry->datagramsDecoded ||
             stats.datagramsRefused != entry->datagramsRefused ||
             stats.framesAdmitted != entry->framesAdmitted ||
@@ -846,9 +852,9 @@ CheckCorpus(const std::filesystem::path& directory)
             // offset — and the reason this capture was recorded with two
             // origins that disagree.
             source.GetIntake().AlignClock(0.0);
-            const motion::PoseSampleResult head = source.Sample(0.0);
-            const motion::PoseSampleResult between = source.Sample(-1.0 / 60.0);
-            const motion::PoseSampleResult before = source.Sample(-1.0);
+            const openstrata::motion::PoseSampleResult head = source.Sample(0.0);
+            const openstrata::motion::PoseSampleResult between = source.Sample(-1.0 / 60.0);
+            const openstrata::motion::PoseSampleResult before = source.Sample(-1.0);
             if (head.status != PoseSampleStatus::Sampled ||
                 between.status != PoseSampleStatus::Sampled ||
                 before.status != PoseSampleStatus::Held || !head.IsValid() ||
@@ -914,6 +920,6 @@ main(int argc, char** argv)
     TestTheDatagramNeedNotOutliveThePush();
     TestResetForgetsBothHalvesAndKeepsTheTally();
     TestTheSourceSurvivesHavingNowhereToReport();
-    std::puts("vrmAdapterVmc live source tests passed");
+    std::puts("motionConnectorVmc live source tests passed");
     return 0;
 }

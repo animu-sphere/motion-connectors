@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/FrameAssembler.h"
+#include "motionConnectorVmc/FrameAssembler.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -8,13 +8,13 @@
 #include <string>
 #include <utility>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 VmcFrameAssembler::VmcFrameAssembler(const VmcFrameConfig& config) : _config(config)
 {
     _lastSeen.fill(0.0);
-    _metadata.kind = motion::MotionSourceKind::LiveCapture;
+    _metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
     _metadata.protocol = "vmc";
 }
 
@@ -32,8 +32,8 @@ VmcFrameAssembler::Reset()
     _reportedStale.reset();
     _lastSeen.fill(0.0);
     _lastAccepted.reset();
-    _metadata = motion::MotionSourceMetadata();
-    _metadata.kind = motion::MotionSourceKind::LiveCapture;
+    _metadata = openstrata::motion::SourceMetadata();
+    _metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
     _metadata.protocol = "vmc";
 }
 
@@ -76,7 +76,7 @@ VmcFrameAssembler::_Close(std::vector<VmcFrame>* frames, std::vector<Diagnostic>
 
     // Expressions count as content: a pose can hold them, so a frame carrying
     // only them is carrying motion rather than an empty boundary.
-    if (!frame.pose.validRotations.any() && !frame.hasRoot && frame.pose.expressions.IsEmpty())
+    if (!frame.pose.validRotations.any() && !frame.hasRoot && frame.pose.channels.IsEmpty())
     {
         ++_stats.framesRefusedEmpty;
         _Report(diagnostics, DiagnosticCode::IncompleteFrame, {}, frame.senderTime,
@@ -135,7 +135,7 @@ VmcFrameAssembler::_Close(std::vector<VmcFrame>* frames, std::vector<Diagnostic>
     out.missing = _observed & ~out.pose.validRotations;
     if (_config.stalenessSeconds > 0.0)
     {
-        for (std::size_t index = 0; index != motion::HumanBoneCount; ++index)
+        for (std::size_t index = 0; index != openstrata::motion::HumanJointCount; ++index)
         {
             if (!out.missing.test(index) ||
                 timestamp - _lastSeen[index] <= _config.stalenessSeconds)
@@ -153,12 +153,12 @@ VmcFrameAssembler::_Close(std::vector<VmcFrame>* frames, std::vector<Diagnostic>
             // this adapter raises: an operator comparing a diagnostic against a
             // capture is reading Unity's spelling, not VRM 1.0's.
             _Report(diagnostics, DiagnosticCode::StaleJoint,
-                    VmcHumanBoneName(static_cast<motion::HumanBone>(index)), timestamp,
+                    VmcHumanBoneName(static_cast<openstrata::motion::HumanJoint>(index)), timestamp,
                     "no update for " + std::to_string(timestamp - _lastSeen[index]) + " s");
         }
     }
 
-    for (std::size_t index = 0; index != motion::HumanBoneCount; ++index)
+    for (std::size_t index = 0; index != openstrata::motion::HumanJointCount; ++index)
     {
         if (!out.pose.validRotations.test(index))
         {
@@ -259,7 +259,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
             _frame.pose.localRotations[index] = sample.localRotation;
             _frame.pose.validRotations.set(index);
             _frame.bonePacket[index] = _packetSerial;
-            if (sample.bone == motion::HumanBone::Hips)
+            if (sample.bone == openstrata::motion::HumanJoint::Hips)
             {
                 _frame.hipsOffset = sample.localPosition;
             }
@@ -269,7 +269,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
 
         case VmcMessageKind::RootTransform:
         {
-            motion::RootMotion root;
+            openstrata::motion::RootMotion root;
             Diagnostic refusal;
             if (!MapVmcRootTransform(message, &root, &refusal))
             {
@@ -323,10 +323,10 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
         case VmcMessageKind::BlendValue:
         {
             // The name is the sender's, and this layer has no vocabulary to
-            // check it against (motionCore/Humanoid.h): the only thing that can
+            // check it against (motionCore/MotionPose.h): the only thing that can
             // be wrong with it here is arriving twice.
             const std::string name(message.name);
-            // `expressionPacket` is asked rather than `pose.expressions`,
+            // `expressionPacket` is asked rather than `pose.channels`,
             // although a name is written to both: two containers that must
             // agree about which names are present is one invariant more than
             // this needs, and the packet serial is the thing being tested.
@@ -363,7 +363,7 @@ VmcFrameAssembler::Push(const VmcPacket& packet, double receiveTime, std::vector
             {
                 _Open(receiveTime);
             }
-            _frame.pose.expressions.Set(name, message.value);
+            _frame.pose.channels.Set(name, message.value);
             _frame.expressionPacket[name] = _packetSerial;
             ++_stats.expressionsAccepted;
             break;
@@ -391,4 +391,4 @@ VmcFrameAssembler::Flush(std::vector<VmcFrame>* frames, std::vector<Diagnostic>*
     return _Close(frames, diagnostics) ? 1 : 0;
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

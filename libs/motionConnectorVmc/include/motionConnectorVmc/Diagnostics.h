@@ -9,7 +9,7 @@
 // describing whichever bug was chased last. Every failure the VMC path can
 // report is one of the eight below.
 //
-// Two namespaces meet here and must not merge. `VRM_VMC_*` says the *protocol*
+// Two namespaces meet here and must not merge. `MOTION_VMC_*` says the *protocol*
 // layer refused something — a datagram, an OSC type tag, a frame boundary.
 // `VRM_MOTION_*` says the *canonical* layer's contract was violated, and those
 // codes belong to the motion libraries rather than to any adapter, so that a
@@ -21,7 +21,7 @@
 // dropped packet the receiver continues through must not be reported the same
 // way as a socket that never bound.
 //
-// ## What is this adapter's, and what is `liveTransport`'s
+// ## What is this adapter's, and what is `motionConnectorTransport`'s
 //
 // The code set is the only half of this file that is still written here, and
 // that split is the contract rather than a tidy-up (WORKSPACE.md §2). A code
@@ -35,12 +35,12 @@
 // The names below are unchanged, and their absence from this file's own text
 // is why: `Diagnostic` and `DiagnosticSeverity` are the same types they always
 // were, reached through a `using` rather than redeclared, so nothing that
-// spelled `vrmAdapterVmc::Diagnostic` has to learn a second spelling.
+// spelled `vmc::Diagnostic` has to learn a second spelling.
 #pragma once
 
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/api.h"
 
-#include "liveTransport/Diagnostics.h"
+#include "motionConnectorTransport/Diagnostics.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -48,7 +48,7 @@
 #include <string>
 #include <string_view>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // Values are stable array indices; append only before Count.
@@ -82,21 +82,21 @@ inline constexpr std::size_t DiagnosticCodeCount = static_cast<std::size_t>(Diag
 
 // The severity scale is shared, because "info / warning / error" is not a
 // statement about VMC.
-using DiagnosticSeverity = liveTransport::DiagnosticSeverity;
-using liveTransport::DiagnosticSeverityString;
+using DiagnosticSeverity = transport::DiagnosticSeverity;
+using transport::DiagnosticSeverityString;
 
 // The stable string, e.g. "VRM_VMC_PACKET_MALFORMED". This is the contract;
 // the enumerator spelling is not.
-VRMADAPTERVMC_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
+MOTIONCONNECTORVMC_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
 
-VRMADAPTERVMC_API std::optional<DiagnosticCode> FindDiagnosticCode(std::string_view name) noexcept;
+MOTIONCONNECTORVMC_API std::optional<DiagnosticCode> FindDiagnosticCode(std::string_view name) noexcept;
 
-VRMADAPTERVMC_API DiagnosticSeverity DiagnosticDefaultSeverity(DiagnosticCode code) noexcept;
+MOTIONCONNECTORVMC_API DiagnosticSeverity DiagnosticDefaultSeverity(DiagnosticCode code) noexcept;
 
 // Whether a live session can continue past this code by default. A caller may
 // still escalate — a flood of recoverable diagnostics is its own signal — but
 // it never has to guess which class a code belongs to.
-VRMADAPTERVMC_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
+MOTIONCONNECTORVMC_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
 
 // One reported diagnostic: this adapter's code, in the shared vehicle.
 //
@@ -106,11 +106,11 @@ VRMADAPTERVMC_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
 // enum's zero, because it is `PacketMalformed` in both adapters and that is
 // enumerator 0 in this set and 6 in the sibling's — a default-constructed
 // diagnostic has to keep meaning what it meant.
-using Diagnostic = liveTransport::Diagnostic<DiagnosticCode, DiagnosticCode::PacketMalformed>;
+using Diagnostic = transport::Diagnostic<DiagnosticCode, DiagnosticCode::PacketMalformed>;
 
 // Fills `severity` and `recoverable` from the code's defaults, so the two
 // cannot silently disagree with the table.
-VRMADAPTERVMC_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string detail = {});
+MOTIONCONNECTORVMC_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string detail = {});
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
@@ -119,6 +119,6 @@ VRMADAPTERVMC_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string det
 //
 // Absent optional fields are omitted rather than printed empty, and the field
 // order is fixed.
-VRMADAPTERVMC_API std::string FormatDiagnostic(const Diagnostic& diagnostic);
+MOTIONCONNECTORVMC_API std::string FormatDiagnostic(const Diagnostic& diagnostic);
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

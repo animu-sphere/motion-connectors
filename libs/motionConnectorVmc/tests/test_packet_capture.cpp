@@ -9,7 +9,7 @@
 // byte -- so a fixture can never drift from the writer without turning a test
 // red, which is what lets every decoder test downstream compare a golden result
 // rather than merely parse one.
-#include "vrmAdapterVmc/PacketCapture.h"
+#include "motionConnectorVmc/PacketCapture.h"
 
 #include <algorithm>
 #include <cassert>
@@ -21,12 +21,14 @@
 #include <string>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using vrmAdapterVmc::PacketCapture;
-using vrmAdapterVmc::PacketCaptureError;
-using vrmAdapterVmc::RecordedDatagram;
+using vmc::PacketCapture;
+using vmc::PacketCaptureError;
+using vmc::RecordedDatagram;
 
 RecordedDatagram
 Datagram(double receiveTime, std::vector<std::uint8_t> bytes)
@@ -41,7 +43,7 @@ std::string
 Write(const PacketCapture& capture)
 {
     std::ostringstream output;
-    const bool ok = vrmAdapterVmc::WritePacketCapture(output, capture);
+    const bool ok = vmc::WritePacketCapture(output, capture);
     assert(ok);
     (void)ok;
     return output.str();
@@ -51,7 +53,7 @@ bool
 Read(const std::string& text, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
     std::istringstream input(text);
-    return vrmAdapterVmc::ReadPacketCapture(input, capture, error);
+    return vmc::ReadPacketCapture(input, capture, error);
 }
 
 // The OSC message `/VMC/Ext/T ,f 0.1`, hand-assembled: an address padded to a
@@ -350,7 +352,7 @@ CheckCorpus(const std::filesystem::path& directory)
         PacketCapture parsed;
         PacketCaptureError error;
         std::istringstream input(original);
-        if (!vrmAdapterVmc::ReadPacketCapture(input, &parsed, &error))
+        if (!vmc::ReadPacketCapture(input, &parsed, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -358,7 +360,7 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         std::ostringstream rewritten;
-        if (!vrmAdapterVmc::WritePacketCapture(rewritten, parsed) || rewritten.str() != original)
+        if (!vmc::WritePacketCapture(rewritten, parsed) || rewritten.str() != original)
         {
             std::fprintf(stderr, "%s: does not round trip byte-identically\n", name.c_str());
             ++failures;
@@ -411,6 +413,6 @@ main(int argc, char** argv)
     TestMalformedCapturesAreRefusedAndSayWhere();
     TestTheWriterSurvivesAHostileGlobalLocale();
     TestCommentsAndBlankLinesAreIgnored();
-    std::puts("vrmAdapterVmc packet capture tests passed");
+    std::puts("motionConnectorVmc packet capture tests passed");
     return 0;
 }

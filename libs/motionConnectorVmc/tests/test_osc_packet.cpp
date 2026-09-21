@@ -18,10 +18,10 @@
 // **The corpus.** The decoder against every committed capture, which is where
 // two independent things meet: the recorded corpus was authored by a generator
 // that encodes OSC, this decodes it, and neither was written from the other.
-#include "vrmAdapterVmc/OscPacket.h"
+#include "motionConnectorVmc/OscPacket.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/PacketCapture.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/PacketCapture.h"
 
 #include <algorithm>
 #include <cassert>
@@ -34,12 +34,14 @@
 #include <string_view>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::OscPacket;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::OscPacket;
 
 // ---------------------------------------------------------------------------
 // Byte assembly. Big-endian throughout, like the wire.
@@ -118,7 +120,7 @@ TestARefusalArrivesAsThisAdaptersCode()
     OscPacket packet;
     packet.messages.push_back({});
     Diagnostic diagnostic;
-    assert(!vrmAdapterVmc::DecodeOscPacket(datagram, &packet, &diagnostic));
+    assert(!vmc::DecodeOscPacket(datagram, &packet, &diagnostic));
 
     // The code, and the two defaults its table row decides. A raise site that
     // filled these by hand could disagree with the table; `MakeDiagnostic` is
@@ -126,7 +128,7 @@ TestARefusalArrivesAsThisAdaptersCode()
     assert(diagnostic.code == DiagnosticCode::PacketMalformed);
     assert(diagnostic.recoverable);
     assert(diagnostic.severity ==
-           vrmAdapterVmc::DiagnosticDefaultSeverity(DiagnosticCode::PacketMalformed));
+           vmc::DiagnosticDefaultSeverity(DiagnosticCode::PacketMalformed));
 
     // The subject and the detail are the shared decoder's, carried across
     // rather than reworded: the address it had read, and the byte it stopped
@@ -138,13 +140,13 @@ TestARefusalArrivesAsThisAdaptersCode()
 
     // And the string a golden test compares. This is the one assertion the
     // extraction existed to leave standing.
-    assert(vrmAdapterVmc::FormatDiagnostic(diagnostic).find("[VRM_VMC_PACKET_MALFORMED]") == 0);
+    assert(vmc::FormatDiagnostic(diagnostic).find("[VRM_VMC_PACKET_MALFORMED]") == 0);
 
     // A refused datagram leaves the caller's packet as it was.
     assert(packet.messages.size() == 1);
 
     // The no-diagnostic overload takes the same decision and must not crash.
-    assert(!vrmAdapterVmc::DecodeOscPacket(datagram, &packet));
+    assert(!vmc::DecodeOscPacket(datagram, &packet));
 }
 
 void
@@ -162,7 +164,7 @@ TestAnUnimplementedVmcAddressIsNotThisLayersRefusal()
 
     OscPacket packet;
     Diagnostic diagnostic;
-    assert(vrmAdapterVmc::DecodeOscPacket(unimplemented, &packet, &diagnostic));
+    assert(vmc::DecodeOscPacket(unimplemented, &packet, &diagnostic));
     assert(packet.messages.front().address == "/VMC/Ext/Midi/Note");
     assert(packet.messages.front().arguments[1].integer == 60);
 }
@@ -256,9 +258,9 @@ CheckCorpus(const std::filesystem::path& directory)
         }
         covered.insert(name);
 
-        vrmAdapterVmc::PacketCapture capture;
-        vrmAdapterVmc::PacketCaptureError error;
-        if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+        vmc::PacketCapture capture;
+        vmc::PacketCaptureError error;
+        if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -273,7 +275,7 @@ CheckCorpus(const std::filesystem::path& directory)
         {
             OscPacket packet;
             Diagnostic diagnostic;
-            if (!vrmAdapterVmc::DecodeOscPacket(capture.datagrams[index].bytes, &packet,
+            if (!vmc::DecodeOscPacket(capture.datagrams[index].bytes, &packet,
                                                 &diagnostic))
             {
                 if (!refused.empty())
@@ -284,13 +286,13 @@ CheckCorpus(const std::filesystem::path& directory)
                 if (std::string_view(entry->refused).empty())
                 {
                     std::fprintf(stderr, "%s: %s\n", name.c_str(),
-                                 vrmAdapterVmc::FormatDiagnostic(diagnostic).c_str());
+                                 vmc::FormatDiagnostic(diagnostic).c_str());
                 }
                 continue;
             }
             messages += packet.messages.size();
             bundles += packet.bundled ? 1 : 0;
-            for (const vrmAdapterVmc::OscMessage& message : packet.messages)
+            for (const vmc::OscMessage& message : packet.messages)
             {
                 addresses.insert(std::string(message.address));
             }
@@ -351,6 +353,6 @@ main(int argc, char** argv)
 
     TestARefusalArrivesAsThisAdaptersCode();
     TestAnUnimplementedVmcAddressIsNotThisLayersRefusal();
-    std::puts("vrmAdapterVmc OSC packet tests passed");
+    std::puts("motionConnectorVmc OSC packet tests passed");
     return 0;
 }

@@ -34,7 +34,7 @@ namespace
 constexpr std::size_t kDefaultMaxDatagrams = 1000000;
 
 // The same argument for the second thing a session accumulates, in the unit
-// that thing is measured in. `--export-trace` holds one `motion::HumanoidPose`
+// that thing is measured in. `--export-trace` holds one `openstrata::motion::MotionPose`
 // per delivered frame, and a pose is **1320 bytes** -- fifty-five quaternions
 // and a confidence array, most of which any one sender leaves untouched.
 //

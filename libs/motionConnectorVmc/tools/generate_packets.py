@@ -22,7 +22,7 @@ relayed through one are Milestone B's evidence, recorded with the record tool
 and added to this corpus as they are measured
 (roadmap/adapters-mocopi-vmc-ardy.md §10).
 
-The output must match the C++ writer byte for byte; `vrmAdapterVmc_corpus`
+The output must match the C++ writer byte for byte; `motionConnectorVmc_corpus`
 enforces that. Run:
 
     python adapters/liveCapture/vmc/tools/generate_packets.py
@@ -342,7 +342,7 @@ def capture_mixed_traffic() -> Capture:
     point of this fixture.
 
     The blend shapes were once in that list and are not any more: they become
-    `HumanoidPose::expressions`. `A` is sent as `0.0` on every frame, which makes
+    `MotionPose::expressions`. `A` is sent as `0.0` on every frame, which makes
     this the capture that records the difference between a weight that is zero
     and a name a sender never sent -- a reader that conflated the two would find
     two names here where the assembler reports three.

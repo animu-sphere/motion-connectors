@@ -4,9 +4,9 @@
 //
 // `motion-capture-trace` is defined as "what an adapter delivered -- after
 // protocol decode and coordinate conversion, before any intake policy"
-// (motionRuntime/CaptureTrace.h), and that sentence describes a `VmcFrame`
+// (motionRecording/CaptureTrace.h), and that sentence describes a `VmcFrame`
 // exactly. So this file is a transcription rather than a conversion: a frame's
-// pose is already a `motion::HumanoidPose`, already stamped, already rooted, and
+// pose is already a `openstrata::motion::MotionPose`, already stamped, already rooted, and
 // nothing here computes a value that was not delivered.
 //
 // It exists so that no tool in the aggregate product has to link an adapter
@@ -37,7 +37,7 @@
 //
 // ## A pose is expensive, and a session is bounded in two units now
 //
-// `sizeof(motion::HumanoidPose)` is 1320 bytes: fifty-five quaternions and a
+// `sizeof(openstrata::motion::MotionPose)` is 1320 bytes: fifty-five quaternions and a
 // confidence array, most of it unused by any one sender. A bundled sender emits
 // one frame per datagram, so a recording bounded only by `--max-datagrams` and
 // its million-datagram default would hold **1.26 GB** of poses here on top of
@@ -62,12 +62,14 @@
 // with a neutral extension.
 #pragma once
 
-#include "vrmAdapterVmc/FrameAssembler.h"
+#include "motionConnectorVmc/FrameAssembler.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <cstddef>
 #include <vector>
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace vmcRecordTool
 {
@@ -89,8 +91,8 @@ class TraceCollector
     // session, and a session ends up carrying what its sender had said by its
     // last frame. Stamping the whole capture with the metadata it ended on
     // would claim a session knew a model title that arrived after it.
-    void Observe(const std::vector<vrmAdapterVmc::VmcFrame>& frames,
-                 const motion::MotionSourceMetadata& metadata);
+    void Observe(const std::vector<vmc::VmcFrame>& frames,
+                 const openstrata::motion::SourceMetadata& metadata);
 
     // How many frames are held, across every session. The caller's stop
     // condition reads this rather than the report's frame count, which counts
@@ -112,14 +114,14 @@ class TraceCollector
     void Close();
 
     // Valid after `Close`. Sessions that produced no frame are not among them.
-    const std::vector<motion::HumanoidAnimation>&
+    const std::vector<openstrata::motion::MotionClip>&
     GetSessions() const noexcept
     {
         return _sessions;
     }
 
   private:
-    std::vector<motion::HumanoidAnimation> _sessions;
+    std::vector<openstrata::motion::MotionClip> _sessions;
     std::size_t _frames = 0;
     bool _closed = false;
 };

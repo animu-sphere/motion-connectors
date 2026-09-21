@@ -14,8 +14,8 @@
 // `OscPacket`, `OscMessage`, `OscArgument`, `OscBlob` and the two constants are
 // the same types they always were, reached through a `using` rather than
 // redeclared — so `VmcMessage.cpp`, `LiveSource.cpp` and every test that
-// spelled `vrmAdapterVmc::OscPacket` did not have to learn a second spelling.
-// `Diagnostics.h` did exactly this for `liveTransport`'s vehicle on 2026-08-24
+// spelled `vmc::OscPacket` did not have to learn a second spelling.
+// `Diagnostics.h` did exactly this for `motionConnectorTransport`'s vehicle on 2026-08-24
 // and this follows it.
 //
 // The **function** is not a `using`, and that is the whole of the boundary. The
@@ -33,16 +33,16 @@
 // `VRM_VMC_UNSUPPORTED_MESSAGE` — which is never raised from here.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/api.h"
 
-#include "osc/OscPacket.h"
+#include "motionConnectorOsc/OscPacket.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 using osc::MaxOscBundleDepth;
@@ -58,7 +58,7 @@ using osc::OscTimeTagImmediate;
 //
 // The refusal's text is the shared decoder's verbatim; the code, the severity
 // and the recoverability are this adapter's, from its own table.
-VRMADAPTERVMC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size,
+MOTIONCONNECTORVMC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size,
                                        OscPacket* packet, Diagnostic* diagnostic = nullptr);
 
 inline bool
@@ -83,4 +83,4 @@ DecodeOscPacket(const std::vector<std::uint8_t>& datagram, OscPacket* packet,
 bool DecodeOscPacket(std::vector<std::uint8_t>&& datagram, OscPacket* packet,
                      Diagnostic* diagnostic = nullptr) = delete;
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

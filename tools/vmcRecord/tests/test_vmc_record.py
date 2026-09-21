@@ -15,7 +15,7 @@ the claim the tool exists for:
     that went in, and the recorded file reports the same motion as the file it
     was replayed from
 
-That is `vrmAdapterVmc_loopbackCorpus`'s claim raised to the CLI: the library
+That is `motionConnectorVmc_loopbackCorpus`'s claim raised to the CLI: the library
 test compares poses, and this one compares the artifact an operator actually
 keeps. It is a separate CTest name for the same reason the library's socket
 tests are -- a runner that forbids binding excludes it and loses nothing else.
@@ -71,7 +71,7 @@ EXPECTED = {
     "neutral-standing-30hz": {"datagrams": 6, "frames": 5, "expressions": None,
                               "sessions": [5]},
     # Six, not five: the restart is admitted as a new session under the default
-    # policy, which is the difference `vrmAdapterVmc_liveSourceCorpus` records
+    # policy, which is the difference `motionConnectorVmc_liveSourceCorpus` records
     # as six frames against four.
     #
     # And the only capture that exports two traces. The two sessions' clocks

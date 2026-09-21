@@ -17,16 +17,16 @@
 // is the one the corpus was recorded to make: the bundled sender and the
 // unbundled sender, which put their clock at opposite ends of a frame, produce
 // the same five frames at the same 30 Hz cadence.
-#include "vrmAdapterVmc/FrameAssembler.h"
+#include "motionConnectorVmc/FrameAssembler.h"
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/OscPacket.h"
-#include "vrmAdapterVmc/PacketCapture.h"
-#include "vrmAdapterVmc/SkeletonMap.h"
-#include "vrmAdapterVmc/VmcMessage.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/OscPacket.h"
+#include "motionConnectorVmc/PacketCapture.h"
+#include "motionConnectorVmc/SkeletonMap.h"
+#include "motionConnectorVmc/VmcMessage.h"
 
 #include "motionCore/Compare.h"
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <algorithm>
 #include <array>
@@ -41,21 +41,23 @@
 #include <string_view>
 #include <vector>
 
+namespace vmc = openstrata::connectors::vmc;
+
 namespace
 {
 
-using motion::HumanBone;
-using motion::HumanBoneCount;
-using vrmAdapterVmc::Diagnostic;
-using vrmAdapterVmc::DiagnosticCode;
-using vrmAdapterVmc::DiagnosticSeverity;
-using vrmAdapterVmc::VmcFrame;
-using vrmAdapterVmc::VmcFrameAssembler;
-using vrmAdapterVmc::VmcFrameConfig;
-using vrmAdapterVmc::VmcHumanBoneName;
-using vrmAdapterVmc::VmcMessage;
-using vrmAdapterVmc::VmcMessageKind;
-using vrmAdapterVmc::VmcPacket;
+using openstrata::motion::HumanJoint;
+using openstrata::motion::HumanJointCount;
+using vmc::Diagnostic;
+using vmc::DiagnosticCode;
+using vmc::DiagnosticSeverity;
+using vmc::VmcFrame;
+using vmc::VmcFrameAssembler;
+using vmc::VmcFrameConfig;
+using vmc::VmcHumanBoneName;
+using vmc::VmcMessage;
+using vmc::VmcMessageKind;
+using vmc::VmcPacket;
 
 constexpr std::array<float, 4> kUnityIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
 
@@ -69,7 +71,7 @@ TimeMessage(double seconds)
 }
 
 VmcMessage
-BoneMessage(HumanBone bone, const std::array<float, 3>& position = {})
+BoneMessage(HumanJoint bone, const std::array<float, 3>& position = {})
 {
     VmcMessage message;
     message.kind = VmcMessageKind::BoneTransform;
@@ -84,7 +86,7 @@ BoneMessage(HumanBone bone, const std::array<float, 3>& position = {})
 VmcMessage
 RootMessage()
 {
-    VmcMessage message = BoneMessage(HumanBone::Hips);
+    VmcMessage message = BoneMessage(HumanJoint::Hips);
     message.kind = VmcMessageKind::RootTransform;
     message.name = "root";
     return message;
@@ -102,20 +104,20 @@ ModelMessage()
 
 // A short rig, so a test states which bones it is talking about rather than
 // looping over fifty-five.
-constexpr std::array<HumanBone, 4> kRig = {HumanBone::Hips, HumanBone::Spine, HumanBone::Chest,
-                                           HumanBone::Head};
+constexpr std::array<HumanJoint, 4> kRig = {HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest,
+                                           HumanJoint::Head};
 
 // The bundled sender's shape: the clock opens the frame, the root and the bones
 // follow, and the whole frame is one datagram.
 VmcPacket
 BundledFrame(double seconds,
-             std::initializer_list<HumanBone> bones = {HumanBone::Hips, HumanBone::Spine,
-                                                       HumanBone::Chest, HumanBone::Head})
+             std::initializer_list<HumanJoint> bones = {HumanJoint::Hips, HumanJoint::Spine,
+                                                       HumanJoint::Chest, HumanJoint::Head})
 {
     VmcPacket packet;
     packet.messages.push_back(TimeMessage(seconds));
     packet.messages.push_back(RootMessage());
-    for (const HumanBone bone : bones)
+    for (const HumanJoint bone : bones)
     {
         packet.messages.push_back(BoneMessage(bone));
     }
@@ -222,7 +224,7 @@ TestAnUnbundledSenderIsClosedByARepeat()
         const double seconds = 20.0 + index / 30.0;
         assert(assembler.Push(OneMessage(RootMessage()), 0.0, &frames, &diagnostics) ==
                (index == 0 ? 0u : 1u));
-        for (const HumanBone bone : kRig)
+        for (const HumanJoint bone : kRig)
         {
             assert(assembler.Push(OneMessage(BoneMessage(bone)), 0.0, &frames, &diagnostics) == 0);
         }
@@ -250,7 +252,7 @@ TestARepeatInsideOneDatagramIsADuplicate()
     std::vector<Diagnostic> diagnostics;
 
     VmcPacket packet = BundledFrame(1.0);
-    packet.messages.push_back(BoneMessage(HumanBone::Chest));
+    packet.messages.push_back(BoneMessage(HumanJoint::Chest));
     packet.messages.push_back(RootMessage());
 
     assert(assembler.Push(packet, 0.0, &frames, &diagnostics) == 0);
@@ -260,7 +262,7 @@ TestARepeatInsideOneDatagramIsADuplicate()
     assert(frames[0].duplicateBones == 2);
     assert(frames[0].pose.validRotations.count() == kRig.size());
     assert(CountCode(diagnostics, DiagnosticCode::DuplicateBone) == 2);
-    assert(diagnostics[0].subject == VmcHumanBoneName(HumanBone::Chest));
+    assert(diagnostics[0].subject == VmcHumanBoneName(HumanJoint::Chest));
     assert(diagnostics[0].severity == DiagnosticSeverity::Warning);
     assert(diagnostics[0].recoverable);
     assert(diagnostics[1].subject == "/VMC/Ext/Root/Pos");
@@ -279,7 +281,7 @@ TestASecondClockEndsTheFrameWhereverItArrived()
 
     VmcPacket packet = BundledFrame(3.0);
     packet.messages.push_back(TimeMessage(4.0));
-    packet.messages.push_back(BoneMessage(HumanBone::Head));
+    packet.messages.push_back(BoneMessage(HumanJoint::Head));
 
     assert(assembler.Push(packet, 0.0, &frames, &diagnostics) == 1);
     assert(assembler.Flush(&frames, &diagnostics) == 1);
@@ -336,7 +338,7 @@ TestABlendValueIsAssembledLikeABone()
 
     // The first value stood, and the reported zero is a value: a reader that
     // dropped it would find one name here instead of two.
-    const motion::ExpressionWeights& weights = frames[0].pose.expressions;
+    const openstrata::motion::MotionChannelSet& weights = frames[0].pose.channels;
     assert(weights.entries.size() == 2);
     assert(weights.Find("Joy") != nullptr && *weights.Find("Joy") == 0.5f);
     assert(weights.Find("A") != nullptr && *weights.Find("A") == 0.0f);
@@ -367,7 +369,7 @@ TestAFrameCarryingOnlyExpressionsIsEmitted()
     assert(frames.size() == 1);
     assert(Near(frames[0].pose.timestamp, 5.0));
     assert(!frames[0].pose.validRotations.any());
-    assert(frames[0].pose.expressions.entries.size() == 1);
+    assert(frames[0].pose.channels.entries.size() == 1);
     assert(assembler.GetStats().framesRefusedEmpty == 0);
 }
 
@@ -486,20 +488,20 @@ TestANewBoneJoinsTheFrameThatIsOpenEvenAfterItsClock()
     VmcFrameAssembler assembler;
     std::vector<VmcFrame> frames;
 
-    for (const HumanBone bone : {HumanBone::Hips, HumanBone::Spine})
+    for (const HumanJoint bone : {HumanJoint::Hips, HumanJoint::Spine})
     {
         assembler.Push(OneMessage(BoneMessage(bone)), 0.0, &frames);
     }
     assembler.Push(OneMessage(TimeMessage(1.0)), 0.0, &frames);
     // The next frame leads with a bone the first one never carried.
-    assembler.Push(OneMessage(BoneMessage(HumanBone::Head)), 0.0, &frames);
-    assembler.Push(OneMessage(BoneMessage(HumanBone::Hips)), 0.0, &frames);
+    assembler.Push(OneMessage(BoneMessage(HumanJoint::Head)), 0.0, &frames);
+    assembler.Push(OneMessage(BoneMessage(HumanJoint::Hips)), 0.0, &frames);
     assembler.Push(OneMessage(TimeMessage(1.033)), 0.0, &frames);
     assembler.Flush(&frames, nullptr);
 
     assert(frames.size() == 2);
     assert(frames[0].pose.validRotations.count() == 3);
-    assert(frames[0].pose.validRotations.test(static_cast<std::size_t>(HumanBone::Head)));
+    assert(frames[0].pose.validRotations.test(static_cast<std::size_t>(HumanJoint::Head)));
     assert(frames[1].pose.validRotations.count() == 1);
 
     // Narrow in practice for the reason the header gives: a Unity sender walks
@@ -507,18 +509,18 @@ TestANewBoneJoinsTheFrameThatIsOpenEvenAfterItsClock()
     // still sorts behind one that repeats first, and the frames come out whole.
     VmcFrameAssembler ordered;
     std::vector<VmcFrame> recovered;
-    for (const HumanBone bone : {HumanBone::Hips, HumanBone::Spine, HumanBone::Chest})
+    for (const HumanJoint bone : {HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest})
     {
         ordered.Push(OneMessage(BoneMessage(bone)), 0.0, &recovered);
     }
     ordered.Push(OneMessage(TimeMessage(1.0)), 0.0, &recovered);
     // `Chest` drops out for a frame and comes back in the next.
-    for (const HumanBone bone : {HumanBone::Hips, HumanBone::Spine})
+    for (const HumanJoint bone : {HumanJoint::Hips, HumanJoint::Spine})
     {
         ordered.Push(OneMessage(BoneMessage(bone)), 0.0, &recovered);
     }
     ordered.Push(OneMessage(TimeMessage(1.033)), 0.0, &recovered);
-    for (const HumanBone bone : {HumanBone::Hips, HumanBone::Spine, HumanBone::Chest})
+    for (const HumanJoint bone : {HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest})
     {
         ordered.Push(OneMessage(BoneMessage(bone)), 0.0, &recovered);
     }
@@ -544,20 +546,20 @@ TestAMissingBoneIsReportedAndTheFrameIsKept()
     std::vector<Diagnostic> diagnostics;
 
     assembler.Push(BundledFrame(1.0), 0.0, &frames, &diagnostics);
-    assembler.Push(BundledFrame(1.033, {HumanBone::Hips, HumanBone::Spine}), 0.0, &frames,
+    assembler.Push(BundledFrame(1.033, {HumanJoint::Hips, HumanJoint::Spine}), 0.0, &frames,
                    &diagnostics);
     assembler.Flush(&frames, &diagnostics);
 
     assert(frames.size() == 2);
     // The frame survives: whether the gap becomes a held pose or an unbound
-    // joint is `MissingBonePolicy`'s answer, one layer up.
+    // joint is `MissingJointPolicy`'s answer, one layer up.
     assert(frames[1].missing.count() == 2);
-    assert(frames[1].missing.test(static_cast<std::size_t>(HumanBone::Chest)));
-    assert(frames[1].missing.test(static_cast<std::size_t>(HumanBone::Head)));
+    assert(frames[1].missing.test(static_cast<std::size_t>(HumanJoint::Chest)));
+    assert(frames[1].missing.test(static_cast<std::size_t>(HumanJoint::Head)));
     // And the assembler holds nothing forward itself, or the missing bones
     // would arrive downstream looking like fresh samples.
     assert(frames[1].pose.validRotations.count() == 2);
-    assert(!frames[1].pose.validRotations.test(static_cast<std::size_t>(HumanBone::Chest)));
+    assert(!frames[1].pose.validRotations.test(static_cast<std::size_t>(HumanJoint::Chest)));
     assert(frames[1].stale.none());
     assert(assembler.GetStats().framesIncomplete == 1);
     assert(CountCode(diagnostics, DiagnosticCode::IncompleteFrame) == 1);
@@ -584,7 +586,7 @@ TestAStaleBoneIsReportedOnceAndRecovers()
     assembler.Push(BundledFrame(1.0), 0.0, &frames, &diagnostics);
     for (int index = 1; index != 6; ++index)
     {
-        assembler.Push(BundledFrame(1.0 + index * 0.05, {HumanBone::Hips, HumanBone::Spine}), 0.0,
+        assembler.Push(BundledFrame(1.0 + index * 0.05, {HumanJoint::Hips, HumanJoint::Spine}), 0.0,
                        &frames, &diagnostics);
     }
     assembler.Push(BundledFrame(1.3), 0.0, &frames, &diagnostics);
@@ -609,13 +611,13 @@ TestAStaleBoneIsReportedOnceAndRecovers()
     assert(stale->severity == DiagnosticSeverity::Warning);
     assert(stale->recoverable);
     // Named the way the sender wrote it, not the way VRM 1.0 spells it.
-    assert(stale->subject == VmcHumanBoneName(HumanBone::Chest));
-    assert(!motion::FindHumanBone(stale->subject));
+    assert(stale->subject == VmcHumanBoneName(HumanJoint::Chest));
+    assert(!openstrata::motion::FindHumanJoint(stale->subject));
 
     // The bones come back, and the horizon is armed again rather than spent.
     assert(frames[6].missing.none() && frames[6].stale.none());
-    assembler.Push(BundledFrame(1.6, {HumanBone::Hips}), 0.0, &frames, &diagnostics);
-    assembler.Push(BundledFrame(1.9, {HumanBone::Hips}), 0.0, &frames, &diagnostics);
+    assembler.Push(BundledFrame(1.6, {HumanJoint::Hips}), 0.0, &frames, &diagnostics);
+    assembler.Push(BundledFrame(1.9, {HumanJoint::Hips}), 0.0, &frames, &diagnostics);
     assembler.Flush(&frames, &diagnostics);
     assert(assembler.GetStats().stalenessCrossings == 5);
 }
@@ -636,8 +638,8 @@ TestTheModelBecomesProvenanceAndThePathDoesNot()
     // A handshake is not a frame: it carries no bone, no root, and no clock.
     assert(frames.empty());
 
-    const motion::MotionSourceMetadata& metadata = assembler.GetSourceMetadata();
-    assert(metadata.kind == motion::MotionSourceKind::LiveCapture);
+    const openstrata::motion::SourceMetadata& metadata = assembler.GetSourceMetadata();
+    assert(metadata.kind == openstrata::motion::MotionSourceKind::LiveCapture);
     assert(metadata.protocol == "vmc");
     assert(metadata.sourceId == "Example Avatar");
     // The path names a file on the sender's machine; this adapter may not
@@ -648,7 +650,10 @@ TestTheModelBecomesProvenanceAndThePathDoesNot()
     assembler.Push(BundledFrame(1.0), 0.0, &frames, nullptr);
     assembler.Flush(&frames, nullptr);
     assert(frames.size() == 1);
-    assert(!frames[0].pose.source.has_value());
+    // The assembler stamps no provenance; the frame's own does that. An absent
+    // optional said so before the move, and the default `SourceMetadata` says
+    // it now -- the claim is unchanged.
+    assert(frames[0].pose.metadata == openstrata::motion::SourceMetadata{});
     // VMC measures neither, and a pose that claimed otherwise would be gated by
     // a confidence floor it never earned.
     assert(!frames[0].pose.confidence.has_value());
@@ -664,8 +669,8 @@ TestTheHipsOffsetIsReachableAndNotComposed()
     VmcPacket packet;
     packet.messages.push_back(TimeMessage(1.0));
     packet.messages.push_back(RootMessage());
-    packet.messages.push_back(BoneMessage(HumanBone::Hips, {0.2f, 0.9f, 0.0f}));
-    packet.messages.push_back(BoneMessage(HumanBone::Spine, {0.0f, 0.1f, 0.0f}));
+    packet.messages.push_back(BoneMessage(HumanJoint::Hips, {0.2f, 0.9f, 0.0f}));
+    packet.messages.push_back(BoneMessage(HumanJoint::Spine, {0.0f, 0.1f, 0.0f}));
     assembler.Push(packet, 0.0, &frames, nullptr);
     assembler.Flush(&frames, nullptr);
 
@@ -686,10 +691,10 @@ TestARefusedSampleCostsItselfAndNotTheFrame()
     std::vector<Diagnostic> diagnostics;
 
     VmcPacket packet = BundledFrame(1.0);
-    VmcMessage unknown = BoneMessage(HumanBone::Head);
+    VmcMessage unknown = BoneMessage(HumanJoint::Head);
     unknown.name = "LeftPinkyProximal";
     packet.messages.push_back(unknown);
-    VmcMessage broken = BoneMessage(HumanBone::Neck);
+    VmcMessage broken = BoneMessage(HumanJoint::Neck);
     broken.transform.rotation = {0.0f, 0.0f, 0.0f, 0.0f};
     packet.messages.push_back(broken);
 
@@ -729,7 +734,7 @@ TestTheSourceIsStampedOnEveryDiagnostic()
     {
         assert(diagnostic.source == "127.0.0.1:39539");
     }
-    assert(vrmAdapterVmc::FormatDiagnostic(diagnostics[0]).find("source=127.0.0.1:39539") !=
+    assert(vmc::FormatDiagnostic(diagnostics[0]).find("source=127.0.0.1:39539") !=
            std::string::npos);
 }
 
@@ -831,9 +836,9 @@ bool
 Replay(const std::filesystem::path& path, std::vector<VmcFrame>* frames,
        std::vector<Diagnostic>* diagnostics, VmcFrameAssembler* assembler)
 {
-    vrmAdapterVmc::PacketCapture capture;
-    vrmAdapterVmc::PacketCaptureError error;
-    if (!vrmAdapterVmc::ReadPacketCaptureFile(path.string(), &capture, &error))
+    vmc::PacketCapture capture;
+    vmc::PacketCaptureError error;
+    if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
     {
         std::fprintf(stderr, "%s:%zu: %s\n", path.filename().string().c_str(), error.line,
                      error.message.c_str());
@@ -841,15 +846,15 @@ Replay(const std::filesystem::path& path, std::vector<VmcFrame>* frames,
     }
     assembler->SetSource(capture.sourceId);
 
-    for (const vrmAdapterVmc::RecordedDatagram& datagram : capture.datagrams)
+    for (const vmc::RecordedDatagram& datagram : capture.datagrams)
     {
-        vrmAdapterVmc::OscPacket osc;
-        if (!vrmAdapterVmc::DecodeOscPacket(datagram.bytes, &osc))
+        vmc::OscPacket osc;
+        if (!vmc::DecodeOscPacket(datagram.bytes, &osc))
         {
             continue;
         }
-        vrmAdapterVmc::VmcPacket vmc;
-        vrmAdapterVmc::DecodeVmcPacket(osc, &vmc);
+        vmc::VmcPacket vmc;
+        vmc::DecodeVmcPacket(osc, &vmc);
         assembler->Push(vmc, datagram.receiveTime, frames, diagnostics);
     }
     assembler->Flush(frames, diagnostics);
@@ -958,7 +963,7 @@ CheckCorpus(const std::filesystem::path& directory)
             continue;
         }
 
-        const vrmAdapterVmc::VmcFrameStats& stats = assembler.GetStats();
+        const vmc::VmcFrameStats& stats = assembler.GetStats();
         if (frames.size() != entry->frames ||
             stats.framesRefusedOutOfOrder != entry->refusedOutOfOrder ||
             stats.framesIncomplete != entry->incomplete ||
@@ -1027,7 +1032,7 @@ CheckCorpus(const std::filesystem::path& directory)
         {
             for (std::size_t index = 0; index != frames.size(); ++index)
             {
-                const motion::ExpressionWeights& weights = frames[index].pose.expressions;
+                const openstrata::motion::MotionChannelSet& weights = frames[index].pose.channels;
                 const float* joy = weights.Find("Joy");
                 const float* blink = weights.Find("Blink");
                 const float* a = weights.Find("A");
@@ -1090,14 +1095,14 @@ CheckCorpus(const std::filesystem::path& directory)
         {
             unbundled = frames;
             const pxr::GfQuatf identity(1.0f, pxr::GfVec3f(0.0f));
-            const std::size_t arm = static_cast<std::size_t>(HumanBone::LeftUpperArm);
+            const std::size_t arm = static_cast<std::size_t>(HumanJoint::LeftUpperArm);
             for (std::size_t index = 0; index != frames.size(); ++index)
             {
                 const float expected =
                     static_cast<float>(15.0 * index * 3.14159265358979323846 / 180.0);
                 if (!frames[index].pose.validRotations.test(arm) ||
                     std::abs(
-                        motion::AngleBetween(frames[index].pose.localRotations[arm], identity) -
+                        openstrata::motion::AngleBetween(frames[index].pose.localRotations[arm], identity) -
                         expected) > 1e-4f)
                 {
                     std::fprintf(stderr, "%s: frame %zu is not the arm at %f degrees\n",
@@ -1168,7 +1173,7 @@ CheckCorpus(const std::filesystem::path& directory)
         if (name == "malformed-forms.vmcpackets")
         {
             if (frames[1].missing.count() != 1 || frames[1].stale.any() ||
-                !frames[1].missing.test(static_cast<std::size_t>(HumanBone::Chest)))
+                !frames[1].missing.test(static_cast<std::size_t>(HumanJoint::Chest)))
             {
                 std::fprintf(stderr,
                              "%s: the second frame is missing %zu bone(s) and "
@@ -1243,6 +1248,6 @@ main(int argc, char** argv)
     TestTheSourceIsStampedOnEveryDiagnostic();
     TestTheAssemblerSurvivesHavingNowhereToReport();
     TestResetForgetsTheStreamAndKeepsTheTally();
-    std::puts("vrmAdapterVmc frame assembler tests passed");
+    std::puts("motionConnectorVmc frame assembler tests passed");
     return 0;
 }

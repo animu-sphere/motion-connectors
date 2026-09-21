@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 
-#include "vrmAdapterVmc/FrameAssembler.h"
-#include "vrmAdapterVmc/UdpReceiver.h"
+#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/UdpReceiver.h"
 
 #include <cstddef>
 #include <string>
 #include <vector>
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace vmcRecordTool
 {
@@ -16,7 +18,7 @@ struct Options
     // The socket. `UdpReceiverConfig` is taken whole rather than copied field
     // by field, so a receiver setting added there reaches this tool by being
     // parsed rather than by being re-declared.
-    vrmAdapterVmc::UdpReceiverConfig receiver;
+    vmc::UdpReceiverConfig receiver;
 
     // The capture to write. Empty with --inspect or --dry-run.
     std::string outputPath;
@@ -49,7 +51,7 @@ struct Options
     // What the report calls stale, and what it calls a restart. The only two
     // settings of the decode path this tool exposes, because they are the only
     // two that change the *reading* of a session rather than what is recorded.
-    vrmAdapterVmc::VmcFrameConfig frame;
+    vmc::VmcFrameConfig frame;
 
     // Stop conditions. A recorder with none is a process that never exits, so
     // there is always at least one: `maxDatagrams` has a default and the other

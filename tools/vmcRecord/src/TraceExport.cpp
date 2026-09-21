@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "TraceExport.h"
 
-#include "motionRuntime/CaptureTrace.h"
+#include "motionRecording/CaptureTrace.h"
+
+namespace vmc = openstrata::connectors::vmc;
 
 namespace vmcRecordTool
 {
 
 void
-TraceCollector::Observe(const std::vector<vrmAdapterVmc::VmcFrame>& frames,
-                        const motion::MotionSourceMetadata& metadata)
+TraceCollector::Observe(const std::vector<vmc::VmcFrame>& frames,
+                        const openstrata::motion::SourceMetadata& metadata)
 {
-    for (const vrmAdapterVmc::VmcFrame& frame : frames)
+    for (const vmc::VmcFrame& frame : frames)
     {
         // A restart opens a session only when there is one to close. The
         // assembler never marks the first frame of a capture, but a collector
@@ -20,7 +22,7 @@ TraceCollector::Observe(const std::vector<vrmAdapterVmc::VmcFrame>& frames,
         {
             _sessions.emplace_back();
         }
-        motion::HumanoidAnimation& session = _sessions.back();
+        openstrata::motion::MotionClip& session = _sessions.back();
         session.samples.push_back(frame.pose);
         session.source = metadata;
         ++_frames;
@@ -47,7 +49,7 @@ TraceCollector::Close()
         }
     }
 
-    for (motion::HumanoidAnimation& session : _sessions)
+    for (openstrata::motion::MotionClip& session : _sessions)
     {
         session.startTime = session.samples.front().timestamp;
         session.endTime = session.samples.back().timestamp;

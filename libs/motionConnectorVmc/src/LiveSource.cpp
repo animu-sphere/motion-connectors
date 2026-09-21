@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterVmc/LiveSource.h"
+#include "motionConnectorVmc/LiveSource.h"
 
-#include "vrmAdapterVmc/OscPacket.h"
+#include "motionConnectorVmc/OscPacket.h"
 
 #include <utility>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 VmcLiveSource::VmcLiveSource(const VmcLiveSourceConfig& config)
@@ -46,7 +46,7 @@ VmcLiveSource::_Deliver()
         // The handshake can arrive at any point in a session, including between
         // two frames. Comparing rather than assigning keeps a 30 Hz stream from
         // re-stamping the intake sixty times a second to say the same thing.
-        const motion::MotionSourceMetadata& metadata = _assembler.GetSourceMetadata();
+        const openstrata::motion::SourceMetadata& metadata = _assembler.GetSourceMetadata();
         if (metadata != _metadata)
         {
             _metadata = metadata;
@@ -146,13 +146,13 @@ VmcLiveSource::ConsumeSessionRestart() noexcept
     return pending;
 }
 
-motion::PoseSampleResult
+openstrata::motion::PoseSampleResult
 VmcLiveSource::Sample(double evaluationTime)
 {
     return _intake.Sample(evaluationTime);
 }
 
-motion::MotionSourceMetadata
+openstrata::motion::SourceMetadata
 VmcLiveSource::GetSourceMetadata() const
 {
     // The intake's rather than the assembler's: this reports the provenance
@@ -179,4 +179,4 @@ VmcLiveSource::Reset()
     _intake.SetSourceMetadata(_metadata);
 }
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc

@@ -4,7 +4,7 @@
 //
 // This is the last layer of the VMC path and deliberately the thinnest. Every
 // layer below it converts or decides something about the protocol; this one
-// hands what they produced to `motion::LiveCaptureSource` and answers the
+// hands what they produced to `openstrata::motion::LiveCaptureSource` and answers the
 // runtime's `IMotionSource` questions by forwarding them:
 //
 //     datagram -> OSC -> VMC messages -> frame -> [ VmcLiveSource ]
@@ -24,7 +24,7 @@
 // The assembler reports a gap; the intake decides what a gap means. A frame
 // arrives here carrying exactly the bones the sender sent, with `missing` and
 // `stale` beside it as a *report*, and it is passed on exactly that way —
-// `MissingBonePolicy` then holds the bone or leaves it unbound, per the
+// `MissingJointPolicy` then holds the bone or leaves it unbound, per the
 // caller's configuration. Nothing here fills a gap in, and nothing here unbinds
 // a bone the assembler called stale either: `VRM_VMC_STALE_JOINT` is what
 // reaches an operator, because a second missing-bone policy inside the adapter
@@ -83,7 +83,7 @@
 //
 // ## What a pose cannot carry, and where it is still readable
 //
-// A frame knows things a `HumanoidPose` has nowhere to put: the hips offset the
+// A frame knows things a `MotionPose` has nowhere to put: the hips offset the
 // skeleton map converted and nobody has yet decided the meaning of, which bones
 // were missing and which of those are stale, whether it began a session, and
 // how many samples were refused as duplicates. The two statistics structs carry
@@ -120,26 +120,26 @@
 // is a hazard `VmcMessage.h` describes and no overload can refuse: a receive
 // loop with one reusable buffer invalidates them on its next `recv`. Pushing a
 // datagram through this class ends inside the call — a bone has become a
-// `motion::HumanBone`, a title has been copied into a string, and a diagnostic
+// `openstrata::motion::HumanJoint`, a title has been copied into a string, and a diagnostic
 // owns its subject. So a receiver may hand this API a buffer it is about to
 // overwrite, and that is the shape a receiver should have.
 #pragma once
 
-#include "vrmAdapterVmc/Diagnostics.h"
-#include "vrmAdapterVmc/FrameAssembler.h"
-#include "vrmAdapterVmc/VmcMessage.h"
-#include "vrmAdapterVmc/api.h"
+#include "motionConnectorVmc/Diagnostics.h"
+#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/VmcMessage.h"
+#include "motionConnectorVmc/api.h"
 
-#include "motionCore/Humanoid.h"
-#include "motionRuntime/LiveCaptureSource.h"
-#include "motionRuntime/MotionSource.h"
+#include "motionCore/MotionPose.h"
+#include "motionRecording/LiveCaptureSource.h"
+#include "motionSampling/MotionSource.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterVmc
+namespace openstrata::connectors::vmc
 {
 
 // What to do with the first frame of a new session. As above: the option this
@@ -158,7 +158,7 @@ enum class SessionRestartPolicy : std::uint8_t
 struct VmcLiveSourceConfig
 {
     VmcFrameConfig frame;
-    motion::LiveCaptureConfig intake;
+    openstrata::motion::LiveCaptureConfig intake;
     SessionRestartPolicy restart = SessionRestartPolicy::Reset;
 };
 
@@ -199,7 +199,7 @@ struct VmcLiveSourceStats
 // the moment it did. Read them back through `GetAssembler().GetConfig()` and
 // `GetIntake().GetConfig()`. The restart policy is the one setting that belongs
 // to neither half, so it is the one this class keeps.
-class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
+class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IMotionSource
 {
   public:
     explicit VmcLiveSource(const VmcLiveSourceConfig& config = {});
@@ -216,7 +216,7 @@ class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
     }
 
     // The endpoint or fixture name every diagnostic this path raises is stamped
-    // with. It is not provenance: `MotionSourceMetadata::sourceId` is what the
+    // with. It is not provenance: `SourceMetadata::sourceId` is what the
     // sender said its model was, and an address is not that.
     void SetSource(std::string source);
 
@@ -268,16 +268,16 @@ class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
 
     // IMotionSource, entirely by delegation. A pose sampled from here is a pose
     // the runtime produced; this class contributes no arithmetic to it.
-    motion::PoseSampleResult Sample(double evaluationTime) override;
-    motion::MotionSourceMetadata GetSourceMetadata() const override;
+    openstrata::motion::PoseSampleResult Sample(double evaluationTime) override;
+    openstrata::motion::SourceMetadata GetSourceMetadata() const override;
     bool GetTimeRange(double* startTime, double* endTime) const override;
 
-    motion::LiveCaptureSource&
+    openstrata::motion::LiveCaptureSource&
     GetIntake() noexcept
     {
         return _intake;
     }
-    const motion::LiveCaptureSource&
+    const openstrata::motion::LiveCaptureSource&
     GetIntake() const noexcept
     {
         return _intake;
@@ -293,7 +293,7 @@ class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
     // policy or the intake then refused. Valid until the next push, which
     // reuses the vector rather than allocating one per datagram.
     //
-    // This is the window onto what a `HumanoidPose` cannot carry — see the
+    // This is the window onto what a `MotionPose` cannot carry — see the
     // header. A caller that only wants poses never touches it; a recording tool
     // gathering the evidence Milestone B is missing reads it after every push.
     const std::vector<VmcFrame>&
@@ -337,7 +337,7 @@ class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
     void _StampDatagram(std::vector<Diagnostic>* diagnostics, std::size_t from) const;
 
     VmcFrameAssembler _assembler;
-    motion::LiveCaptureSource _intake;
+    openstrata::motion::LiveCaptureSource _intake;
     SessionRestartPolicy _restart;
 
     // Reused across pushes rather than allocated per datagram: at 30 Hz with a
@@ -351,10 +351,10 @@ class VRMADAPTERVMC_API VmcLiveSource final : public motion::IMotionSource
 
     // What the intake was last told, so the handshake is forwarded once rather
     // than on every frame that follows it.
-    motion::MotionSourceMetadata _metadata;
+    openstrata::motion::SourceMetadata _metadata;
 
     bool _restartPending = false;
     VmcLiveSourceStats _stats;
 };
 
-} // namespace vrmAdapterVmc
+} // namespace openstrata::connectors::vmc
