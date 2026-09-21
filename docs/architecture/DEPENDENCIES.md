@@ -52,7 +52,7 @@ Each is isolated to its connector and is off unless that connector is built
 | `motionConnectorTransport` | OS sockets | system |
 | `motionConnectorOsc` | none; the wire format is implemented here | — |
 | `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
-| `motionConnectorMocopi` | `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
+| `motionConnectorMocopi` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
 | `motionConnectorVrchatOsc` | `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorWebSocket` | a WebSocket library, optional; TLS optional on top | third party, chosen with the connector |
 | `motionConnectorOpenXR` | the OpenXR loader | third party |

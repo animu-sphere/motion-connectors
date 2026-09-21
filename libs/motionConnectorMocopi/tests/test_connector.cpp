@@ -33,6 +33,9 @@ main()
 
     assert(connector.Open(config));
     assert(connector.GetState() == ConnectorState::Connecting);
+    assert(connector.PushDatagram(nullptr, 0, 0.0) == 0);
+    assert(!connector.GetDiagnostics().empty());
+    assert(connector.GetDiagnostics().back().source.rfind("127.0.0.1:", 0) == 0);
     assert(connector.GetCapabilities().Has(ConnectorCapability::Body));
     assert(connector.GetCapabilities().Has(ConnectorCapability::RootMotion));
     assert(connector.GetCapabilities().Has(ConnectorCapability::SourceTimestamps));
@@ -54,9 +57,14 @@ main()
     assert(frame.actors[0].pose->metadata.protocol == "mocopi");
     assert(frame.actors[0].pose->root.hasPosition);
 
-    auto incomplete = FrameAt(2, 2.0);
+    assert(connector.PushPacket(FrameAt(3, 3.0), 0.2) == 1);
+    MotionFrame packetLoss;
+    assert(connector.Poll(packetLoss));
+    assert(connector.GetState() == ConnectorState::Degraded);
+
+    auto incomplete = FrameAt(4, 4.0);
     DropJoint(&incomplete, 10);
-    assert(connector.PushPacket(incomplete, 0.2) == 1);
+    assert(connector.PushPacket(incomplete, 0.3) == 1);
 
     MotionFrame degraded;
     assert(connector.Poll(degraded));

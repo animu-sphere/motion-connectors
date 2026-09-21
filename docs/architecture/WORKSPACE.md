@@ -106,7 +106,7 @@ motionConnectorCore ───────→ usd-motion-plugins motionCore
 motionConnectorTransport ──→ (standard library, OS sockets)
 motionConnectorOsc ────────→ (standard library)
 motionConnectorVmc ────────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
-motionConnectorMocopi ─────→ usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
+motionConnectorMocopi ─────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
 motionConnectorVrchatOsc ──→ usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc (its CLI adds motionConnectorTracking, motionRecording)
 motionConnectorTracking ───→ usd-motion-plugins motionCore (shared-contract adaptation remains pending)
 motionConnectorWebSocket ──→ motionConnectorCore, an optional WebSocket library
@@ -120,7 +120,7 @@ The imported pose connectors currently link the installed
 `usd-motion-plugins` packages that provide their bridge: `motionCore`,
 `motionSampling` and/or `motionRecording`. The tracker connector uses
 `motionCore`. `motionConnectorCore` now provides the shared connector contract;
-VMC is the first source adapter to consume it.
+VMC and mocopi are the first source adapters to consume it.
 
 ### 2.2 Forbidden
 

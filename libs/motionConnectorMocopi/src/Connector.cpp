@@ -54,6 +54,7 @@ MocopiConnector::Open(const openstrata::connectors::core::ConnectorConfig& confi
         _state = openstrata::connectors::core::ConnectorState::Error;
         return openstrata::connectors::core::Status::Failure(_receiver.GetLastErrorText());
     }
+    _source.SetSource(_receiver.GetBoundEndpoint());
 
     _state = openstrata::connectors::core::ConnectorState::Connecting;
     return openstrata::connectors::core::Status::Ok();
@@ -135,8 +136,9 @@ MocopiConnector::_EnqueueFrames(double receiveTimestamp)
         if (result == openstrata::connectors::core::FramePushResult::Accepted)
         {
             ++accepted;
-            _state = frame.missing.any() ? openstrata::connectors::core::ConnectorState::Degraded
-                                         : openstrata::connectors::core::ConnectorState::Connected;
+            _state = (frame.missing.any() || frame.lostFrames != 0)
+                          ? openstrata::connectors::core::ConnectorState::Degraded
+                          : openstrata::connectors::core::ConnectorState::Connected;
         }
         else
         {
