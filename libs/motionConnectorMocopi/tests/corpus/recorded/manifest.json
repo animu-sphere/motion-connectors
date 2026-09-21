@@ -4,7 +4,7 @@
   "format": {
     "name": "mocopi-packet-capture",
     "version": 1,
-    "spec": "adapters/liveCapture/mocopi/include/vrmAdapterMocopi/PacketCapture.h"
+    "spec": "libs/motionConnectorMocopi/include/motionConnectorMocopi/PacketCapture.h"
   },
   "recordedWith": {
     "tool": "mocopi_record",
@@ -24,12 +24,12 @@
     "device": "mocopi-6sensor-iphone16",
     "network": "IPv4 LAN, device to this host over Wi-Fi, UDP 12351",
     "redistributionAllowed": false,
-    "redistribution": "NOT carried here, and not fetchable either -- unlike a licensed public dataset there is no upstream to pull from. The bytes exist on the operator's machine outside the repository; where they are kept is the operator's business and is deliberately not recorded here (roadmap section 9.2)."
+    "redistribution": "NOT carried here, and not fetchable either -- unlike a licensed public dataset there is no upstream to pull from. The bytes exist on the operator's machine outside the repository; where they are kept is the operator's business and is deliberately not recorded here (the adapter plan's section 9.2)."
   },
   "limitations": [
-    "These rows are measurements, not fixtures. Nothing in CI runs against them, no test asserts them, and the hardware lane that produced them is opt-in and is never a required gate (roadmap section 9.5).",
+    "These rows are measurements, not fixtures. Nothing in CI runs against them, no test asserts them, and the hardware lane that produced them is opt-in and is never a required gate (the adapter plan's section 9.5).",
     "A row can be re-derived only by whoever holds the bytes. The sha256 is what says whether the file a later reader has is the file these numbers came from.",
-    "The generated corpus one directory up is flat rather than split into `generated/` and `recorded/` as roadmap section 9.2 draws it. Restructuring it would move every path six test binaries scan, for no gain to this file; the split is expressed here by this directory existing and by its .gitignore, which refuses bytes rather than sorting them.",
+    "The generated corpus one directory up is flat rather than split into `generated/` and `recorded/` as the adapter plan's section 9.2 draws it. Restructuring it would move every path six test binaries scan, for no gain to this file; the split is expressed here by this directory existing and by its .gitignore, which refuses bytes rather than sorting them.",
     "`framesDelivered` counts what the assembler emitted, which is not the frame datagrams the capture holds: a capture that begins before its device declares a rig refuses every frame until the first skeleton packet, and those frames are real datagrams that became no pose."
   ],
   "sessions": [
@@ -39,7 +39,7 @@
       "bytes": 15578727,
       "recordedAt": "2026-08-15T21:47:09+09:00",
       "sourceId": "cross-source",
-      "pins": "The release's distinguishing check (roadmap section 9.6): one physical session observed as mocopi UDP *and* as this application's own BVH export, recorded over the same window. The BVH half is `libs/motionBvh` territory and carries its own row; what this file is for is being the other half of a comparison that nothing before it could make, because two recordings of two different sessions can only be similar. Sequence: 5 s still, head turn left then right, LEFT arm raised and lowered, 4 steps forward, return.",
+      "pins": "The release's distinguishing check (the adapter plan's section 9.6): one physical session observed as mocopi UDP *and* as this application's own BVH export, recorded over the same window. The BVH half is `libs/motionBvh` territory and carries its own row; what this file is for is being the other half of a comparison that nothing before it could make, because two recordings of two different sessions can only be similar. Sequence: 5 s still, head turn left then right, LEFT arm raised and lowered, 4 steps forward, return.",
       "measured": {
         "datagrams": 2200,
         "payloadBytes": 3533160,
@@ -112,7 +112,7 @@
         "VRM_MOCOPI_FRAME_INCOMPLETE"
       ],
       "observations": {
-        "darkWindow": "A restarted session is dark until the device repeats its rest table, and this is the first measurement of how long that is on real hardware: 233 frames refused, and the new session's first *emitted* frame stamped 3.8833 s into its own stream clock. The two agree exactly -- 233/60 = 3.8833 -- which cross-checks the assembler's accounting against the device. The roadmap's estimate of 'about 3.5 s' is therefore a little optimistic; 3.88 s is the measured cost of a restart on this application.",
+        "darkWindow": "A restarted session is dark until the device repeats its rest table, and this is the first measurement of how long that is on real hardware: 233 frames refused, and the new session's first *emitted* frame stamped 3.8833 s into its own stream clock. The two agree exactly -- 233/60 = 3.8833 -- which cross-checks the assembler's accounting against the device. The adapter plan's estimate of 'about 3.5 s' is therefore a little optimistic; 3.88 s is the measured cost of a restart on this application.",
         "whichBranchFired": "The clock branch. `VRM_MOCOPI_SOURCE_RESTARTED` reports the stream clock beginning again 21.333313 s before the last accepted frame, which is far past any threshold. The counter branch that the corpus's `frame-loss-60hz` exists for -- a restart 0.1 s in, which no clock rule can see -- is still a shape only a generated capture has produced.",
         "sourcePortChanges": "The restart came from a new ephemeral port: the live report names 192.168.1.23:64949 and :59931, so the two sessions are distinguishable at the transport as well as by the stream clock.",
         "aPeerIsLostByTheFormat": "The capture header names one peer, so this file replays as a one-peer session and the live report's `peers: 2` exists nowhere in it. That is a limitation of `mocopi-packet-capture` rather than of this session, and the sibling format has it identically. A recording that spans a restart is exactly when it bites.",

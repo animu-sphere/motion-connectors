@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Enforce vrmAdapterMocopi's leaf boundary.
+"""Enforce motionConnectorMocopi's leaf boundary.
 
-WORKSPACE.md §2 gives an adapter library exactly three edges — motionCore,
-motionRuntime and liveTransport — and forbids the rest: vrmSchema, every USD file-format bundle,
-`vrmRetarget` (the library), OpenExec, `ExecIr`, and every sibling adapter. It
-also may not be a plugin bundle (§1), so a plugin manifest or a plugInfo.json
-anywhere under the adapter is a failure by itself.
+WORKSPACE.md §2 gives a connector library exactly four edges — motionCore,
+motionSampling, motionRecording and motionConnectorTransport — and forbids the
+rest: the consumer repositories' libraries, every USD file-format bundle,
+OpenExec, `ExecIr`, and every sibling connector. It also may not be a plugin
+bundle (§1), so a plugin manifest or a plugInfo.json anywhere under the
+connector is a failure by itself.
 
-The sibling live adapter is the name this check exists for more than any other,
+The sibling connector is the name this check exists for more than any other,
 and the reason is specific to this adapter rather than general. The two decode
 motion from the same product — one natively, one after a relay has re-expressed
 it — so reaching across is not an implausible mistake made by somebody who
 misread the layout. It is the *convenient* thing to do the first time a packet
-looks like an OSC bundle. Adapter plan §2.1 forbids it because a native decoder
+looks like an OSC bundle. CONNECTOR_CONTRACT.md forbids it because a native
+decoder
 that borrowed a relay's decoder would inherit the relay's assumptions about
 framing, clocks and bone names, and the whole point of the native path is to
 measure what those assumptions cost. That check is a `git grep`'s worth of
@@ -21,35 +23,37 @@ enforcement, and it is worth having anyway: the sibling's own boundary script
 already refuses this adapter's name, so the pair is symmetric and neither can
 grow the edge quietly.
 
-Two differences from the equivalent check on `libs/motionRuntime` are
-deliberate, and both come straight from the contract:
+Two differences from the equivalent check on a sampling or recording library
+are deliberate, and both come straight from the contract:
 
-* **Transport is allowed here.** A socket in `motionRuntime` is a violation; a
-  socket in an adapter is the adapter's job (motion policy §8.2). This script
-  therefore does not scan for one. Since OSC-2 the adapter reaches one through
-  `liveTransport` rather than opening it here, which narrows what this library
-  contains but not what it is permitted to contain — the allowlist keeps the
-  platform's own primitives on it, because the permission is the contract's and
-  not this file's to withdraw.
-* **Only `include/` and `src/` are scanned.** An adapter's CLI under `tools/`
-  is a workspace *tool*, and a tool may drive `vrmRetarget` and author a stage
-  exactly as `motion_retarget` does. Scanning it would flag the one place the
-  contract permits what the library may not do.
+* **Transport is allowed here.** A socket in `motionSampling` would be a
+  violation; a socket in a connector is the connector's job (DESIGN_POLICY.md
+  §8.2). This script therefore does not scan for one. The connector reaches one
+  through `motionConnectorTransport` rather than opening it here, which narrows
+  what this library contains but not what it is permitted to contain — the
+  allowlist keeps the platform's own primitives on it, because the permission
+  is the contract's and not this file's to withdraw.
+* **Only `include/` and `src/` are scanned.** The connector's CLI under the
+  root `tools/` is a workspace *tool*, and a tool may author a stage where the
+  library may not. Scanning it would flag the one place the contract permits
+  what the library does not.
 
 The binary argument is the adapter's **test executable**, not its `.lib`/`.a`.
 A static archive records no imports at all — `dumpbin /dependents` on one prints
 a section summary and nothing else — so pointing this check at the library would
 make it a gate that cannot fail, which is worse than no gate. The linked test
 executable is the first artifact in which the adapter's real transitive imports
-exist, so it is the first one worth inspecting. It links the adapter plus
-`motionCore`, `motionRuntime` and `liveTransport` and nothing else, which is
-exactly the closure this boundary is about.
+exist, so it is the first one worth inspecting. It links the connector plus
+`motionCore`, `motionSampling`, `motionRecording` and
+`motionConnectorTransport` and nothing else, which is exactly the closure this
+boundary is about.
 
-This is also the only enforcement there is. `ost` 0.21.0 discovers plain
-libraries in the project root's immediate subdirectories and under `libs/`, so
-`adapters/liveCapture/*/openstrata.library.yaml` is never loaded and the
-workspace graph gate validates none of the edges declared in it — silently,
-since the gate still reports "valid" (report 34).
+It is no longer the only enforcement there is. This library is a workspace
+member here, so `openstrata.library.yaml` beside it is loaded and the workspace
+graph gate validates every edge it declares — including, since `ost` 0.23.x,
+the three that name a published `usd-motion-plugins` artifact by digest. What
+this script adds is what a graph cannot see: a name reached in source with no
+link line behind it.
 """
 
 from __future__ import annotations
@@ -153,7 +157,7 @@ def _report(errors: list[str]) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print("vrmAdapterMocopi boundary check passed")
+    print("motionConnectorMocopi boundary check passed")
     return 0
 
 
@@ -182,10 +186,10 @@ def main() -> int:
     # is named alongside them because the sibling's protocol layer is the piece
     # this adapter would be tempted to borrow rather than its library name.
     #
-    # `vrmAdapterVrchatOsc` and `vrchat` joined the list with the third
+    # `motionConnectorVrchatOsc` and `vrchat` joined the list with the third
     # adapter, and the first of the two is not redundant with `osc`: that
     # token has word boundaries on both sides, so it refuses a bare `osc`
-    # and matches nothing inside `vrmAdapterVrchatOsc`. The three checks
+    # and matches nothing inside `motionConnectorVrchatOsc`. The three checks
     # each name the other two on purpose, so no pair can grow an edge
     # quietly.
     #
@@ -197,10 +201,16 @@ def main() -> int:
     # adapter's TOOL and not on the adapter, and this is the only place that
     # prohibition is enforceable -- which is the same argument, read from the
     # other end, that `motionTracking`'s own check makes about the bone enum.
+    # A forbidden name matches as a PREFIX and not as a whole word. The
+    # imported pattern asked for `\bvmc\b`, and a symbol named
+    # `motionConnectorVmcProbe` has word characters on both sides of the name,
+    # so the boundary the rule wanted is not there — the measurement the
+    # sibling's import made, applied here before it can cost anything.
     forbidden_neighbours = re.compile(
-        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm\w*|execMotion|execVrm|"
-        r"vrmAdapterVmc|vrmAdapterVrchatOsc|vrmAdapterArdy|cgltf|vmc|osc|"
-        r"vrchat|ardy|motionTracking)\b",
+        r"motionConnector(?:Vmc|VrchatOsc|Tracking|Core|WebSocket|OpenXR)\w*|"
+        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
+        r"vrmAdapter|cgltf|ardy)\w*|"
+        r"\b(?:vmc|osc|vrchat)\w*",
         re.IGNORECASE)
     for area in (source / "include", source / "src"):
         for path in area.rglob("*"):
@@ -232,7 +242,7 @@ def main() -> int:
     # *absence* was the argument: the sibling linked it for a `DatagramQueue`'s
     # mutex and this adapter had no queue. That is still true of the adapter —
     # nothing here constructs a queue and nothing here holds a mutex — but the
-    # queue is `liveTransport`'s now, it is opt-in there, and its threading
+    # queue is `motionConnectorTransport`'s now, it is opt-in there, and its threading
     # primitive travels with that library's exported target. A shared library
     # cannot offer one class its mutex and not another. So what the name means
     # on this list changed, from "this adapter asked for it" to "this adapter's
@@ -241,9 +251,10 @@ def main() -> int:
     cmake = re.sub(r"#[^\n]*", "",
                    (source / "CMakeLists.txt").read_text(encoding="utf-8"))
     allowed_link = {
-        "vrmadaptermocopi", "public", "private", "interface",
-        "motioncore::motioncore", "motionruntime::motionruntime",
-        "livetransport::livetransport",
+        "motionconnectormocopi", "public", "private", "interface",
+        "motioncore::motioncore",
+        "motionsampling::motionsampling", "motionrecording::motionrecording",
+        "motionconnectortransport::motionconnectortransport",
         "ws2_32", "threads::threads",
     }
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
@@ -251,8 +262,9 @@ def main() -> int:
         for token in arguments.split():
             if token.lower() not in allowed_link:
                 errors.append(
-                    "vrmAdapterMocopi may link only motionCore, motionRuntime, "
-                    "liveTransport and the platform's own primitives; "
+                    "motionConnectorMocopi may link only motionCore, "
+                    "motionSampling, motionRecording, "
+                    "motionConnectorTransport and the platform's own primitives; "
                     f"CMakeLists.txt links `{token}`")
 
     # An exported edge the package **config** does not resolve.
@@ -260,7 +272,7 @@ def main() -> int:
     # The two checks above are about what may be linked; this one is about
     # whether a consumer of the *installed* package can link it at all. A
     # `PUBLIC` dependency lands in the exported target's
-    # `INTERFACE_LINK_LIBRARIES`, so `find_package(vrmAdapterMocopi)` re-creates a target
+    # `INTERFACE_LINK_LIBRARIES`, so `find_package(motionConnectorMocopi)` re-creates a target
     # naming `X::Y` — and if the config never called `find_dependency(X)`,
     # CMake fails at generate time with "the target was not found". It does not
     # search for it, even when that package's config is sitting in the same
@@ -271,15 +283,15 @@ def main() -> int:
     # build resolves every target in-tree and never opens a config file; `ost
     # library build` does the same. The path that breaks is a standalone
     # configure of this adapter or of its CLI — which is a stated PR
-    # requirement (roadmap §12) and a manual step. Measured 2026-08-29: both
-    # `vrmAdapterVmc` and `vrmAdapterVrchatOsc` grew a `PUBLIC osc::osc` and
+    # requirement and a manual step. Measured in usd-vrm-plugins on
+    # 2026-08-29: both connectors grew a `PUBLIC osc::osc` and
     # neither config gained a `find_dependency(osc)`; all 17 CI lanes were
     # green and a two-line consumer project could not configure.
     #
     # One direction only. Every linked package must be resolved; a resolved
     # package that is not linked is not an error — `pxr` is exactly that here,
     # guarded and present because a transitive Gf target needs it.
-    config_path = source / "cmake" / "vrmAdapterMocopiConfig.cmake.in"
+    config_path = source / "cmake" / "motionConnectorMocopiConfig.cmake.in"
     config = config_path.read_text(encoding="utf-8")
     resolved = set(re.findall(r"find_dependency\s*\(\s*([A-Za-z0-9_]+)", config))
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
@@ -288,7 +300,7 @@ def main() -> int:
             if "::" not in token:
                 continue
             package = token.split("::")[0]
-            if package == "vrmAdapterMocopi":
+            if package == "motionConnectorMocopi":
                 continue
             if package not in resolved:
                 errors.append(
@@ -319,14 +331,14 @@ def main() -> int:
                 f"({', '.join(f'usd_{a}' for a in sorted(_ALLOWED_USD_LIBRARIES))})")
 
     forbidden_binary = re.compile(
-        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|vrmAdapterVmc|"
-        r"vrmAdapterVrchatOsc|vrmAdapterArdy|UsdVrm\w*)\b",
+        r"\b(?:vrmSchema|vrmContainer|vrmRetarget|motionConnectorVmc|"
+        r"motionConnectorVrchatOsc|UsdVrm)\w*",
         re.IGNORECASE)
     imported = forbidden_binary.search(dependencies)
     if imported:
         errors.append(
             f"{binary.name} imports `{imported.group(0)}` — a plugin bundle, a "
-            "sibling adapter, or vrmRetarget")
+            "sibling connector, or a consumer's library")
 
     return _report(errors)
 

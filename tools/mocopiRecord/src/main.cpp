@@ -7,7 +7,7 @@
 // decoder can be *written*. That is the whole difference, and it comes from the
 // protocol: the vendor documents the transport and stops, so there is no
 // specification to write a corpus from and exactly one way to obtain one without
-// guessing (roadmap Milestone D, UdpReceiver.h). The receiver landed first for
+// guessing (the adapter plan's Milestone D, UdpReceiver.h). The receiver landed first for
 // that reason; this is the consumer it was waiting for.
 //
 // ## Nothing here decodes anything, and that is not a stage of completion
@@ -72,12 +72,12 @@
 #include "SessionReport.h"
 #include "TraceExport.h"
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/LiveSource.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/UdpReceiver.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/LiveSource.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/UdpReceiver.h"
 
-#include "motionRuntime/CaptureTrace.h"
+#include "motionRecording/CaptureTrace.h"
 
 #include <algorithm>
 #include <csignal>
@@ -89,6 +89,8 @@
 #include <string>
 #include <system_error>
 #include <vector>
+
+namespace mocopi = openstrata::connectors::mocopi;
 
 namespace
 {
@@ -117,15 +119,15 @@ constexpr double kProgressSeconds = 1.0;
 // that raises it, so the sibling's filter would suppress the only mid-session
 // message an operator actually waits for.
 void
-ReportDiagnostics(const std::vector<vrmAdapterMocopi::Diagnostic>& log, bool quiet)
+ReportDiagnostics(const std::vector<mocopi::Diagnostic>& log, bool quiet)
 {
     if (quiet)
     {
         return;
     }
-    for (const vrmAdapterMocopi::Diagnostic& diagnostic : log)
+    for (const mocopi::Diagnostic& diagnostic : log)
     {
-        std::cerr << "mocopi_record: " << vrmAdapterMocopi::FormatDiagnostic(diagnostic) << "\n";
+        std::cerr << "mocopi_record: " << mocopi::FormatDiagnostic(diagnostic) << "\n";
     }
 }
 
@@ -155,7 +157,7 @@ EndpointIsIpv6(const std::string& endpoint)
 // would save a loop and cost the only claim `--inspect` has.
 bool
 ExportTrace(const mocopiRecordTool::Options& options,
-            const vrmAdapterMocopi::PacketCapture& capture)
+            const mocopi::PacketCapture& capture)
 {
     // The second half of the refusal `ParseOptions` makes on the spelling. That
     // one catches `--inspect x --export-trace x`; this catches the same file
@@ -174,7 +176,7 @@ ExportTrace(const mocopiRecordTool::Options& options,
         return false;
     }
 
-    vrmAdapterMocopi::MocopiLiveSource source;
+    mocopi::MocopiLiveSource source;
     // The capture's own peer, so a replayed session's diagnostics name what the
     // live one's would have named. A capture that recorded none falls back to
     // its path, which is what the corpus tests use.
@@ -190,26 +192,26 @@ ExportTrace(const mocopiRecordTool::Options& options,
     // the operator did say, on the command line, and the capture header kept it.
     // Copying it forward is not a guess; leaving the trace anonymous when the
     // file beside it is not would be a loss for nothing.
-    motion::MotionSourceMetadata metadata = source.GetSourceMetadata();
+    openstrata::motion::SourceMetadata metadata = source.GetSourceMetadata();
     metadata.provider = capture.sender;
     metadata.sourceId = capture.sourceId;
 
     mocopiRecordTool::TraceCollector trace;
-    std::vector<vrmAdapterMocopi::Diagnostic> log;
+    std::vector<mocopi::Diagnostic> log;
     // First of each code, and how many there were. A frame short of one bone
     // raises one diagnostic per frame, so a 2000-frame session with a sensor off
     // would otherwise write 2000 lines over the report an operator ran this for.
-    std::map<vrmAdapterMocopi::DiagnosticCode, std::pair<std::string, std::size_t>> seen;
-    for (const vrmAdapterMocopi::RecordedDatagram& datagram : capture.datagrams)
+    std::map<mocopi::DiagnosticCode, std::pair<std::string, std::size_t>> seen;
+    for (const mocopi::RecordedDatagram& datagram : capture.datagrams)
     {
         source.PushDatagram(datagram.bytes, datagram.receiveTime, &log);
         trace.Observe(source.GetFramesFromLastPush(), metadata);
-        for (const vrmAdapterMocopi::Diagnostic& diagnostic : log)
+        for (const mocopi::Diagnostic& diagnostic : log)
         {
             auto& entry = seen[diagnostic.code];
             if (entry.second == 0)
             {
-                entry.first = vrmAdapterMocopi::FormatDiagnostic(diagnostic);
+                entry.first = mocopi::FormatDiagnostic(diagnostic);
             }
             ++entry.second;
         }
@@ -221,7 +223,7 @@ ExportTrace(const mocopiRecordTool::Options& options,
     // line that would go here.
 
     trace.Close();
-    const std::vector<motion::HumanoidAnimation>& sessions = trace.GetSessions();
+    const std::vector<openstrata::motion::MotionClip>& sessions = trace.GetSessions();
 
     if (!options.quiet)
     {
@@ -231,7 +233,7 @@ ExportTrace(const mocopiRecordTool::Options& options,
             if (entry.second.second > 1)
             {
                 std::cerr << " (and " << (entry.second.second - 1) << " more of "
-                          << vrmAdapterMocopi::DiagnosticCodeString(entry.first) << ")";
+                          << mocopi::DiagnosticCodeString(entry.first) << ")";
             }
             std::cerr << "\n";
         }
@@ -270,8 +272,8 @@ ExportTrace(const mocopiRecordTool::Options& options,
         return false;
     }
 
-    const motion::HumanoidAnimation& session = sessions[index];
-    if (!motion::WriteCaptureTraceFile(options.traceExportPath, session))
+    const openstrata::motion::MotionClip& session = sessions[index];
+    if (!openstrata::motion::WriteCaptureTraceFile(options.traceExportPath, session))
     {
         // The writer refuses before its first byte when a value cannot be
         // spelled in that format, so a refusal here leaves the path untouched
@@ -318,9 +320,9 @@ ExportTrace(const mocopiRecordTool::Options& options,
 int
 RunInspect(const mocopiRecordTool::Options& options)
 {
-    vrmAdapterMocopi::PacketCapture capture;
-    vrmAdapterMocopi::PacketCaptureError captureError;
-    if (!vrmAdapterMocopi::ReadPacketCaptureFile(options.inspectPath, &capture, &captureError))
+    mocopi::PacketCapture capture;
+    mocopi::PacketCaptureError captureError;
+    if (!mocopi::ReadPacketCaptureFile(options.inspectPath, &capture, &captureError))
     {
         std::cerr << "mocopi_record: " << options.inspectPath;
         if (captureError.line != 0)
@@ -332,7 +334,7 @@ RunInspect(const mocopiRecordTool::Options& options)
     }
 
     mocopiRecordTool::SessionReport report;
-    for (const vrmAdapterMocopi::RecordedDatagram& datagram : capture.datagrams)
+    for (const mocopi::RecordedDatagram& datagram : capture.datagrams)
     {
         // The record's own peer where the capture carries one, and the
         // header's where it does not.
@@ -357,13 +359,13 @@ RunInspect(const mocopiRecordTool::Options& options)
 int
 RunRecord(const mocopiRecordTool::Options& options)
 {
-    vrmAdapterMocopi::UdpReceiver receiver;
-    std::vector<vrmAdapterMocopi::Diagnostic> log;
+    mocopi::UdpReceiver receiver;
+    std::vector<mocopi::Diagnostic> log;
     if (!receiver.Open(options.receiver, &log))
     {
-        for (const vrmAdapterMocopi::Diagnostic& diagnostic : log)
+        for (const mocopi::Diagnostic& diagnostic : log)
         {
-            std::cerr << "mocopi_record: " << vrmAdapterMocopi::FormatDiagnostic(diagnostic)
+            std::cerr << "mocopi_record: " << mocopi::FormatDiagnostic(diagnostic)
                       << "\n";
         }
         return 1;
@@ -398,7 +400,7 @@ RunRecord(const mocopiRecordTool::Options& options)
         }
     }
 
-    vrmAdapterMocopi::PacketCapture capture;
+    mocopi::PacketCapture capture;
     capture.sender = options.sender;
     capture.device = options.device;
     capture.sourceId = options.sourceId;
@@ -407,7 +409,7 @@ RunRecord(const mocopiRecordTool::Options& options)
     mocopiRecordTool::SessionReport report;
     report.SetStopReason(mocopiRecordTool::StopReason::Interrupted);
 
-    vrmAdapterMocopi::ReceivedDatagram datagram;
+    mocopi::ReceivedDatagram datagram;
     double lastArrival = 0.0;
     double lastProgress = 0.0;
     bool running = true;
@@ -419,16 +421,16 @@ RunRecord(const mocopiRecordTool::Options& options)
             break;
         }
 
-        const vrmAdapterMocopi::ReceiveStatus status =
+        const mocopi::ReceiveStatus status =
             receiver.Receive(&datagram, kPollSeconds, &log);
         switch (status)
         {
-        case vrmAdapterMocopi::ReceiveStatus::Received:
+        case mocopi::ReceiveStatus::Received:
         {
             // Recorded first. See the header: with no decoder in this process
             // the rule costs nothing to keep, and it is the rule the file's
             // whole value rests on.
-            capture.datagrams.push_back(vrmAdapterMocopi::RecordedDatagram{
+            capture.datagrams.push_back(mocopi::RecordedDatagram{
                 datagram.receiveTime, datagram.peer, datagram.bytes});
             if (capture.peerEndpoint.empty())
             {
@@ -446,9 +448,9 @@ RunRecord(const mocopiRecordTool::Options& options)
             }
             break;
         }
-        case vrmAdapterMocopi::ReceiveStatus::Idle:
+        case mocopi::ReceiveStatus::Idle:
             break;
-        case vrmAdapterMocopi::ReceiveStatus::Closed:
+        case mocopi::ReceiveStatus::Closed:
             // Not folded into the arm below. `Closed` means no socket is open,
             // which is a different fact from a socket that reported an error —
             // and `GetLastErrorText()` is documented as empty until something
@@ -458,7 +460,7 @@ RunRecord(const mocopiRecordTool::Options& options)
             report.SetStopReason(mocopiRecordTool::StopReason::SocketClosed);
             running = false;
             break;
-        case vrmAdapterMocopi::ReceiveStatus::Failed:
+        case mocopi::ReceiveStatus::Failed:
             std::cerr << "mocopi_record: the socket failed: " << receiver.GetLastErrorText()
                       << "\n";
             report.SetStopReason(mocopiRecordTool::StopReason::ReceiveFailed);
@@ -542,7 +544,7 @@ RunRecord(const mocopiRecordTool::Options& options)
         }
         else
         {
-            written = vrmAdapterMocopi::WritePacketCaptureFile(options.outputPath, capture);
+            written = mocopi::WritePacketCaptureFile(options.outputPath, capture);
             if (!written)
             {
                 std::cerr << "mocopi_record: could not write " << options.outputPath << "\n";

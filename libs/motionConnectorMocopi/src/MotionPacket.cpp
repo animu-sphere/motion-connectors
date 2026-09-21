@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/MotionPacket.h"
 
 #include <cmath>
 #include <string>
 #include <utility>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 namespace
 {
@@ -637,4 +637,4 @@ DecodeMotionPacket(const std::uint8_t* bytes, std::size_t size, MotionPacket* pa
     return true;
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

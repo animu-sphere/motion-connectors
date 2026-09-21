@@ -16,6 +16,10 @@
     {
       "name": "motionConnectorVmc",
       "header": "motionConnectorVmc/FrameAssembler.h"
+    },
+    {
+      "name": "motionConnectorMocopi",
+      "header": "motionConnectorMocopi/FrameAssembler.h"
     }
   ]
 }

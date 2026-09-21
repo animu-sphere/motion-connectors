@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/Diagnostics.h"
 
 #include <array>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 namespace
 {
 
-using liveTransport::DiagnosticCodeEntry;
+using transport::DiagnosticCodeEntry;
 
 // One table, in enum order. Severity and recoverability live here rather than
 // at each raise site so that two call sites cannot report the same code two
@@ -18,7 +18,7 @@ using liveTransport::DiagnosticCodeEntry;
 //
 // The table is what stayed in this adapter when everything around it moved. Its
 // rows are this protocol's failure modes and nothing else's, which is exactly
-// why a shared library may not hold one (liveTransport/Diagnostics.h).
+// why a shared library may not hold one (motionConnectorTransport/Diagnostics.h).
 //
 // Exactly one code is fatal, and it is the same one the sibling adapter makes
 // fatal: a receiver that never bound has nothing to recover into. Everything
@@ -41,7 +41,7 @@ constexpr std::array<DiagnosticCodeEntry, DiagnosticCodeCount> kCodes{{
     {"VRM_MOCOPI_NON_FINITE_TRANSFORM", DiagnosticSeverity::Warning, true},
 }};
 
-constexpr liveTransport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
+constexpr transport::DiagnosticCodeTable<DiagnosticCode> kTable{kCodes.data(), kCodes.size()};
 
 } // namespace
 
@@ -89,7 +89,7 @@ FormatDiagnostic(const Diagnostic& diagnostic)
     // an improvement on "deliberately": an operator reading a session log with
     // both adapters in it does not have to learn a second line format to find
     // out which one complained.
-    return liveTransport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
+    return transport::FormatDiagnostic(DiagnosticCodeString(diagnostic.code), diagnostic);
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

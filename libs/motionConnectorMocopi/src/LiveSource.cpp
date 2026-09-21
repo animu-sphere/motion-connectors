@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/LiveSource.h"
+#include "motionConnectorMocopi/LiveSource.h"
 
 #include <utility>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 MocopiLiveSource::MocopiLiveSource(const MocopiLiveSourceConfig& config)
@@ -122,13 +122,13 @@ MocopiLiveSource::ConsumeSessionRestart() noexcept
     return pending;
 }
 
-motion::PoseSampleResult
+openstrata::motion::PoseSampleResult
 MocopiLiveSource::Sample(double evaluationTime)
 {
     return _intake.Sample(evaluationTime);
 }
 
-motion::MotionSourceMetadata
+openstrata::motion::SourceMetadata
 MocopiLiveSource::GetSourceMetadata() const
 {
     // The intake's rather than the assembler's, which on this protocol are the
@@ -155,4 +155,4 @@ MocopiLiveSource::Reset()
     _intake.SetSourceMetadata(_assembler.GetSourceMetadata());
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

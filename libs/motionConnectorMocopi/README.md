@@ -1,4 +1,4 @@
-# vrmAdapterMocopi
+# motionConnectorMocopi
 
 The native live input adapter for one capture product: that product's own UDP
 packets from the device's application, in; canonical humanoid motion, out. No
@@ -6,31 +6,32 @@ third-party sender application anywhere in the path.
 
 ```text
 UDP datagram → packet decode → joint mapping → coordinate conversion
-             → frame assembly → HumanoidPose → LiveCaptureSource
+             → frame assembly → MotionPose → LiveCaptureSource
 ```
 
 **Status: through the runtime bridge — the library is code-complete.** What
 exists is the library's identity
 and its two edges, the frozen diagnostic set, the recorded-packet format, the
-**UDP receiver**, [**`mocopi_record`**](tools/mocopiRecord/README.md) — the CLI
+**UDP receiver**, [**`mocopi_record`**](../../tools/mocopiRecord/README.md) — the CLI
 that turns a source aimed at this machine into a capture file — the **packet
-decoder** ([container](include/vrmAdapterMocopi/PacketChunk.h) and
-[two packet kinds](include/vrmAdapterMocopi/MotionPacket.h), with a
+decoder** ([container](include/motionConnectorMocopi/PacketChunk.h) and
+[two packet kinds](include/motionConnectorMocopi/MotionPacket.h), with a
 [corpus](tests/corpus/README.md) behind them) — and now the
-[**joint map and the basis change**](include/vrmAdapterMocopi/SkeletonMap.h),
+[**joint map and the basis change**](include/motionConnectorMocopi/SkeletonMap.h),
 which is the first layer here that knows a humanoid exists, then
-[**frame assembly**](include/vrmAdapterMocopi/FrameAssembler.h) — the layer that
+[**frame assembly**](include/motionConnectorMocopi/FrameAssembler.h) — the layer that
 decides whether a datagram is a frame, whether it is complete, and whether the
 source restarted — and finally the
-[**live-source bridge**](include/vrmAdapterMocopi/LiveSource.h), where a frame
-becomes a pose a consumer samples through the unchanged `motionRuntime`.
+[**live-source bridge**](include/motionConnectorMocopi/LiveSource.h), where a frame
+becomes a pose a consumer samples through the unchanged
+`motionRecording`.
 
 **What does not exist is a session that met a device.** Every layer above is
 exercised, and by committed bytes that never met a sensor. Tracking state and
 confidence have nothing to decode into — the measured grammar carries neither —
 and reconnection, the opt-in hardware run, and the cross-source comparison of
 §9.6 all need an operator rather than a commit.
-See [the plan](../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) §6 and
+See [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §6 and
 Milestone D for the implementation order, and
 [below](#transport-arrives-first-here-and-that-is-the-finding) for why this
 adapter's order is the reverse of its sibling's.
@@ -53,7 +54,7 @@ fourth commit rather than its first:
 
 - **A decoder written from a remembered format is a guess wearing the shape of
   progress.** That is the failure mode the recorded-motion plan was built around
-  ([BVH-0](../../../docs/roadmap/recorded-motion-sources.md#9-milestones)), and
+  ([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/recorded-motion-sources.md#9-milestones)), and
   it applies harder here: a BVH file that is misread produces a visibly wrong
   figure, where a packet field read at the wrong offset produces plausible
   numbers.
@@ -64,7 +65,7 @@ fourth commit rather than its first:
   8000 times over four different motions is a measurement; one that does not is
   a wrong guess, and the check was written to be able to say so. The grammar and
   the population behind each claim are on
-  [`MotionPacket.h`](include/vrmAdapterMocopi/MotionPacket.h).
+  [`MotionPacket.h`](include/motionConnectorMocopi/MotionPacket.h).
 
 The recorded sessions themselves are **not committable** — they hold a real
 person's motion, and a skeleton packet is a body measurement — so what is
@@ -109,7 +110,7 @@ second made the first moot.
   the two hands rise 0.670 m and 0.650 m, tracking each other frame by frame —
   and the head-turn session turns both ways. No amount of remembering helps.
 - **The answer was already in the repository.**
-  [`mocopi-mobile-bvh-default-v1`](../../../profiles/motion/mocopi-mobile-bvh-default-v1.yaml)
+  [`mocopi-mobile-bvh-default-v1`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/profiles/motion/mocopi-mobile-bvh-default-v1.yaml)
   was measured on 2026-08-04 from *the same application's* BVH export and states
   `handedness: right`, `+Y`, `+Z`, and a side for every joint. The only question
   left was whether the application mirrors between the file it writes and the
@@ -129,12 +130,12 @@ rather than an open question — and, as of 2026-08-12, that both exist.
 
 One thing not to over-read: this says the two paths agree about the *rest pose*,
 not about the motion. That is the
-[cross-source comparison](../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) of
+[cross-source comparison](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) of
 §9.6, on a single session observed both ways, and it is still owed.
 
 ## The map is where an id becomes a bone
 
-[`SkeletonMap.h`](include/vrmAdapterMocopi/SkeletonMap.h) carries the reasoning;
+[`SkeletonMap.h`](include/motionConnectorMocopi/SkeletonMap.h) carries the reasoning;
 four things in it are decisions rather than details.
 
 **A bone id is a position, not a name.** The sibling maps the string
@@ -159,7 +160,7 @@ sibling's answer to the same question is *not* the identity.
 dropped.** A joint between two mapped ones is on the path between them, so a
 bound bone's rotation is the composition from just below its nearest bound
 ancestor down to itself — the path rule, stated in
-[MOTION_CONTRACT.md](../../../docs/design/MOTION_CONTRACT.md) and now implemented
+[MOTION_CONTRACT.md](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md) and now implemented
 twice. The two tracks may not share the table (§2.1), so their agreement is
 enforced from outside instead: `scripts/check_docs.py` reads the adapter's table,
 the recorded profile, and the committed BVH export the correspondence was
@@ -169,8 +170,8 @@ measured on, and fails when the three stop describing one rig.
 translations and cannot compose them; natively there is no second channel, and in
 207,064 measured bone-frames every other translation restated its rest offset bit
 for bit. So the body's placement is the hips joint's own translation — and since
-the [root/hips record](../../../docs/design/MOTION_CONTRACT.md#root-and-hips-v070)
-was written it is also a `motion::RootMotion`, absolute and in the sender's own
+the [root/hips record](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md#root-and-hips-v070)
+was written it is also a `openstrata::motion::RootMotion`, absolute and in the sender's own
 space, composed by `MocopiFrameAssembler` under
 `BodyPlacementPolicy::HipsOnly`. That is the only one of the record's four
 policies this protocol can express, and it is why a mocopi session retargets onto
@@ -186,14 +187,16 @@ exactly what the sibling's header says an adapter must not do and cannot avoid.
 ## What this is, structurally
 
 A plain static CMake library with an `openstrata.library.yaml`, exactly like
-`motionRuntime` and `vrmRetarget` — **not** a plugin bundle. It registers
-nothing with OpenUSD and ships no `plugInfo.json`, because
-[WORKSPACE.md §2](../../../docs/architecture/WORKSPACE.md) keeps it away from
-`vrmSchema`, from every file-format bundle, and from OpenExec. It has exactly
-two dependencies, and they are the two its manifest declares:
+its siblings here — **not** a plugin bundle. It registers nothing with OpenUSD
+and ships no `plugInfo.json`, because
+[WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) keeps it away from every
+file-format bundle and from OpenExec. It has exactly four dependencies, and
+they are the four its manifest declares — three of them published
+`usd-motion-plugins` artifacts, pinned there by digest per target:
 
 ```text
-vrmAdapterMocopi -> motionCore, motionRuntime
+motionConnectorMocopi -> motionCore, motionSampling, motionRecording,
+                         motionConnectorTransport
 ```
 
 `tests/check_boundaries.py` is what makes that a fact rather than an intention.
@@ -202,9 +205,10 @@ API in `include/` or `src/`, on a mention of the sibling adapter or a plugin
 bundle, on a `target_link_libraries` naming anything outside its allowlist, and
 on a binary whose imports leave the OpenUSD value-type layer.
 
-That allowlist is the two libraries above plus `ws2_32`, which is not a
+That allowlist is the four libraries above plus `ws2_32`, which is not a
 dependency direction — WORKSPACE.md §2 constrains which *workspace* libraries an
-adapter may reach, and motion policy §8.2 puts the socket inside the adapter
+connector may reach, and DESIGN_POLICY.md §8.2 puts the socket inside the
+connector
 deliberately. It arrived with the receiver rather than being reserved for it,
 which is the arrangement the scaffold commit asked for. `Threads::Threads` is
 still absent and is the half worth reading: the sibling links it for a datagram
@@ -212,20 +216,21 @@ queue's mutex, this adapter has no queue, and adding the name "because a
 receiver usually needs one" is exactly the reservation the allowlist exists to
 catch.
 
-It is also the *only* enforcement: `ost` 0.21.0 does not discover a library
-under `adapters/`, so the workspace graph gate validates none of these edges and
-still reports "valid"
-([report 34](../../../docs/reports/ost/34-2026-07-29-v0.21.0-adapter-library-discovery-gap.md)).
+It is no longer the *only* enforcement. This library is a workspace member
+here, so the graph gate loads the manifest beside it and validates every edge it
+declares, the three external ones included. What the script adds is what a graph
+cannot see: a name reached in source with no link line behind it.
 
 ## The sibling adapter is not a dependency, and never becomes one
 
 The other live adapter decodes a generic protocol that this same product can be
 relayed through, which makes reaching across it the *convenient* mistake rather
-than an implausible one. Adapter plan §2.1 forbids it, and the reason is not
+than an implausible one. The connector contract forbids it, and the reason is not
 tidiness: a native decoder that borrowed a relay's decoder would inherit the
 relay's assumptions about framing, clocks and bone names, and the entire point
 of building this path is to measure what those assumptions cost
-([§6](../../../docs/roadmap/adapters-mocopi-vmc-ardy.md)). The two boundary
+([§6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md),
+the plan this connector was built under before it moved). The two boundary
 scripts refuse each other's names, so the pair is symmetric.
 
 The two paths do meet once, deliberately: the **same physical session** observed
@@ -266,18 +271,18 @@ is the rule that sent it here — "the fixture-driven tests stay deterministic" 
 a statement about the layers that decode, and this one decodes nothing.
 
 It costs nothing the original order was protecting, either.
-`vrmAdapterMocopi_udpReceiver` needs no device, no sender application and no
+`motionConnectorMocopi_udpReceiver` needs no device, no sender application and no
 fixture: it binds loopback on an OS-assigned port and sends itself a dozen bytes.
 It is its own CTest name so a runner that forbids sockets excludes a name rather
 than a claim, and it never touches port 12351 — a developer with a real device
 aimed at this machine does not lose it to the test suite. Three names in this
 adapter bind a socket and a lane that forbids binds must exclude all three:
-`vrmAdapterMocopi_udpReceiver`, `vrmAdapterMocopi_udpReceiverTruncation`, and
-`vrmAdapterMocopi_loopbackCorpus` below — which reads like a corpus pass and
+`motionConnectorMocopi_udpReceiver`, `motionConnectorMocopi_udpReceiverTruncation`, and
+`motionConnectorMocopi_loopbackCorpus` below — which reads like a corpus pass and
 behaves like a socket test, so it is the one such a list would miss.
 
 And once every layer above it existed, the same binary took on the one claim the
-inverted order left open: `vrmAdapterMocopi_loopbackCorpus` sends all nine
+inverted order left open: `motionConnectorMocopi_loopbackCorpus` sends all nine
 committed captures — 54 datagrams — to a bound port, reads them back off it, and
 requires the frames, the sampled poses, the diagnostics and all three tallies to
 be **identical** to what the same bytes produce with no socket in the path. Every
@@ -298,21 +303,21 @@ code.
 
 ## The recorder
 
-[`tools/mocopiRecord`](tools/mocopiRecord/README.md) is the CLI, and it is the
+[`tools/mocopiRecord`](../../tools/mocopiRecord/README.md) is the CLI, and it is the
 consumer the receiver above was waiting for: `mocopi_record --output` turns a
 source aimed at this port into a capture file, and `--inspect` reads one back
 with no socket at all. It ships in the same artifact as the library
-([WORKSPACE.md §5](../../../docs/architecture/WORKSPACE.md)) and links the
-adapter and nothing else, which is less than §2 permits a tool — an adapter's
-CLI may drive `vrmRetarget` and author a stage, and this one cannot usefully do
-either, because there is no decoder for a retarget to act on.
+([WORKSPACE.md §5](../../docs/architecture/WORKSPACE.md)) and links the
+connector and nothing else, which is less than §2 permits a tool — a
+connector's CLI may author a stage, and this one has no reason to: what it
+produces is a capture file.
 
 It decodes nothing, so its report is about the datagram *envelope*: the counts,
 the peers, the arrival rate on the receive clock, a census of distinct payload
 lengths, and the leading bytes every datagram shares. Those last two are the
 first sentences about this protocol anything here has been able to say, and the
 line they stay on the right side of is argued in
-[`SessionReport.h`](tools/mocopiRecord/src/SessionReport.h). It is also where
+[`SessionReport.h`](../../tools/mocopiRecord/src/SessionReport.h). It is also where
 `--silence-timeout` states the threshold `VRM_MOCOPI_DEVICE_UNAVAILABLE` has no
 default for, and where the vendor's IPv4-only and no-`localhost` statements
 become warnings that fire *before* the first datagram — the receiver refuses
@@ -322,7 +327,7 @@ out of a product's documentation.
 ## Recorded input
 
 `mocopi-packet-capture` v1 — spec on
-[`PacketCapture.h`](include/vrmAdapterMocopi/PacketCapture.h) — is the other
+[`PacketCapture.h`](include/motionConnectorMocopi/PacketCapture.h) — is the other
 half of the arrangement above: the receiver turns a source into datagrams, and
 this is what keeps them. The datagrams a session delivered, verbatim, with the
 instant each arrived. Line-oriented text, so a fixture diffs; hex with an ASCII
@@ -349,7 +354,8 @@ that make the sentence above concrete.
 
 **It is a second format rather than the sibling's, and that is a decision.** The
 header file argues it in full; the short version is that reaching the sibling's
-header is a forbidden edge, `motionRuntime` is the wrong home for a transport
+header is a forbidden edge, a sampling or recording library is the wrong home
+for a transport
 artifact, and two magic lines mean a capture of one protocol handed to the other
 protocol's decoder fails at line 1 with a clear message instead of at the first
 field with a malformed-packet diagnostic blamed on a source that never sent it.
@@ -366,7 +372,7 @@ branch on either.
 
 ## Diagnostics
 
-Nine codes, frozen in `include/vrmAdapterMocopi/Diagnostics.h` — and frozen on
+Nine codes, frozen in `include/motionConnectorMocopi/Diagnostics.h` — and frozen on
 2026-08-03, two days before this directory existed, so that the set describes
 the protocol's failure modes rather than whichever bug was chased first:
 
@@ -379,7 +385,10 @@ VRM_MOCOPI_NON_FINITE_TRANSFORM
 ```
 
 `VRM_MOTION_*` is the canonical layer's namespace and `VRM_VMC_*` is the other
-adapter's; neither is this one's. Exactly one code is non-recoverable — a
+connector's; neither is this one's. The `VRM_` prefix on all three is the
+sender's and is wrong here: renaming them is DIAG-O1 in
+[DIAGNOSTICS.md](../../docs/reference/DIAGNOSTICS.md), deliberately left for
+one change over every connector rather than done per import. Exactly one code is non-recoverable — a
 receiver that never bound has nothing to recover into. Two that look fatal and
 are not: a device that is **not there yet** is the ordinary state of a receiver
 bound before the operator started the application, and **tracking loss** is the
@@ -407,9 +416,9 @@ Composed with the rest of the workspace:
 ```sh
 cmake -S . -B build -DCMAKE_PREFIX_PATH=<usd-install>
 cmake --build build --config Release
-# Both halves: the library's sixteen names and the CLI's three. `-R vrmAdapterMocopi`
+# Both halves: the library's sixteen names and the CLI's three. `-R motionConnectorMocopi`
 # alone silently misses the tool, whose names begin with `mocopi_record`.
-ctest --test-dir build -R "vrmAdapterMocopi|mocopi_record"
+ctest --test-dir build -R "motionConnectorMocopi|mocopi_record"
 ```
 
 Or through the runtime `ost` resolves for the workspace:
@@ -418,17 +427,17 @@ Or through the runtime `ost` resolves for the workspace:
 ost build && ost test
 ```
 
-Standalone — this directory is its own CMake project, resolving `motionCore` and
-`motionRuntime` as installed packages rather than in-tree targets, and building
-the CLI along with the library because that is the configuration the adapter's
-artifact would be built from:
+Standalone — this directory is its own CMake project, resolving `motionCore`,
+`motionSampling`, `motionRecording` and `motionConnectorTransport` as installed
+packages rather than in-tree targets:
 
 ```sh
-cmake -S adapters/liveCapture/mocopi -B build/mocopi \
+cmake -S libs/motionConnectorMocopi -B build/mocopi \
       -DCMAKE_PREFIX_PATH="<usd-install>;<workspace-prefix>"
 cmake --build build/mocopi
 ```
 
-`ost plugin build` is not the standalone route here: it takes a *bundle*
-directory and refuses anything without an `openstrata.plugin.yaml`, which an
-adapter does not have and must not grow.
+`ost library build` is the route `ost` takes to the same configure, and it is
+what materializes the three pinned artifacts first. `ost plugin build` is not
+it: that takes a *bundle* directory and refuses anything without an
+`openstrata.plugin.yaml`, which a connector does not have and must not grow.

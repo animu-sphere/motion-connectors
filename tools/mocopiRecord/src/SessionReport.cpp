@@ -157,12 +157,12 @@ SessionReport::_ObservePrefix(const std::uint8_t* bytes, std::size_t count)
 }
 
 void
-SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterMocopi::Diagnostic>& log)
+SessionReport::ObserveDiagnostics(const std::vector<mocopi::Diagnostic>& log)
 {
-    for (const vrmAdapterMocopi::Diagnostic& diagnostic : log)
+    for (const mocopi::Diagnostic& diagnostic : log)
     {
         const auto index = static_cast<std::size_t>(diagnostic.code);
-        if (index >= vrmAdapterMocopi::DiagnosticCodeCount)
+        if (index >= mocopi::DiagnosticCodeCount)
         {
             continue;
         }
@@ -175,12 +175,12 @@ SessionReport::ObserveDiagnostics(const std::vector<vrmAdapterMocopi::Diagnostic
 }
 
 void
-SessionReport::Print(std::FILE* out, const vrmAdapterMocopi::UdpReceiver* receiver,
-                     const vrmAdapterMocopi::PacketCapture* provenance) const
+SessionReport::Print(std::FILE* out, const mocopi::UdpReceiver* receiver,
+                     const mocopi::PacketCapture* provenance) const
 {
     if (receiver)
     {
-        const vrmAdapterMocopi::UdpReceiverStats& socket = receiver->GetStats();
+        const mocopi::UdpReceiverStats& socket = receiver->GetStats();
         // The loopback note is stronger here than in the sibling's report, and
         // it is the vendor's statement rather than this tool's inference: the
         // product documents `localhost` as an unsupported destination, so a
@@ -274,7 +274,7 @@ SessionReport::Print(std::FILE* out, const vrmAdapterMocopi::UdpReceiver* receiv
             // session's shared prefix read `#...head....ftypsony motion format`,
             // and the tags are what a reader recognises. Hex alone would have
             // hidden the finding in plain sight.
-            const std::size_t perLine = vrmAdapterMocopi::PacketCaptureBytesPerLine;
+            const std::size_t perLine = mocopi::PacketCaptureBytesPerLine;
             for (std::size_t offset = 0; offset < _prefix.size(); offset += perLine)
             {
                 const std::size_t count = std::min(perLine, _prefix.size() - offset);
@@ -292,7 +292,7 @@ SessionReport::Print(std::FILE* out, const vrmAdapterMocopi::UdpReceiver* receiv
                 }
                 std::fprintf(
                     out, "  |%s|\n",
-                    vrmAdapterMocopi::PacketCaptureGutter(_prefix.data() + offset, count).c_str());
+                    mocopi::PacketCaptureGutter(_prefix.data() + offset, count).c_str());
             }
         }
     }
@@ -409,13 +409,13 @@ SessionReport::_PrintDiagnostics(std::FILE* out) const
         return;
     }
 
-    for (std::size_t index = 0; index < vrmAdapterMocopi::DiagnosticCodeCount; ++index)
+    for (std::size_t index = 0; index < mocopi::DiagnosticCodeCount; ++index)
     {
         if (_diagnostics[index] == 0)
         {
             continue;
         }
-        const auto code = static_cast<vrmAdapterMocopi::DiagnosticCode>(index);
+        const auto code = static_cast<mocopi::DiagnosticCode>(index);
         // The severity the diagnostic was *raised* with, not the code's default.
         // Diagnostics.h contemplates a caller escalating one, and the whole
         // diagnostic is already kept here -- so recomputing the severity from the
@@ -423,12 +423,12 @@ SessionReport::_PrintDiagnostics(std::FILE* out) const
         // immediately below it, which formats the real one.
         std::fprintf(out, "diagnostics: %llu x %s (%s)\n",
                      static_cast<unsigned long long>(_diagnostics[index]),
-                     std::string(vrmAdapterMocopi::DiagnosticCodeString(code)).c_str(),
-                     std::string(vrmAdapterMocopi::DiagnosticSeverityString(
+                     std::string(mocopi::DiagnosticCodeString(code)).c_str(),
+                     std::string(mocopi::DiagnosticSeverityString(
                                      _firstDiagnostic[index].severity))
                          .c_str());
         std::fprintf(out, "             first: %s\n",
-                     vrmAdapterMocopi::FormatDiagnostic(_firstDiagnostic[index]).c_str());
+                     mocopi::FormatDiagnostic(_firstDiagnostic[index]).c_str());
     }
 }
 

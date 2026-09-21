@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/PacketChunk.h"
+#include "motionConnectorMocopi/PacketChunk.h"
 
 #include <cstring>
 #include <string>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 namespace
 {
@@ -236,4 +236,4 @@ ReadPacketChunkF64(const PacketChunk& chunk, double* value) noexcept
     return true;
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

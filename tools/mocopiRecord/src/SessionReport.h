@@ -52,9 +52,9 @@
 // will go looking for jitter in a device that never had any.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/UdpReceiver.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/UdpReceiver.h"
 
 #include <array>
 #include <cstddef>
@@ -64,6 +64,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+namespace mocopi = openstrata::connectors::mocopi;
 
 namespace mocopiRecordTool
 {
@@ -110,7 +112,7 @@ class SessionReport
     // ever be 0, so a reader has to go and verify the clear before they can tell
     // that the offset is inert. One of them had to go, and the clear is the one
     // that also bounds how much a long session accumulates.
-    void ObserveDiagnostics(const std::vector<vrmAdapterMocopi::Diagnostic>& log);
+    void ObserveDiagnostics(const std::vector<mocopi::Diagnostic>& log);
 
     void
     SetStopReason(StopReason reason) noexcept
@@ -146,8 +148,8 @@ class SessionReport
     // live session the operator supplied it on the command line a moment ago and
     // does not need it read back; for a capture recorded months ago it is half of
     // what "is this fixture still what I thought it was" means.
-    void Print(std::FILE* out, const vrmAdapterMocopi::UdpReceiver* receiver,
-               const vrmAdapterMocopi::PacketCapture* provenance) const;
+    void Print(std::FILE* out, const mocopi::UdpReceiver* receiver,
+               const mocopi::PacketCapture* provenance) const;
 
   private:
     void _ObservePrefix(const std::uint8_t* bytes, std::size_t count);
@@ -222,10 +224,10 @@ class SessionReport
     // "at least" would invite a reviewer to look for bytes that are not there.
     std::size_t _shortestDatagram = 0;
 
-    std::array<std::uint64_t, vrmAdapterMocopi::DiagnosticCodeCount> _diagnostics{};
+    std::array<std::uint64_t, mocopi::DiagnosticCodeCount> _diagnostics{};
     // The first of each code, kept whole. A count says a session reported
     // silence twice; the first line says when.
-    std::array<vrmAdapterMocopi::Diagnostic, vrmAdapterMocopi::DiagnosticCodeCount>
+    std::array<mocopi::Diagnostic, mocopi::DiagnosticCodeCount>
         _firstDiagnostic{};
 
     StopReason _stop = StopReason::EndOfCapture;

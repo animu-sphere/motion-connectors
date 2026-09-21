@@ -4,7 +4,7 @@
 //
 // This is the last layer of the native path and deliberately the thinnest.
 // Every layer below it converts or decides something about the protocol; this
-// one hands what they produced to `motion::LiveCaptureSource` and answers the
+// one hands what they produced to `openstrata::motion::LiveCaptureSource` and answers the
 // runtime's `IMotionSource` questions by forwarding them:
 //
 //     datagram -> chunks -> packet -> frame -> [ MocopiLiveSource ]
@@ -12,9 +12,10 @@
 //
 // What it must *not* grow is the reason it is written down at all. Buffering,
 // interpolation, smoothing, confidence gating, missing-bone resolution and
-// root-motion intake all exist exactly once, in `motionRuntime`, and an adapter
+// root-motion intake all exist exactly once, in the sampling and recording
+// libraries, and a connector
 // that grew a second copy would have forked the pipeline rather than extended
-// it (roadmap/adapters-mocopi-vmc-ardy.md §2, §6). So this class keeps no
+// it (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §2, §6). So this class keeps no
 // history of its own: the frames of the push it is in the middle of, the
 // provenance it has already told the intake about, and a latch for the one
 // event a consumer cannot reconstruct from the poses it receives.
@@ -23,12 +24,12 @@
 //
 // The assembler reports; the intake decides. A frame arrives here carrying
 // exactly the bones it formed, with `missing` beside it as a *report*, and it is
-// passed on exactly that way — `MissingBonePolicy` then holds the bone or leaves
+// passed on exactly that way — `MissingJointPolicy` then holds the bone or leaves
 // it unbound, per the caller's configuration. Nothing here fills a gap in. That
 // division is the sibling's and the argument is the same: a second missing-bone
 // policy inside an adapter would disagree with the configured one invisibly.
 //
-// ## Three places this differs from `vrmAdapterVmc::VmcLiveSource`
+// ## Three places this differs from the sibling connector's `VmcLiveSource`
 //
 // A reader arriving from the sibling should be told what is missing before
 // looking for it. Each of the three is a consequence of a measurement rather
@@ -153,7 +154,7 @@
 //
 // ## What a pose cannot carry, and where it is still readable
 //
-// A frame knows things a `HumanoidPose` has nowhere to put: which bones the rig
+// A frame knows things a `MotionPose` has nowhere to put: which bones the rig
 // declared and this frame did not form, whether it began a session, how many
 // datagrams the transport lost before it, and how far the sender's two clocks
 // have drifted apart. The statistics structs carry the aggregates and the
@@ -188,14 +189,14 @@
 //
 // Nothing here is thread-safe, and neither is what it wraps: `PoseBuffer` holds
 // a deque, `LiveCaptureSource::Sample` writes its own statistics as it answers,
-// and `motionRuntime` contains no mutex or atomic at all. So a push and a sample
+// and neither sampling nor recording contains a mutex or an atomic at all. So a push and a sample
 // may not run concurrently, and neither may two samples.
 //
 // That is not solved here, and the shape of the solution is already settled one
 // layer down: the hand-off between a receive thread and a consumer's is a
 // bounded queue of **raw datagrams**, before any decoder, so this class and all
-// of `motionRuntime` stay on one thread exactly as their tests are written
-// (motion policy §11.4, and `vrmAdapterVmc::DatagramQueue` for the sibling's).
+// of those libraries stay on one thread exactly as their tests are written
+// (DESIGN_POLICY.md §11.4, and the sibling connector's `DatagramQueue` for the sibling's).
 // What this class must *not* do meanwhile is grow a private lock: a mutex here
 // would make it safe against itself and leave every `GetIntake()` caller racing
 // on the same buffer, which is a worse fault for looking like a fixed one.
@@ -205,26 +206,26 @@
 // `MotionPacket::provenance.formatType` and every `UnreadChunk` point into the
 // caller's bytes — the hazard `MotionPacket.h` names, and the reason its rvalue
 // overload is deleted. Pushing a datagram through this class ends inside the
-// call: a joint has become a `motion::HumanBone`, a rotation has been reordered
+// call: a joint has become a `openstrata::motion::HumanJoint`, a rotation has been reordered
 // into a `GfQuatf`, and a diagnostic owns its subject and its detail. So a
 // receiver may hand this API the buffer it is about to overwrite, and that is
 // the shape a receiver should have.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/FrameAssembler.h"
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/FrameAssembler.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "motionRuntime/LiveCaptureSource.h"
-#include "motionRuntime/MotionSource.h"
+#include "motionRecording/LiveCaptureSource.h"
+#include "motionSampling/MotionSource.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // What to do with the first frame of a new session. As above: the option this
@@ -243,7 +244,7 @@ enum class SessionRestartPolicy : std::uint8_t
 struct MocopiLiveSourceConfig
 {
     MocopiFrameConfig frame;
-    motion::LiveCaptureConfig intake;
+    openstrata::motion::LiveCaptureConfig intake;
     SessionRestartPolicy restart = SessionRestartPolicy::Reset;
 };
 
@@ -302,7 +303,7 @@ struct MocopiLiveSourceStats
 // the moment it did. Read them back through `GetAssembler().GetConfig()` and
 // `GetIntake().GetConfig()`. The restart policy is the one setting that belongs
 // to neither half, so it is the one this class keeps.
-class VRMADAPTERMOCOPI_API MocopiLiveSource final : public motion::IMotionSource
+class MOTIONCONNECTORMOCOPI_API MocopiLiveSource final : public openstrata::motion::IMotionSource
 {
   public:
     explicit MocopiLiveSource(const MocopiLiveSourceConfig& config = {});
@@ -381,16 +382,16 @@ class VRMADAPTERMOCOPI_API MocopiLiveSource final : public motion::IMotionSource
 
     // IMotionSource, entirely by delegation. A pose sampled from here is a pose
     // the runtime produced; this class contributes no arithmetic to it.
-    motion::PoseSampleResult Sample(double evaluationTime) override;
-    motion::MotionSourceMetadata GetSourceMetadata() const override;
+    openstrata::motion::PoseSampleResult Sample(double evaluationTime) override;
+    openstrata::motion::SourceMetadata GetSourceMetadata() const override;
     bool GetTimeRange(double* startTime, double* endTime) const override;
 
-    motion::LiveCaptureSource&
+    openstrata::motion::LiveCaptureSource&
     GetIntake() noexcept
     {
         return _intake;
     }
-    const motion::LiveCaptureSource&
+    const openstrata::motion::LiveCaptureSource&
     GetIntake() const noexcept
     {
         return _intake;
@@ -419,7 +420,7 @@ class VRMADAPTERMOCOPI_API MocopiLiveSource final : public motion::IMotionSource
     // shape that could only ever hold a single frame would have to be unwrapped
     // by every caller that also reads the sibling's.
     //
-    // This is the window onto what a `HumanoidPose` cannot carry — see the
+    // This is the window onto what a `MotionPose` cannot carry — see the
     // header. A caller that only wants poses never touches it; a recording tool
     // gathering the root/hips evidence v0.7.0 owes reads it after every push.
     const std::vector<MocopiFrame>&
@@ -462,7 +463,7 @@ class VRMADAPTERMOCOPI_API MocopiLiveSource final : public motion::IMotionSource
     void _StampDatagram(std::vector<Diagnostic>* diagnostics, std::size_t from) const;
 
     MocopiFrameAssembler _assembler;
-    motion::LiveCaptureSource _intake;
+    openstrata::motion::LiveCaptureSource _intake;
     SessionRestartPolicy _restart;
 
     // Reused across pushes rather than allocated per datagram: at 60 Hz this is
@@ -478,4 +479,4 @@ class VRMADAPTERMOCOPI_API MocopiLiveSource final : public motion::IMotionSource
     MocopiLiveSourceStats _stats;
 };
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

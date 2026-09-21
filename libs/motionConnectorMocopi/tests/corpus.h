@@ -41,11 +41,11 @@
 // arrangement is, and a VMC copy of it is the same change one namespace over.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/FrameAssembler.h"
-#include "vrmAdapterMocopi/LiveSource.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/FrameAssembler.h"
+#include "motionConnectorMocopi/LiveSource.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include <algorithm>
 #include <cassert>
@@ -56,7 +56,9 @@
 #include <string>
 #include <vector>
 
-namespace vrmAdapterMocopiTests
+namespace mocopi = openstrata::connectors::mocopi;
+
+namespace motionConnectorMocopiTests
 {
 
 // Every `.mocopipackets` file in `directory`, sorted, or false with a line on
@@ -103,11 +105,11 @@ CollectCaptures(const std::filesystem::path& directory, std::vector<std::filesys
 struct PushedDatagram
 {
     std::size_t admitted = 0;
-    std::vector<vrmAdapterMocopi::MocopiFrame> frames;
+    std::vector<mocopi::MocopiFrame> frames;
     bool restartLatched = false;
     // The pose a consumer sampled, present exactly when a frame was admitted and
     // the buffer had something to answer with.
-    std::optional<motion::HumanoidPose> sampled;
+    std::optional<openstrata::motion::MotionPose> sampled;
 };
 
 // One datagram through the whole bridge: push, poison, latch the restart, sample
@@ -118,8 +120,8 @@ struct PushedDatagram
 // caller compares rather than by an assertion about pointers. It is a pointer
 // rather than a value for that reason alone.
 inline PushedDatagram
-PushDatagram(vrmAdapterMocopi::MocopiLiveSource* source, std::vector<std::uint8_t>* bytes,
-             double receiveTime, std::vector<vrmAdapterMocopi::Diagnostic>* diagnostics)
+PushDatagram(mocopi::MocopiLiveSource* source, std::vector<std::uint8_t>* bytes,
+             double receiveTime, std::vector<mocopi::Diagnostic>* diagnostics)
 {
     PushedDatagram out;
     out.admitted = source->PushDatagram(*bytes, receiveTime, diagnostics);
@@ -146,7 +148,8 @@ PushDatagram(vrmAdapterMocopi::MocopiLiveSource* source, std::vector<std::uint8_
     // instant falls *between* two stored ones and the buffer interpolates —
     // which would compare one interpolation against another and measure the
     // arithmetic rather than the layer under test (MOTION_CONTRACT.md).
-    const motion::PoseSampleResult result = source->Sample(out.frames.back().pose.timestamp);
+    const openstrata::motion::PoseSampleResult result =
+        source->Sample(out.frames.back().pose.timestamp);
     if (result.pose)
     {
         out.sampled = *result.pose;
@@ -159,13 +162,13 @@ PushDatagram(vrmAdapterMocopi::MocopiLiveSource* source, std::vector<std::uint8_
 // bridge's, the assembler's, and the intake's.
 struct ReplayStats
 {
-    vrmAdapterMocopi::MocopiLiveSourceStats source;
-    vrmAdapterMocopi::MocopiFrameStats frame;
-    motion::LiveCaptureStats intake;
+    mocopi::MocopiLiveSourceStats source;
+    mocopi::MocopiFrameStats frame;
+    openstrata::motion::LiveCaptureStats intake;
 };
 
 inline ReplayStats
-ReadStats(const vrmAdapterMocopi::MocopiLiveSource& source)
+ReadStats(const mocopi::MocopiLiveSource& source)
 {
     ReplayStats out;
     out.source = source.GetStats();
@@ -174,4 +177,4 @@ ReadStats(const vrmAdapterMocopi::MocopiLiveSource& source)
     return out;
 }
 
-} // namespace vrmAdapterMocopiTests
+} // namespace motionConnectorMocopiTests

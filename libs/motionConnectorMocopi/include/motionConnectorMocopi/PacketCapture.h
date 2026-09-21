@@ -3,8 +3,8 @@
 // A recorded mocopi packet capture: the on-disk form of what the socket
 // received.
 //
-// The format, its reader and its writer are `liveTransport`'s
-// (liveTransport/PacketCapture.h). What is this adapter's is one string — the
+// The format, its reader and its writer are `motionConnectorTransport`'s
+// (motionConnectorTransport/PacketCapture.h). What is this adapter's is one string — the
 // magic line — and that is the whole of what stayed behind.
 //
 // It is deliberately *not* a `motion-capture-trace`. The two formats sit at
@@ -21,7 +21,7 @@
 //
 // This header used to argue that the *whole* format was repeated rather than
 // shared, having ruled out both homes a reader reaches for first — a sibling
-// adapter's include is forbidden, and `motionRuntime` refuses a socket — and it
+// connector's include is forbidden, and a recording library refuses a socket — and it
 // closed by naming exactly what would change the answer:
 //
 // > What changes it is a *third* recorder — a third live adapter, or a tool
@@ -29,7 +29,7 @@
 // > home is the boundary question above, argued in its own change.
 //
 // A third live adapter arrived, the boundary was argued in its own change, and
-// `liveTransport` is the answer (osc-and-vrchat-trackers.md §3.2). One of the
+// `motionConnectorTransport` is the answer (osc-and-vrchat-trackers.md §3.2). One of the
 // three arguments survived the move intact, and it is why the magic is still
 // here rather than shared:
 //
@@ -47,44 +47,44 @@
 // library that now stores them cannot, since it knows no protocol at all.
 #pragma once
 
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "liveTransport/PacketCapture.h"
+#include "motionConnectorTransport/PacketCapture.h"
 
 #include <iosfwd>
 #include <string>
 #include <string_view>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // The first token of every capture this adapter reads or writes. A fixture's
 // type tag, in the sense above.
 inline constexpr std::string_view PacketCaptureMagic = "!mocopi-packet-capture";
 
-using liveTransport::MaxDatagramBytes;
-using liveTransport::PacketCaptureBytesPerLine;
-using liveTransport::PacketCaptureFormatVersion;
+using transport::MaxDatagramBytes;
+using transport::PacketCaptureBytesPerLine;
+using transport::PacketCaptureFormatVersion;
 
-using liveTransport::PacketCapture;
-using liveTransport::PacketCaptureError;
-using liveTransport::RecordedDatagram;
+using transport::PacketCapture;
+using transport::PacketCaptureError;
+using transport::RecordedDatagram;
 
-using liveTransport::PacketCaptureGutter;
+using transport::PacketCaptureGutter;
 
 // Parses a capture. On failure `capture` is left untouched and `error`, when
 // given, names the line and the reason.
 inline bool
 ReadPacketCapture(std::istream& input, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
-    return liveTransport::ReadPacketCapture(PacketCaptureMagic, input, capture, error);
+    return transport::ReadPacketCapture(PacketCaptureMagic, input, capture, error);
 }
 
 inline bool
 ReadPacketCaptureFile(const std::string& path, PacketCapture* capture,
                       PacketCaptureError* error = nullptr)
 {
-    return liveTransport::ReadPacketCaptureFile(PacketCaptureMagic, path, capture, error);
+    return transport::ReadPacketCaptureFile(PacketCaptureMagic, path, capture, error);
 }
 
 // Writes `capture`. Emission is deterministic, so re-reading and rewriting a
@@ -93,13 +93,13 @@ ReadPacketCaptureFile(const std::string& path, PacketCapture* capture,
 inline bool
 WritePacketCapture(std::ostream& output, const PacketCapture& capture)
 {
-    return liveTransport::WritePacketCapture(PacketCaptureMagic, output, capture);
+    return transport::WritePacketCapture(PacketCaptureMagic, output, capture);
 }
 
 inline bool
 WritePacketCaptureFile(const std::string& path, const PacketCapture& capture)
 {
-    return liveTransport::WritePacketCaptureFile(PacketCaptureMagic, path, capture);
+    return transport::WritePacketCaptureFile(PacketCaptureMagic, path, capture);
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

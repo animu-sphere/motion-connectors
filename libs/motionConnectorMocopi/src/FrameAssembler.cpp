@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/FrameAssembler.h"
+#include "motionConnectorMocopi/FrameAssembler.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 namespace
@@ -27,7 +27,7 @@ Seconds(double value)
 
 MocopiFrameAssembler::MocopiFrameAssembler(const MocopiFrameConfig& config) : _config(config)
 {
-    _metadata.kind = motion::MotionSourceKind::LiveCapture;
+    _metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
     _metadata.protocol = "mocopi";
 }
 
@@ -56,8 +56,8 @@ MocopiFrameAssembler::Reset()
 {
     _ForgetSession();
     _pendingNewSession = false;
-    _metadata = motion::MotionSourceMetadata();
-    _metadata.kind = motion::MotionSourceKind::LiveCapture;
+    _metadata = openstrata::motion::SourceMetadata();
+    _metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
     _metadata.protocol = "mocopi";
 }
 
@@ -257,17 +257,17 @@ MocopiFrameAssembler::_PushFrame(const MotionFrame& frame, std::vector<MocopiFra
         }
     }
     if (_config.bodyPlacement == BodyPlacementPolicy::HipsOnly &&
-        mapping.present.test(static_cast<std::size_t>(motion::HumanBone::Hips)))
+        mapping.present.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)))
     {
         // The body's orientation, from the same joint and the same frame. It is
         // the hips bone's rotation and stays there too: the recorded half
         // duplicates it identically, because a rig that roots at its hips has a
         // root path of one joint and the composition down it is that joint.
-        // Nothing downstream applies it twice -- `vrmRetarget` reads position
+        // Nothing downstream applies it twice -- `motionRetarget` reads position
         // alone -- and the duplication is what makes the two paths' poses
         // comparable field for field.
         out.pose.root.worldOrientation =
-            out.pose.localRotations[static_cast<std::size_t>(motion::HumanBone::Hips)];
+            out.pose.localRotations[static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)];
         out.pose.root.hasOrientation = true;
     }
     out.unusedJoints = mapping.unusedJoints;
@@ -332,4 +332,4 @@ MocopiFrameAssembler::Push(const MotionPacket& packet, double receiveTime,
     return false;
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // The mocopi adapter's diagnostic namespace
-// (roadmap/adapters-mocopi-vmc-ardy.md §8).
+// (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §8).
 //
 // These codes were frozen on 2026-08-03, before any decoder existed and before
 // this adapter had a directory — which is the point rather than an accident of
@@ -27,7 +27,7 @@
 // device that is there and cannot solve — and both are ordinary things for a
 // session to continue through.
 //
-// ## What is this adapter's, and what is `liveTransport`'s
+// ## What is this adapter's, and what is `motionConnectorTransport`'s
 //
 // The code set is the only half of this file that is still written here, and
 // that split is the contract rather than a tidy-up (WORKSPACE.md §2). A code
@@ -43,9 +43,9 @@
 // were, reached through a `using` rather than redeclared.
 #pragma once
 
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "liveTransport/Diagnostics.h"
+#include "motionConnectorTransport/Diagnostics.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -53,7 +53,7 @@
 #include <string>
 #include <string_view>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // Values are stable array indices; append only before Count.
@@ -99,22 +99,23 @@ inline constexpr std::size_t DiagnosticCodeCount = static_cast<std::size_t>(Diag
 
 // The severity scale is shared, because "info / warning / error" is not a
 // statement about this protocol.
-using DiagnosticSeverity = liveTransport::DiagnosticSeverity;
-using liveTransport::DiagnosticSeverityString;
+using DiagnosticSeverity = transport::DiagnosticSeverity;
+using transport::DiagnosticSeverityString;
 
 // The stable string, e.g. "VRM_MOCOPI_PACKET_MALFORMED". This is the contract;
 // the enumerator spelling is not.
-VRMADAPTERMOCOPI_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
+MOTIONCONNECTORMOCOPI_API std::string_view DiagnosticCodeString(DiagnosticCode code) noexcept;
 
-VRMADAPTERMOCOPI_API std::optional<DiagnosticCode>
+MOTIONCONNECTORMOCOPI_API std::optional<DiagnosticCode>
 FindDiagnosticCode(std::string_view name) noexcept;
 
-VRMADAPTERMOCOPI_API DiagnosticSeverity DiagnosticDefaultSeverity(DiagnosticCode code) noexcept;
+MOTIONCONNECTORMOCOPI_API DiagnosticSeverity
+DiagnosticDefaultSeverity(DiagnosticCode code) noexcept;
 
 // Whether a live session can continue past this code by default. A caller may
 // still escalate — a flood of recoverable diagnostics is its own signal — but
 // it never has to guess which class a code belongs to.
-VRMADAPTERMOCOPI_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
+MOTIONCONNECTORMOCOPI_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
 
 // One reported diagnostic: this adapter's code, in the shared vehicle.
 //
@@ -131,11 +132,11 @@ VRMADAPTERMOCOPI_API bool DiagnosticIsRecoverable(DiagnosticCode code) noexcept;
 // zero, because it is `PacketMalformed` in both adapters and that is enumerator
 // 6 in this set and 0 in the sibling's — a default-constructed diagnostic has
 // to keep meaning what it meant.
-using Diagnostic = liveTransport::Diagnostic<DiagnosticCode, DiagnosticCode::PacketMalformed>;
+using Diagnostic = transport::Diagnostic<DiagnosticCode, DiagnosticCode::PacketMalformed>;
 
 // Fills `severity` and `recoverable` from the code's defaults, so the two
 // cannot silently disagree with the table above.
-VRMADAPTERMOCOPI_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string detail = {});
+MOTIONCONNECTORMOCOPI_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string detail = {});
 
 // A single deterministic line, stable enough for a golden test to compare:
 //
@@ -146,6 +147,6 @@ VRMADAPTERMOCOPI_API Diagnostic MakeDiagnostic(DiagnosticCode code, std::string 
 // order is fixed. The grammar is the sibling adapter's, deliberately: an
 // operator reading a session log with both adapters in it should not have to
 // learn a second line format to find out which one complained.
-VRMADAPTERMOCOPI_API std::string FormatDiagnostic(const Diagnostic& diagnostic);
+MOTIONCONNECTORMOCOPI_API std::string FormatDiagnostic(const Diagnostic& diagnostic);
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

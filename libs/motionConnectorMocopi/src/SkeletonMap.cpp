@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "vrmAdapterMocopi/SkeletonMap.h"
+#include "motionConnectorMocopi/SkeletonMap.h"
 
 #include <algorithm>
 #include <cmath>
@@ -8,13 +8,13 @@
 #include <string>
 #include <utility>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 namespace
 {
 
-using motion::HumanBone;
+using openstrata::motion::HumanJoint;
 
 // Which canonical bone each joint of the measured rig carries, by id. `Count`
 // is the five the canonical vocabulary has no bone for: they are on the path
@@ -23,36 +23,36 @@ using motion::HumanBone;
 //
 // Written out rather than derived, and checked against the recorded track's
 // profile from outside (`scripts/check_docs.py`) rather than shared with it.
-constexpr std::array<HumanBone, MeasuredBoneCount> kMeasuredBones = {{
-    HumanBone::Hips,       //  0  root
-    HumanBone::Count,      //  1  torso_1
-    HumanBone::Spine,      //  2  torso_2
-    HumanBone::Count,      //  3  torso_3
-    HumanBone::Chest,      //  4  torso_4
-    HumanBone::Count,      //  5  torso_5
-    HumanBone::Count,      //  6  torso_6
-    HumanBone::UpperChest, //  7  torso_7, where both shoulders and the neck sit
-    HumanBone::Neck,       //  8  neck_1
-    HumanBone::Count,      //  9  neck_2
-    HumanBone::Head,       // 10  head
+constexpr std::array<HumanJoint, MeasuredBoneCount> kMeasuredBones = {{
+    HumanJoint::Hips,       //  0  root
+    HumanJoint::Count,      //  1  torso_1
+    HumanJoint::Spine,      //  2  torso_2
+    HumanJoint::Count,      //  3  torso_3
+    HumanJoint::Chest,      //  4  torso_4
+    HumanJoint::Count,      //  5  torso_5
+    HumanJoint::Count,      //  6  torso_6
+    HumanJoint::UpperChest, //  7  torso_7, where both shoulders and the neck sit
+    HumanJoint::Neck,       //  8  neck_1
+    HumanJoint::Count,      //  9  neck_2
+    HumanJoint::Head,       // 10  head
 
-    HumanBone::LeftShoulder,  // 11
-    HumanBone::LeftUpperArm,  // 12
-    HumanBone::LeftLowerArm,  // 13
-    HumanBone::LeftHand,      // 14
-    HumanBone::RightShoulder, // 15
-    HumanBone::RightUpperArm, // 16
-    HumanBone::RightLowerArm, // 17
-    HumanBone::RightHand,     // 18
+    HumanJoint::LeftShoulder,  // 11
+    HumanJoint::LeftUpperArm,  // 12
+    HumanJoint::LeftLowerArm,  // 13
+    HumanJoint::LeftHand,      // 14
+    HumanJoint::RightShoulder, // 15
+    HumanJoint::RightUpperArm, // 16
+    HumanJoint::RightLowerArm, // 17
+    HumanJoint::RightHand,     // 18
 
-    HumanBone::LeftUpperLeg,  // 19
-    HumanBone::LeftLowerLeg,  // 20
-    HumanBone::LeftFoot,      // 21
-    HumanBone::LeftToes,      // 22
-    HumanBone::RightUpperLeg, // 23
-    HumanBone::RightLowerLeg, // 24
-    HumanBone::RightFoot,     // 25
-    HumanBone::RightToes,     // 26
+    HumanJoint::LeftUpperLeg,  // 19
+    HumanJoint::LeftLowerLeg,  // 20
+    HumanJoint::LeftFoot,      // 21
+    HumanJoint::LeftToes,      // 22
+    HumanJoint::RightUpperLeg, // 23
+    HumanJoint::RightLowerLeg, // 24
+    HumanJoint::RightFoot,     // 25
+    HumanJoint::RightToes,     // 26
 }};
 
 static_assert(kMeasuredBones.size() == MeasuredParentColumn.size(),
@@ -179,7 +179,7 @@ PathFromNearestBoundAncestor(std::uint16_t jointId) noexcept
             break;
         }
         const auto parentId = static_cast<std::uint16_t>(parent);
-        if (kMeasuredBones[parentId] != HumanBone::Count)
+        if (kMeasuredBones[parentId] != HumanJoint::Count)
         {
             break;
         }
@@ -212,15 +212,15 @@ constexpr std::array<JointPath, MeasuredBoneCount> kPaths = MeasuredPaths();
 
 } // namespace
 
-std::optional<HumanBone>
+std::optional<HumanJoint>
 MeasuredHumanBone(std::uint16_t boneId) noexcept
 {
     if (!IsMeasuredJoint(boneId))
     {
         return std::nullopt;
     }
-    const HumanBone bone = kMeasuredBones[boneId];
-    if (bone == HumanBone::Count)
+    const HumanJoint bone = kMeasuredBones[boneId];
+    if (bone == HumanJoint::Count)
     {
         return std::nullopt;
     }
@@ -285,7 +285,7 @@ SkeletonMap::SkeletonMap()
     restTranslations.fill(pxr::GfVec3f(0.0f));
 }
 
-std::optional<HumanBone>
+std::optional<HumanJoint>
 SkeletonMap::Bone(std::uint16_t boneId) const noexcept
 {
     if (static_cast<std::size_t>(boneId) >= jointCount)
@@ -389,7 +389,7 @@ MakeSkeletonMap(const MotionSkeleton& skeleton, SkeletonMap* out,
     // capture rather than as a bug (MOTION_CONTRACT.md).
     for (std::uint16_t jointId = 0; jointId < MeasuredBoneCount; ++jointId)
     {
-        const std::optional<HumanBone> bone = MeasuredHumanBone(jointId);
+        const std::optional<HumanJoint> bone = MeasuredHumanBone(jointId);
         if (!bone)
         {
             continue;
@@ -503,10 +503,10 @@ MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame, FrameMapping* o
     // numbers the legs first, so a single joint-id walk would emit every arm
     // ahead of every leg. That is the kind of difference a consumer merging two
     // sorted lists finds as one silently wrong sample rather than as a failure.
-    std::array<pxr::GfQuatf, motion::HumanBoneCount> composed;
+    std::array<pxr::GfQuatf, openstrata::motion::HumanJointCount> composed;
     for (std::uint16_t jointId = 0; jointId < MeasuredBoneCount; ++jointId)
     {
-        const std::optional<HumanBone> bone = map.Bone(jointId);
+        const std::optional<HumanJoint> bone = map.Bone(jointId);
         if (!bone)
         {
             continue;
@@ -529,7 +529,7 @@ MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame, FrameMapping* o
         }
         if (!complete)
         {
-            ++mapping.missingBones;
+            ++mapping.missingJoints;
             continue;
         }
         const auto slot = static_cast<std::size_t>(*bone);
@@ -538,14 +538,14 @@ MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame, FrameMapping* o
     }
 
     mapping.bones.reserve(mapping.present.count());
-    for (std::size_t slot = 0; slot < motion::HumanBoneCount; ++slot)
+    for (std::size_t slot = 0; slot < openstrata::motion::HumanJointCount; ++slot)
     {
         if (!mapping.present.test(slot))
         {
             continue;
         }
         BoneSample sample;
-        sample.bone = static_cast<HumanBone>(slot);
+        sample.bone = static_cast<HumanJoint>(slot);
         sample.localRotation = composed[slot];
         mapping.bones.push_back(sample);
     }
@@ -555,4 +555,4 @@ MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame, FrameMapping* o
     return mapped;
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

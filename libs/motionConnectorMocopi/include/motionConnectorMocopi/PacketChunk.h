@@ -9,7 +9,7 @@
 // layer cannot tell which is which. It knows lengths and tags. It does not know
 // that `fram` is a frame or that `tran` holds a quaternion — those belong to
 // `MotionPacket.h`, one step up, for the same reason the sibling adapter keeps
-// OSC away from VMC (roadmap/adapters-mocopi-vmc-ardy.md §5, §6): a container
+// OSC away from VMC (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §5, §6): a container
 // has its own malformed-input cases, and a decoder that mixed the two could only
 // ever be tested end to end.
 //
@@ -55,8 +55,8 @@
 // than remain, or a walk that ends between chunks instead of on the end.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/api.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -64,7 +64,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // `<uint32 length><4-byte tag>`, ahead of every payload.
@@ -134,7 +134,7 @@ struct PacketChunk
 // printable ASCII, and `0x`-prefixed hex when any byte is not. Diagnostics are
 // compared by golden tests, so a tag full of control bytes must not be able to
 // put a newline or a terminal escape into one.
-VRMADAPTERMOCOPI_API std::string PacketChunkTagText(std::string_view tag);
+MOTIONCONNECTORMOCOPI_API std::string PacketChunkTagText(std::string_view tag);
 
 // Walks exactly one level. Returns false and fills `diagnostic`, when given,
 // with `VRM_MOCOPI_PACKET_MALFORMED` and a byte offset in its detail; `chunks`
@@ -146,7 +146,7 @@ VRMADAPTERMOCOPI_API std::string PacketChunkTagText(std::string_view tag);
 // `baseOffset` is added to every `PacketChunk::offset` and to the byte position a
 // refusal quotes, so a payload walked out of the middle of a datagram still
 // reports datagram-absolute positions. Zero is right for a whole datagram.
-VRMADAPTERMOCOPI_API bool DecodePacketChunks(const std::uint8_t* bytes, std::size_t size,
+MOTIONCONNECTORMOCOPI_API bool DecodePacketChunks(const std::uint8_t* bytes, std::size_t size,
                                              std::vector<PacketChunk>* chunks,
                                              std::string_view context = "datagram",
                                              Diagnostic* diagnostic = nullptr,
@@ -188,12 +188,12 @@ bool DecodePacketChunks(std::vector<std::uint8_t>&& datagram, std::vector<Packet
 // refusing a duplicate: whether two `fram` chunks in one datagram are a protocol
 // violation is not a question the container can answer, and the packet decoder
 // above does answer it.
-VRMADAPTERMOCOPI_API const PacketChunk* FindPacketChunk(const std::vector<PacketChunk>& chunks,
+MOTIONCONNECTORMOCOPI_API const PacketChunk* FindPacketChunk(const std::vector<PacketChunk>& chunks,
                                                         std::string_view tag) noexcept;
 
 // How many chunks carry `tag`. The packet decoder uses this to refuse a
 // duplicate of a field it reads exactly once.
-VRMADAPTERMOCOPI_API std::size_t CountPacketChunks(const std::vector<PacketChunk>& chunks,
+MOTIONCONNECTORMOCOPI_API std::size_t CountPacketChunks(const std::vector<PacketChunk>& chunks,
                                                    std::string_view tag) noexcept;
 
 // Little-endian scalar reads of a leaf payload. Each returns false when the
@@ -202,13 +202,13 @@ VRMADAPTERMOCOPI_API std::size_t CountPacketChunks(const std::vector<PacketChunk
 // these do not read a *prefix* of a longer payload: a field that grew is a field
 // whose meaning this project has not measured, and reading its first four bytes
 // anyway is how a version change becomes a plausible number.
-VRMADAPTERMOCOPI_API bool ReadPacketChunkU16(const PacketChunk& chunk,
+MOTIONCONNECTORMOCOPI_API bool ReadPacketChunkU16(const PacketChunk& chunk,
                                              std::uint16_t* value) noexcept;
-VRMADAPTERMOCOPI_API bool ReadPacketChunkI16(const PacketChunk& chunk,
+MOTIONCONNECTORMOCOPI_API bool ReadPacketChunkI16(const PacketChunk& chunk,
                                              std::int16_t* value) noexcept;
-VRMADAPTERMOCOPI_API bool ReadPacketChunkU32(const PacketChunk& chunk,
+MOTIONCONNECTORMOCOPI_API bool ReadPacketChunkU32(const PacketChunk& chunk,
                                              std::uint32_t* value) noexcept;
-VRMADAPTERMOCOPI_API bool ReadPacketChunkF32(const PacketChunk& chunk, float* value) noexcept;
-VRMADAPTERMOCOPI_API bool ReadPacketChunkF64(const PacketChunk& chunk, double* value) noexcept;
+MOTIONCONNECTORMOCOPI_API bool ReadPacketChunkF32(const PacketChunk& chunk, float* value) noexcept;
+MOTIONCONNECTORMOCOPI_API bool ReadPacketChunkF64(const PacketChunk& chunk, double* value) noexcept;
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

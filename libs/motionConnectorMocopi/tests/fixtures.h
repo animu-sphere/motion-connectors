@@ -26,8 +26,8 @@
 // parameter it does not want.
 #pragma once
 
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/SkeletonMap.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/SkeletonMap.h"
 
 #include <algorithm>
 #include <array>
@@ -35,12 +35,14 @@
 #include <cstdint>
 #include <vector>
 
-namespace vrmAdapterMocopiTests
+namespace mocopi = openstrata::connectors::mocopi;
+
+namespace motionConnectorMocopiTests
 {
 
 // The corpus generator's invented proportions, in bone order — round numbers
 // that are nobody's body.
-inline constexpr float kRestOffsets[vrmAdapterMocopi::MeasuredBoneCount][3] = {
+inline constexpr float kRestOffsets[mocopi::MeasuredBoneCount][3] = {
     {0.0f, 0.90f, 0.0f},  {0.0f, 0.06f, 0.0f},  {0.0f, 0.06f, 0.0f},   {0.0f, 0.06f, 0.0f},
     {0.0f, 0.06f, 0.0f},  {0.0f, 0.06f, 0.0f},  {0.0f, 0.06f, 0.0f},   {0.0f, 0.10f, 0.0f},
     {0.0f, 0.05f, 0.0f},  {0.0f, 0.05f, 0.0f},  {0.0f, 0.05f, 0.0f},   {0.02f, -0.08f, 0.08f},
@@ -74,44 +76,44 @@ RestOffset(std::size_t jointId)
     return {{kRestOffsets[jointId][0], kRestOffsets[jointId][1], kRestOffsets[jointId][2]}};
 }
 
-inline vrmAdapterMocopi::MotionPacket
+inline mocopi::MotionPacket
 SkeletonPacket()
 {
-    vrmAdapterMocopi::MotionSkeleton skeleton;
-    for (std::size_t jointId = 0; jointId < vrmAdapterMocopi::MeasuredBoneCount; ++jointId)
+    mocopi::MotionSkeleton skeleton;
+    for (std::size_t jointId = 0; jointId < mocopi::MeasuredBoneCount; ++jointId)
     {
-        vrmAdapterMocopi::BoneDefinition joint;
+        mocopi::BoneDefinition joint;
         joint.boneId = static_cast<std::uint16_t>(jointId);
-        joint.parentBoneId = vrmAdapterMocopi::MeasuredParentColumn[jointId];
+        joint.parentBoneId = mocopi::MeasuredParentColumn[jointId];
         joint.restTransform.rotation = WireIdentity();
         joint.restTransform.translation = RestOffset(jointId);
         skeleton.bones.push_back(joint);
     }
-    vrmAdapterMocopi::MotionPacket packet;
-    packet.kind = vrmAdapterMocopi::MotionPacketKind::Skeleton;
+    mocopi::MotionPacket packet;
+    packet.kind = mocopi::MotionPacketKind::Skeleton;
     packet.skeleton = std::move(skeleton);
     return packet;
 }
 
 // A frame that restates the rest pose, which is what every measured frame does
 // for every joint but the root.
-inline vrmAdapterMocopi::MotionPacket
+inline mocopi::MotionPacket
 FramePacket(std::uint32_t frameNumber, double streamSeconds, double senderUnixSeconds)
 {
-    vrmAdapterMocopi::MotionFrame frame;
+    mocopi::MotionFrame frame;
     frame.frameNumber = frameNumber;
     frame.streamSeconds = static_cast<float>(streamSeconds);
     frame.senderUnixSeconds = senderUnixSeconds;
-    for (std::size_t jointId = 0; jointId < vrmAdapterMocopi::MeasuredBoneCount; ++jointId)
+    for (std::size_t jointId = 0; jointId < mocopi::MeasuredBoneCount; ++jointId)
     {
-        vrmAdapterMocopi::BoneFrame bone;
+        mocopi::BoneFrame bone;
         bone.boneId = static_cast<std::uint16_t>(jointId);
         bone.transform.rotation = WireIdentity();
         bone.transform.translation = RestOffset(jointId);
         frame.bones.push_back(bone);
     }
-    vrmAdapterMocopi::MotionPacket packet;
-    packet.kind = vrmAdapterMocopi::MotionPacketKind::Frame;
+    mocopi::MotionPacket packet;
+    packet.kind = mocopi::MotionPacketKind::Frame;
     packet.frame = std::move(frame);
     return packet;
 }
@@ -120,7 +122,7 @@ FramePacket(std::uint32_t frameNumber, double streamSeconds, double senderUnixSe
 // session*. Not for the first frame after a restart: the stream clock begins
 // again there and the wall clock does not, so a caller building one states
 // `uttm` itself through `FramePacket`.
-inline vrmAdapterMocopi::MotionPacket
+inline mocopi::MotionPacket
 FrameAt(std::uint32_t frameNumber, double streamSeconds)
 {
     return FramePacket(frameNumber, streamSeconds, kEpoch + streamSeconds);
@@ -131,9 +133,9 @@ FrameAt(std::uint32_t frameNumber, double streamSeconds)
 // builder restates rest for all 27 joints, so a session built from it stands
 // still. A test about the body's placement needs a body that moved.
 inline void
-MoveHips(vrmAdapterMocopi::MotionPacket* packet, float x, float y, float z)
+MoveHips(mocopi::MotionPacket* packet, float x, float y, float z)
 {
-    for (vrmAdapterMocopi::BoneFrame& bone : packet->frame->bones)
+    for (mocopi::BoneFrame& bone : packet->frame->bones)
     {
         if (bone.boneId == 0)
         {
@@ -145,13 +147,13 @@ MoveHips(vrmAdapterMocopi::MotionPacket* packet, float x, float y, float z)
 
 // Removes a joint's record, so the bones on its path cannot be formed.
 inline void
-DropJoint(vrmAdapterMocopi::MotionPacket* packet, std::uint16_t boneId)
+DropJoint(mocopi::MotionPacket* packet, std::uint16_t boneId)
 {
-    std::vector<vrmAdapterMocopi::BoneFrame>& bones = packet->frame->bones;
+    std::vector<mocopi::BoneFrame>& bones = packet->frame->bones;
     bones.erase(std::remove_if(bones.begin(), bones.end(),
-                               [boneId](const vrmAdapterMocopi::BoneFrame& bone)
+                               [boneId](const mocopi::BoneFrame& bone)
                                { return bone.boneId == boneId; }),
                 bones.end());
 }
 
-} // namespace vrmAdapterMocopiTests
+} // namespace motionConnectorMocopiTests

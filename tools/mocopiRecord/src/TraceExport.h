@@ -4,9 +4,9 @@
 //
 // `motion-capture-trace` is defined as "what an adapter delivered -- after
 // protocol decode and coordinate conversion, before any intake policy"
-// (motionRuntime/CaptureTrace.h), and that sentence describes a `MocopiFrame`
+// (motionRecording/CaptureTrace.h), and that sentence describes a `MocopiFrame`
 // exactly. So this file is a transcription rather than a conversion: a frame's
-// pose is already a `motion::HumanoidPose`, already stamped with the sender's
+// pose is already a `openstrata::motion::MotionPose`, already stamped with the sender's
 // own clock, and nothing here computes a value that was not delivered.
 //
 // It exists so that no tool in the aggregate product has to link an adapter
@@ -29,7 +29,7 @@
 // spend that property to save a command. And `Options.h` already records the
 // consequence: there is no `--max-frames` here "and there cannot be", because
 // this tool accumulates datagrams alone. A live export accumulates
-// `sizeof(motion::HumanoidPose)` = 1320 bytes per frame beside the capture the
+// `sizeof(openstrata::motion::MotionPose)` = 1320 bytes per frame beside the capture the
 // datagram bound was sized for, which is the second bound in its own unit the
 // sibling had to grow.
 //
@@ -83,7 +83,7 @@
 // in the one place that has both the frames and the reason to care.
 //
 // It was added while §5.2 was open, when no layer on the live path was willing
-// to call that translation root motion: it reached no `HumanoidPose` and
+// to call that translation root motion: it reached no `MotionPose` and
 // therefore no trace, the bytes kept it, and nothing could read it back out. A
 // cross-source session made the case concrete -- 1.17 m of walk arrived through
 // the BVH path and nothing at all through this one, which is a fact about a
@@ -99,15 +99,17 @@
 // with the other.
 #pragma once
 
-#include "vrmAdapterMocopi/FrameAssembler.h"
+#include "motionConnectorMocopi/FrameAssembler.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/vec3f.h"
 
 #include <cstddef>
 #include <optional>
 #include <vector>
+
+namespace mocopi = openstrata::connectors::mocopi;
 
 namespace mocopiRecordTool
 {
@@ -150,8 +152,8 @@ class TraceCollector
     // operator's `--sender` and `--source-id`, which are the capture header's
     // own and are the only provenance this protocol will ever have -- amends it
     // once.
-    void Observe(const std::vector<vrmAdapterMocopi::MocopiFrame>& frames,
-                 const motion::MotionSourceMetadata& metadata);
+    void Observe(const std::vector<mocopi::MocopiFrame>& frames,
+                 const openstrata::motion::SourceMetadata& metadata);
 
     // How many frames are held, across every session.
     std::size_t
@@ -174,7 +176,7 @@ class TraceCollector
     void Close();
 
     // Valid after `Close`. Sessions that produced no frame are not among them.
-    const std::vector<motion::HumanoidAnimation>&
+    const std::vector<openstrata::motion::MotionClip>&
     GetSessions() const noexcept
     {
         return _sessions;
@@ -190,7 +192,7 @@ class TraceCollector
     }
 
   private:
-    std::vector<motion::HumanoidAnimation> _sessions;
+    std::vector<openstrata::motion::MotionClip> _sessions;
     std::vector<HipsMotion> _hips;
     // Per open session, carried alongside rather than inside `HipsMotion`: the
     // first and last positions seen, which is what `net` is measured from and

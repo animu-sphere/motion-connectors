@@ -21,9 +21,9 @@
 // the vendor's own -- the `BVH Sender` pointed at a `.bvh` this repository wrote
 // -- and when an operator makes one it joins this corpus and this test grows the
 // case it deserves.
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/PacketChunk.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/PacketChunk.h"
 
 #include "corpus.h"
 
@@ -36,17 +36,19 @@
 #include <string>
 #include <vector>
 
+namespace mocopi = openstrata::connectors::mocopi;
+
 namespace
 {
 
-using vrmAdapterMocopi::BoneDefinition;
-using vrmAdapterMocopi::BoneFrame;
-using vrmAdapterMocopi::Diagnostic;
-using vrmAdapterMocopi::DiagnosticCode;
-using vrmAdapterMocopi::MotionPacket;
-using vrmAdapterMocopi::MotionPacketKind;
-using vrmAdapterMocopi::PacketChunk;
-using vrmAdapterMocopi::RecordedDatagram;
+using mocopi::BoneDefinition;
+using mocopi::BoneFrame;
+using mocopi::Diagnostic;
+using mocopi::DiagnosticCode;
+using mocopi::MotionPacket;
+using mocopi::MotionPacketKind;
+using mocopi::PacketChunk;
+using mocopi::RecordedDatagram;
 
 using Bytes = std::vector<std::uint8_t>;
 
@@ -191,7 +193,7 @@ OneBoneFrame()
 bool
 Decode(const Bytes& datagram, MotionPacket* packet, std::vector<Diagnostic>* diagnostics = nullptr)
 {
-    return vrmAdapterMocopi::DecodeMotionPacket(datagram, packet, diagnostics);
+    return mocopi::DecodeMotionPacket(datagram, packet, diagnostics);
 }
 
 // The single code a refusal reported, asserted rather than merely counted: a
@@ -213,8 +215,8 @@ RefusedWith(const Bytes& datagram, DiagnosticCode expected, const char* what)
     {
         std::fprintf(
             stderr, "%s: refused with %s, expected %s (%s)\n", what,
-            std::string(vrmAdapterMocopi::DiagnosticCodeString(diagnostics.back().code)).c_str(),
-            std::string(vrmAdapterMocopi::DiagnosticCodeString(expected)).c_str(),
+            std::string(mocopi::DiagnosticCodeString(diagnostics.back().code)).c_str(),
+            std::string(mocopi::DiagnosticCodeString(expected)).c_str(),
             diagnostics.back().detail.c_str());
         assert(false);
     }
@@ -241,7 +243,7 @@ TestTheContainerClosesOrIsRefused()
     const Bytes datagram = Join({Head(), Sender()});
     std::vector<PacketChunk> chunks;
     Diagnostic diagnostic;
-    assert(vrmAdapterMocopi::DecodePacketChunks(datagram, &chunks, "datagram", &diagnostic));
+    assert(mocopi::DecodePacketChunks(datagram, &chunks, "datagram", &diagnostic));
     assert(chunks.size() == 2);
     assert(chunks[0].tag == "head");
     assert(chunks[1].tag == "sndf");
@@ -254,13 +256,13 @@ TestTheContainerClosesOrIsRefused()
     // container reads it rather than refusing it; the packet layer is what
     // refuses it, for carrying neither payload kind.
     const Bytes empty;
-    assert(vrmAdapterMocopi::DecodePacketChunks(empty, &chunks));
+    assert(mocopi::DecodePacketChunks(empty, &chunks));
     assert(chunks.empty());
 
     // A header that does not fit.
     Bytes shortHeader;
     AppendU32(&shortHeader, 0);
-    assert(!vrmAdapterMocopi::DecodePacketChunks(shortHeader, &chunks, "datagram", &diagnostic));
+    assert(!mocopi::DecodePacketChunks(shortHeader, &chunks, "datagram", &diagnostic));
     assert(diagnostic.code == DiagnosticCode::PacketMalformed);
     assert(chunks.empty());
 
@@ -272,20 +274,20 @@ TestTheContainerClosesOrIsRefused()
     const Bytes tag = Text("fram");
     overrun.insert(overrun.end(), tag.begin(), tag.end());
     overrun.resize(overrun.size() + 16, 0);
-    assert(!vrmAdapterMocopi::DecodePacketChunks(overrun, &chunks, "datagram", &diagnostic));
+    assert(!mocopi::DecodePacketChunks(overrun, &chunks, "datagram", &diagnostic));
     assert(diagnostic.detail.find("fram") != std::string::npos);
     assert(diagnostic.detail.find("4096") != std::string::npos);
 
     // A walk that lands between chunks rather than on the end.
     Bytes trailing = Head();
     trailing.insert(trailing.end(), {1, 2, 3});
-    assert(!vrmAdapterMocopi::DecodePacketChunks(trailing, &chunks, "datagram", &diagnostic));
+    assert(!mocopi::DecodePacketChunks(trailing, &chunks, "datagram", &diagnostic));
 
     // A tag full of bytes a terminal would act on cannot reach a diagnostic as
     // itself: golden tests compare these lines.
-    const std::string text = vrmAdapterMocopi::PacketChunkTagText(std::string_view("a\nb\x1b", 4));
+    const std::string text = mocopi::PacketChunkTagText(std::string_view("a\nb\x1b", 4));
     assert(text == "0x610a621b");
-    assert(vrmAdapterMocopi::PacketChunkTagText("fram") == "fram");
+    assert(mocopi::PacketChunkTagText("fram") == "fram");
 }
 
 void
@@ -295,27 +297,27 @@ TestALeafIsReadAtItsExactWidth()
     AppendU32(&payload, 0x04030201);
     const Bytes datagram = Chunk("fnum", payload);
     std::vector<PacketChunk> chunks;
-    assert(vrmAdapterMocopi::DecodePacketChunks(datagram, &chunks));
+    assert(mocopi::DecodePacketChunks(datagram, &chunks));
     assert(chunks.size() == 1);
 
     std::uint32_t value = 0;
-    assert(vrmAdapterMocopi::ReadPacketChunkU32(chunks[0], &value));
+    assert(mocopi::ReadPacketChunkU32(chunks[0], &value));
     assert(value == 0x04030201);
 
     // Not a prefix of a wider field, and not a widened narrower one: a field
     // whose length changed is a field whose meaning is unmeasured.
     std::uint16_t narrow = 0;
-    assert(!vrmAdapterMocopi::ReadPacketChunkU16(chunks[0], &narrow));
+    assert(!mocopi::ReadPacketChunkU16(chunks[0], &narrow));
     double wide = 0.0;
-    assert(!vrmAdapterMocopi::ReadPacketChunkF64(chunks[0], &wide));
+    assert(!mocopi::ReadPacketChunkF64(chunks[0], &wide));
 
     // The parent column's root sentinel is negative, so this field is signed.
     Bytes minusOne;
     AppendU16(&minusOne, 0xffff);
     const Bytes parent = Chunk("pbid", minusOne);
-    assert(vrmAdapterMocopi::DecodePacketChunks(parent, &chunks));
+    assert(mocopi::DecodePacketChunks(parent, &chunks));
     std::int16_t parentId = 0;
-    assert(vrmAdapterMocopi::ReadPacketChunkI16(chunks[0], &parentId));
+    assert(mocopi::ReadPacketChunkI16(chunks[0], &parentId));
     assert(parentId == -1);
 }
 
@@ -332,7 +334,7 @@ TestAFrameDecodes()
     assert(Decode(datagram, &packet, &diagnostics));
     assert(diagnostics.empty());
     assert(packet.kind == MotionPacketKind::Frame);
-    assert(vrmAdapterMocopi::MotionPacketKindTag(packet.kind) == "fram");
+    assert(mocopi::MotionPacketKindTag(packet.kind) == "fram");
     assert(packet.provenance.formatType == "sony motion format");
     assert(packet.provenance.formatVersion == 1);
     assert(packet.provenance.receivePort == 12351);
@@ -365,7 +367,7 @@ TestASkeletonDecodes()
     MotionPacket packet;
     assert(Decode(datagram, &packet));
     assert(packet.kind == MotionPacketKind::Skeleton);
-    assert(vrmAdapterMocopi::MotionPacketKindTag(packet.kind) == "skdf");
+    assert(mocopi::MotionPacketKindTag(packet.kind) == "skdf");
     assert(!packet.frame.has_value());
     assert(packet.skeleton.has_value());
     assert(packet.skeleton->bones.size() == 2);
@@ -647,7 +649,7 @@ TestAnUnknownChunkIsCountedAndNotInterpreted()
     const auto found = [&packet](std::string_view tag, std::string_view container)
     {
         return std::any_of(packet.unread.begin(), packet.unread.end(),
-                           [&](const vrmAdapterMocopi::UnreadChunk& entry)
+                           [&](const mocopi::UnreadChunk& entry)
                            { return entry.tag == tag && entry.container == container; });
     };
     assert(found("yyyy", "datagram"));
@@ -670,7 +672,7 @@ TestTheMeasuredBoneCountIsNotARequirement()
     const Bytes datagram = Frame(1, 0.0f, 1786492800.0, records);
     assert(Decode(datagram, &packet));
     assert(packet.frame->bones.size() == 11);
-    assert(vrmAdapterMocopi::MeasuredBoneCount == 27);
+    assert(mocopi::MeasuredBoneCount == 27);
 
     // And a frame with no bones at all decodes. Whether that is a usable frame
     // is the assembler's question -- VRM_MOCOPI_FRAME_INCOMPLETE is its code --
@@ -1000,7 +1002,7 @@ int
 CheckCorpus(const std::filesystem::path& directory)
 {
     std::vector<std::filesystem::path> files;
-    if (!vrmAdapterMocopiTests::CollectCaptures(directory, &files))
+    if (!motionConnectorMocopiTests::CollectCaptures(directory, &files))
     {
         return 1;
     }
@@ -1009,9 +1011,9 @@ CheckCorpus(const std::filesystem::path& directory)
     for (const std::filesystem::path& file : files)
     {
         const std::string name = file.filename().string();
-        vrmAdapterMocopi::PacketCapture capture;
-        vrmAdapterMocopi::PacketCaptureError error;
-        if (!vrmAdapterMocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
+        mocopi::PacketCapture capture;
+        mocopi::PacketCaptureError error;
+        if (!mocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
         {
             failures += Failed(name, "line " + std::to_string(error.line) + ": " + error.message);
             continue;
@@ -1027,7 +1029,7 @@ CheckCorpus(const std::filesystem::path& directory)
         {
             MotionPacket packet;
             const std::size_t before = diagnostics.size();
-            if (vrmAdapterMocopi::DecodeMotionPacket(datagram.bytes, &packet, &diagnostics))
+            if (mocopi::DecodeMotionPacket(datagram.bytes, &packet, &diagnostics))
             {
                 decoded.push_back(std::move(packet));
                 refusals.push_back(DiagnosticCode::Count);
@@ -1088,7 +1090,7 @@ CheckCorpus(const std::filesystem::path& directory)
                     detail += ' ';
                     detail += code == DiagnosticCode::Count
                                   ? std::string("DECODED")
-                                  : std::string(vrmAdapterMocopi::DiagnosticCodeString(code));
+                                  : std::string(mocopi::DiagnosticCodeString(code));
                 }
                 failures += Failed(name, detail);
             }
@@ -1228,6 +1230,6 @@ main(int argc, char** argv)
     TestAnUnknownChunkIsCountedAndNotInterpreted();
     TestTheMeasuredBoneCountIsNotARequirement();
     TestBoneIdsAreReportedNotJudged();
-    std::puts("vrmAdapterMocopi motion packet tests passed");
+    std::puts("motionConnectorMocopi motion packet tests passed");
     return 0;
 }

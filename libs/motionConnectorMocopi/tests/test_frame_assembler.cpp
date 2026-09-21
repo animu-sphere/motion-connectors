@@ -37,11 +37,11 @@
 // decode and map **identically**, so the only thing that differs between them is
 // the declared rig — and this is the layer where that difference becomes an
 // incomplete frame rather than a refused one.
-#include "vrmAdapterMocopi/FrameAssembler.h"
+#include "motionConnectorMocopi/FrameAssembler.h"
 
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/SkeletonMap.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/SkeletonMap.h"
 
 #include "corpus.h"
 #include "fixtures.h"
@@ -56,26 +56,28 @@
 #include <string>
 #include <vector>
 
+namespace mocopi = openstrata::connectors::mocopi;
+
 namespace
 {
 
-using namespace vrmAdapterMocopiTests;
+using namespace motionConnectorMocopiTests;
 
-using motion::HumanBone;
-using vrmAdapterMocopi::BodyPlacementPolicy;
-using vrmAdapterMocopi::BoneDefinition;
-using vrmAdapterMocopi::BoneFrame;
-using vrmAdapterMocopi::Diagnostic;
-using vrmAdapterMocopi::DiagnosticCode;
-using vrmAdapterMocopi::MeasuredBoneCount;
-using vrmAdapterMocopi::MeasuredParentColumn;
-using vrmAdapterMocopi::MocopiFrame;
-using vrmAdapterMocopi::MocopiFrameAssembler;
-using vrmAdapterMocopi::MocopiFrameConfig;
-using vrmAdapterMocopi::MotionFrame;
-using vrmAdapterMocopi::MotionPacket;
-using vrmAdapterMocopi::MotionPacketKind;
-using vrmAdapterMocopi::MotionSkeleton;
+using openstrata::motion::HumanJoint;
+using mocopi::BodyPlacementPolicy;
+using mocopi::BoneDefinition;
+using mocopi::BoneFrame;
+using mocopi::Diagnostic;
+using mocopi::DiagnosticCode;
+using mocopi::MeasuredBoneCount;
+using mocopi::MeasuredParentColumn;
+using mocopi::MocopiFrame;
+using mocopi::MocopiFrameAssembler;
+using mocopi::MocopiFrameConfig;
+using mocopi::MotionFrame;
+using mocopi::MotionPacket;
+using mocopi::MotionPacketKind;
+using mocopi::MotionSkeleton;
 
 // The measured agreement between the two clocks: under 2 µs over 33 s
 // (MotionPacket.h). Used as the bound for "these two clocks still agree", which
@@ -133,8 +135,8 @@ void
 TestTheSessionMetadataIsProtocolOnly()
 {
     MocopiFrameAssembler assembler;
-    const motion::MotionSourceMetadata& metadata = assembler.GetSourceMetadata();
-    assert(metadata.kind == motion::MotionSourceKind::LiveCapture);
+    const openstrata::motion::SourceMetadata& metadata = assembler.GetSourceMetadata();
+    assert(metadata.kind == openstrata::motion::MotionSourceKind::LiveCapture);
     assert(metadata.protocol == "mocopi");
     // The only per-session identifier this protocol carries is `sndf/ipad`, and
     // it is treated as possibly device-identifying. Nothing may promote it into
@@ -354,12 +356,12 @@ TestAnIncompleteFrameIsEmittedAndReported()
     assert(assembler.Push(damaged, 0.0, &frames, &diagnostics));
 
     // Emitted, not refused. Whether nineteen of twenty-two bones is a usable
-    // frame is `MissingBonePolicy`'s answer one layer up, and an adapter that
+    // frame is `MissingJointPolicy`'s answer one layer up, and an adapter that
     // dropped the frame would have taken it.
     assert(frames.size() == 1);
     assert(frames[0].missing.count() == 1);
-    assert(frames[0].missing.test(static_cast<std::size_t>(HumanBone::LeftLowerLeg)));
-    assert(frames[0].pose.validRotations.test(static_cast<std::size_t>(HumanBone::LeftFoot)));
+    assert(frames[0].missing.test(static_cast<std::size_t>(HumanJoint::LeftLowerLeg)));
+    assert(frames[0].pose.validRotations.test(static_cast<std::size_t>(HumanJoint::LeftFoot)));
     assert(assembler.GetStats().framesIncomplete == 1);
     assert(Count(diagnostics, DiagnosticCode::FrameIncomplete) == 1);
 }
@@ -378,7 +380,7 @@ TestMissingIsMeasuredAgainstTheDeclaredRigAndNotTheHumanoid()
     // sixty times a second would be reporting a rig as a fault.
     assert(frames[0].missing.none());
     assert(frames[0].pose.validRotations.count() == kCanonicalBoneCount);
-    assert(kCanonicalBoneCount < motion::HumanBoneCount);
+    assert(kCanonicalBoneCount < openstrata::motion::HumanJointCount);
     assert(assembler.GetStats().framesIncomplete == 0);
 }
 
@@ -431,7 +433,7 @@ TestTheHipsTranslationIsTheBodysRootMotion()
     // it is that joint.
     assert(frames[0].pose.root.hasOrientation);
     assert(frames[0].pose.root.worldOrientation ==
-           frames[0].pose.localRotations[static_cast<std::size_t>(HumanBone::Hips)]);
+           frames[0].pose.localRotations[static_cast<std::size_t>(HumanJoint::Hips)]);
 
     // The device reports no velocity and this layer derives none: that is the
     // intake's policy, and an assembler that did it would be a second runtime.
@@ -510,7 +512,7 @@ TestTheGrammarCarriesNoTrackingStateAndNoneIsInvented()
     assert(!frames[0].pose.confidence.has_value());
     assert(!frames[0].pose.contacts.has_value());
     // This protocol has no expression channel at all.
-    assert(frames[0].pose.expressions.IsEmpty());
+    assert(frames[0].pose.channels.IsEmpty());
 }
 
 // ---------------------------------------------------------------------------
@@ -583,7 +585,7 @@ struct AssembledCapture
 {
     std::vector<MocopiFrame> frames;
     std::vector<Diagnostic> diagnostics;
-    vrmAdapterMocopi::MocopiFrameStats stats;
+    mocopi::MocopiFrameStats stats;
 };
 
 int
@@ -808,15 +810,16 @@ CheckIncompleteFrame(const AssembledCapture& capture, const std::string& name)
     }
 
     // Emitted, not refused. Whether nineteen of twenty-two bones is usable is
-    // `MissingBonePolicy`'s answer one layer up.
+    // `MissingJointPolicy`'s answer one layer up.
     const MocopiFrame& damaged = capture.frames[0];
     if (damaged.missing.count() != 3 ||
         damaged.pose.validRotations.count() != kCanonicalBoneCount - 3)
     {
         return Failed(name, "three refused records did not cost three bones");
     }
-    const HumanBone missing[] = {HumanBone::UpperChest, HumanBone::Head, HumanBone::LeftLowerLeg};
-    for (const HumanBone bone : missing)
+    const HumanJoint missing[] = {
+        HumanJoint::UpperChest, HumanJoint::Head, HumanJoint::LeftLowerLeg};
+    for (const HumanJoint bone : missing)
     {
         if (!damaged.missing.test(static_cast<std::size_t>(bone)))
         {
@@ -890,7 +893,7 @@ int
 CheckCorpus(const std::filesystem::path& directory)
 {
     std::vector<std::filesystem::path> files;
-    if (!vrmAdapterMocopiTests::CollectCaptures(directory, &files))
+    if (!motionConnectorMocopiTests::CollectCaptures(directory, &files))
     {
         return 1;
     }
@@ -899,9 +902,9 @@ CheckCorpus(const std::filesystem::path& directory)
     for (const std::filesystem::path& file : files)
     {
         const std::string name = file.filename().string();
-        vrmAdapterMocopi::PacketCapture capture;
-        vrmAdapterMocopi::PacketCaptureError error;
-        if (!vrmAdapterMocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
+        mocopi::PacketCapture capture;
+        mocopi::PacketCaptureError error;
+        if (!mocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
         {
             failures += Failed(name, "line " + std::to_string(error.line) + ": " + error.message);
             continue;
@@ -910,13 +913,13 @@ CheckCorpus(const std::filesystem::path& directory)
         AssembledCapture assembled;
         MocopiFrameAssembler assembler;
         assembler.SetSource(capture.sourceId);
-        for (const vrmAdapterMocopi::RecordedDatagram& datagram : capture.datagrams)
+        for (const mocopi::RecordedDatagram& datagram : capture.datagrams)
         {
             MotionPacket packet;
             // The decoder's own diagnostics are not this test's subject: its
             // corpus mode already pins them, and mixing the two lists would make
             // a refusal here indistinguishable from one there.
-            if (!vrmAdapterMocopi::DecodeMotionPacket(datagram.bytes, &packet))
+            if (!mocopi::DecodeMotionPacket(datagram.bytes, &packet))
             {
                 continue;
             }
@@ -1018,6 +1021,6 @@ main(int argc, char** argv)
     TestTheGrammarCarriesNoTrackingStateAndNoneIsInvented();
     TestTheTwoClocksGiveADriftCheck();
     TestResetDropsTheSessionAndKeepsTheStats();
-    std::puts("vrmAdapterMocopi frame assembler tests passed");
+    std::puts("motionConnectorMocopi frame assembler tests passed");
     return 0;
 }

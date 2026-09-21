@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 
-#include "vrmAdapterMocopi/UdpReceiver.h"
+#include "motionConnectorMocopi/UdpReceiver.h"
 
 #include <cstddef>
 #include <string>
 #include <vector>
+
+namespace mocopi = openstrata::connectors::mocopi;
 
 namespace mocopiRecordTool
 {
@@ -15,7 +17,7 @@ struct Options
     // The socket. `UdpReceiverConfig` is taken whole rather than copied field
     // by field, so a receiver setting added there reaches this tool by being
     // parsed rather than by being re-declared.
-    vrmAdapterMocopi::UdpReceiverConfig receiver;
+    mocopi::UdpReceiverConfig receiver;
 
     // The capture to write. Empty with --inspect or --dry-run.
     std::string outputPath;

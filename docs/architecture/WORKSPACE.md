@@ -27,7 +27,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | imported 2026-09-19, with its history; namespace `openstrata::connectors::transport` |
 | `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | imported 2026-09-19, with its history; namespace `openstrata::connectors::osc` |
 | `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1` | `usd-vrm-plugins` `vrmAdapterVmc` | imported 2026-09-21, with its history; namespace `openstrata::connectors::vmc`; its recorder is `tools/vmcRecord/` |
-| `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | reserved |
+| `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1` | `usd-vrm-plugins` `vrmAdapterMocopi` | imported 2026-09-21, with its history; namespace `openstrata::connectors::mocopi`; its recorder is `tools/mocopiRecord/` |
 | `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | reserved |
 | `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | imported 2026-09-20, with its history; namespace `openstrata::connectors::tracking`; the first member here to consume `usd-motion-plugins` |
 | `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions | new | reserved |
@@ -68,7 +68,7 @@ dependency (§17).
 | Identity | Kind | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- | --- |
 | `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36) | new | reserved |
-| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | `vmc_record` imported 2026-09-21, with its history; `mocopi_record` and `vrchat_osc_record` reserved |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture and a trace | `usd-vrm-plugins`, with each connector | `vmc_record` and `mocopi_record` imported 2026-09-21, with their history; `vrchat_osc_record` reserved |
 | examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
 | Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
 | JS / TS package | binding | `bindings/js/` | `openConnector`, `frames()` async iterator, the WASM bridge (design policy §18) | new | reserved |
@@ -105,7 +105,7 @@ motionConnectorCore ───────→ usd-motion-plugins motionCore
 motionConnectorTransport ──→ (standard library, OS sockets)
 motionConnectorOsc ────────→ (standard library)
 motionConnectorVmc ────────→ usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
-motionConnectorMocopi ─────→ motionConnectorCore, motionConnectorTransport
+motionConnectorMocopi ─────→ usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
 motionConnectorVrchatOsc ──→ motionConnectorCore, motionConnectorTransport, motionConnectorOsc
 motionConnectorTracking ───→ usd-motion-plugins motionCore (motionConnectorCore is still reserved)
 motionConnectorWebSocket ──→ motionConnectorCore, an optional WebSocket library

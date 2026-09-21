@@ -13,9 +13,9 @@ completion.** The vendor documents the transport — UDP, port 12351 by default,
 IPv4 only, unencrypted — and states nothing about the packet structure, so there
 is no specification to write a corpus from and exactly one way to obtain one
 without guessing: receive it. The receiver landed before this tool for that
-reason ([`UdpReceiver.h`](../../include/vrmAdapterMocopi/UdpReceiver.h)); this is
+reason ([`UdpReceiver.h`](../../libs/motionConnectorMocopi/include/motionConnectorMocopi/UdpReceiver.h)); this is
 the consumer it was waiting for, and
-[the plan](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) names it in
+[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) names it in
 Milestone D as the next code after it.
 
 Every other recorder in this repository turns a session into a file so a decoder
@@ -30,7 +30,7 @@ Two of those have no answer here, and the discipline this tool needs is that it
 must not invent them. A field read at the wrong offset produces plausible
 numbers, and a guess that reached a committed fixture's provenance is a guess
 that survives longest and is questioned least
-([BVH-0](../../../../../docs/roadmap/recorded-motion-sources.md#9-milestones)).
+([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/recorded-motion-sources.md#9-milestones)).
 
 So three questions, and every number in the answers is a property of the
 datagram *envelope*:
@@ -106,15 +106,15 @@ moment ago.
 
 ```text
 session.mocopipackets → mocopi_record --inspect --export-trace → session.trace
-                      → motion_capture → motion_retarget → an avatar
+                      → motion_record → a motion stage → a consumer's retarget
 ```
 
-A `motion-capture-trace` is what an adapter *delivered* — after protocol decode
-and coordinate conversion, before any intake policy — and the product's own
-`motion_capture` replays one knowing nothing about mocopi. That file is the only
-thing that passes between this adapter and the product, which is what
-[WORKSPACE.md §2](../../../../../docs/architecture/WORKSPACE.md) requires and
-what lets the release condition say **unchanged** about both tools downstream.
+A `motion-capture-trace` is what a connector *delivered* — after protocol
+decode and coordinate conversion, before any intake policy — and
+`usd-motion-plugins`' `motion_record` replays one knowing nothing about mocopi.
+That file is the only thing that passes between this connector and a consumer,
+which is what [WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) requires
+and what lets both tools downstream stay **unchanged**.
 
 **It goes with `--inspect`, and only there.** The sibling tool exports from a
 live session too; this one refuses to, and the refusal is the tool's own design
@@ -156,7 +156,7 @@ mocopi_record: the trace carries 4.81282 m of hips path (0.690738 m net) as
 ```
 
 The hips joint is the only one this rig translates, and since the
-[root/hips record](../../../../../docs/design/MOTION_CONTRACT.md#root-and-hips-v070)
+[root/hips record](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md#root-and-hips-v070)
 was written it is the body's placement: the assembler composes it into
 `RootMotion::worldPosition`, so it reaches the pose, the trace, and an avatar.
 A real 36-second session carries **4.8 m** of it.
@@ -225,7 +225,7 @@ mocopi_record --output session.mocopipackets \
 # And what a committed capture holds, months later, with no device present.
 mocopi_record --inspect session.mocopipackets
 
-# The same session as canonical motion, on its way to the product's tools.
+# The same session as canonical motion, on its way to a consumer's tools.
 mocopi_record --inspect session.mocopipackets --export-trace session.trace
 ```
 
@@ -260,11 +260,11 @@ Two more exits worth knowing before a long session:
 ## What may be committed, and what may not
 
 A capture recorded off a phone holds somebody's motion, and
-[§9.2](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md#92-corpus) keeps
+[§9.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md#92-corpus) keeps
 recorded evidence apart from the generated corpus for exactly that reason. The
 vendor's `BVH Sender` is the path that needs no device: pointed at a `.bvh` this
 repository wrote
-([`libs/motionBvh/tests/corpus/generated/`](../../../../../libs/motionBvh/tests/corpus/generated/)),
+([`libs/motionBvh/tests/corpus/generated/`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/libs/motionBvh/tests/corpus/generated/)),
 it yields a capture whose *encoding* is the vendor's and whose *content* is ours.
 That one belongs in `generated/` with its provenance saying what produced it.
 
@@ -274,7 +274,7 @@ the decoder.
 
 ## Tests
 
-Five CTest names, split the way every claim in this adapter is split:
+Four CTest names, split the way every claim in this connector is split:
 
 | name | needs | what it checks |
 | --- | --- | --- |
@@ -282,7 +282,6 @@ Five CTest names, split the way every claim in this adapter is split:
 | `mocopi_record_loopback` | a socket | bytes recorded verbatim, the stop reasons, the two-peer warning, six peers counted as six while four are named, and the silence report firing once with the session continuing through it |
 | `mocopi_record_ipv6` | IPv6 loopback | the socket takes the address and the tool warns; `Skipped` where the runner has no `::1` |
 | `mocopi_record_export` | the corpus | the frames, the operator's provenance, the measured rate, the two refusals a restarted capture earns, and a capture that decodes into no frame writing nothing |
-| `mocopi_record_endToEnd` | the product's tools | the whole chain onto a rig, resolved through a `UsdSkelSkeletonQuery` — and onto `Seed-san.vrm` where the tree has the importer |
 
 The envelope fixtures are authored beside the tests rather than read from a
 corpus, and that is the point: this tool has no opinion about what a datagram
@@ -291,15 +290,15 @@ makes the reader independent of the writer under test. `--export-trace` is the
 exception and says why: an export decodes, so its fixtures have to be things the
 decoder can decode.
 
-**What `mocopi_record_endToEnd` asks, and why it is not the sibling's
-question.** No committed mocopi capture *moves* — every one is a held pose,
-because they were generated to pin a decode path — so the test bakes two
-sessions onto one rig and requires the joints that differ between them to be the
-joints the sessions differ by. Both upper arms rotate in `arms-lowered-60hz`, so
-a set of joint names cannot tell a side swap from a correct map; the sides are
-therefore checked by sign as well, which is `SkeletonMap.h`'s measurement
-carried to the end of the chain. A capture that moves needs a device, and the
-day one is committed this test says so by failing.
+**The chain onto a rig is not checked here, and that is a decision.** Its last
+step bakes a recorded session onto an avatar with a retarget CLI, and this
+repository has neither and will have neither: WORKSPACE.md §2.3 points every
+edge at `usd-motion-plugins` and none at a consumer. That leg stays in
+`usd-vrm-plugins` with the avatar it needs, where it asks the question no
+committed mocopi capture can ask here — every one is a held pose, so the test
+bakes two sessions onto one rig and requires the joints that differ between them
+to be the joints the sessions differ by, sides checked by sign because both
+upper arms rotate in `arms-lowered-60hz`.
 
 ## What it does not do
 

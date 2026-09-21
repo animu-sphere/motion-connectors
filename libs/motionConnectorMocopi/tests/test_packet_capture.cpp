@@ -11,7 +11,7 @@
 // rather than merely parse one. There is no corpus yet, and the reason is
 // written down in the adapter's README: recording one needs the wire format,
 // and this layer deliberately has none.
-#include "vrmAdapterMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/PacketCapture.h"
 
 #include "corpus.h"
 
@@ -25,12 +25,14 @@
 #include <string>
 #include <vector>
 
+namespace mocopi = openstrata::connectors::mocopi;
+
 namespace
 {
 
-using vrmAdapterMocopi::PacketCapture;
-using vrmAdapterMocopi::PacketCaptureError;
-using vrmAdapterMocopi::RecordedDatagram;
+using mocopi::PacketCapture;
+using mocopi::PacketCaptureError;
+using mocopi::RecordedDatagram;
 
 RecordedDatagram
 Datagram(double receiveTime, std::vector<std::uint8_t> bytes)
@@ -45,7 +47,7 @@ std::string
 Write(const PacketCapture& capture)
 {
     std::ostringstream output;
-    const bool ok = vrmAdapterMocopi::WritePacketCapture(output, capture);
+    const bool ok = mocopi::WritePacketCapture(output, capture);
     assert(ok);
     (void)ok;
     return output.str();
@@ -55,7 +57,7 @@ bool
 Read(const std::string& text, PacketCapture* capture, PacketCaptureError* error = nullptr)
 {
     std::istringstream input(text);
-    return vrmAdapterMocopi::ReadPacketCapture(input, capture, error);
+    return mocopi::ReadPacketCapture(input, capture, error);
 }
 
 // Sixteen bytes that are not a packet, and are not claimed to be one.
@@ -334,7 +336,7 @@ int
 CheckCorpus(const std::filesystem::path& directory)
 {
     std::vector<std::filesystem::path> captures;
-    if (!vrmAdapterMocopiTests::CollectCaptures(directory, &captures))
+    if (!motionConnectorMocopiTests::CollectCaptures(directory, &captures))
     {
         return 1;
     }
@@ -357,7 +359,7 @@ CheckCorpus(const std::filesystem::path& directory)
         PacketCapture parsed;
         PacketCaptureError error;
         std::istringstream input(original);
-        if (!vrmAdapterMocopi::ReadPacketCapture(input, &parsed, &error))
+        if (!mocopi::ReadPacketCapture(input, &parsed, &error))
         {
             std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
             ++failures;
@@ -365,7 +367,7 @@ CheckCorpus(const std::filesystem::path& directory)
         }
 
         std::ostringstream rewritten;
-        if (!vrmAdapterMocopi::WritePacketCapture(rewritten, parsed) || rewritten.str() != original)
+        if (!mocopi::WritePacketCapture(rewritten, parsed) || rewritten.str() != original)
         {
             std::fprintf(stderr, "%s: does not round trip byte-identically\n", name.c_str());
             ++failures;
@@ -418,6 +420,6 @@ main(int argc, char** argv)
     TestMalformedCapturesAreRefusedAndSayWhere();
     TestTheWriterSurvivesAHostileGlobalLocale();
     TestCommentsAndBlankLinesAreIgnored();
-    std::puts("vrmAdapterMocopi packet capture tests passed");
+    std::puts("motionConnectorMocopi packet capture tests passed");
     return 0;
 }

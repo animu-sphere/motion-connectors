@@ -2,16 +2,16 @@
 //
 // This product's joint ids and this product's axes, turned into canonical
 // humanoid semantics. It is the first layer in this adapter that knows a
-// `motion::HumanBone` exists, and it is the one conversion the adapter exists
-// to perform (roadmap/adapters-mocopi-vmc-ardy.md §6).
+// `openstrata::motion::HumanJoint` exists, and it is the one conversion the adapter exists
+// to perform (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §6).
 //
 // It converts and it does not decide. A decoded `MotionSkeleton` and
 // `MotionFrame` go in, canonical values come out; whether a frame with three
 // bones missing is a usable frame, whether the counter went backwards, and
 // whether the hips position is also the body's root are the frame assembler's
 // and the bridge's questions and are deliberately not answered here. Nor does
-// anything below resolve a target joint: a joint becomes a `HumanBone` and
-// stops, because the map from there to a rig belongs to `vrmRetarget` and to
+// anything below resolve a target joint: a joint becomes a `HumanJoint` and
+// stops, because the map from there to a rig belongs to `motionRetarget` and to
 // the avatar's own `vrm:humanBones` bindings (§5.1).
 //
 // ## A bone id is a position, not a name
@@ -67,7 +67,7 @@
 // misassembled body rather than as a failure. So a bound bone's local rotation
 // is the composition of the source local rotations from just below its nearest
 // bound ancestor down to itself, root-first — the path rule, stated once in
-// [MOTION_CONTRACT.md](../../../../../docs/design/MOTION_CONTRACT.md) and
+// [MOTION_CONTRACT.md](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md) and
 // implemented here for the second time.
 //
 // Which joints a map binds therefore changes how a bend is *distributed* and
@@ -116,14 +116,14 @@
 //
 // The sibling adapter has two candidate root translations — `/VMC/Ext/Root/Pos`
 // and the hips local position — cannot compose them, and says so
-// ([§5.2](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md)). Natively
+// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)). Natively
 // that ambiguity does not arise: the rig's root joint *is* the hips, there is no
 // second channel, and in 207,064 measured bone-frames every non-root translation
 // equalled its rest offset bit for bit. So the body's placement is the hips
 // joint's own translation, absolute and in metres, and this layer reports it as
 // that.
 //
-// It is reported beside the bones rather than as a `motion::RootMotion`, and
+// It is reported beside the bones rather than as a `openstrata::motion::RootMotion`, and
 // that is still true of *this* layer after the record was written. Whether the
 // body's placement is root motion, and whether the hips rotation is also the
 // root's orientation, were the two open policy questions this release owed;
@@ -147,9 +147,10 @@
 // one about every 3.5 s — so the map carries the real one, composed along the
 // same paths and in canonical values.
 //
-// It is carried as values rather than as a `vrmRetarget::SourceRestPose`
+// It is carried as values rather than as an `openstrata::motion::SourceRestPose`
 // because that type lives across an edge this library may not have
-// (WORKSPACE.md §2: an adapter reaches `motionCore` and `motionRuntime` and
+// (WORKSPACE.md §2: a connector reaches `motionCore`, `motionSampling`,
+// `motionRecording` and `motionConnectorTransport` and
 // nothing else). A tool may compose the two, and that is where it happens.
 //
 // ## The codes this layer raises
@@ -174,11 +175,11 @@
 // confidence or state, so there is nothing here to decode into it.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/quatf.h"
 #include "pxr/base/gf/vec3f.h"
@@ -190,7 +191,7 @@
 #include <optional>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // The parent of each joint of the measured rig, by id, with -1 for the root.
@@ -233,31 +234,31 @@ inline constexpr std::array<std::int16_t, MeasuredBoneCount> MeasuredParentColum
 // The canonical bone the measured rig's joint `boneId` carries, or nullopt for
 // the five it has no bone for and for any id the measured rig does not have.
 // `IsMeasuredJoint` is what separates those two answers.
-VRMADAPTERMOCOPI_API std::optional<motion::HumanBone>
+MOTIONCONNECTORMOCOPI_API std::optional<openstrata::motion::HumanJoint>
 MeasuredHumanBone(std::uint16_t boneId) noexcept;
 
 // Whether `boneId` is a joint of the measured rig at all. A measured joint with
 // no canonical bone is one of the five on the path; anything else is a joint
 // whose meaning this project has not measured.
-VRMADAPTERMOCOPI_API bool IsMeasuredJoint(std::uint16_t boneId) noexcept;
+MOTIONCONNECTORMOCOPI_API bool IsMeasuredJoint(std::uint16_t boneId) noexcept;
 
 // The device's axes into the canonical ones. The identity, measured — see the
 // header. No validity check: a non-finite input converts to a non-finite
 // output, because these are the arithmetic and the functions below are the
 // boundary.
-VRMADAPTERMOCOPI_API pxr::GfVec3f
+MOTIONCONNECTORMOCOPI_API pxr::GfVec3f
 ToCanonicalPosition(const std::array<float, 3>& translation) noexcept;
 
 // Reorders the wire's scalar-last components into `pxr::GfQuatf`'s scalar-first
 // ones, and normalises. NaN components stay NaN and a zero-length quaternion
 // converts to a zero-length one; neither is repaired here.
-VRMADAPTERMOCOPI_API pxr::GfQuatf
+MOTIONCONNECTORMOCOPI_API pxr::GfQuatf
 ToCanonicalRotation(const std::array<float, 4>& rotation) noexcept;
 
 // One canonical joint of one frame.
 struct BoneSample
 {
-    motion::HumanBone bone = motion::HumanBone::Count;
+    openstrata::motion::HumanJoint bone = openstrata::motion::HumanJoint::Count;
 
     // Local to the semantic humanoid parent, composed along the path from just
     // below the nearest bound ancestor. It is the *source's* local rotation:
@@ -273,24 +274,25 @@ struct BoneSample
 struct SkeletonMap
 {
     // Identity rotations and zero translations until a skeleton packet fills
-    // them, for the same reason `motion::HumanoidPose` declares one: a rest
+    // them, for the same reason `openstrata::motion::MotionPose` declares one: a rest
     // pose that is uninitialised memory makes a caller's mistake a different
     // bug on every run.
-    VRMADAPTERMOCOPI_API SkeletonMap();
+    MOTIONCONNECTORMOCOPI_API SkeletonMap();
 
     // The canonical bone `boneId` carries in this rig, or nullopt.
-    VRMADAPTERMOCOPI_API std::optional<motion::HumanBone> Bone(std::uint16_t boneId) const noexcept;
+    MOTIONCONNECTORMOCOPI_API std::optional<openstrata::motion::HumanJoint>
+    Bone(std::uint16_t boneId) const noexcept;
 
     // The canonical bones this rig carries. Twenty-two for the measured rig.
-    std::bitset<motion::HumanBoneCount> present;
+    std::bitset<openstrata::motion::HumanJointCount> present;
 
     // The device's rest pose in canonical values: local to the semantic
     // humanoid parent, composed along the same paths the frames are. Every
     // measured skeleton packet states identity rotations and puts the whole
     // rest in the offsets, and this reports what the packet said rather than
     // that expectation.
-    std::array<pxr::GfQuatf, motion::HumanBoneCount> restRotations;
-    std::array<pxr::GfVec3f, motion::HumanBoneCount> restTranslations;
+    std::array<pxr::GfQuatf, openstrata::motion::HumanJointCount> restRotations;
+    std::array<pxr::GfVec3f, openstrata::motion::HumanJointCount> restTranslations;
 
     // The joint count the session declared. `MeasuredBoneCount`, or more for a
     // longer rig whose leading joints matched.
@@ -337,19 +339,19 @@ struct SkeletonMap
 // live log should not have to read the detail text to tell those apart.
 //
 // `diagnostics`, when given, is appended to and never cleared.
-VRMADAPTERMOCOPI_API bool MakeSkeletonMap(const MotionSkeleton& skeleton, SkeletonMap* out,
+MOTIONCONNECTORMOCOPI_API bool MakeSkeletonMap(const MotionSkeleton& skeleton, SkeletonMap* out,
                                           std::vector<Diagnostic>* diagnostics = nullptr);
 
 // What one frame said, in canonical terms.
 struct FrameMapping
 {
-    // In `motion::HumanBone` order rather than wire order, so two frames of the
+    // In `openstrata::motion::HumanJoint` order rather than wire order, so two frames of the
     // same session produce the same sequence whatever order the device sent its
     // records in.
     std::vector<BoneSample> bones;
 
     // The bones `bones` carries, as the canonical pose wants them.
-    std::bitset<motion::HumanBoneCount> present;
+    std::bitset<openstrata::motion::HumanJointCount> present;
 
     // The hips joint's translation: the body's placement, absolute, in metres.
     // False when the hips record did not arrive.
@@ -372,7 +374,7 @@ struct FrameMapping
     // their path did not arrive. `present` says which arrived; this says how
     // many did not, so a caller that only wants the count does not have to
     // subtract two bitsets.
-    std::size_t missingBones = 0;
+    std::size_t missingJoints = 0;
 };
 
 // Maps one decoded frame through `map`.
@@ -391,8 +393,8 @@ struct FrameMapping
 // across frames must never see the previous frame's bones survive this call.
 //
 // `diagnostics`, when given, is appended to and never cleared.
-VRMADAPTERMOCOPI_API bool MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame,
+MOTIONCONNECTORMOCOPI_API bool MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame,
                                          FrameMapping* out,
                                          std::vector<Diagnostic>* diagnostics = nullptr);
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

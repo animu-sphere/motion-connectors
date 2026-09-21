@@ -2,7 +2,7 @@
 
 The fixtures the mocopi packet decoder runs against. Each `.mocopipackets` file
 is a capture in the format documented on
-[`PacketCapture.h`](../../include/vrmAdapterMocopi/PacketCapture.h):
+[`PacketCapture.h`](../../include/motionConnectorMocopi/PacketCapture.h):
 line-oriented text, one `d` record per datagram, hex bytes with an ASCII gutter,
 deterministic to six decimals.
 
@@ -11,7 +11,7 @@ deterministic to six decimals.
 bone counts, digests, and the phenomenon each capture pins). Its measured fields
 are derived from the captures by
 [`tools/generate_packets.py`](../../tools/generate_packets.py) and re-checked by
-`vrmAdapterMocopi_packetGen`, so they cannot drift out of agreement with the
+`motionConnectorMocopi_packetGen`, so they cannot drift out of agreement with the
 fixtures; its prose fields (`pins`, `tags`) are hand-written. This file is the
 operator's guide.
 
@@ -21,7 +21,7 @@ The grammar these bytes encode is **measured**: 8000 datagrams across five real
 device sessions and four distinct motions, walked until the arithmetic closed at
 every level of every datagram. The claims and the population each was measured on
 are written out on
-[`MotionPacket.h`](../../include/vrmAdapterMocopi/MotionPacket.h).
+[`MotionPacket.h`](../../include/motionConnectorMocopi/MotionPacket.h).
 
 The **content** is invented. The rest pose here is clean round-number
 proportions, because a real skeleton packet is a body measurement of a real
@@ -41,18 +41,18 @@ does mean the corpus is not the evidence. Two things close the gap, in this
 order:
 
 1. **The vendor's `BVH Sender`**, pointed at a `.bvh` this repository wrote
-   ([`libs/motionBvh/tests/corpus/generated/`](../../../../../libs/motionBvh/tests/corpus/generated/)).
+   ([`libs/motionBvh/tests/corpus/generated/`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/libs/motionBvh/tests/corpus/generated/)).
    Its *encoding* is the vendor's own and its *content* is ours, so it is a
    capture that can genuinely refute the grammar and that this project may still
    commit and public CI may still run. When an operator makes one it belongs in
    this directory, and `test_motion_packet.cpp` grows the case it deserves.
 2. **The cross-source comparison** of
-   [the plan](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) §9.6 — the
+   [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §9.6 — the
    same physical session observed natively and relayed through VMC — which is
    the release's distinguishing check and cannot be faked by either corpus.
 
 This is the same split the BVH track already runs on
-([`generated/` versus `recorded/`](../../../../../libs/motionBvh/tests/corpus/)),
+([`generated/` versus `recorded/`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/libs/motionBvh/tests/corpus/)),
 with a wrinkle the plan names: a `BVH Sender` capture is neither of those two
 things, because its bytes are the vendor's and its motion never met a sensor.
 
@@ -67,7 +67,7 @@ directory's `.gitignore` refuses everything but the manifest, because an
 extension list would fail open on exactly the files that must not be committed.
 
 What those sessions settled, and what stayed open, is in the manifest row by row
-and in [the §9.6 report](../../../../../docs/reports/motion/01-2026-08-15-mocopi-cross-source.md).
+and in [the §9.6 report](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/01-2026-08-15-mocopi-cross-source.md).
 The short version: one session observed both ways agrees to a median 0.084° per
 bone, the residual is timing rather than value, and the live path drops 4.81 m
 of hips travel that the recorded path keeps.
@@ -80,7 +80,7 @@ The split is expressed by `recorded/` existing and by what it refuses.
 
 ## Why packets and not traces
 
-A [`motion-capture-trace`](../../../../../libs/motionRuntime/include/motionRuntime/CaptureTrace.h)
+A [`motion-capture-trace`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/libs/motionRecording/include/motionRecording/CaptureTrace.h)
 records what an adapter *produced*. This records what it was *given*:
 
 ```text
@@ -99,7 +99,7 @@ Handedness is **resolved**: the basis is right-handed and **+X is the body's
 left**, so in `bnid` order 11–14 is the left arm, 15–18 the right, 19–22 the left
 leg and 23–26 the right. It was settled on 2026-08-12 by comparing this rig
 against the one
-[`mocopi-mobile-bvh-default-v1`](../../../../../profiles/motion/mocopi-mobile-bvh-default-v1.yaml)
+[`mocopi-mobile-bvh-default-v1`](https://github.com/animu-sphere/usd-motion-plugins/blob/main/profiles/motion/mocopi-mobile-bvh-default-v1.yaml)
 measured from the same application's BVH export — all 27 rest offsets agree sign
 for sign to 4.4e-7 m — and the adapter
 [README](../../README.md#the-decoder-stops-where-the-measurement-does) carries
@@ -113,7 +113,7 @@ asserting something this layer does not compute, and would go green or red for
 reasons belonging to the joint map two layers up.
 
 **That component now exists, and it reads this same directory** —
-`vrmAdapterMocopi_skeletonMapCorpus`, a third pass over the captures asking what
+`motionConnectorMocopi_skeletonMapCorpus`, a third pass over the captures asking what
 each becomes once its joints carry canonical bones. So the sides are finally
 asserted, on the layer that computes them, and `arms-lowered-60hz` is where: the
 left forearm's rest direction is rotated by the sample and compared against where
@@ -152,7 +152,7 @@ itself the boundary being drawn.
 ## Regenerating
 
 ```sh
-python adapters/liveCapture/mocopi/tools/generate_packets.py
+python libs/motionConnectorMocopi/tools/generate_packets.py
 ```
 
 Seven CTest names guard the result, and they check different things. Six of them
@@ -160,9 +160,9 @@ are readings of this same directory at successive layers, which is the point:
 one set of bytes, asked a different question by each component that consumes it,
 so a fixture is never merely parsed by the layer it was written for.
 
-- `vrmAdapterMocopi_corpus` — every capture parses and re-emits byte-identically
+- `motionConnectorMocopi_corpus` — every capture parses and re-emits byte-identically
   through the **C++ writer**, so a fixture cannot drift from the format.
-- `vrmAdapterMocopi_motionPacketCorpus` — every capture decodes to what its
+- `motionConnectorMocopi_motionPacketCorpus` — every capture decodes to what its
   `sourceId` claims it pins, or is refused **per datagram** with the code it
   exists to be refused with. A capture with no assertion registered against its
   `sourceId` fails rather than passing quietly.
@@ -172,16 +172,16 @@ so a fixture is never merely parsed by the layer it was written for.
   → decoder (this), with nothing asserting a `pins` string against behaviour. A
   `pins` field is a claim addressed to a reviewer, and treating it as an
   assertion would be reading a description as a specification.
-- `vrmAdapterMocopi_skeletonMapCorpus` — what each capture becomes once its
+- `motionConnectorMocopi_skeletonMapCorpus` — what each capture becomes once its
   joints carry canonical bones: which arm is which, which bones a refused record
   costs, and which rigs get no map at all. Registered per `sourceId` like the
   pass above, including for the two `malformed-*` captures, whose assertion is
   that nothing reaches this layer from them — a claim that can stop being true.
-- `vrmAdapterMocopi_frameAssemblerCorpus` — the sequence questions, which every
+- `motionConnectorMocopi_frameAssemblerCorpus` — the sequence questions, which every
   layer below answers one datagram at a time and so cannot: a gap, a duplicate
   delivery, a restart, and whether a frame short of the declared rig is emitted
   or refused.
-- `vrmAdapterMocopi_liveSourceCorpus` — the first reading whose subject is a
+- `motionConnectorMocopi_liveSourceCorpus` — the first reading whose subject is a
   **pose a consumer sampled** rather than something a layer produced. It makes
   the one cross-layer claim: every frame the assembler emitted was admitted by
   the intake, because the assembler emits strictly advancing frames within a
@@ -190,7 +190,7 @@ so a fixture is never merely parsed by the layer it was written for.
   outlive the call" is checked by the poses matching rather than by an assertion
   about pointers, and it is the only place the two restart policies are run over
   the same bytes.
-- `vrmAdapterMocopi_loopbackCorpus` — the same bytes once more, **through a real
+- `motionConnectorMocopi_loopbackCorpus` — the same bytes once more, **through a real
   socket**: every capture is sent to a bound loopback port, read back off it, and
   checked to produce the same frames, the same sampled poses, the same
   diagnostics and the same tallies as the file path. It is the only reading whose
@@ -204,7 +204,7 @@ so a fixture is never merely parsed by the layer it was written for.
   subject and sequence — the one field allowed to differ is `source`, which names
   the endpoint rather than the fixture, and that difference is asserted rather
   than merely tolerated.
-- `vrmAdapterMocopi_packetGen` — the committed bytes still match the
+- `motionConnectorMocopi_packetGen` — the committed bytes still match the
   **generator** that authored them. This matters more here than for the sibling
   adapter: regenerating is the only way this corpus can be extended, because the
   measurement it was written from is not committed.

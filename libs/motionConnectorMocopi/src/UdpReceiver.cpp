@@ -4,7 +4,7 @@
 // a transport event to a `VRM_MOCOPI_*` code.
 //
 // This is the only file in the pair that could not be shared, and the reason is
-// the whole of WORKSPACE.md §2's diagnostic split. `liveTransport` reports what
+// the whole of WORKSPACE.md §2's diagnostic split. `motionConnectorTransport` reports what
 // it observed; a code is frozen per adapter, before its decoder exists, so the
 // layer that knows which adapter it is has to be the one that names it.
 //
@@ -12,11 +12,11 @@
 // has no code for silence — and that is the entire remaining difference between
 // two receivers that had drifted by 210 lines.
 
-#include "vrmAdapterMocopi/UdpReceiver.h"
+#include "motionConnectorMocopi/UdpReceiver.h"
 
 #include <utility>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 namespace
@@ -38,18 +38,18 @@ namespace
 // against the decoder's `TRACKING_LOST` and `TIMESTAMP_INVALID` lines as though
 // they were comparable.
 Diagnostic
-Translate(const liveTransport::TransportEventReport& report)
+Translate(const transport::TransportEventReport& report)
 {
     switch (report.event)
     {
-    case liveTransport::TransportEvent::Silence:
+    case transport::TransportEvent::Silence:
     {
         Diagnostic diagnostic = MakeDiagnostic(DiagnosticCode::DeviceUnavailable, report.detail);
         diagnostic.source = report.source;
         diagnostic.subject = report.subject;
         return diagnostic;
     }
-    case liveTransport::TransportEvent::BindFailed:
+    case transport::TransportEvent::BindFailed:
         break;
     }
     Diagnostic diagnostic = MakeDiagnostic(DiagnosticCode::SocketBindFailed, report.detail);
@@ -59,14 +59,14 @@ Translate(const liveTransport::TransportEventReport& report)
 }
 
 void
-Append(const std::vector<liveTransport::TransportEventReport>& events,
+Append(const std::vector<transport::TransportEventReport>& events,
        std::vector<Diagnostic>* diagnostics)
 {
     if (!diagnostics)
     {
         return;
     }
-    for (const liveTransport::TransportEventReport& report : events)
+    for (const transport::TransportEventReport& report : events)
     {
         diagnostics->push_back(Translate(report));
     }
@@ -77,14 +77,14 @@ Append(const std::vector<liveTransport::TransportEventReport>& events,
 bool
 UdpReceiver::Open(const UdpReceiverConfig& config, std::vector<Diagnostic>* diagnostics)
 {
-    liveTransport::UdpReceiverConfig transport;
+    transport::UdpReceiverConfig transport;
     transport.listenAddress = config.listenAddress;
     transport.listenPort = config.listenPort;
     transport.reuseAddress = config.reuseAddress;
     transport.receiveBufferBytes = config.receiveBufferBytes;
     transport.silenceTimeoutSeconds = config.silenceTimeoutSeconds;
 
-    std::vector<liveTransport::TransportEventReport> events;
+    std::vector<transport::TransportEventReport> events;
     const bool opened = _receiver.Open(transport, &events);
     Append(events, diagnostics);
     return opened;
@@ -104,10 +104,10 @@ UdpReceiver::Receive(ReceivedDatagram* datagram, double timeoutSeconds,
         return _receiver.Receive(datagram, timeoutSeconds);
     }
 
-    std::vector<liveTransport::TransportEventReport> events;
+    std::vector<transport::TransportEventReport> events;
     const ReceiveStatus status = _receiver.Receive(datagram, timeoutSeconds, &events);
     Append(events, diagnostics);
     return status;
 }
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

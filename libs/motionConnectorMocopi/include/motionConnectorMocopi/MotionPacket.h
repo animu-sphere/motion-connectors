@@ -7,7 +7,7 @@
 // parent column and a rest pose. It does not know that bone 12 is an upper arm,
 // which way the device's +X points, or where a frame begins — those belong to
 // the skeleton map, the coordinate converter and the frame assembler
-// (roadmap/adapters-mocopi-vmc-ardy.md §6), and keeping them out is what lets a
+// (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §6), and keeping them out is what lets a
 // wire-format question be answered without a rig.
 //
 // ## The grammar, as measured
@@ -72,7 +72,7 @@
 //
 // The one thing worth *not* concluding from it: this says the two paths agree
 // about the rest pose, not that they agree about the motion. That is
-// [§9.6](../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md)'s cross-source
+// [§9.6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)'s cross-source
 // comparison, on a single session observed both ways, and it is still owed.
 //
 // ## Four rules that are decisions
@@ -139,9 +139,9 @@
 // single packet can see that either.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/PacketChunk.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/PacketChunk.h"
+#include "motionConnectorMocopi/api.h"
 
 #include <array>
 #include <cstddef>
@@ -150,7 +150,7 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // `head/ftyp`. The format's magic, and the only string in the protocol.
@@ -185,7 +185,7 @@ enum class MotionPacketKind : std::uint8_t
 };
 
 // The tag the kind is carried under, e.g. "fram". Empty for Count.
-VRMADAPTERMOCOPI_API std::string_view MotionPacketKindTag(MotionPacketKind kind) noexcept;
+MOTIONCONNECTORMOCOPI_API std::string_view MotionPacketKindTag(MotionPacketKind kind) noexcept;
 
 // A transform exactly as the wire carries it: the device's own axes and units,
 // and a quaternion in the scalar-last component order this protocol serialises
@@ -329,7 +329,7 @@ struct MotionPacket
 //
 // The codes this layer raises, and no others: `VRM_MOCOPI_PACKET_MALFORMED`,
 // `VRM_MOCOPI_NON_FINITE_TRANSFORM`, `VRM_MOCOPI_TIMESTAMP_INVALID`.
-VRMADAPTERMOCOPI_API bool DecodeMotionPacket(const std::uint8_t* bytes, std::size_t size,
+MOTIONCONNECTORMOCOPI_API bool DecodeMotionPacket(const std::uint8_t* bytes, std::size_t size,
                                              MotionPacket* packet,
                                              std::vector<Diagnostic>* diagnostics = nullptr);
 
@@ -348,4 +348,4 @@ DecodeMotionPacket(const std::vector<std::uint8_t>& datagram, MotionPacket* pack
 bool DecodeMotionPacket(std::vector<std::uint8_t>&& datagram, MotionPacket* packet,
                         std::vector<Diagnostic>* diagnostics = nullptr) = delete;
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

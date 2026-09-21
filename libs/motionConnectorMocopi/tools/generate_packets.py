@@ -7,7 +7,7 @@ The VMC corpus is synthetic because a recording off a commercial sender carries
 that application's avatar; the shapes themselves come from a published protocol,
 so writing them down costs nothing. This protocol is not published. Its shapes
 come from measuring 8000 datagrams of five real device sessions -- the grammar is
-written out on include/vrmAdapterMocopi/MotionPacket.h with the population each
+written out on include/motionConnectorMocopi/MotionPacket.h with the population each
 claim was measured on -- and those recordings hold a real person's motion and a
 real person's body proportions, so they are evidence that cannot be committed.
 
@@ -42,10 +42,10 @@ test names no bone and changes no basis, so an assertion about "the left arm"
 would be asserting something two layers up. That belongs to MocopiSkeletonMap's
 fixtures when it exists.
 
-The output must match the C++ writer byte for byte; `vrmAdapterMocopi_corpus`
+The output must match the C++ writer byte for byte; `motionConnectorMocopi_corpus`
 enforces that. Run:
 
-    python adapters/liveCapture/mocopi/tools/generate_packets.py
+    python libs/motionConnectorMocopi/tools/generate_packets.py
 
 `manifest.json` is maintained from here too. Its measured fields (datagram
 counts, payload sizes, durations, the packet kinds and chunk tags present, bone
@@ -797,7 +797,7 @@ def main() -> int:
     if drifted:
         print("regenerated captures differ from the committed corpus: "
               + ", ".join(drifted), file=sys.stderr)
-        print("run: python adapters/liveCapture/mocopi/tools/"
+        print("run: python libs/motionConnectorMocopi/tools/"
               "generate_packets.py", file=sys.stderr)
         return 1
 
@@ -805,7 +805,7 @@ def main() -> int:
     if problems:
         for problem in problems:
             print(f"manifest drift: {problem}", file=sys.stderr)
-        print("run: python adapters/liveCapture/mocopi/tools/"
+        print("run: python libs/motionConnectorMocopi/tools/"
               "generate_packets.py", file=sys.stderr)
         return 1
     if not args.check:

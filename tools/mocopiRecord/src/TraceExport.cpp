@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "TraceExport.h"
 
-#include "motionRuntime/CaptureTrace.h"
+#include "motionRecording/CaptureTrace.h"
 
 namespace mocopiRecordTool
 {
 
 void
-TraceCollector::Observe(const std::vector<vrmAdapterMocopi::MocopiFrame>& frames,
-                        const motion::MotionSourceMetadata& metadata)
+TraceCollector::Observe(const std::vector<mocopi::MocopiFrame>& frames,
+                        const openstrata::motion::SourceMetadata& metadata)
 {
     // Observing after `Close` re-opens it, so the derived fields are recomputed
     // rather than left describing the frames this call did not know about. The
@@ -17,7 +17,7 @@ TraceCollector::Observe(const std::vector<vrmAdapterMocopi::MocopiFrame>& frames
     // to not call `Close` at all, which `GetSessions` already documents.
     _closed = false;
 
-    for (const vrmAdapterMocopi::MocopiFrame& frame : frames)
+    for (const mocopi::MocopiFrame& frame : frames)
     {
         // A restart opens a session only when there is one to close. The
         // assembler never marks the first frame of a capture, but a collector
@@ -39,7 +39,7 @@ TraceCollector::Observe(const std::vector<vrmAdapterMocopi::MocopiFrame>& frames
             _hipsFirst.emplace_back();
             _hipsLast.emplace_back();
         }
-        motion::HumanoidAnimation& session = _sessions.back();
+        openstrata::motion::MotionClip& session = _sessions.back();
         session.samples.push_back(frame.pose);
         session.source = metadata;
         ++_frames;
@@ -97,7 +97,7 @@ TraceCollector::Close()
     // the wrong frames rather than as a crash. Unreachable code that has to
     // stay correct in four places is worse than no code.
 
-    for (motion::HumanoidAnimation& session : _sessions)
+    for (openstrata::motion::MotionClip& session : _sessions)
     {
         session.startTime = session.samples.front().timestamp;
         session.endTime = session.samples.back().timestamp;

@@ -6,11 +6,11 @@
 // never 12351, because a developer with a real source running would otherwise
 // find this suite fighting it for the port. That is also why these are their own
 // CTest names: excluding a name is cheaper than excluding a claim
-// (roadmap §9.5).
+// (the adapter plan §9.5).
 //
 // This binary carries **three** such names, and a runner forbidding sockets must
-// exclude all three: `vrmAdapterMocopi_udpReceiver`,
-// `vrmAdapterMocopi_udpReceiverTruncation`, and `vrmAdapterMocopi_loopbackCorpus`
+// exclude all three: `motionConnectorMocopi_udpReceiver`,
+// `motionConnectorMocopi_udpReceiverTruncation`, and `motionConnectorMocopi_loopbackCorpus`
 // — the corpus replay at the bottom of this file, which binds a loopback socket
 // like everything else here. It is listed in CMake beside the other corpus
 // passes, none of which bind anything, so it is the one an operator building an
@@ -18,7 +18,7 @@
 //
 // The sender is in this file rather than in the library. §9.3 asks for a "test
 // sender", and that is what it is: the adapter receives, and a `UdpSender` in
-// `vrmAdapterMocopi` would be a class no consumer of the adapter has a use for.
+// `motionConnectorMocopi` would be a class no consumer of the adapter has a use for.
 //
 // **Nothing here asserts anything about the wire format**, and that is the
 // point of the layer rather than a gap in its tests. The payloads below are
@@ -34,7 +34,7 @@
 // ## The one pass that does read the format, and why it lives here
 //
 // Given a corpus directory this binary runs a different check
-// (`vrmAdapterMocopi_loopbackCorpus`): every committed capture is replayed
+// (`motionConnectorMocopi_loopbackCorpus`): every committed capture is replayed
 // **through a real socket**, all the way to a pose a consumer sampled, and
 // compared against the same bytes read straight from the file. That is the one
 // claim no amount of socket unit testing can make — the tests above prove the
@@ -60,7 +60,7 @@
 // translates", arrived at from the other direction).
 //
 // **The comparison is exact, and it has no clock exemption**, which is the
-// sibling adapter's arrangement inverted. `vrmAdapterVmc_loopbackCorpus` must
+// sibling adapter's arrangement inverted. `motionConnectorVmc_loopbackCorpus` must
 // exempt the pose timestamp when a sender sent no `/VMC/Ext/T`, because the
 // receive clock then reaches the pose. Here it reaches nothing at all: every
 // frame carries the sender's own `time`, and `MocopiFrameAssembler::Push`
@@ -68,11 +68,11 @@
 // must agree in every observable — the poses, the frame window beside them, the
 // three tallies, and every field of every diagnostic except the one that names
 // where the bytes came from.
-#include "vrmAdapterMocopi/UdpReceiver.h"
+#include "motionConnectorMocopi/UdpReceiver.h"
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/LiveSource.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/LiveSource.h"
+#include "motionConnectorMocopi/PacketCapture.h"
 
 #include "corpus.h"
 
@@ -105,20 +105,22 @@
 #include <unistd.h>
 #endif
 
+namespace mocopi = openstrata::connectors::mocopi;
+
 namespace
 {
 
-using vrmAdapterMocopi::Diagnostic;
-using vrmAdapterMocopi::DiagnosticCode;
-using vrmAdapterMocopi::DiagnosticSeverity;
-using vrmAdapterMocopi::MocopiFrame;
-using vrmAdapterMocopi::MocopiLiveSource;
-using vrmAdapterMocopi::PacketCapture;
-using vrmAdapterMocopi::ReceivedDatagram;
-using vrmAdapterMocopi::ReceiveStatus;
-using vrmAdapterMocopi::RecordedDatagram;
-using vrmAdapterMocopi::UdpReceiver;
-using vrmAdapterMocopi::UdpReceiverConfig;
+using mocopi::Diagnostic;
+using mocopi::DiagnosticCode;
+using mocopi::DiagnosticSeverity;
+using mocopi::MocopiFrame;
+using mocopi::MocopiLiveSource;
+using mocopi::PacketCapture;
+using mocopi::ReceivedDatagram;
+using mocopi::ReceiveStatus;
+using mocopi::RecordedDatagram;
+using mocopi::UdpReceiver;
+using mocopi::UdpReceiverConfig;
 
 // Long enough that a loopback datagram which has been handed to the kernel is
 // certainly readable, short enough that a genuinely lost one fails the suite
@@ -463,7 +465,7 @@ TestADatagramArrivesWholeWithItsSenderAndItsInstant()
     assert(receiver.Receive(&datagram, kLoopbackTimeout) == ReceiveStatus::Received);
     assert(datagram.bytes.empty());
 
-    const vrmAdapterMocopi::UdpReceiverStats& stats = receiver.GetStats();
+    const mocopi::UdpReceiverStats& stats = receiver.GetStats();
     assert(stats.datagramsReceived == 4);
     assert(stats.bytesReceived == small.size() * 2 + large.size());
     assert(stats.datagramsTruncated == 0);
@@ -716,7 +718,7 @@ CheckAnOverlongDatagramIsDroppedRatherThanHandedBackAsWhole()
     // Above the IPv4 bound the capture format enforces, below IPv6's own 65527
     // maximum. One byte over would do; a handful makes the intent legible.
     const std::vector<std::uint8_t> overlong =
-        Payload(vrmAdapterMocopi::MaxDatagramBytes + 8, 0x00);
+        Payload(mocopi::MaxDatagramBytes + 8, 0x00);
     if (!sender.Send(overlong))
     {
         std::puts("skipped: this host will not send an over-long datagram");
@@ -809,12 +811,12 @@ TestWhatCameOffTheSocketIsWhatACaptureKeeps()
     }
 
     std::ostringstream written;
-    assert(vrmAdapterMocopi::WritePacketCapture(written, capture));
+    assert(mocopi::WritePacketCapture(written, capture));
 
     PacketCapture reread;
     std::istringstream input(written.str());
-    vrmAdapterMocopi::PacketCaptureError error;
-    if (!vrmAdapterMocopi::ReadPacketCapture(input, &reread, &error))
+    mocopi::PacketCaptureError error;
+    if (!mocopi::ReadPacketCapture(input, &reread, &error))
     {
         std::fprintf(stderr, "line %zu: %s\n", error.line, error.message.c_str());
         assert(false);
@@ -831,7 +833,7 @@ TestWhatCameOffTheSocketIsWhatACaptureKeeps()
     // And re-emitting reproduces the file byte for byte, which is what will let
     // a committed capture be compared rather than merely parsed.
     std::ostringstream again;
-    assert(vrmAdapterMocopi::WritePacketCapture(again, reread));
+    assert(mocopi::WritePacketCapture(again, reread));
     assert(again.str() == written.str());
 }
 
@@ -845,8 +847,8 @@ TestWhatCameOffTheSocketIsWhatACaptureKeeps()
 // means the hand-off into the runtime did.
 struct Delivered
 {
-    motion::HumanoidPose framePose;
-    motion::HumanoidPose sampledPose;
+    openstrata::motion::MotionPose framePose;
+    openstrata::motion::MotionPose sampledPose;
     bool sampled = false;
 
     std::uint32_t frameNumber = 0;
@@ -854,7 +856,7 @@ struct Delivered
     double clockDrift = 0.0;
     bool beginsNewSession = false;
     std::uint32_t lostFrames = 0;
-    std::bitset<motion::HumanBoneCount> missing;
+    std::bitset<openstrata::motion::HumanJointCount> missing;
     std::optional<pxr::GfVec3f> hipsPosition;
     std::size_t unusedJoints = 0;
     std::size_t droppedTranslations = 0;
@@ -864,9 +866,9 @@ struct Replayed
 {
     std::vector<Delivered> frames;
     std::vector<Diagnostic> diagnostics;
-    vrmAdapterMocopi::MocopiLiveSourceStats stats;
-    vrmAdapterMocopi::MocopiFrameStats frameStats;
-    motion::LiveCaptureStats intakeStats;
+    mocopi::MocopiLiveSourceStats stats;
+    mocopi::MocopiFrameStats frameStats;
+    openstrata::motion::LiveCaptureStats intakeStats;
     std::size_t restartsLatched = 0;
 };
 
@@ -876,7 +878,7 @@ struct Replayed
 // pipelines compared against each other would report a difference in this file
 // as a statement about the socket.
 void
-Collect(const vrmAdapterMocopiTests::PushedDatagram& pushed, Replayed* out)
+Collect(const motionConnectorMocopiTests::PushedDatagram& pushed, Replayed* out)
 {
     const std::vector<MocopiFrame>& frames = pushed.frames;
     for (const MocopiFrame& frame : frames)
@@ -920,8 +922,9 @@ ReplayFromFile(const PacketCapture& capture)
     for (const RecordedDatagram& datagram : capture.datagrams)
     {
         buffer.assign(datagram.bytes.begin(), datagram.bytes.end());
-        const vrmAdapterMocopiTests::PushedDatagram pushed = vrmAdapterMocopiTests::PushDatagram(
-            &source, &buffer, datagram.receiveTime, &out.diagnostics);
+        const motionConnectorMocopiTests::PushedDatagram pushed =
+            motionConnectorMocopiTests::PushDatagram(
+                &source, &buffer, datagram.receiveTime, &out.diagnostics);
         if (pushed.restartLatched)
         {
             ++out.restartsLatched;
@@ -929,7 +932,8 @@ ReplayFromFile(const PacketCapture& capture)
         Collect(pushed, &out);
     }
 
-    const vrmAdapterMocopiTests::ReplayStats stats = vrmAdapterMocopiTests::ReadStats(source);
+    const motionConnectorMocopiTests::ReplayStats stats =
+        motionConnectorMocopiTests::ReadStats(source);
     out.stats = stats.source;
     out.frameStats = stats.frame;
     out.intakeStats = stats.intake;
@@ -985,8 +989,9 @@ ReplayFromWire(const PacketCapture& capture, Replayed* out, std::string* endpoin
         // proves nothing, because `PushDatagram` has already completed by then;
         // a decoder that retained a `string_view` into the caller's bytes would
         // survive that shape and produce garbage under this one.
-        const vrmAdapterMocopiTests::PushedDatagram pushed = vrmAdapterMocopiTests::PushDatagram(
-            &source, &received.bytes, received.receiveTime, &out->diagnostics);
+        const motionConnectorMocopiTests::PushedDatagram pushed =
+            motionConnectorMocopiTests::PushDatagram(
+                &source, &received.bytes, received.receiveTime, &out->diagnostics);
         if (pushed.restartLatched)
         {
             ++out->restartsLatched;
@@ -994,7 +999,8 @@ ReplayFromWire(const PacketCapture& capture, Replayed* out, std::string* endpoin
         Collect(pushed, out);
     }
 
-    const vrmAdapterMocopiTests::ReplayStats stats = vrmAdapterMocopiTests::ReadStats(source);
+    const motionConnectorMocopiTests::ReplayStats stats =
+        motionConnectorMocopiTests::ReadStats(source);
     out->stats = stats.source;
     out->frameStats = stats.frame;
     out->intakeStats = stats.intake;
@@ -1094,11 +1100,11 @@ FirstStatThatDiffers(const Replayed& file, const Replayed& wire)
          wire.intakeStats.framesRejectedStale},
         {"framesRejectedEmpty", file.intakeStats.framesRejectedEmpty,
          wire.intakeStats.framesRejectedEmpty},
-        {"bonesObserved", file.intakeStats.bonesObserved, wire.intakeStats.bonesObserved},
-        {"bonesGatedByConfidence", file.intakeStats.bonesGatedByConfidence,
-         wire.intakeStats.bonesGatedByConfidence},
-        {"bonesHeld", file.intakeStats.bonesHeld, wire.intakeStats.bonesHeld},
-        {"bonesUnbound", file.intakeStats.bonesUnbound, wire.intakeStats.bonesUnbound},
+        {"jointsObserved", file.intakeStats.jointsObserved, wire.intakeStats.jointsObserved},
+        {"jointsGatedByConfidence", file.intakeStats.jointsGatedByConfidence,
+         wire.intakeStats.jointsGatedByConfidence},
+        {"jointsHeld", file.intakeStats.jointsHeld, wire.intakeStats.jointsHeld},
+        {"jointsUnbound", file.intakeStats.jointsUnbound, wire.intakeStats.jointsUnbound},
         {"rootSamplesObserved", file.intakeStats.rootSamplesObserved,
          wire.intakeStats.rootSamplesObserved},
         {"rootVelocitiesDerived", file.intakeStats.rootVelocitiesDerived,
@@ -1136,8 +1142,8 @@ CheckTheWireChangesNothing(const std::filesystem::path& path)
     const std::string name = path.filename().string();
 
     PacketCapture capture;
-    vrmAdapterMocopi::PacketCaptureError error;
-    if (!vrmAdapterMocopi::ReadPacketCaptureFile(path.string(), &capture, &error))
+    mocopi::PacketCaptureError error;
+    if (!mocopi::ReadPacketCaptureFile(path.string(), &capture, &error))
     {
         std::fprintf(stderr, "%s:%zu: %s\n", name.c_str(), error.line, error.message.c_str());
         return 1;
@@ -1195,7 +1201,7 @@ CheckTheWireChangesNothing(const std::filesystem::path& path)
             if (!SameDiagnosticApartFromWhereItCameFrom(file, wire))
             {
                 std::fprintf(stderr, "%s: diagnostic %zu differs: %s\n", name.c_str(), index,
-                             vrmAdapterMocopi::FormatDiagnostic(wire).c_str());
+                             mocopi::FormatDiagnostic(wire).c_str());
                 ++failures;
                 continue;
             }
@@ -1258,7 +1264,7 @@ int
 CheckCorpus(const std::filesystem::path& directory)
 {
     std::vector<std::filesystem::path> files;
-    if (!vrmAdapterMocopiTests::CollectCaptures(directory, &files))
+    if (!motionConnectorMocopiTests::CollectCaptures(directory, &files))
     {
         return 1;
     }
@@ -1324,6 +1330,6 @@ main(int argc, char** argv)
     TestAReopenedReceiverIsNotStillWaitingForTheLastSessionsSource();
     TestANewCountingWindowCanStillSeeAnOngoingSilence();
     TestWhatCameOffTheSocketIsWhatACaptureKeeps();
-    std::puts("vrmAdapterMocopi udp receiver tests passed");
+    std::puts("motionConnectorMocopi udp receiver tests passed");
     return 0;
 }

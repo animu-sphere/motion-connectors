@@ -21,6 +21,15 @@ endif()
 # decodes, so its fixtures have to be things the decoder can decode. Inventing
 # those in Python would be a second packet generator, silently disagreeing with
 # `tools/generate_packets.py` at whatever point nobody checked.
+# The connector owns the corpus; the recorder is a root member here, so the
+# path walks up to the repository root rather than to a sibling of the tool.
+# Relative to this directory and not to `CMAKE_SOURCE_DIR`: a standalone
+# configure of tools/mocopiRecord -- which this tool's CMakeLists.txt supports
+# on purpose -- makes that variable the tool's own directory, and the export
+# test below would then be handed a corpus path that does not exist.
+set(_mocopirecord_corpus
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/motionConnectorMocopi/tests/corpus")
+
 add_test(NAME mocopi_record_inspect
     COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/test_mocopi_record.py"
@@ -38,11 +47,11 @@ add_test(NAME mocopi_record_export
             "${CMAKE_CURRENT_SOURCE_DIR}/test_mocopi_record.py"
             --tool "$<TARGET_FILE:mocopi_record>"
             --mode export
-            --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/corpus")
+            --corpus "${_mocopirecord_corpus}")
 
 # The IPv6 warning, on its own name so that "could not check this here" is a word
 # in the ctest summary rather than a line nobody sees — the arrangement
-# `vrmAdapterMocopi_udpReceiverTruncation` established in this adapter for
+# `motionConnectorMocopi_udpReceiverTruncation` established in this adapter for
 # exactly the same reason. A runner without IPv6 loopback cannot bind `::1`, and
 # inside the loopback suite that would have been invisible: ctest hides a passing
 # test's output, so a lane that checked the claim and a lane that quietly declined
@@ -60,103 +69,36 @@ add_test(NAME mocopi_record_ipv6
             --mode ipv6)
 set_tests_properties(mocopi_record_ipv6 PROPERTIES SKIP_RETURN_CODE 77)
 
-# The chain a mocopi session takes to a rig, which exists only in a build tree
-# that carries the product's tools as well as this adapter. A standalone
-# configure of the adapter has neither target, and naming one that does not
-# exist fails at generate time -- so the guard, exactly as the sibling adapter
-# and tools/motionCapture use one.
-#
-# It is the same arrangement as `vmc_record_endToEnd` and it is deliberately a
-# second test rather than a shared one: WORKSPACE.md §2 forbids an adapter from
-# knowing its sibling exists, and a shared end-to-end driver would be that
-# knowledge in a test directory instead of a link line.
-if(TARGET motion_capture AND TARGET motion_retarget)
-    # And onto a released VRM as well, where the same tree carries the importer
-    # to open one with -- the v0.7.0 condition's own wording, a session reaching
-    # a *real* VRM avatar. An addition rather than a replacement: the fixture
-    # beside this file binds every bone this device sends, and a shipped model
-    # does not, which is the finding that half exists to keep.
-    set(_mocopi_vrm_avatar "")
-    if(TARGET UsdVrmFileFormat)
-        set(_mocopi_vrm_avatar
-            "${CMAKE_SOURCE_DIR}/plugins/usdVrmFileFormat/tests/corpus/spec-samples/vrm1/seed-san/Seed-san.vrm")
-        if(NOT EXISTS "${_mocopi_vrm_avatar}")
-            set(_mocopi_vrm_avatar "")
-        endif()
-    endif()
-    set(_mocopi_vrm_argument "")
-    if(_mocopi_vrm_avatar)
-        set(_mocopi_vrm_argument --vrm-avatar "${_mocopi_vrm_avatar}")
-    endif()
-
-    add_test(NAME mocopi_record_endToEnd
-        COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/test_mocopi_end_to_end.py"
-                --record-tool "$<TARGET_FILE:mocopi_record>"
-                --capture-tool "$<TARGET_FILE:motion_capture>"
-                --retarget-tool "$<TARGET_FILE:motion_retarget>"
-                --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/corpus"
-                --avatar "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/mocopi_avatar.usda"
-                ${_mocopi_vrm_argument})
-else()
-    message(STATUS
-        "mocopiRecord: the product's motion tools are not in this build tree; "
-        "the mocopi->rig end-to-end test will be skipped")
-endif()
+# The mocopi -> rig end-to-end leg is NOT registered here, and that is a
+# decision rather than an omission. Its last step bakes a recorded session onto
+# an avatar with a retarget CLI, and this repository has neither and will have
+# neither: WORKSPACE.md §2.3 points every edge at usd-motion-plugins and none
+# at a consumer. The leg stays in usd-vrm-plugins with the avatar it needs, as
+# vmc_record's did and as motion_record_replay's bake did when that tool moved.
+# What is here is what this repository can answer for: the recorder's own
+# inspect, loopback, export and IPv6 names.
 
 if(WIN32)
-    # The same runtime the adapter's own tests need, for the same reason: the
-    # tool is statically linked against the adapter, but motionCore and
-    # motionRuntime call exported Gf entry points, so the process loads
+    # The same runtime the connector's own tests need, for the same reason:
+    # the tool is statically linked against the connector, but motionCore and
+    # the sampling and recording packages call exported Gf entry points, so the
+    # process loads
     # usd_gf.dll -> usd_tf.dll -> tbb.dll plus python3xx.dll at start-up. An
     # activated `ost` session has them on PATH; a plain-CMake `ctest` does not,
     # and the tool exits 0xC0000135 before main().
     if(TARGET gf)
-        set(_mocopi_record_gf gf)
+        set(_mocopirecord_gf gf)
     else()
-        set(_mocopi_record_gf pxr::gf)
+        set(_mocopirecord_gf pxr::gf)
     endif()
-    set(_mocopi_record_test_path
-        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_mocopi_record_gf}>"
-        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_mocopi_record_gf}>/../bin")
-    get_filename_component(_mocopi_record_python_dir "${Python3_EXECUTABLE}"
+    set(_mocopirecord_test_path
+        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_mocopirecord_gf}>"
+        "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_mocopirecord_gf}>/../bin")
+    get_filename_component(_mocopirecord_python_dir "${Python3_EXECUTABLE}"
                            DIRECTORY)
-    list(APPEND _mocopi_record_test_path
-         "PATH=path_list_prepend:${_mocopi_record_python_dir}")
+    list(APPEND _mocopirecord_test_path
+         "PATH=path_list_prepend:${_mocopirecord_python_dir}")
     set_tests_properties(mocopi_record_inspect mocopi_record_loopback
                          mocopi_record_export mocopi_record_ipv6 PROPERTIES
-        ENVIRONMENT_MODIFICATION "${_mocopi_record_test_path}")
-endif()
-
-if(TEST mocopi_record_endToEnd)
-    # This one needs more than the tools' own DLLs: it opens the baked stage
-    # through `pxr` in Python, so the USD runtime has to be importable and not
-    # merely loadable. Derived the way tools/motionCapture derives it -- pxr_DIR
-    # points at the config package, three levels below the prefix holding bin/,
-    # lib/ and the Python packages.
-    set(_mocopi_usd_root "")
-    if(pxr_DIR AND EXISTS "${pxr_DIR}/bin")
-        set(_mocopi_usd_root "${pxr_DIR}")
-    elseif(pxr_DIR)
-        get_filename_component(_mocopi_usd_root "${pxr_DIR}/../../.." ABSOLUTE)
-    endif()
-    set(_mocopi_e2e_env
-        "PATH=path_list_prepend:${_mocopi_usd_root}/bin;PATH=path_list_prepend:${_mocopi_usd_root}/lib;PYTHONPATH=path_list_prepend:${_mocopi_usd_root}/lib/python;PYTHONPATH=path_list_prepend:${_mocopi_usd_root}/lib/site-packages")
-    if(_mocopi_vrm_avatar)
-        # Mirrored from plugins/usdVrmFileFormat/tests/CMakeLists.txt, which is
-        # the environment that bundle's own smoke tests run in on all three OS:
-        # the build-tree plugInfo (absolute LibraryPath, so no working-directory
-        # assumption), the plugin's own lib/, and the sibling vrmSchema bundle,
-        # whose typed Vrm*API schemas the importer applies and whose library
-        # libUsdVrmFileFormat links.
-        set(_mocopi_schema_bundle "${CMAKE_SOURCE_DIR}/plugins/vrmSchema")
-        string(APPEND _mocopi_e2e_env
-            ";PATH=path_list_prepend:$<TARGET_FILE_DIR:UsdVrmFileFormat>"
-            ";PATH=path_list_prepend:${_mocopi_schema_bundle}/lib"
-            ";PATH=path_list_prepend:$<TARGET_FILE_DIR:vrmContainer::vrmContainer>"
-            ";PXR_PLUGINPATH_NAME=path_list_prepend:${CMAKE_BINARY_DIR}/plugins/usdVrmFileFormat/tests/resources/usdVrmFileFormat"
-            ";PXR_PLUGINPATH_NAME=path_list_prepend:${_mocopi_schema_bundle}/plugin/resources/vrmSchema")
-    endif()
-    set_tests_properties(mocopi_record_endToEnd PROPERTIES
-        ENVIRONMENT_MODIFICATION "${_mocopi_e2e_env}")
+        ENVIRONMENT_MODIFICATION "${_mocopirecord_test_path}")
 endif()

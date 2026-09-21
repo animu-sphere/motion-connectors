@@ -2,24 +2,25 @@
 #
 # mocopi_record — the mocopi adapter's CLI.
 #
-# Added from the adapter's own CMakeLists rather than from the repository root,
-# because the tool ships *with* the adapter: WORKSPACE.md §5 names one artifact
-# carrying the library together with its CLI. That also means a standalone
-# configure of `adapters/liveCapture/mocopi` builds both, which is the
-# configuration the artifact would be built from.
+# A workspace member of its own, added from the repository root: WORKSPACE.md
+# §2.1 puts every tool under the root tools/, beside motion_connect. It still
+# ships *with* its connector -- §5 names one artifact carrying the library
+# together with its CLI -- and a standalone configure of this directory
+# resolves that library as an installed package, which is the configuration the
+# artifact would be built from.
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../VERSION"
-         _mocopi_record_version LIMIT_COUNT 1)
-    string(STRIP "${_mocopi_record_version}" _mocopi_record_version)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
+    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
+         _mocopirecord_version LIMIT_COUNT 1)
+    string(STRIP "${_mocopirecord_version}" _mocopirecord_version)
 else()
-    set(_mocopi_record_version "0.9.0")
+    set(_mocopirecord_version "0.1.0")
 endif()
 
 project(mocopiRecordTool
-    VERSION ${_mocopi_record_version}
+    VERSION ${_mocopirecord_version}
     DESCRIPTION "Native mocopi session recorder"
     LANGUAGES CXX)
 
@@ -30,37 +31,37 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT DEFINED MOCOPIRECORD_BUILD_TESTS)
-    if(DEFINED VRMADAPTERMOCOPI_BUILD_TESTS)
-        set(_mocopi_record_tests_default "${VRMADAPTERMOCOPI_BUILD_TESTS}")
+    if(DEFINED MOTIONCONNECTORMOCOPI_BUILD_TESTS)
+        set(_mocopirecord_tests_default "${MOTIONCONNECTORMOCOPI_BUILD_TESTS}")
     else()
-        set(_mocopi_record_tests_default "${PROJECT_IS_TOP_LEVEL}")
+        set(_mocopirecord_tests_default "${PROJECT_IS_TOP_LEVEL}")
     endif()
     option(MOCOPIRECORD_BUILD_TESTS "Build mocopi_record tests"
-           ${_mocopi_record_tests_default})
+           ${_mocopirecord_tests_default})
 endif()
 
 # A standalone configure of this directory resolves the adapter as an installed
 # package; the composed build already has the in-tree target.
-if(NOT TARGET vrmAdapterMocopi::vrmAdapterMocopi)
-    find_package(vrmAdapterMocopi REQUIRED CONFIG)
+if(NOT TARGET motionConnectorMocopi::motionConnectorMocopi)
+    find_package(motionConnectorMocopi REQUIRED CONFIG)
 endif()
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../cmake/UsdVrmUtf8CodePage.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(mocopi_record
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
     src/main.cpp)
-usdvrm_use_utf8_code_page(mocopi_record)
+motionconnectors_use_utf8_code_page(mocopi_record)
 
 target_compile_features(mocopi_record PRIVATE cxx_std_17)
-# The adapter, and deliberately nothing else. §2 would permit this target to link
-# `vrmRetarget` and OpenUSD's stage libraries the way `motion_retarget` does; it
-# does not need them, and a link line is the cheapest place to keep that true.
+# The connector, and deliberately nothing else. §2 would permit this target to
+# author a stage the way a consumer's retarget CLI does; it does not need to,
+# and a link line is the cheapest place to keep that true.
 # `ws2_32` arrives transitively because the adapter declares it PUBLIC, which is
 # right: the socket this tool drives is the adapter's.
-target_link_libraries(mocopi_record PRIVATE vrmAdapterMocopi::vrmAdapterMocopi)
+target_link_libraries(mocopi_record PRIVATE motionConnectorMocopi::motionConnectorMocopi)
 
 if(MSVC)
     target_compile_options(mocopi_record PRIVATE /utf-8)
@@ -70,8 +71,7 @@ if(MSVC)
     target_compile_definitions(mocopi_record PRIVATE NOMINMAX _USE_MATH_DEFINES)
 endif()
 
-# Staged into the tool's own bin/, the way `vmc_record` and the product's motion
-# tools are: `ost plugin package` reads the directories openstrata.tool.yaml
+# Staged into the tool's own bin/, the way `vmc_record` is: `ost plugin package` reads the directories openstrata.tool.yaml
 # declares rather than a build tree, so a tool that only lands in build/ is
 # refused at packaging with PRECONDITION_FAILED.
 set_target_properties(mocopi_record PROPERTIES

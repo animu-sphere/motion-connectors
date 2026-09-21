@@ -3,7 +3,7 @@
 // Whether a datagram is a frame, and whether the stream it belongs to is still
 // the same stream.
 //
-// This is the layer that *decides* (roadmap/adapters-mocopi-vmc-ardy.md §6).
+// This is the layer that *decides* (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §6).
 // Everything below it converts: bytes into chunks, chunks into the two packet
 // kinds, joint ids into canonical bones. Nothing below has been allowed to
 // answer a question about a *session* — `MotionPacket.h` refuses a bone and
@@ -14,7 +14,7 @@
 // all, whether it is complete, whether it orders against the frame before it,
 // and whether the source restarted. It does not hold a missing bone forward,
 // smooth, interpolate, or derive a velocity — those are `LiveCaptureSource`'s
-// intake policies and `motionRuntime`'s arithmetic, and an adapter that grew a
+// intake policies and `motionRecording`'s arithmetic, and an adapter that grew a
 // second copy would be a second motion runtime (§2).
 //
 // ## One datagram is one frame, and that is measured
@@ -27,7 +27,7 @@
 // one `fnum`, one `time` (MotionPacket.h) — and no session grew a second shape.
 //
 // So this class holds no open frame, accumulates nothing across datagrams, and
-// has **no `Flush()`**. A reader arriving from `vrmAdapterVmc::VmcFrameAssembler`
+// has **no `Flush()`**. A reader arriving from the sibling connector's `VmcFrameAssembler`
 // will look for one; its absence is the measurement, not an omission. There is
 // never a frame in flight to lose at the end of a stream, and a caller that
 // stops reading has lost nothing this class was holding.
@@ -165,7 +165,7 @@
 // below deferred to and a reader may expect it to be a rejection.
 //
 // Whether nineteen of twenty-two bones is a usable frame is a *policy* question,
-// and `LiveCaptureSource` already owns the answer in `MissingBonePolicy` — hold
+// and `LiveCaptureSource` already owns the answer in `MissingJointPolicy` — hold
 // the last value, or leave the joint unbound. An adapter that dropped the frame
 // would be answering it here, one layer too low, and would take the choice away
 // from the only component that knows what the session is for. So this layer
@@ -185,7 +185,7 @@
 //
 // It was carried and not composed until 2026-08-23, because whether the body's
 // placement is root motion was the open record this release existed to close
-// ([§5.2](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md)) and an
+// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)) and an
 // assembler that filled in a `RootMotion` would have answered it silently, in
 // the layer with the least standing to. What changed is the record and not this
 // layer's standing: `MOTION_CONTRACT.md`'s "Root and hips" states the answer,
@@ -215,12 +215,12 @@
 // class unchanged rather than being re-raised per frame.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/SkeletonMap.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/SkeletonMap.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "motionCore/Humanoid.h"
+#include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/vec3f.h"
 
@@ -232,12 +232,12 @@
 #include <string_view>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // Where the device's one translation goes.
 //
-// [§5.2](../../../../../docs/roadmap/adapters-mocopi-vmc-ardy.md) gives four
+// [§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md) gives four
 // words to a sender with two candidate root channels -- `RootOnly`, `HipsOnly`,
 // `RootPlusHipsOffset`, and a per-sender profile -- and this protocol can
 // express exactly one of them. There is no root channel here, so the other
@@ -319,7 +319,7 @@ struct MocopiFrame
     // `BodyPlacementPolicy::HipsOnly` and is absent under `None`. Its two
     // velocity fields are absent under both: the device reports no velocity and
     // deriving one is the intake's policy, not this layer's.
-    motion::HumanoidPose pose;
+    openstrata::motion::MotionPose pose;
 
     // The device's frame counter, verbatim. Not an index into anything: it counts
     // the application's frames rather than the stream's, so the first frame of a
@@ -347,7 +347,7 @@ struct MocopiFrame
     // rather than against a rig learned from the stream, and against the full
     // canonical humanoid least of all: a rig that ends at the wrists is not
     // sending an incomplete frame sixty times a second.
-    std::bitset<motion::HumanBoneCount> missing;
+    std::bitset<openstrata::motion::HumanJointCount> missing;
 
     // The body's placement: the hips joint's own translation, absolute, in
     // metres. Absent when the hips record did not arrive.
@@ -410,7 +410,7 @@ struct MocopiFrameStats
 // `SkeletonMap` already draws: this layer's questions are about fields, and a
 // class that took bytes would be re-deciding what `DecodeMotionPacket` decided
 // and could not be tested against a rig the decoder has never seen.
-class VRMADAPTERMOCOPI_API MocopiFrameAssembler
+class MOTIONCONNECTORMOCOPI_API MocopiFrameAssembler
 {
   public:
     explicit MocopiFrameAssembler(const MocopiFrameConfig& config = {});
@@ -460,7 +460,7 @@ class VRMADAPTERMOCOPI_API MocopiFrameAssembler
     // something published. The format magic does name a vendor, but it is a
     // constant of the protocol rather than a fact about the session, and
     // `protocol` already says which protocol this is.
-    const motion::MotionSourceMetadata&
+    const openstrata::motion::SourceMetadata&
     GetSourceMetadata() const noexcept
     {
         return _metadata;
@@ -505,7 +505,7 @@ class VRMADAPTERMOCOPI_API MocopiFrameAssembler
 
     MocopiFrameConfig _config;
     std::string _source;
-    motion::MotionSourceMetadata _metadata;
+    openstrata::motion::SourceMetadata _metadata;
 
     SkeletonMap _map;
     bool _hasMap = false;
@@ -531,4 +531,4 @@ class VRMADAPTERMOCOPI_API MocopiFrameAssembler
     MocopiFrameStats _stats;
 };
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

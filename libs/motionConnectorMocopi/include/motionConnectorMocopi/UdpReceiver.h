@@ -15,7 +15,7 @@
 //
 // The sibling adapter built its receiver last, and the plan said this one
 // should too — recorded decoder, mapping, live-source bridge, thin receiver
-// (roadmap/adapters-mocopi-vmc-ardy.md §6). That order exists to keep every
+// (usd-vrm-plugins' adapters-mocopi-vmc-ardy.md §6). That order exists to keep every
 // test below the transport runnable from committed bytes, and it was right
 // there because the bytes existed: the VMC Protocol is a published
 // specification, so a corpus could be *written* before a socket was opened.
@@ -44,7 +44,7 @@
 // All three halves of that happened, in that order. The four were merged into
 // the sibling first, each with a test where a test could tell the fix from the
 // defect (OSC-1). The boundary was argued in its own change. Then the class
-// moved, unchanged, to `liveTransport` (osc-and-vrchat-trackers.md §2, §3.2).
+// moved, unchanged, to `motionConnectorTransport` (osc-and-vrchat-trackers.md §2, §3.2).
 //
 // ## What is left in this file, and why it is not the socket
 //
@@ -67,7 +67,7 @@
 // An over-long datagram is detected and dropped rather than passed on
 // half-read; `receiveTime` is seconds since `Open` on a steady clock, which is
 // the origin `mocopi-packet-capture` records against; and silence is reported
-// once per episode rather than once per poll. All three are `liveTransport`'s to
+// once per episode rather than once per poll. All three are `motionConnectorTransport`'s to
 // keep now, and its header is where each is argued.
 //
 // ## Diagnosing a session that receives nothing
@@ -84,18 +84,18 @@
 // them for a human is a CLI's job and not this class's.
 #pragma once
 
-#include "vrmAdapterMocopi/Diagnostics.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/api.h"
+#include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/api.h"
 
-#include "liveTransport/UdpReceiver.h"
+#include "motionConnectorTransport/UdpReceiver.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace vrmAdapterMocopi
+namespace openstrata::connectors::mocopi
 {
 
 // The port the capture product sends to unless it is told otherwise. Named
@@ -110,9 +110,9 @@ inline constexpr std::uint16_t DefaultMocopiPort = 12351;
 // overflowing, and that case is real and this adapter has not met it. It is
 // opt-in there for exactly this reason, so not naming it costs nothing and
 // reserves nothing.
-using liveTransport::ReceivedDatagram;
-using liveTransport::ReceiveStatus;
-using liveTransport::UdpReceiverStats;
+using transport::ReceivedDatagram;
+using transport::ReceiveStatus;
+using transport::UdpReceiverStats;
 
 struct UdpReceiverConfig
 {
@@ -147,7 +147,7 @@ struct UdpReceiverConfig
 };
 
 // A bound UDP socket, reporting this adapter's codes.
-class VRMADAPTERMOCOPI_API UdpReceiver final
+class MOTIONCONNECTORMOCOPI_API UdpReceiver final
 {
   public:
     UdpReceiver() = default;
@@ -273,7 +273,7 @@ class VRMADAPTERMOCOPI_API UdpReceiver final
     }
 
   private:
-    liveTransport::UdpReceiver _receiver;
+    transport::UdpReceiver _receiver;
 };
 
-} // namespace vrmAdapterMocopi
+} // namespace openstrata::connectors::mocopi

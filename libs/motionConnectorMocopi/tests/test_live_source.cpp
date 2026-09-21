@@ -39,11 +39,11 @@
 // could not state a session the corpus does not contain. The one claim that
 // genuinely needs bytes — that a datagram need not outlive the call — is made in
 // the corpus pass, which replays every capture through a single reused buffer.
-#include "vrmAdapterMocopi/LiveSource.h"
+#include "motionConnectorMocopi/LiveSource.h"
 
-#include "vrmAdapterMocopi/MotionPacket.h"
-#include "vrmAdapterMocopi/PacketCapture.h"
-#include "vrmAdapterMocopi/SkeletonMap.h"
+#include "motionConnectorMocopi/MotionPacket.h"
+#include "motionConnectorMocopi/PacketCapture.h"
+#include "motionConnectorMocopi/SkeletonMap.h"
 
 #include "corpus.h"
 #include "fixtures.h"
@@ -60,27 +60,29 @@
 #include <string>
 #include <vector>
 
+namespace mocopi = openstrata::connectors::mocopi;
+
 namespace
 {
 
-using namespace vrmAdapterMocopiTests;
+using namespace motionConnectorMocopiTests;
 
-using motion::HumanBone;
-using vrmAdapterMocopi::BodyPlacementPolicy;
-using vrmAdapterMocopi::BoneDefinition;
-using vrmAdapterMocopi::BoneFrame;
-using vrmAdapterMocopi::Diagnostic;
-using vrmAdapterMocopi::DiagnosticCode;
-using vrmAdapterMocopi::MeasuredBoneCount;
-using vrmAdapterMocopi::MeasuredParentColumn;
-using vrmAdapterMocopi::MocopiFrame;
-using vrmAdapterMocopi::MocopiLiveSource;
-using vrmAdapterMocopi::MocopiLiveSourceConfig;
-using vrmAdapterMocopi::MotionFrame;
-using vrmAdapterMocopi::MotionPacket;
-using vrmAdapterMocopi::MotionPacketKind;
-using vrmAdapterMocopi::MotionSkeleton;
-using vrmAdapterMocopi::SessionRestartPolicy;
+using openstrata::motion::HumanJoint;
+using mocopi::BodyPlacementPolicy;
+using mocopi::BoneDefinition;
+using mocopi::BoneFrame;
+using mocopi::Diagnostic;
+using mocopi::DiagnosticCode;
+using mocopi::MeasuredBoneCount;
+using mocopi::MeasuredParentColumn;
+using mocopi::MocopiFrame;
+using mocopi::MocopiLiveSource;
+using mocopi::MocopiLiveSourceConfig;
+using mocopi::MotionFrame;
+using mocopi::MotionPacket;
+using mocopi::MotionPacketKind;
+using mocopi::MotionSkeleton;
+using mocopi::SessionRestartPolicy;
 
 // The restart fixtures below match the committed capture's shape: a session
 // recorded twenty seconds into its stream, which is what makes the new stream's
@@ -91,7 +93,7 @@ constexpr double kSessionStart = 20.0;
 constexpr double kResumedUnix = kEpoch + kSessionStart + 0.1;
 
 // `motionCore`'s, never a number picked here (Compare.h).
-constexpr motion::MotionTolerance kTolerance{};
+constexpr openstrata::motion::MotionTolerance kTolerance{};
 
 // ---------------------------------------------------------------------------
 // The path, end to end
@@ -103,17 +105,17 @@ TestAFrameBecomesASampleablePose()
     MocopiLiveSource source;
     // Nothing has arrived, so there is nothing to answer with — the runtime's
     // own status, reported through this class rather than invented by it.
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Unavailable);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Unavailable);
     assert(!source.GetSkeletonMap());
 
     assert(source.PushPacket(SkeletonPacket(), 0.0) == 0);
     // A skeleton packet is a rig and never a pose.
     assert(source.GetSkeletonMap());
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Unavailable);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Unavailable);
 
     assert(source.PushPacket(FrameAt(1, 0.0), 0.0) == 1);
-    const motion::PoseSampleResult result = source.Sample(0.0);
-    assert(result.status == motion::PoseSampleStatus::Sampled);
+    const openstrata::motion::PoseSampleResult result = source.Sample(0.0);
+    assert(result.status == openstrata::motion::PoseSampleStatus::Sampled);
     assert(result.pose);
     assert(result.pose->validRotations.count() == kCanonicalBoneCount);
 }
@@ -130,10 +132,10 @@ TestTheBridgeContributesNoArithmetic()
     source.PushPacket(FrameAt(1, 0.0), 0.0);
 
     assert(source.GetFramesFromLastPush().size() == 1);
-    const motion::HumanoidPose assembled = source.GetFramesFromLastPush()[0].pose;
-    const motion::PoseSampleResult result = source.Sample(0.0);
+    const openstrata::motion::MotionPose assembled = source.GetFramesFromLastPush()[0].pose;
+    const openstrata::motion::PoseSampleResult result = source.Sample(0.0);
     assert(result.pose);
-    assert(motion::NearlyEqual(*result.pose, assembled, kTolerance));
+    assert(openstrata::motion::NearlyEqual(*result.pose, assembled, kTolerance));
     assert(result.pose->timestamp == assembled.timestamp);
 
     // `NearlyEqual` and not `==`, and the difference is the point rather than a
@@ -145,8 +147,8 @@ TestTheBridgeContributesNoArithmetic()
     // Compare.h exists to draw. Asserted both ways so that "only provenance
     // changed" is checked rather than assumed.
     assert(!(*result.pose == assembled));
-    motion::HumanoidPose labelled = assembled;
-    labelled.source = source.GetSourceMetadata();
+    openstrata::motion::MotionPose labelled = assembled;
+    labelled.metadata = source.GetSourceMetadata();
     assert(*result.pose == labelled);
 }
 
@@ -156,10 +158,10 @@ TestTheMissingBonePolicyIsTheIntakes()
     // The same input under the two policies, so the answer visibly changes with
     // the runtime's configuration rather than with the adapter. An adapter that
     // resolved a missing bone itself would make these two identical.
-    const auto run = [](motion::MissingBonePolicy policy)
+    const auto run = [](openstrata::motion::MissingJointPolicy policy)
     {
         MocopiLiveSourceConfig config;
-        config.intake.missingBones = policy;
+        config.intake.missingJoints = policy;
         MocopiLiveSource source(config);
         source.PushPacket(SkeletonPacket(), 0.0);
         source.PushPacket(FrameAt(1, 0.0), 0.0);
@@ -180,24 +182,24 @@ TestTheMissingBonePolicyIsTheIntakes()
         // policies, and the test would pass while measuring nothing. Landing on
         // the sample is what makes the intake's answer the one being read.
         const double stored = source.GetFramesFromLastPush()[0].pose.timestamp;
-        const motion::PoseSampleResult result = source.Sample(stored);
-        assert(result.status == motion::PoseSampleStatus::Sampled);
+        const openstrata::motion::PoseSampleResult result = source.Sample(stored);
+        assert(result.status == openstrata::motion::PoseSampleStatus::Sampled);
         assert(result.pose);
         return result.pose->validRotations.count();
     };
 
     // Held: the head keeps the rotation the first frame gave it. Unbound: it is
     // gone, and downstream is free to fall back to the target's rest.
-    assert(run(motion::MissingBonePolicy::HoldLast) == kCanonicalBoneCount);
-    assert(run(motion::MissingBonePolicy::LeaveUnbound) == kCanonicalBoneCount - 1);
+    assert(run(openstrata::motion::MissingJointPolicy::HoldLast) == kCanonicalBoneCount);
+    assert(run(openstrata::motion::MissingJointPolicy::LeaveUnbound) == kCanonicalBoneCount - 1);
 }
 
 void
 TestProvenanceIsToldOnceAndNeverChanges()
 {
     MocopiLiveSource source;
-    const motion::MotionSourceMetadata before = source.GetSourceMetadata();
-    assert(before.kind == motion::MotionSourceKind::LiveCapture);
+    const openstrata::motion::SourceMetadata before = source.GetSourceMetadata();
+    assert(before.kind == openstrata::motion::MotionSourceKind::LiveCapture);
     assert(before.protocol == "mocopi");
     // Deliberately empty, and asserted rather than left to drift: the only
     // per-session identifier this protocol carries is unidentified and possibly
@@ -339,7 +341,7 @@ TestTheClockOffsetIsHandedBackRatherThanRepaired()
     source.PushPacket(FrameAt(4000, kSessionStart), kSessionStart);
     // A consumer whose own clock reads zero when the stream reads 20.
     source.GetIntake().AlignClock(0.0);
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Sampled);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Sampled);
 
     source.PushPacket(FramePacket(1, 0.0, kResumedUnix), 0.0);
     source.PushPacket(SkeletonPacket(), 0.0);
@@ -347,13 +349,13 @@ TestTheClockOffsetIsHandedBackRatherThanRepaired()
 
     // Nothing repaired the offset, so the source now reads as far ahead of its
     // data: the stale offset is still adding twenty seconds.
-    const motion::PoseSampleResult stale = source.Sample(0.0);
-    assert(stale.status != motion::PoseSampleStatus::Sampled);
+    const openstrata::motion::PoseSampleResult stale = source.Sample(0.0);
+    assert(stale.status != openstrata::motion::PoseSampleStatus::Sampled);
 
     // The latch is what a consumer acts on, and re-aligning is all it takes.
     assert(source.ConsumeSessionRestart());
     assert(source.GetIntake().AlignClock(0.0));
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Sampled);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Sampled);
 }
 
 void
@@ -368,8 +370,8 @@ TestUnderRefuseTheAlignWouldHideTheStallItExistsToShow()
     RunRestart(SessionRestartPolicy::Refuse, &source);
 
     // The stall is visible: the source is behind and falling further behind.
-    const motion::PoseSampleResult stalled = source.Sample(kSessionStart + 10.0);
-    assert(stalled.status != motion::PoseSampleStatus::Sampled);
+    const openstrata::motion::PoseSampleResult stalled = source.Sample(kSessionStart + 10.0);
+    assert(stalled.status != openstrata::motion::PoseSampleStatus::Sampled);
     assert(stalled.lag > 0.0);
 
     // The latch still fires, because a consumer that chose `Refuse` needs to
@@ -380,8 +382,8 @@ TestUnderRefuseTheAlignWouldHideTheStallItExistsToShow()
     // makes a stopped stream answer `Sampled` with no lag at all — the stall
     // `Refuse` exists to show, hidden by following the other policy's recipe.
     source.GetIntake().AlignClock(kSessionStart + 10.0);
-    const motion::PoseSampleResult hidden = source.Sample(kSessionStart + 10.0);
-    assert(hidden.status == motion::PoseSampleStatus::Sampled);
+    const openstrata::motion::PoseSampleResult hidden = source.Sample(kSessionStart + 10.0);
+    assert(hidden.status == openstrata::motion::PoseSampleStatus::Sampled);
     assert(hidden.lag == 0.0);
     // Pinned as a characterisation: the behaviour is `AlignClock`'s and is
     // correct there, so what this asserts is that the *advice* is load-bearing.
@@ -397,7 +399,7 @@ TestUnderRefuseTheAlignWouldHideTheStallItExistsToShow()
 // pushed into a source configured with one intake policy. The moving hips is
 // the point: `FramePacket` restates rest for every joint, so a session built
 // from it stands still and a root-motion test on it would measure nothing.
-motion::PoseSampleResult
+openstrata::motion::PoseSampleResult
 WalkOneStep(MocopiLiveSource* source, double* step)
 {
     MotionPacket first = FrameAt(1, 0.0);
@@ -422,10 +424,10 @@ TestTheIntakesRootPolicyIsNoLongerInert()
     // a path that had quietly stopped composing.
     {
         MocopiLiveSourceConfig config;
-        config.intake.rootMotion = motion::RootMotionIntake::Passthrough;
+        config.intake.rootMotion = openstrata::motion::RootMotionIntake::Passthrough;
         MocopiLiveSource source(config);
         double step = 0.0;
-        const motion::PoseSampleResult result = WalkOneStep(&source, &step);
+        const openstrata::motion::PoseSampleResult result = WalkOneStep(&source, &step);
         assert(result.pose);
         assert(result.pose->root.hasPosition);
         assert(std::fabs(result.pose->root.worldPosition[2] - 0.5f) < 1e-6f);
@@ -436,10 +438,10 @@ TestTheIntakesRootPolicyIsNoLongerInert()
     }
     {
         MocopiLiveSourceConfig config;
-        config.intake.rootMotion = motion::RootMotionIntake::Ignore;
+        config.intake.rootMotion = openstrata::motion::RootMotionIntake::Ignore;
         MocopiLiveSource source(config);
         double step = 0.0;
-        const motion::PoseSampleResult result = WalkOneStep(&source, &step);
+        const openstrata::motion::PoseSampleResult result = WalkOneStep(&source, &step);
         assert(result.pose);
         // A session that animates in place, asked for rather than imposed —
         // and the measurement is still on the frame, so what was given up is
@@ -449,10 +451,10 @@ TestTheIntakesRootPolicyIsNoLongerInert()
     }
     {
         MocopiLiveSourceConfig config;
-        config.intake.rootMotion = motion::RootMotionIntake::DeriveVelocity;
+        config.intake.rootMotion = openstrata::motion::RootMotionIntake::DeriveVelocity;
         MocopiLiveSource source(config);
         double step = 0.0;
-        const motion::PoseSampleResult result = WalkOneStep(&source, &step);
+        const openstrata::motion::PoseSampleResult result = WalkOneStep(&source, &step);
         assert(result.pose);
         assert(result.pose->root.hasPosition);
         // The only thing on this path that will ever fill `linearVelocity`.
@@ -475,10 +477,10 @@ TestTheBodyPlacementPolicyReachesTheAssemblerFromTheConfig()
     // above.
     MocopiLiveSourceConfig config;
     config.frame.bodyPlacement = BodyPlacementPolicy::None;
-    config.intake.rootMotion = motion::RootMotionIntake::DeriveVelocity;
+    config.intake.rootMotion = openstrata::motion::RootMotionIntake::DeriveVelocity;
     MocopiLiveSource source(config);
     double step = 0.0;
-    const motion::PoseSampleResult result = WalkOneStep(&source, &step);
+    const openstrata::motion::PoseSampleResult result = WalkOneStep(&source, &step);
     assert(result.pose);
     assert(!result.pose->root.hasPosition);
     assert(!result.pose->root.hasLinearVelocity);
@@ -503,13 +505,13 @@ TestTheEvidenceWindowShowsWhatThePoseDropped()
     assert(source.GetFramesFromLastPush().size() == 1);
     const MocopiFrame& frame = source.GetFramesFromLastPush()[0];
     assert(frame.lostFrames == 2);
-    assert(frame.missing.test(static_cast<std::size_t>(HumanBone::Head)));
+    assert(frame.missing.test(static_cast<std::size_t>(HumanJoint::Head)));
     assert(frame.hipsPosition);
     // Three of the four reached no pose, which is the point of the window. The
     // fourth, the hips translation, now does — and the window kept it because
     // what the device sent and what a policy decided about it are two readings
     // rather than one.
-    const motion::PoseSampleResult result = source.Sample(3.0 / kFrameRate);
+    const openstrata::motion::PoseSampleResult result = source.Sample(3.0 / kFrameRate);
     assert(result.pose);
     assert(result.pose->root.hasPosition);
 }
@@ -552,7 +554,7 @@ TestResetForgetsTheStreamAndKeepsTheStats()
     source.Reset();
     // The rig went with the stream, which is what a new session means here.
     assert(!source.GetSkeletonMap());
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Unavailable);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Unavailable);
     assert(source.GetFramesFromLastPush().empty());
     // No latch: `Reset()` is the caller's own action and an object does not
     // report back something the caller just did.
@@ -578,7 +580,7 @@ TestASecondCaptureInheritsTheClockOffsetAndNothingSaysSo()
     source.PushPacket(SkeletonPacket(), 0.0);
     source.PushPacket(FrameAt(4000, kSessionStart), kSessionStart);
     source.GetIntake().AlignClock(0.0);
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Sampled);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Sampled);
 
     // A second capture, whose stream clock starts at zero like every stream's.
     source.Reset();
@@ -588,12 +590,12 @@ TestASecondCaptureInheritsTheClockOffsetAndNothingSaysSo()
     // The offset from the first capture is still adding twenty seconds, so the
     // source reads as far ahead of its data — and no latch fired to say why.
     assert(!source.ConsumeSessionRestart());
-    assert(source.Sample(0.0).status != motion::PoseSampleStatus::Sampled);
+    assert(source.Sample(0.0).status != openstrata::motion::PoseSampleStatus::Sampled);
 
     // The caller re-aligns because it knows it started a new stream, which is
     // the whole of the contract here.
     assert(source.GetIntake().AlignClock(0.0));
-    assert(source.Sample(0.0).status == motion::PoseSampleStatus::Sampled);
+    assert(source.Sample(0.0).status == openstrata::motion::PoseSampleStatus::Sampled);
 }
 
 // ---------------------------------------------------------------------------
@@ -603,13 +605,13 @@ TestASecondCaptureInheritsTheClockOffsetAndNothingSaysSo()
 struct ReplayedCapture
 {
     std::vector<Diagnostic> diagnostics;
-    vrmAdapterMocopi::MocopiLiveSourceStats stats;
-    vrmAdapterMocopi::MocopiFrameStats frameStats;
-    motion::LiveCaptureStats intakeStats;
+    mocopi::MocopiLiveSourceStats stats;
+    mocopi::MocopiFrameStats frameStats;
+    openstrata::motion::LiveCaptureStats intakeStats;
     // Every pose the intake admitted, in order, sampled back out at its own
     // timestamp — which is what makes "the two halves meet" a claim about poses
     // rather than about counters.
-    std::vector<motion::HumanoidPose> delivered;
+    std::vector<openstrata::motion::MotionPose> delivered;
     std::size_t restartsLatched = 0;
 };
 
@@ -621,7 +623,7 @@ Failed(const std::string& name, const std::string& detail)
 }
 
 ReplayedCapture
-Replay(const vrmAdapterMocopi::PacketCapture& capture, SessionRestartPolicy policy)
+Replay(const mocopi::PacketCapture& capture, SessionRestartPolicy policy)
 {
     MocopiLiveSourceConfig config;
     config.restart = policy;
@@ -636,11 +638,12 @@ Replay(const vrmAdapterMocopi::PacketCapture& capture, SessionRestartPolicy poli
     // results rather than by an assertion about pointers, and the discipline is
     // the shared call's rather than this loop's to get right.
     std::vector<std::uint8_t> buffer;
-    for (const vrmAdapterMocopi::RecordedDatagram& datagram : capture.datagrams)
+    for (const mocopi::RecordedDatagram& datagram : capture.datagrams)
     {
         buffer.assign(datagram.bytes.begin(), datagram.bytes.end());
-        const vrmAdapterMocopiTests::PushedDatagram pushed = vrmAdapterMocopiTests::PushDatagram(
-            &source, &buffer, datagram.receiveTime, &out.diagnostics);
+        const motionConnectorMocopiTests::PushedDatagram pushed =
+            motionConnectorMocopiTests::PushDatagram(
+                &source, &buffer, datagram.receiveTime, &out.diagnostics);
         if (pushed.restartLatched)
         {
             ++out.restartsLatched;
@@ -651,7 +654,8 @@ Replay(const vrmAdapterMocopi::PacketCapture& capture, SessionRestartPolicy poli
         }
     }
 
-    const vrmAdapterMocopiTests::ReplayStats stats = vrmAdapterMocopiTests::ReadStats(source);
+    const motionConnectorMocopiTests::ReplayStats stats =
+        motionConnectorMocopiTests::ReadStats(source);
     out.stats = stats.source;
     out.frameStats = stats.frame;
     out.intakeStats = stats.intake;
@@ -690,7 +694,7 @@ CheckTheTwoHalvesMeet(const ReplayedCapture& replayed, const std::string& name)
     // may never disagree. This is the invariant; whether a pose has a placement
     // at all is the next paragraph's question, and conflating the two would let
     // a half-composed root pass as a missing one.
-    for (const motion::HumanoidPose& pose : replayed.delivered)
+    for (const openstrata::motion::MotionPose& pose : replayed.delivered)
     {
         if (pose.root.hasPosition != pose.root.hasOrientation)
         {
@@ -702,10 +706,10 @@ CheckTheTwoHalvesMeet(const ReplayedCapture& replayed, const std::string& name)
     // Every pose in this corpus does have one, and that is a fact about these
     // captures rather than about the contract: all nine send a complete bone
     // table in every frame datagram, so no frame here loses its hips record.
-    // A frame that composes none is a shape `vrmAdapterMocopi_frameAssembler`
+    // A frame that composes none is a shape `motionConnectorMocopi_frameAssembler`
     // has to construct deliberately, by dropping joint 0. So an absence here
     // means the composition stopped, not that a record went missing.
-    for (const motion::HumanoidPose& pose : replayed.delivered)
+    for (const openstrata::motion::MotionPose& pose : replayed.delivered)
     {
         if (!pose.root.hasPosition)
         {
@@ -733,7 +737,7 @@ CheckTheTwoHalvesMeet(const ReplayedCapture& replayed, const std::string& name)
                                 "derive");
         }
         const bool derived = std::any_of(replayed.delivered.begin() + 1, replayed.delivered.end(),
-                                         [](const motion::HumanoidPose& pose)
+                                         [](const openstrata::motion::MotionPose& pose)
                                          { return pose.root.hasLinearVelocity; });
         if (replayed.delivered.size() > 1 && !derived)
         {
@@ -751,7 +755,7 @@ CheckNeutralStanding(const ReplayedCapture& replayed, const std::string& name)
     {
         return Failed(name, "five poses and no restart were expected");
     }
-    for (const motion::HumanoidPose& pose : replayed.delivered)
+    for (const openstrata::motion::MotionPose& pose : replayed.delivered)
     {
         if (pose.validRotations.count() != kCanonicalBoneCount)
         {
@@ -773,7 +777,7 @@ CheckNeutralStanding(const ReplayedCapture& replayed, const std::string& name)
 }
 
 int
-CheckSessionRestart(const vrmAdapterMocopi::PacketCapture& capture, const ReplayedCapture& replayed,
+CheckSessionRestart(const mocopi::PacketCapture& capture, const ReplayedCapture& replayed,
                     const std::string& name)
 {
     // The capture this file needed. Under the default policy the stream
@@ -821,7 +825,7 @@ CheckSessionRestart(const vrmAdapterMocopi::PacketCapture& capture, const Replay
 }
 
 int
-CheckRestartWithoutRecovery(const vrmAdapterMocopi::PacketCapture& capture,
+CheckRestartWithoutRecovery(const mocopi::PacketCapture& capture,
                             const ReplayedCapture& replayed, const std::string& name)
 {
     // `frame-loss-01`, and the assertion is what it *cannot* show. Its restart
@@ -858,7 +862,7 @@ CheckIncompleteFrame(const ReplayedCapture& replayed, const std::string& name)
 {
     // An incomplete frame is a *pose* here, which is the division this whole
     // layer rests on: the assembler reported what was missing and did not
-    // refuse the frame, and `MissingBonePolicy` — HoldLast by default — is what
+    // refuse the frame, and `MissingJointPolicy` — HoldLast by default — is what
     // decides the three bones' fate.
     if (replayed.stats.framesAdmitted != 2)
     {
@@ -891,7 +895,7 @@ CheckIncompleteFrame(const ReplayedCapture& replayed, const std::string& name)
     // holding is not available to it. A session that begins mid-dropout starts
     // unbound however it is configured, which is worth pinning because it is the
     // one arrangement where the two policies agree.
-    if (replayed.intakeStats.bonesHeld != 0)
+    if (replayed.intakeStats.jointsHeld != 0)
     {
         return Failed(name, "a bone was held from a frame that never arrived");
     }
@@ -912,7 +916,7 @@ int
 CheckCorpus(const std::filesystem::path& directory)
 {
     std::vector<std::filesystem::path> files;
-    if (!vrmAdapterMocopiTests::CollectCaptures(directory, &files))
+    if (!motionConnectorMocopiTests::CollectCaptures(directory, &files))
     {
         return 1;
     }
@@ -921,9 +925,9 @@ CheckCorpus(const std::filesystem::path& directory)
     for (const std::filesystem::path& file : files)
     {
         const std::string name = file.filename().string();
-        vrmAdapterMocopi::PacketCapture capture;
-        vrmAdapterMocopi::PacketCaptureError error;
-        if (!vrmAdapterMocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
+        mocopi::PacketCapture capture;
+        mocopi::PacketCaptureError error;
+        if (!mocopi::ReadPacketCaptureFile(file.string(), &capture, &error))
         {
             failures += Failed(name, "line " + std::to_string(error.line) + ": " + error.message);
             continue;
@@ -1027,6 +1031,6 @@ main(int argc, char** argv)
     TestARefusedDatagramIsCountedAndClearsTheWindow();
     TestResetForgetsTheStreamAndKeepsTheStats();
     TestASecondCaptureInheritsTheClockOffsetAndNothingSaysSo();
-    std::puts("vrmAdapterMocopi live source tests passed");
+    std::puts("motionConnectorMocopi live source tests passed");
     return 0;
 }
