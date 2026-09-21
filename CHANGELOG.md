@@ -8,6 +8,31 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorVrchatOsc` and `vrchat_osc_record`, imported from
+  `usd-vrm-plugins`' `vrmAdapterVrchatOsc` with their history** (that
+  repository's MIG-4, and the last connector it had to send). VRChat OSC
+  Trackers decode, the address inventory, tracking-space normalization and
+  tracker frames, under `openstrata::connectors::vrchatOsc`, with the recorder
+  at `tools/vrchatOscRecord/`. New CTest names:
+  `motionConnectorVrchatOsc_unit`, `_trackerMessage`, `_addressInventory`,
+  `_trackingSpace`, `_frameAssembler`, `_packetCapture`, `_udpReceiver`,
+  `_udpReceiverTruncation`, their corpus readings, `_boundaries`, `_packetGen`,
+  and `vrchat_osc_record_inspect`, `_loopback`, `_ipv6`, `_export`.
+  - **The edge set is the point: this connector is not a pose source.** The
+    library pins `motionCore` alone from `usd-motion-plugins`, for the value
+    types the canonical basis is expressed in, beside the two leaves already
+    here. A tracker observation is pre-IK, so neither sampling nor recording is
+    a library edge — the CLI takes `motionConnectorTracking` for the solve and
+    `motionRecording` for the trace it writes.
+  - That makes `vrchat_osc_record` the first tool here whose descriptor
+    declares a digest-pinned external artifact of its own.
+  - **The VRChat OSC -> rig end-to-end leg is deliberately not here**, as
+    neither sibling recorder's is. What is here is the export, which is the name
+    that calls the humanoid solve: the link the leg was waiting for is
+    exercised, the bake is not.
+  - The corpus comes with it — 16 generated captures and the recorded-session
+    manifests, whose bytes were never redistributable and still are not.
+
 - **`motionConnectorMocopi` and `mocopi_record`, imported from
   `usd-vrm-plugins`' `vrmAdapterMocopi` with their history** (that repository's
   MIG-4). Native mocopi UDP decode -- the container grammar, the packet chunks,
