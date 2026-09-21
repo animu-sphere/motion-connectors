@@ -132,7 +132,7 @@ canonical (a flipped payload byte, say) fails the second and not the first.
 2. Add an entry to `manifest.json` with its `file` and — the part no tool can
    derive — *which phenomenon it pins*. A capture that duplicates an existing
    one's coverage is not worth its review cost.
-3. Run `python adapters/liveCapture/vmc/tools/generate_packets.py`. It writes the
+3. Run `python libs/motionConnectorVmc/tools/generate_packets.py`. It writes the
    capture and fills in every measured field of the manifest entry (datagrams,
    payload bytes, duration, address patterns, digest); `--check` then holds both
    to what it produced.

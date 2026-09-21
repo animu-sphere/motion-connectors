@@ -4,7 +4,7 @@ Record a live VMC session, and say what it was.
 
 ```sh
 vmc_record --output session.vmcpackets --sender vseeface --source-id walk-01
-vmc_record --inspect adapters/liveCapture/vmc/tests/corpus/arm-raise-30hz.vmcpackets
+vmc_record --inspect libs/motionConnectorVmc/tests/corpus/arm-raise-30hz.vmcpackets
 ```
 
 This is the VMC adapter's CLI, and the one part of it that meets a real sender.
@@ -139,6 +139,6 @@ runner that forbids binding excludes it and loses nothing else.
 It does not retarget, author a stage, or open an avatar.
 [WORKSPACE.md](../../docs/architecture/WORKSPACE.md) §2 *permits* an
 adapter tool to do all three — that permission is what separates a tool from its
-library — and this one needs none of them. `motion_capture` is where a VMC
-session becomes a clip (Milestone C), and a second path to an avatar from here
-would be the fork the plan's §2 forbids.
+library — and this one needs none of them. Semantic recording and retargeting
+belong to `usd-motion-plugins` and the avatar repositories; a second path to an
+avatar from this capture tool would duplicate that pipeline.

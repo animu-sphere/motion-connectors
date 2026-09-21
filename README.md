@@ -4,17 +4,15 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Connectivity for live motion: devices, browsers, SDKs, streams and remote
-services, normalized into the one motion contract the OpenUSD avatar stack
-shares.
+services, recorded transport captures and replay sources, normalized into the
+shared motion contract used by the OpenUSD avatar stack.
 
-> **Status: documentation and an empty build scaffold.** The design policy is
-> accepted and the contracts are proposed. The first connectors (VMC, mocopi, VRChat OSC
-> Trackers) are implemented and measured today in
-> [`usd-vrm-plugins`](https://github.com/animu-sphere/usd-vrm-plugins), and
-> they arrive here once `usd-motion-plugins` publishes its core
-> ([roadmap](docs/roadmap/current.md)). The
+> **Status: v0.1.0 implementation in progress.** The native transport, OSC,
+> tracking, VMC, mocopi and VRChat OSC Tracker implementations are in this
+> repository. Current work is converging them on the shared connector contract,
+> source profiles and the `motion_connect` CLI. The
 > [capability matrix](docs/reference/CAPABILITY_MATRIX.md) is the only page
-> that says what is implemented here.
+> that states current implementation status.
 
 ## The central rule
 
@@ -27,9 +25,9 @@ mocopi · VMC · VRChat OSC · MediaPipe · WebXR · OpenXR · WebSocket · …
                                │
                                ▼
 motion-connectors      connect · normalize · timestamp · identify · stream
-                               │  MotionFrame (MotionPose, tracker observations)
+                               │  MotionFrame (shared MotionPose, tracker observations)
                                ▼
-usd-motion-plugins     filter · retarget · record · UsdSkelAnimation
+usd-motion-plugins     filter · retarget · semantic recording · USD bridge
                                │
                                ▼
 usd-vrm-plugins · usd-mmd-plugins · …            avatar-format semantics
@@ -43,35 +41,19 @@ retarget, filter, author USD or interpret VRM or MMD, and it never needs a
 `UsdStage`. The pose it produces is `usd-motion-plugins`' `MotionPose`. This
 repository depends on that one, and nothing depends on it except the runtime.
 
-## Planned components
+## Current milestone
 
-| Component | Role | Release |
-| --- | --- | --- |
-| `motionConnectorCore` | `IMotionConnector`, `MotionFrame`, state, capabilities, timing, the bounded frame buffer | v0.1.0 |
-| `motionConnectorTransport`, `motionConnectorOsc` | UDP and packet capture; the OSC 1.0 wire format (both **imported**) | v0.1.0 |
-| `motionConnectorVmc` | VMC Protocol | v0.1.0 |
-| `motion_connect` | `list`, `dump`, `inspect`, then `record`, `bridge` | v0.1.0, v0.2.0 |
-| `motionConnectorMocopi`, `motionConnectorVrchatOsc`, `motionConnectorTracking` | mocopi native UDP; VRChat OSC Trackers; tracker assignment and solve | v0.1.0 |
-| `motionConnectorWebSocket`, Python bindings | `MotionFrame` over the network; `open_connector` | v0.2.0 |
-| `motionConnectorMediaPipe`, JS / TS package | browser body, hand and face tracking | v0.3.0 |
-| `motionConnectorWebXR` | browser XR head, controllers and hands | v0.4.0 |
-| `motionConnectorOpenXR` | native XR | later |
-
-Every connector is an optional module: a build that wants VMC needs no OpenXR,
-no browser and no vendor SDK. Identities and dependency directions are fixed
-in [docs/architecture/WORKSPACE.md](docs/architecture/WORKSPACE.md). Which
-release carries what is in the
-[roadmap](docs/roadmap/README.md#status-at-a-glance).
+Complete `motionConnectorCore`, adapt the imported source implementations to
+that contract, add their profiles and finish the hardware-free replay and
+package evidence for v0.1.0. The incomplete work and later releases are in the
+[roadmap](docs/roadmap/README.md).
 
 ## Canonical conventions
 
 Canonical motion is right-handed, +Y up, +Z forward, in metres and seconds.
-Each source's basis is converted exactly once, inside its connector, and each
-basis is declared as *measured*, *documented* or *assumed*
-([COORDINATE_SYSTEMS.md](docs/design/COORDINATE_SYSTEMS.md)). Timestamps
-carry the source clock and the receive clock separately, never mixed. Live
-streams tolerate disconnects and frame loss, and they report state instead of
-failing the runtime ([CONNECTOR_CONTRACT.md](docs/design/CONNECTOR_CONTRACT.md)).
+Each source's basis is converted exactly once inside its connector. Timestamps
+keep source and receive clocks separate, and live streams report disconnects
+and frame loss through connector state ([connector contract](docs/design/CONNECTOR_CONTRACT.md)).
 
 ## Documentation
 

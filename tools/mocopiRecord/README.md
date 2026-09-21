@@ -102,19 +102,19 @@ recorded months ago — which is why it prints the capture's own `provenance` li
 and a live session does not. On a live run the operator typed those values a
 moment ago.
 
-## Where a session leaves this adapter: `--export-trace`
+## Imported compatibility export: `--export-trace`
 
 ```text
 session.mocopipackets → mocopi_record --inspect --export-trace → session.trace
                       → motion_record → a motion stage → a consumer's retarget
 ```
 
-A `motion-capture-trace` is what a connector *delivered* — after protocol
-decode and coordinate conversion, before any intake policy — and
-`usd-motion-plugins`' `motion_record` replays one knowing nothing about mocopi.
-That file is the only thing that passes between this connector and a consumer,
-which is what [WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) requires
-and what lets both tools downstream stay **unchanged**.
+The imported implementation can derive a `motion-capture-trace` from a
+committed raw capture. That export is a compatibility path, not this
+repository's canonical recording boundary: semantic motion recording belongs
+to `usd-motion-plugins`. The v0.1.0 convergence work must keep raw capture and
+replay authoritative and either move this export downstream or redefine it as a
+`MotionFrame` diagnostic export.
 
 **It goes with `--inspect`, and only there.** The sibling tool exports from a
 live session too; this one refuses to, and the refusal is the tool's own design
