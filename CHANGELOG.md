@@ -8,6 +8,38 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorMocopi` and `mocopi_record`, imported from
+  `usd-vrm-plugins`' `vrmAdapterMocopi` with their history** (that repository's
+  MIG-4). Native mocopi UDP decode -- the container grammar, the packet chunks,
+  the joint map and basis change, frame assembly and `mocopi.body.v1` -- under
+  `openstrata::connectors::mocopi`, with the recorder at `tools/mocopiRecord/`.
+  New CTest names: `motionConnectorMocopi_unit`, `_packetCapture`,
+  `_motionPacket`, `_skeletonMap`, `_frameAssembler`, `_liveSource`,
+  `_udpReceiver`, `_udpReceiverTruncation`, `_corpus`, `_motionPacketCorpus`,
+  `_skeletonMapCorpus`, `_frameAssemblerCorpus`, `_liveSourceCorpus`,
+  `_loopbackCorpus`, `_boundaries`, `_packetGen`, and `mocopi_record_inspect`,
+  `_loopback`, `_export`, `_ipv6`.
+  - **It links the transport leaf and not the wire format**, which is the one
+    structural difference from the sibling connector: this protocol is not OSC,
+    and WORKSPACE.md §2 forbids reaching another protocol's decoder. The three
+    `usd-motion-plugins` packages are the same three the sibling pins, by the
+    same digests from v0.5.0's pin table.
+  - The C++ namespace of a leaf is not its package name: the transport
+    library's is `transport`, so a `using` that named `motionConnectorTransport`
+    compiled nowhere. Measured, not predicted -- it is what the first build of
+    this import failed on.
+  - Nine committed captures come with it, and they stay byte-compared:
+    `.gitattributes` already carried the `*.mocopipackets binary` rule the
+    sibling's import declared for this one.
+  - **The mocopi -> rig end-to-end leg is deliberately not here**, for the
+    reason `vmc_record`'s was not: its last step bakes a session onto an avatar
+    with a retarget CLI, and §2.3 points every edge at `usd-motion-plugins` and
+    none at a consumer.
+  - `MOTIONCONNECTORMOCOPI_BUILD_TOOL` did not travel. The option existed to
+    keep a library's install free of its CLI's edges; here the recorder is a
+    workspace member of its own and the installed-consumer lane answers that
+    question instead.
+
 - **`motionConnectorVmc` and `vmc_record`, imported from `usd-vrm-plugins`'
   `vrmAdapterVmc` with their history** (that repository's MIG-4). VMC Protocol
   decode, frame assembly and `vmc.v1`, under `openstrata::connectors::vmc`,
