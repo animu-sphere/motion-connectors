@@ -137,7 +137,9 @@ VmcConnector::_EnqueueFrames(double receiveTimestamp)
         if (result == openstrata::connectors::core::FramePushResult::Accepted)
         {
             ++accepted;
-            _state = openstrata::connectors::core::ConnectorState::Connected;
+            _state = (frame.missing.any() || frame.stale.any())
+                          ? openstrata::connectors::core::ConnectorState::Degraded
+                          : openstrata::connectors::core::ConnectorState::Connected;
         }
         else
         {

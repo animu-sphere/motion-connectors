@@ -11,7 +11,7 @@ namespace
 {
 
 openstrata::connectors::vmc::VmcPacket
-Packet(float timestamp)
+Packet(float timestamp, bool includeSpine = false)
 {
     using namespace openstrata::connectors::vmc;
     VmcPacket packet;
@@ -26,6 +26,13 @@ Packet(float timestamp)
     bone.name = VmcHumanBoneName(openstrata::motion::HumanJoint::Hips);
     bone.transform.rotation = {0.0f, 0.0f, 0.0f, 1.0f};
     packet.messages.push_back(bone);
+
+    if (includeSpine)
+    {
+        VmcMessage spine = bone;
+        spine.name = VmcHumanBoneName(openstrata::motion::HumanJoint::Spine);
+        packet.messages.push_back(spine);
+    }
     return packet;
 }
 
@@ -60,8 +67,9 @@ main()
     assert(connector.GetCapabilities().Has(ConnectorCapability::Body));
     assert(connector.GetCapabilities().Has(ConnectorCapability::Face));
 
-    assert(connector.PushPacket(Packet(1.0f), 0.1) == 0);
+    assert(connector.PushPacket(Packet(1.0f, true), 0.1) == 0);
     assert(connector.PushPacket(Packet(2.0f), 0.2) == 1);
+    assert(connector.PushPacket(Packet(3.0f), 0.3) == 1);
 
     MotionFrame frame;
     assert(connector.Poll(frame));
@@ -74,7 +82,10 @@ main()
     assert(frame.actors[0].actor == "vmc:0");
     assert(frame.actors[0].pose.has_value());
     assert(frame.actors[0].pose->metadata.protocol == "vmc");
-    assert(connector.GetState() == ConnectorState::Connected);
+
+    MotionFrame degraded;
+    assert(connector.Poll(degraded));
+    assert(connector.GetState() == ConnectorState::Degraded);
 
     connector.Close();
     assert(connector.GetState() == ConnectorState::Disconnected);
