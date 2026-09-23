@@ -166,7 +166,13 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **The `ost` pin is 0.23.3.** 0.23.3 pulls, graphs and validates an
+- **The `ost` pin is 0.23.4.** 0.23.4 applies the runtime check to
+  `ost library build` and `ost plugin build` as well, so a member build tree
+  configured against another runtime is discarded there too. It also adds pins
+  for a published bundle and a published test tool (`usd-vrm-plugins`' ost
+  report 45), which nothing here uses yet. Re-pinned with the ecosystem.
+
+- **The `ost` pin was 0.23.3.** 0.23.3 pulls, graphs and validates an
   external library artifact only a tool declares, as `vrchat_osc_record`'s
   descriptor does, and discards a build tree whose cache was configured
   against another runtime (`usd-vrm-plugins`' ost report 44). Re-pinned with
