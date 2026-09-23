@@ -37,7 +37,7 @@ Whether the web path can avoid this closure is
 | Language | C++20 for native libraries; TypeScript for web modules |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
-| OpenStrata | `ost` 0.23.2, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
+| OpenStrata | `ost` 0.23.3, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
 | Python | the interpreter OpenUSD was built against, for bindings and tooling (v0.2.0) |
 | Node | an LTS release, for the JS / TS package (v0.3.0) |
