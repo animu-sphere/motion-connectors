@@ -166,6 +166,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The `ost` pin is 0.23.3.** 0.23.3 pulls, graphs and validates an
+  external library artifact only a tool declares, as `vrchat_osc_record`'s
+  descriptor does, and discards a build tree whose cache was configured
+  against another runtime (`usd-vrm-plugins`' ost report 44). Re-pinned with
+  the ecosystem.
+
 - **The `ost` pin is 0.23.2**, re-pinned across the ecosystem together with
   `usd-motion-plugins` and `usd-vrm-plugins`, and the workflow re-rendered from
   it. `requires.libraries` can name a digest-pinned library artifact from
