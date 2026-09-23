@@ -24,8 +24,11 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is 0.23.3 (2026-09-23), re-pinned across the ecosystem together
-# with usd-motion-plugins, usd-vrm-plugins and usd-mmd-plugins. 0.23.3 pulls,
+# `ost` pin is 0.23.4 (2026-09-24), re-pinned across the ecosystem together
+# with usd-motion-plugins, usd-vrm-plugins and usd-mmd-plugins. 0.23.4 checks a
+# member build tree's runtime in `ost library build` and `ost plugin build` as
+# well, and adds pins for a published bundle and a published test tool
+# (usd-vrm-plugins' ost report 45); nothing here uses either yet. 0.23.3 pulls,
 # graphs and validates an external library only a tool declares -- which
 # `vrchat_osc_record`'s descriptor does here -- and discards a build tree
 # configured against another runtime (usd-vrm-plugins' ost report 44). 0.23.2
@@ -78,7 +81,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.23.3"
+    version: "0.23.4"
     repository: animu-sphere/open-strata
 
 runners:
