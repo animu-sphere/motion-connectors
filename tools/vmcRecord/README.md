@@ -10,7 +10,7 @@ vmc_record --inspect libs/motionConnectorVmc/tests/corpus/arm-raise-30hz.vmcpack
 This is the VMC adapter's CLI, and the one part of it that meets a real sender.
 Every layer beneath it is verifiable from committed bytes — which is the whole
 point of the adapter's build order
-([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §5) and also
+([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) §5) and also
 its limit: the corpus is *generated*, so it reproduces the protocol's shapes and
 not what any real application emits. The rest of Milestone B is the same shape —
 two sender applications validated, a capture device through a relay, a recorded

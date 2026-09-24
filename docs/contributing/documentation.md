@@ -20,6 +20,7 @@ if it changes one of the following without updating the page that owns it:
 | `guides/` | How to accomplish a task, with commands that have been run. | Commands nobody has run. |
 | `releases/` | One immutable record per released version. | Work in progress. |
 | `reports/` | Dated evidence from real runs and real sessions; append-only. | Current-state claims. |
+| `archive/` | Plans and documents that were once authoritative and no longer are, each opening with a *Historical only* banner. | Anything a reader should act on. |
 | `contributing/` | How to maintain this repository. | End-user tasks. |
 
 ## Status rules
@@ -32,6 +33,33 @@ if it changes one of the following without updating the page that owns it:
   source whose only test needs hardware.
 - A release record and a dated report are not rewritten. A later finding gets a
   new report and a one-line forward note on the old one.
+
+## Cross-repository contracts
+
+**One concept, one owning repository, one canonical document.** This
+repository owns how external motion *enters*; `usd-motion-plugins` owns what
+generic motion *is*; each avatar repository owns how its format *uses* it.
+
+> A repository may describe how it consumes a sibling repository's contract,
+> but must not redefine that contract.
+>
+> Link to the owning repository instead of copying its API semantics,
+> capability status, roadmap, or implementation state.
+
+Good: "`MotionFrame` carries `usd-motion-plugins`' `MotionPose`, whose
+semantics are its MOTION_CONTRACT.md." Bad: a definition of what `MotionPose`
+contains, maintained here. Link to a sibling's canonical document, never to one
+it has archived or superseded; where a decision was taken in a document that is
+now history there, cite it as history, not as policy.
+
+## Root README
+
+The root README is an entry point in the shared shape — Scope,
+Architecture, Components, Documentation, Build, License — and stays short.
+It carries no current milestone, no version status prose, no status column in
+its component table, and no contract definitions or sibling status; it links
+to the [capability matrix](../reference/CAPABILITY_MATRIX.md) and the
+[roadmap](../roadmap/current.md) instead.
 
 ## Stable numbering
 

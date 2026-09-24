@@ -9,7 +9,7 @@ A tracker source carries numbered observations that are pre-IK, and a tracker
 index is not a body role — it is an index into whatever the wearer strapped on.
 Three decisions sit between that index and a joint, and collapsing any two of
 them is how one protocol's semantics leak into the motion layer
-([usd-vrm-plugins' OSC track §5.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#51-assignment-is-a-third-thing-and-it-belongs-to-neither-end),
+([usd-vrm-plugins' OSC track §5.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#51-assignment-is-a-third-thing-and-it-belongs-to-neither-end),
 where this library was measured before it moved):
 
 | Decision | Owner | What it may know |

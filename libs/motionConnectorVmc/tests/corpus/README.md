@@ -49,7 +49,7 @@ agree with the decoder by construction rather than by the protocol.
 protocol produces, not any particular application's quirks. Two real sender
 applications and a capture device relayed through one are Milestone B's, recorded
 with the record tool and added here as they are measured
-([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §10).
+([the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) §10).
 
 ## The set
 

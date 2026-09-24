@@ -116,7 +116,7 @@
 //
 // The sibling adapter has two candidate root translations — `/VMC/Ext/Root/Pos`
 // and the hips local position — cannot compose them, and says so
-// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)). Natively
+// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md)). Natively
 // that ambiguity does not arise: the rig's root joint *is* the hips, there is no
 // second channel, and in 207,064 measured bone-frames every non-root translation
 // equalled its rest offset bit for bit. So the body's placement is the hips

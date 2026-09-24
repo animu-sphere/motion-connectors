@@ -31,5 +31,5 @@ A comparison across them is between two performances of one sequence, and every
 conclusion drawn from it has to survive that — which rules out the per-sample
 timing agreement report 01 was able to measure, and leaves what each path
 carries and drops, which is what
-[§11](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#11-the-fourth-observation-of-one-session)
+[§11](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#11-the-fourth-observation-of-one-session)
 exists to write down.

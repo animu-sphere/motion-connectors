@@ -44,7 +44,7 @@ datagram forever.
 **No humanoid is resolved anywhere here**, and none will be: a tracker index is
 not a body role, assignment is a generic policy outside this adapter, and the
 solve is the motion layer's. See
-[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md) §5 and §5.1, and the
+[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md) §5 and §5.1, and the
 two sections below for why an adapter over a *published* specification still
 records before it decodes.
 
@@ -141,7 +141,7 @@ one.
 ## What this adapter is *not* the second copy of
 
 The census that preceded this directory
-([§2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#2-the-duplication-census))
+([§2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#2-the-duplication-census))
 measured the two existing adapters with vendor identifiers erased: one
 packet-capture implementation written twice, differing by six lines across 800,
 and one UDP receiver written twice and drifted by 210. A third adapter's first
@@ -225,7 +225,7 @@ adapter reads the same wire format, so reaching across would have *worked*.
 OSC-3 removed the temptation rather than the rule — the decoder is
 [`libs/osc`](../motionConnectorOsc/README.md) and this adapter is the second consumer
 it was extracted for
-([§3.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#31-libsosc--extract-after-the-second-consumer)).
+([§3.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#31-libsosc--extract-after-the-second-consumer)).
 [`tests/check_boundaries.py`](tests/check_boundaries.py) still refuses a sibling
 include, because a sibling edge is forbidden by the contract and not by whether
 it would pay.
@@ -233,7 +233,7 @@ it would pay.
 ## Diagnostics
 
 Ten codes, frozen in
-[§8](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#8-diagnostics) before this
+[§8](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#8-diagnostics) before this
 directory existed and before anything here decodes a byte:
 
 ```text
