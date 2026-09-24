@@ -6,6 +6,13 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **The connector-to-motion-stream boundary is settled (CC-O3).** A consumer
+  polls `MotionFrame`, routes each actor's pose to a `LiveCaptureSource`, and
+  samples it through `IMotionSource`. The VMC connector test now exercises that
+  handoff and checks that the source timestamp survives intake.
+
 ### Added
 
 - **`motionConnectorCore` and the first shared-contract VMC and mocopi adapters.** The new

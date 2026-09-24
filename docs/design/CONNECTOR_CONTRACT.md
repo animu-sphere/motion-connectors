@@ -268,9 +268,15 @@ Poll(MotionFrame&)                 ← the only public read
 - The connector buffer is **not** the stream. `usd-motion-plugins`' stream
   intake still applies its own ordering, confidence and bounds; the connector
   buffer exists so that a socket thread and a tick never share a frame.
-  Whether the public `MotionStream` is pull, push or both is
-  `usd-motion-plugins`' MC-O5, and it names this repository's first consumer
-  as the evidence (`CC-O3`).
+- **CC-O3 is resolved:** the connector's public read is `Poll(MotionFrame&)`.
+  A consumer routes each actor's `MotionPose` to that actor's
+  `LiveCaptureSource`, sets the stream provenance with `SetSourceMetadata`,
+  and calls `Push` for each pose in order. The motion layer's public read is
+  `IMotionSource::Sample(evaluationTime)`. An observation-only actor has no pose
+  to push until a separate tracker solve produces one. The VMC connector test
+  exercises the handoff and preservation of the source timestamp; the motion
+  layer owns clock alignment and intake policy. No second `MotionStream` type
+  is required by this boundary.
 
 ## 9. Diagnostics
 
@@ -324,11 +330,13 @@ file format.
 
 ## 13. Open questions
 
+CC-O3 was resolved by the first shared-connector to live-intake test on
+2026-09-24 (§8).
+
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source whose data does not fit `HumanJoint` version 1 (Connector Phase 4, MediaPipe, at the latest) |
 | CC-O2 | Landmark sources: MediaPipe reports joint **positions**, not rotations. Is a landmark set an observation like a tracker (§4), solved downstream, or does the connector solve rotations itself? Design policy §26 says a connector emits "the best faithful normalized observation", which argues for the former | Connector Phase 4 |
-| CC-O3 | The public `MotionStream` shape (`usd-motion-plugins` MC-O5): this repository's proposal is pull over a bounded buffer, push as a wrapper (§8) | the first connector consumed through `motionCore` |
 | CC-O4 | Per-joint tracking loss (`usd-motion-plugins` MC-O6): mocopi's native stream reports it; VMC does not | v0.1.0 convergence |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |

@@ -5,6 +5,8 @@
 #include "motionConnectorVmc/SkeletonMap.h"
 #include "motionConnectorVmc/VmcMessage.h"
 
+#include "motionRecording/LiveCaptureSource.h"
+
 #include <cassert>
 
 namespace
@@ -83,8 +85,25 @@ main()
     assert(frame.actors[0].pose.has_value());
     assert(frame.actors[0].pose->metadata.protocol == "vmc");
 
+    // A connector is polled for MotionFrame values; each actor's canonical
+    // pose is pushed into the motion layer's timestamped intake. The two
+    // buffers serve different purposes and must compose without another pose
+    // conversion or a source-specific stream interface.
+    openstrata::motion::LiveCaptureSource intake;
+    intake.SetSourceMetadata(frame.actors[0].pose->metadata);
+    assert(intake.Push(*frame.actors[0].pose));
+
     MotionFrame degraded;
     assert(connector.Poll(degraded));
+    assert(degraded.actors.size() == 1);
+    assert(degraded.actors[0].pose.has_value());
+    assert(intake.Push(*degraded.actors[0].pose));
+    assert(intake.GetStats().framesAccepted == 2);
+    openstrata::motion::IMotionSource& stream = intake;
+    const auto sample = stream.Sample(frame.actors[0].pose->timestamp);
+    assert(sample.IsValid());
+    assert(sample.pose->metadata.protocol == "vmc");
+    assert(sample.pose->metadata.sourceTimestamp == frame.timing.sourceTimestamp);
     assert(connector.GetState() == ConnectorState::Degraded);
 
     connector.Close();
