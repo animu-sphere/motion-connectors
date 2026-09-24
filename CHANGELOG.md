@@ -8,6 +8,33 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **CS-O1 has a shared library home.** `usd-motion-plugins` 0.5.2 source adds
+  the signed-permutation operation to `motionCore`. The connector adapters
+  will consume it after the package is published and their digest pins are
+  updated.
+- **CS-O3 fixes the conversion policy for the imported connectors.** Their
+  protocol decoders choose the measured basis in code. Installed profiles
+  describe the same basis, with stronger validation for axes, unit and
+  rotation form; they are not runtime conversion programs.
+- **WS-O2 keeps tracker assignment and the direct solve together.**
+  `motionConnectorTracking` owns both generic operations: the solve needs
+  assigned tracker regions, while the motion layer owns only the pose it
+  returns. The existing tests and dependency boundary support this placement.
+- **CC-O4 corrects the mocopi tracking-state claim.** The measured native
+  grammar has neither a per-joint state nor confidence. Missing or refused
+  bones already become absent rotations with an incomplete-frame diagnostic;
+  the reserved `MOCOPI_TRACKING_LOST` code remains unraised.
+- **The source move was checked against `usd-vrm-plugins`.** Its clean local
+  checkout at `9191fbb` contains none of the imported connector library
+  directories or active CMake links to them; remaining names occur in
+  historical comments and boundary checks.
+- **The imported trace export paths were audited.** Every tool delegates trace
+  serialization to `motionRecording`; mocopi and VRChat OSC export from a
+  saved capture, while VMC can also hold and export poses during live capture.
+  VMC now accumulates poses only when `--export-trace` is requested; removing
+  that live semantic path and deciding where offline conversion is invoked
+  remain on the current roadmap.
+
 - **The connector-to-motion-stream boundary is settled (CC-O3).** A consumer
   polls `MotionFrame`, routes each actor's pose to a `LiveCaptureSource`, and
   samples it through `IMotionSource`. The VMC connector test now exercises that

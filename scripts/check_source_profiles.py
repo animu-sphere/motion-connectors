@@ -146,6 +146,10 @@ def check_vmc(profile: dict) -> None:
             {"body", "hands", "face", "root-motion", "source-timestamps"},
             f"{profile_id}: capability set mismatch")
     require(profile["basis"]["handedness"] == "left" and
+            profile["basis"]["upAxis"] == "+Y" and
+            profile["basis"]["forwardAxis"] == "+Z" and
+            profile["basis"]["lengthUnit"] == "metres" and
+            profile["basis"]["rotation"]["kind"] == "quaternion" and
             profile["basis"]["rotation"]["componentOrder"] == "x,y,z,w",
             f"{profile_id}: basis does not describe VMC")
     require(profile["clock"]["timestamp"] == "/VMC/Ext/T" and
@@ -171,6 +175,10 @@ def check_mocopi(profile: dict) -> None:
     require(set(profile["capabilities"]) == {"body", "root-motion", "source-timestamps"},
             f"{profile_id}: capability set mismatch")
     require(profile["basis"]["handedness"] == "right" and
+            profile["basis"]["upAxis"] == "+Y" and
+            profile["basis"]["forwardAxis"] == "+Z" and
+            profile["basis"]["lengthUnit"] == "metres" and
+            profile["basis"]["rotation"]["kind"] == "quaternion" and
             profile["basis"]["rotation"]["componentOrder"] == "x,y,z,w",
             f"{profile_id}: basis does not describe mocopi")
     require(profile["clock"]["timestamp"] == "fram.time" and
@@ -192,7 +200,11 @@ def check_vrchat(profile: dict) -> None:
             f"{profile_id}: every tracker must declare both channels")
     require(set(profile["capabilities"]) == {"trackers"},
             f"{profile_id}: capability set mismatch")
-    require(profile["basis"]["rotation"].get("kind") == "euler" and
+    require(profile["basis"]["handedness"] == "left" and
+            profile["basis"]["upAxis"] == "+Y" and
+            profile["basis"]["forwardAxis"] == "+Z" and
+            profile["basis"]["lengthUnit"] == "metres" and
+            profile["basis"]["rotation"].get("kind") == "euler" and
             profile["basis"]["rotation"].get("order") == "ZXY" and
             profile["basis"]["rotation"].get("unit") == "degrees",
             f"{profile_id}: Euler basis does not describe VRChat OSC")

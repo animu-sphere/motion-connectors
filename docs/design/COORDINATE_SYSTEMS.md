@@ -48,8 +48,10 @@ A connector states its conversion as a **signed permutation** `M` of the axes
 - a quaternion's component order (scalar-first or scalar-last) is part of the
   declaration, not a guess.
 
-These rules are `usd-motion-plugins`' motion contract §3. Where the shared
-primitive that applies them lives is `CS-O1`.
+These rules are `usd-motion-plugins`' motion contract §3. `CS-O1` selected
+its `motionCore/BasisConversion.h` as the home for signed-permutation
+arithmetic on 2026-09-24. Each connector chooses its source basis and applies
+the operation at its boundary; the shared core never guesses a sender's axes.
 
 ## 3. What a connector declares
 
@@ -107,8 +109,23 @@ expectation until a labelled session measures it.
 
 ## 6. Open questions
 
+CS-O1's placement was decided on 2026-09-24: `motionCore` owns
+`SignedPermutationBasis`, `IsValidBasis`, `ApplyBasisToPosition` and
+`ApplyBasisToRotation` in its unreleased 0.5.2 source. The recorded
+`motionSource` converter calls it. VMC and VRChat OSC migrate after that
+package is published and their digest pins are updated. `motionConnectorCore`
+cannot serve the recorded BVH path. Euler composition remains source-specific.
+
+CS-O3 was decided on 2026-09-24: a connector for a fixed wire protocol keeps
+its measured basis and rotation decoding in code. Its installed JSON profile
+declares the same facts for inspection and validation; it is not loaded as
+executable conversion policy at runtime ([SOURCE_PROFILES §5](SOURCE_PROFILES.md#5-where-profiles-live)).
+The profile check pins handedness, up, forward, unit and rotation form against
+the conversion tests. A recorded reader such as BVH still takes a variable
+basis from its producer profile, because different files can name different
+producers. Both call the same `motionCore` arithmetic when its new package is
+available to connectors.
+
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| CS-O1 | Where the change-of-basis primitive lives. `usd-vrm-plugins` holds three copies (the VMC adapter's hard-coded X flip, the BVH layer's general signed permutation, the VRChat adapter's Euler composition) and did not extract it, because the right home is the shared core and that is a contract change. The proposal is `usd-motion-plugins`' `motionCore`, with all three copies as consumers; the alternative is `motionConnectorCore`, which the BVH reader could not reach | v0.1.0 convergence |
 | CS-O2 | VMC senders have two candidate translation channels (root position, hips offset). Which is body translation is a fact about each sender, measured per sender (`usd-motion-plugins` MC-O3, "operator work in `motion-connectors`") | one recorded session from each of two VMC senders |
-| CS-O3 | Whether a connector's conversion is code, or data in its profile that one shared converter applies. The BVH layer already does the latter | CS-O1 |

@@ -39,10 +39,10 @@ into the shared layer.
 - ✅ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
   `vrchat-osc.trackers.v1`; profile IDs and JSON data are validated while
   target-avatar mapping remains outside this repository.
-- ⬜ Resolve the shared change-of-basis primitive and VMC translation-channel
-  evidence (`CS-O1`, `CS-O2`, `CS-O3`).
-- ⬜ Reconcile per-joint tracking loss and actor identity with the shared
-  contract (`CC-O4`, `CC-O5`).
+- ⬜ Adopt `motionCore`'s shared basis operation in VMC and VRChat OSC after
+  its 0.5.2 package is published and update the pinned digests. Measure VMC's
+  two translation channels on two senders (`CS-O2`).
+- ⬜ Revisit actor identity with the first multi-actor source (`CC-O5`).
 
 ### Tools and evidence
 
@@ -54,11 +54,14 @@ into the shared layer.
   every committed capture, using each protocol's required end-of-capture
   handling, and `workspace_installed_consumer` consumes the installed package
   set outside the repository.
-- ⬜ Confirm that `usd-vrm-plugins` no longer consumes the imported libraries
-  after its migration cleanup.
-- ⬜ Audit the imported `--export-trace` paths. Keep raw packet/session capture
-  here, and move or redefine semantic `motion-capture-trace` export under
-  `usd-motion-plugins` so it does not become a second recording boundary.
+- ✅ Audit the imported `--export-trace` paths. All three tools delegate the
+  file format to `motionRecording::WriteCaptureTraceFile`; mocopi and VRChat
+  OSC export only from `--inspect`, while VMC also accumulates poses and
+  exports during live capture with a second `--max-frames` bound.
+- ⬜ Remove or move VMC's live semantic export and settle where offline
+  capture-to-trace conversion is invoked. Raw packet/session capture remains
+  here; a semantic `motion-capture-trace` must have one recording owner in
+  `usd-motion-plugins`.
 - ⬜ Decide whether the three raw capture tools remain separate or are folded
   into `motion_connect record` (`WS-O3`). A future `record` command must remain
   a connector capture/replay tool, not a semantic motion recorder.

@@ -109,7 +109,7 @@ motionConnectorOsc ────────→ (standard library)
 motionConnectorVmc ────────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
 motionConnectorMocopi ─────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
 motionConnectorVrchatOsc ──→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc (its CLI adds motionConnectorTracking, motionRecording)
-motionConnectorTracking ───→ usd-motion-plugins motionCore (shared-contract adaptation remains pending)
+motionConnectorTracking ───→ usd-motion-plugins motionCore
 motionConnectorWebSocket ──→ motionConnectorCore, an optional WebSocket library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
 tools/*, examples/* ───────→ the connectors they name; usd-motion-plugins libraries
@@ -247,11 +247,12 @@ capture no longer matches its generator. This is `usd-vrm-plugins`' corpus rule
 ## 7. Open questions
 
 WS-O1, the names and layout, and WS-O7, the import order, were decided on
-2026-09-19 (§1.1 and §3).
+2026-09-19 (§1.1 and §3). WS-O2 was decided on 2026-09-24: tracker assignment
+and the direct solve remain together in `motionConnectorTracking`
+([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| WS-O2 | `motionConnectorTracking`'s two halves. Assignment is a connector-side policy. The solve produces a `MotionPose` from observations, which `usd-vrm-plugins` called "the motion layer's" but still sent here. Keep both here, or send the solve to `usd-motion-plugins` | v0.1.0 convergence |
 | WS-O3 | The three imported record tools: keep them, or fold them into `motion_connect record` after the move (they share argument-parsing idiom, not behaviour, as measured in `usd-vrm-plugins`' OSC track §3.4) | v0.2.0 planning |
 | WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
 | WS-O5 | Distribution (`usd-vrm-plugins` BND-2): one GitHub release carrying per-connector artifacts, or separate downloads; one version for all connectors (recommended there) or one each; how a vendor SDK dependency is declared rather than discovered; whether hardware validation becomes a capability lane | the first release |

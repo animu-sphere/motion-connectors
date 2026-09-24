@@ -206,7 +206,10 @@ RunInspect(const vmcRecordTool::Options& options)
                                datagram.bytes.size(), datagram.receiveTime);
         source.PushDatagram(datagram.bytes, datagram.receiveTime, &log);
         report.ObserveFrames(source.GetFramesFromLastPush());
-        trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+        if (!options.traceExportPath.empty())
+        {
+            trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+        }
         report.ObserveDiagnostics(log, 0);
         ReportDiagnostics(log, 0, options.quiet);
         // Cleared per datagram, exactly as the record loop does it: the report
@@ -220,7 +223,10 @@ RunInspect(const vmcRecordTool::Options& options)
     // this, and a replay that forgets it loses its last frame.
     source.Flush(&log);
     report.ObserveFrames(source.GetFramesFromLastPush());
-    trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+    if (!options.traceExportPath.empty())
+    {
+        trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+    }
     report.ObserveDiagnostics(log, 0);
 
     bool exported = true;
@@ -302,7 +308,10 @@ RunRecord(const vmcRecordTool::Options& options)
             report.ObserveDatagram(datagram.peer, datagram.bytes.size(), datagram.receiveTime);
             source.PushDatagram(datagram.bytes, datagram.receiveTime, &log);
             report.ObserveFrames(source.GetFramesFromLastPush());
-            trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+            if (!options.traceExportPath.empty())
+            {
+                trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+            }
             report.ObserveDiagnostics(log, seen);
             ReportDiagnostics(log, seen, options.quiet);
             // The list is a session's worth of history nobody reads twice: the
@@ -370,7 +379,10 @@ RunRecord(const vmcRecordTool::Options& options)
     const std::size_t seen = log.size();
     source.Flush(&log);
     report.ObserveFrames(source.GetFramesFromLastPush());
-    trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+    if (!options.traceExportPath.empty())
+    {
+        trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
+    }
     report.ObserveDiagnostics(log, seen);
 
     // The receiver is deliberately not closed here. `Close` clears the bound
