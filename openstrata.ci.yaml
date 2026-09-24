@@ -24,8 +24,16 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is 0.23.4 (2026-09-24), re-pinned across the ecosystem together
-# with usd-motion-plugins, usd-vrm-plugins and usd-mmd-plugins. 0.23.4 checks a
+# `ost` pin is 0.23.6 (2026-09-24), re-pinned across the ecosystem together
+# with usd-motion-plugins, usd-vrm-plugins and usd-mmd-plugins. 0.23.6 installs
+# a workspace dependency bundle into its own target-local stage as well as the
+# shared link prefix, fixing 0.23.5's bundle-packaging regression
+# (usd-vrm-plugins' ost report 47); nothing here ships a bundle. 0.23.5 stages
+# bundle and tool outputs per target rather than in the source tree
+# (usd-mmd-plugins' ost report 01) -- `ost build` now stages each tool from the
+# build tree into its member's .strata/targets/<target>/tool-stage/bin -- and
+# exposes a published bundle's or tool's pinned paths to the root CMake suites
+# (usd-vrm-plugins' ost report 46), which nothing here pins yet. 0.23.4 checks a
 # member build tree's runtime in `ost library build` and `ost plugin build` as
 # well, and adds pins for a published bundle and a published test tool
 # (usd-vrm-plugins' ost report 45); nothing here uses either yet. 0.23.3 pulls,
@@ -81,7 +89,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.23.4"
+    version: "0.23.6"
     repository: animu-sphere/open-strata
 
 runners:
