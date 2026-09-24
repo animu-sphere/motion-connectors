@@ -15,7 +15,7 @@ is no specification to write a corpus from and exactly one way to obtain one
 without guessing: receive it. The receiver landed before this tool for that
 reason ([`UdpReceiver.h`](../../libs/motionConnectorMocopi/include/motionConnectorMocopi/UdpReceiver.h)); this is
 the consumer it was waiting for, and
-[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) names it in
+[the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) names it in
 Milestone D as the next code after it.
 
 Every other recorder in this repository turns a session into a file so a decoder
@@ -30,7 +30,7 @@ Two of those have no answer here, and the discipline this tool needs is that it
 must not invent them. A field read at the wrong offset produces plausible
 numbers, and a guess that reached a committed fixture's provenance is a guess
 that survives longest and is questioned least
-([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/recorded-motion-sources.md#9-milestones)).
+([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/recorded-motion-sources.md#9-milestones)).
 
 So three questions, and every number in the answers is a property of the
 datagram *envelope*:
@@ -260,7 +260,7 @@ Two more exits worth knowing before a long session:
 ## What may be committed, and what may not
 
 A capture recorded off a phone holds somebody's motion, and
-[§9.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md#92-corpus) keeps
+[§9.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md#92-corpus) keeps
 recorded evidence apart from the generated corpus for exactly that reason. The
 vendor's `BVH Sender` is the path that needs no device: pointed at a `.bvh` this
 repository wrote

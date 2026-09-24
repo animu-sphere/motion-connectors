@@ -25,7 +25,7 @@ The decoder was written inside `usd-vrm-plugins`' `vrmAdapterVmc` and stayed the
 releases, because it had one consumer. A library extracted on the strength of
 one caller is a library shaped like that caller — the only evidence that a
 surface is protocol-neutral is a second caller that never says `VMC`
-([the OSC track §3.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
+([the OSC track §3.1](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md)).
 
 That caller was written first and measured. An address inventory of a VRChat OSC
 session, decoding through the VMC-owned decoder without moving it, needed **five
@@ -49,7 +49,7 @@ library's receiver raises two events a caller must tell apart, and this one
 makes a single distinction — a datagram is decodable OSC or it is not. Three
 invented neutral names would have been mapped straight back onto one adapter
 code by every caller, and believed by the next reader
-([the OSC track §8](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
+([the OSC track §8](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md)).
 
 ## The edge set is empty, and emptier than the transport leaf's
 

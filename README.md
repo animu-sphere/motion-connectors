@@ -7,18 +7,30 @@ Connectivity for live motion: devices, browsers, SDKs, streams and remote
 services, recorded transport captures and replay sources, normalized into the
 shared motion contract used by the OpenUSD avatar stack.
 
-> **Status: v0.1.0 implementation in progress.** The native transport, OSC,
-> tracking, VMC, mocopi and VRChat OSC Tracker implementations are in this
-> repository. Current work is converging them on the shared connector contract,
-> source profiles and the `motion_connect` CLI. The
-> [capability matrix](docs/reference/CAPABILITY_MATRIX.md) is the only page
-> that states current implementation status.
-
-## The central rule
+## Scope
 
 > **`motion-connectors` owns connectivity and normalization.
 > `usd-motion-plugins` owns motion semantics and transformation.
 > Avatar plugins own avatar-format semantics.**
+
+This repository owns connector interfaces, `MotionFrame`, source state and
+timestamps, frame assembly and buffering, protocol and device input, source
+profiles and source coordinate conversion, and tracker observations. It stops
+at the canonical motion boundary.
+
+It does not own:
+
+| Responsibility | Owner |
+| --- | --- |
+| What `MotionPose`, `MotionStream` and retargeting mean | [`usd-motion-plugins`](https://github.com/animu-sphere/usd-motion-plugins) |
+| VRM or MMD avatar semantics | [`usd-vrm-plugins`](https://github.com/animu-sphere/usd-vrm-plugins), `usd-mmd-plugins` |
+| Runtime composition and the update loop | `usd-avatar-runtime` |
+
+A connector describes what it observed and nothing about avatars. It does not
+retarget, filter, author USD or interpret VRM or MMD, and it never needs a
+`UsdStage`.
+
+## Architecture
 
 ```text
 mocopi · VMC · VRChat OSC · MediaPipe · WebXR · OpenXR · WebSocket · …
@@ -36,36 +48,41 @@ usd-vrm-plugins · usd-mmd-plugins · …            avatar-format semantics
 usd-avatar-runtime     composition, the update loop
 ```
 
-A connector describes what it observed and nothing about avatars. It does not
-retarget, filter, author USD or interpret VRM or MMD, and it never needs a
-`UsdStage`. The pose it produces is `usd-motion-plugins`' `MotionPose`. This
-repository depends on that one, and nothing depends on it except the runtime.
+## Components
 
-## Current milestone
+| Component | Responsibility |
+| --- | --- |
+| `motionConnectorCore` | `IMotionConnector`, `MotionFrame`, tracker observations, state, timing, the bounded frame buffer |
+| `motionConnectorTransport` | UDP receiver, datagram queue, packet-capture files; knows no protocol |
+| `motionConnectorOsc` | The OSC 1.0 wire format; knows no address semantics |
+| `motionConnectorVmc` | VMC Protocol input |
+| `motionConnectorMocopi` | mocopi native UDP input |
+| `motionConnectorVrchatOsc` | VRChat OSC Trackers input |
+| `motionConnectorTracking` | Tracker regions, assignment and the tracker solve |
+| `motion_connect` | CLI over `MotionFrame`: `list`, `dump`, `inspect` |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLIs: record or inspect a live session's packet capture |
 
-Complete `motionConnectorCore`, adapt the imported source implementations to
-that contract, add their profiles and finish the hardware-free replay and
-package evidence for v0.1.0. The incomplete work and later releases are in the
-[roadmap](docs/roadmap/README.md).
-
-## Canonical conventions
-
-Canonical motion is right-handed, +Y up, +Z forward, in metres and seconds.
-Each source's basis is converted exactly once inside its connector. Timestamps
-keep source and receive clocks separate, and live streams report disconnects
-and frame loss through connector state ([connector contract](docs/design/CONNECTOR_CONTRACT.md)).
+Identities and dependency directions:
+[docs/architecture/WORKSPACE.md](docs/architecture/WORKSPACE.md).
 
 ## Documentation
 
 | | |
 | --- | --- |
-| [docs/design/](docs/design/) | The design policy, and the connector, coordinate-system and source-profile contracts |
-| [docs/architecture/](docs/architecture/) | The workspace contract and external dependencies |
-| [docs/reference/](docs/reference/) | What is implemented, and diagnostics |
-| [docs/roadmap/](docs/roadmap/) | What comes next |
-| [docs/contributing/](docs/contributing/) | How the documentation is maintained |
+| [What is implemented](docs/reference/CAPABILITY_MATRIX.md) | The capability matrix, the only source for implementation status |
+| [Incomplete work](docs/roadmap/current.md) | The current milestone and its completion criteria |
+| [Release history](CHANGELOG.md) | The changelog |
+| [docs/](docs/README.md) | Which document owns which subject |
 
-Changes are recorded in the [changelog](CHANGELOG.md).
+Canonical motion is right-handed, +Y up, +Z forward, in metres and seconds;
+each source is converted exactly once, inside its connector
+([coordinate systems](docs/design/COORDINATE_SYSTEMS.md)).
+
+## Build
+
+[docs/guides/building.md](docs/guides/building.md) builds and tests the tree
+with `ost` or with plain CMake against an OpenUSD 26.08 install and installed
+`usd-motion-plugins` packages.
 
 ## License
 

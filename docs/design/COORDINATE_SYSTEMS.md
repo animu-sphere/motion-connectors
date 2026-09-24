@@ -96,8 +96,8 @@ connector that produced it.
 
 | Source | Handedness | Up | Forward | Unit | Rotation | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| mocopi native UDP | right | +Y | +Z | m | quaternion, scalar-last | **measured** 2026-08-12; the change of basis is the identity ([adapter plan §6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md)) |
-| VMC Protocol (Unity senders) | left | +Y | +Z | m | quaternion | **measured**: flip X alone ([motion contract, canonical basis](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/design/MOTION_CONTRACT.md)); which of two translation channels is body translation is open (`CS-O2`) |
+| mocopi native UDP | right | +Y | +Z | m | quaternion, scalar-last | **measured** 2026-08-12; the change of basis is the identity ([adapter plan §6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md)) |
+| VMC Protocol (Unity senders) | left | +Y | +Z | m | quaternion | **measured**: flip X alone (`usd-motion-plugins` [MOTION_CONTRACT §3](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md#3-coordinates-and-units)); which of two translation channels is body translation is open (`CS-O2`) |
 | VRChat OSC Trackers | left, +X is the body's right | +Y | +Z | m | Euler, degrees | **measured** 2026-08-30 against a labelled session, agreeing with VRChat's documentation ([report `motion/03`](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/03-2026-08-30-vrchat-osc-tracking-space.md)) |
 | MediaPipe (pose, hands, face) | — | — | — | normalized image or metric world landmarks | positions, not rotations | not yet; see [CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) CC-O2 |
 | WebXR | right | +Y | −Z | m | quaternion | documented only |

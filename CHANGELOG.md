@@ -8,6 +8,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The documentation states ownership instead of status.** The root README
+  follows the shared shape (Scope, Architecture, Components, Documentation,
+  Build, License) and no longer carries a current milestone. The
+  documentation guidelines add the cross-repository rule and the root README
+  rules. The operator evidence `usd-vrm-plugins` carried for these connectors
+  — a VMC sender session, a mocopi recovery, a rolled VRChat OSC take, a
+  redistributable mocopi capture, the live path from release artifacts — is
+  on this roadmap now. Links into `usd-vrm-plugins`' motion plans point at its
+  archive, the canonical basis at `usd-motion-plugins`' contract, and three
+  mocopi headers lose a malformed URL.
 - **CS-O1 has a shared library home.** `usd-motion-plugins` 0.5.2 source adds
   the signed-permutation operation to `motionCore`. The connector adapters
   will consume it after the package is published and their digest pins are

@@ -47,7 +47,7 @@ order:
    commit and public CI may still run. When an operator makes one it belongs in
    this directory, and `test_motion_packet.cpp` grows the case it deserves.
 2. **The cross-source comparison** of
-   [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §9.6 — the
+   [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) §9.6 — the
    same physical session observed natively and relayed through VMC — which is
    the release's distinguishing check and cannot be faked by either corpus.
 

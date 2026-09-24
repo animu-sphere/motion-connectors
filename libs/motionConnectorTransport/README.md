@@ -26,7 +26,7 @@ stripped of comments, `PacketCapture.cpp` differed by **5 lines out of 366** and
 `PacketCapture.h` by **1 out of 44**; `UdpReceiver.cpp` differed by 161 and
 `UdpReceiver.h` by 49, and that gap was **four defects** the younger copy had
 fixed and the older one still carried
-([`usd-vrm-plugins` osc-and-vrchat-trackers.md §2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md)).
+([`usd-vrm-plugins` osc-and-vrchat-trackers.md §2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md)).
 Both receivers said so in their own preambles, and both named the same trigger
 for turning the repetition into a library: a **third** recorder. A third live
 adapter is what made that arrive.

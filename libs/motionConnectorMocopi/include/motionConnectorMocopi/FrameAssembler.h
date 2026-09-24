@@ -185,7 +185,7 @@
 //
 // It was carried and not composed until 2026-08-23, because whether the body's
 // placement is root motion was the open record this release existed to close
-// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)) and an
+// ([§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md)) and an
 // assembler that filled in a `RootMotion` would have answered it silently, in
 // the layer with the least standing to. What changed is the record and not this
 // layer's standing: `MOTION_CONTRACT.md`'s "Root and hips" states the answer,
@@ -237,7 +237,7 @@ namespace openstrata::connectors::mocopi
 
 // Where the device's one translation goes.
 //
-// [§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md) gives four
+// [§5.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) gives four
 // words to a sender with two candidate root channels -- `RootOnly`, `HipsOnly`,
 // `RootPlusHipsOffset`, and a per-sender profile -- and this protocol can
 // express exactly one of them. There is no root channel here, so the other

@@ -35,7 +35,7 @@ exercised, and by committed bytes that never met a sensor. Tracking state and
 confidence have nothing to decode into — the measured grammar carries neither —
 and reconnection, the opt-in hardware run, and the cross-source comparison of
 §9.6 all need an operator rather than a commit.
-See [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) §6 and
+See [the plan](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) §6 and
 Milestone D for the implementation order, and
 [below](#transport-arrives-first-here-and-that-is-the-finding) for why this
 adapter's order is the reverse of its sibling's.
@@ -58,7 +58,7 @@ fourth commit rather than its first:
 
 - **A decoder written from a remembered format is a guess wearing the shape of
   progress.** That is the failure mode the recorded-motion plan was built around
-  ([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/recorded-motion-sources.md#9-milestones)), and
+  ([BVH-0](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/recorded-motion-sources.md#9-milestones)), and
   it applies harder here: a BVH file that is misread produces a visibly wrong
   figure, where a packet field read at the wrong offset produces plausible
   numbers.
@@ -134,7 +134,7 @@ rather than an open question — and, as of 2026-08-12, that both exist.
 
 One thing not to over-read: this says the two paths agree about the *rest pose*,
 not about the motion. That is the
-[cross-source comparison](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md) of
+[cross-source comparison](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md) of
 §9.6, on a single session observed both ways, and it is still owed.
 
 ## The map is where an id becomes a bone
@@ -234,7 +234,7 @@ than an implausible one. The connector contract forbids it, and the reason is no
 tidiness: a native decoder that borrowed a relay's decoder would inherit the
 relay's assumptions about framing, clocks and bone names, and the entire point
 of building this path is to measure what those assumptions cost
-([§6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md),
+([§6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md),
 the plan this connector was built under before it moved). The two boundary
 scripts refuse each other's names, so the pair is symmetric.
 

@@ -72,7 +72,7 @@
 //
 // The one thing worth *not* concluding from it: this says the two paths agree
 // about the rest pose, not that they agree about the motion. That is
-// [§9.6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/usd-vrm-plugins' adapters-mocopi-vmc-ardy.md)'s cross-source
+// [§9.6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md)'s cross-source
 // comparison, on a single session observed both ways, and it is still owed.
 //
 // ## Four rules that are decisions

@@ -10,7 +10,7 @@ split was designed to allow rather than a gap:
 - `generated/` fixes the protocol's *shapes* with no hardware, and a shape is
   something a decoder defines. Writing fixtures from the published specification
   before a real datagram had been measured is the failure
-  [§6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#6-the-adapter-capture-precedes-decoder)
+  [§6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#6-the-adapter-capture-precedes-decoder)
   exists to prevent — a specification says what a receiver must accept, not what
   a sender sends. **It arrived with VRC-2** (2026-08-30): twelve captures
   written from the measured session, and three more with VRC-4 the same day —
@@ -32,7 +32,7 @@ created with fixtures already in them.
 ## The split, and what may be committed where
 
 The policy is [adapter plan
-§9.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/adapters-mocopi-vmc-ardy.md#92-corpus)'s,
+§9.2](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md#92-corpus)'s,
 unchanged: generated and recorded never mix, and a session that cannot be
 redistributed leaves a manifest and no bytes.
 
@@ -57,7 +57,7 @@ supply them is the one who just ran the session.
 *relayed* — the sender is an application re-expressing some other device's
 tracking — so a capture that names the application and not the device behind it
 cannot answer the question
-[§11](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/roadmap/osc-and-vrchat-trackers.md#11-the-fourth-observation-of-one-session)
+[§11](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/osc-and-vrchat-trackers.md#11-the-fourth-observation-of-one-session)
 exists to ask, which is whether one physical session observed four ways agrees
 with itself.
 
