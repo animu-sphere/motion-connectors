@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+# The interpreter this suite runs under, found in this directory's own scope
+# (cmake/MotionConnectorsProject.cmake says why).
+motionconnectors_find_test_python()
+
 if(NOT Python3_Interpreter_FOUND)
     message(STATUS "mocopiRecord: Python3 interpreter not found; skipping tests")
     return()

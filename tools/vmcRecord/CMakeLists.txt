@@ -10,34 +10,14 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _vmcrecord_version LIMIT_COUNT 1)
-    string(STRIP "${_vmcrecord_version}" _vmcrecord_version)
-else()
-    set(_vmcrecord_version "0.1.0")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
 
-project(vmcRecordTool
-    VERSION ${_vmcrecord_version}
+project(vmcRecord
+    VERSION ${MOTIONCONNECTORS_VERSION}
     DESCRIPTION "VMC session recorder"
     LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT DEFINED VMCRECORD_BUILD_TESTS)
-    if(DEFINED MOTIONCONNECTORVMC_BUILD_TESTS)
-        set(_vmcrecord_tests_default "${MOTIONCONNECTORVMC_BUILD_TESTS}")
-    else()
-        set(_vmcrecord_tests_default "${PROJECT_IS_TOP_LEVEL}")
-    endif()
-    option(VMCRECORD_BUILD_TESTS "Build vmc_record tests"
-           ${_vmcrecord_tests_default})
-endif()
+motionconnectors_component_project()
 
 # A standalone configure of this directory resolves the adapter as an installed
 # package; the composed build already has the in-tree target.
@@ -45,7 +25,7 @@ if(NOT TARGET motionConnectorVmc::motionConnectorVmc)
     find_package(motionConnectorVmc REQUIRED CONFIG)
 endif()
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vmc_record
     src/Options.cpp
@@ -54,7 +34,7 @@ add_executable(vmc_record
     src/main.cpp)
 motionconnectors_use_utf8_code_page(vmc_record)
 
-target_compile_features(vmc_record PRIVATE cxx_std_17)
+target_compile_features(vmc_record PRIVATE cxx_std_20)
 # The adapter, and deliberately nothing else. §2 would permit this target to
 # link `vrmRetarget` and OpenUSD's stage libraries the way `motion_retarget`
 # does; it does not need them, and a link line is the cheapest place to keep
@@ -69,24 +49,8 @@ if(MSVC)
     target_compile_definitions(vmc_record PRIVATE NOMINMAX _USE_MATH_DEFINES)
 endif()
 
-# Staged into the tool's own bin/, the way `motion_capture` and
-# `motion_retarget` are: `ost plugin package` reads the directories
-# openstrata.tool.yaml declares rather than a build tree, so a tool that only
-# lands in build/ is refused at packaging with PRECONDITION_FAILED.
-set_target_properties(vmc_record PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-foreach(_cfg DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-    set_target_properties(vmc_record PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_${_cfg} "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-endforeach()
-
-include(GNUInstallDirs)
 install(TARGETS vmc_record RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 if(VMCRECORD_BUILD_TESTS)
-    enable_testing()
-    if(NOT Python3_Interpreter_FOUND)
-        find_package(Python3 COMPONENTS Interpreter QUIET)
-    endif()
     add_subdirectory(tests)
 endif()

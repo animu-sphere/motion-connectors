@@ -201,8 +201,13 @@ def check_vrchat(profile: dict) -> None:
             f"{profile_id}: tracker source must declare no source clock")
 
 
-def check_profiles(prefix: pathlib.Path | None) -> None:
+def check_profiles(prefix: pathlib.Path | None, only: list[str]) -> None:
+    unknown = sorted(set(only) - set(PROFILE_FILES))
+    if unknown:
+        raise ValueError(f"no such profile: {', '.join(unknown)}")
     for profile_id, source_path in PROFILE_FILES.items():
+        if only and profile_id not in only:
+            continue
         profile_path = source_path if prefix is None else prefix / "share/motion-connectors/profiles" / source_path.name
         profile = load_profile(profile_id, profile_path)
         if profile_id == "vmc.v1":
@@ -218,9 +223,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prefix", type=pathlib.Path,
                         help="validate the files in an installed prefix")
+    parser.add_argument("--profile", action="append", default=[],
+                        help="check only this profile id (repeatable): a prefix "
+                             "built with a connector switched off holds fewer")
     arguments = parser.parse_args()
     try:
-        check_profiles(arguments.prefix.resolve() if arguments.prefix else None)
+        check_profiles(arguments.prefix.resolve() if arguments.prefix else None,
+                       arguments.profile)
     except (OSError, ValueError, KeyError) as error:
         print(f"profile check failed: {error}", file=sys.stderr)
         return 1

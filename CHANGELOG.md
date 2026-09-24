@@ -166,6 +166,41 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The CMake tree is split by responsibility.** The root `CMakeLists.txt`
+  composes the workspace and nothing else; shared policy lives in
+  `cmake/MotionConnectorsProject.cmake` (the `VERSION` read, the C++ baseline,
+  each component's `<NAME>_BUILD_TESTS` default and `enable_testing()`
+  ownership, the test interpreter) and `cmake/MotionConnectorsPackage.cmake`
+  (`motionconnectors_install_package()`: install, export, config and version
+  files). Every `add_library`, `find_package` and `target_link_libraries` stays
+  in its component, where the boundary checks read it. Exported target names,
+  namespaces and install locations are unchanged.
+  - **C++20 everywhere.** Each target now requires `cxx_std_20`; the components
+    used to ask for `cxx_std_17` under a root that set C++20.
+  - **Every package is `SameMinorVersion`.** The connectors wrote
+    `SameMajorVersion`, which let a pre-1.0 0.2 satisfy a 0.1 consumer.
+  - **Connector options.** `MOTIONCONNECTORS_BUILD_VMC`, `_MOCOPI` and
+    `_VRCHAT_OSC` (default ON) and `MOTIONCONNECTORS_BUILD_TOOLS` (default ON at
+    the top level). With every connector off, configure asks for no OpenUSD and
+    builds the transport and the wire format alone. `motion_connect` is built
+    only when all three connectors are. The installed-consumer lane checks the
+    packages the build actually installed (`--package`).
+  - **No build output in the source tree.** The tools no longer write their
+    executables to `tools/*/bin/`; they stay in the build tree, `ost` (0.23.5
+    and later) stages them from there, and `cmake --install` is the runtime
+    layout. A stale
+    `tools/*/bin/` from an older build can be deleted.
+  - **Single-config builds default to Release, as intended.** The old check
+    ran after `project()`, where MSVC had already set `CMAKE_BUILD_TYPE` to
+    Debug, so a plain Ninja configure on Windows linked the debug CRT against
+    the Release-only OpenUSD and motionCore (LNK2038). `ost` always passed
+    Release, so no CI lane saw it.
+  - The tool projects are named after their directories (`vmcRecord`,
+    `mocopiRecord`, `vrchatOscRecord`, `motionConnect`), which keeps their test
+    options' existing names. Each tool's test option now defaults from
+    `MOTIONCONNECTORS_BUILD_TESTS` like every other component, not from its
+    connector's option.
+
 - **The `ost` pin is 0.23.6.** 0.23.5 stages bundle and tool outputs per
   target instead of in the source tree (`usd-mmd-plugins`' ost report 01):
   `ost build` stages each tool from the build tree into its member's

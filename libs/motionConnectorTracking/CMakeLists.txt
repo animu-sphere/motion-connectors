@@ -22,34 +22,14 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _tracking_version LIMIT_COUNT 1)
-    string(STRIP "${_tracking_version}" _tracking_version)
-else()
-    set(_tracking_version "0.1.0")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
 
 project(motionConnectorTracking
-    VERSION ${_tracking_version}
+    VERSION ${MOTIONCONNECTORS_VERSION}
     DESCRIPTION "Tracker-to-body-region assignment, generic and outside every adapter"
     LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT DEFINED MOTIONCONNECTORTRACKING_BUILD_TESTS)
-    if(DEFINED MOTIONCONNECTORS_BUILD_TESTS)
-        set(_tracking_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
-    else()
-        set(_tracking_tests_default "${PROJECT_IS_TOP_LEVEL}")
-    endif()
-    option(MOTIONCONNECTORTRACKING_BUILD_TESTS "Build motionConnectorTracking tests"
-           ${_tracking_tests_default})
-endif()
+motionconnectors_component_project()
 
 # The solve names OpenUSD's Gf value types and `motionCore`'s joint
 # vocabulary; nothing here has a USD stage, Sdf, plug or file-format
@@ -63,7 +43,7 @@ endif()
 if(NOT pxr_FOUND)
     find_package(pxr REQUIRED CONFIG)
 endif()
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
 
 if(NOT TARGET motionCore::motionCore)
     find_package(motionCore REQUIRED CONFIG)
@@ -76,10 +56,9 @@ add_library(motionConnectorTracking STATIC
     src/TrackerSolve.cpp)
 add_library(motionConnectorTracking::motionConnectorTracking ALIAS motionConnectorTracking)
 set_target_properties(motionConnectorTracking PROPERTIES
-    EXPORT_NAME motionConnectorTracking
     POSITION_INDEPENDENT_CODE ON)
 
-target_compile_features(motionConnectorTracking PUBLIC cxx_std_17)
+target_compile_features(motionConnectorTracking PUBLIC cxx_std_20)
 target_compile_definitions(motionConnectorTracking PUBLIC MOTIONCONNECTORTRACKING_STATIC)
 target_include_directories(motionConnectorTracking
     PUBLIC
@@ -99,35 +78,8 @@ if(MSVC)
     target_compile_options(motionConnectorTracking PUBLIC /utf-8)
 endif()
 
-include(GNUInstallDirs)
-install(TARGETS motionConnectorTracking
-    EXPORT motionConnectorTrackingTargets
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/motionConnectorTrackingConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTrackingConfig.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTracking")
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTrackingConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-install(EXPORT motionConnectorTrackingTargets
-    FILE motionConnectorTrackingTargets.cmake
-    NAMESPACE motionConnectorTracking::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTracking")
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTrackingConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorTrackingConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorTracking")
+motionconnectors_install_package(TARGET motionConnectorTracking)
 
 if(MOTIONCONNECTORTRACKING_BUILD_TESTS)
-    enable_testing()
-    find_package(Python3 COMPONENTS Interpreter QUIET)
     add_subdirectory(tests)
 endif()

@@ -11,8 +11,9 @@ strata.lock
 /.ost-ci/
 /.ost-ci-home/
 
-# Built plugin libraries are staged into each bundle's lib/ by the build, and
-# tools into their own bin/.
+# Built plugin libraries are staged into each bundle's lib/ by the build.
+# Tools no longer write to their own bin/; the entry stays so a tree built
+# before that keeps its stale executables out of git.
 /plugins/*/lib/
 /tools/*/bin/
 

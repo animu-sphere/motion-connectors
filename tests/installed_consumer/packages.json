@@ -1,5 +1,5 @@
 {
-  "about": "Every package motion-connectors installs, as a consumer outside the repository reaches it. scripts/check_installed_consumer.py checks the prefix for each, and CMakeLists.txt beside this file find_package()s each at the repository's major.minor and links its target. A new library adds its row in the change that creates it. The first package to find motionCore also puts the installed usd-motion-plugins prefix on the consumer's CMAKE_PREFIX_PATH; the transport and the wire format find nothing.",
+  "about": "Every package motion-connectors installs, as a consumer outside the repository reaches it. scripts/check_installed_consumer.py checks the prefix for each, and CMakeLists.txt beside this file find_package()s each at the repository's major.minor and links its target. A new library adds its row in the change that creates it, with the source profile it installs, if any. A configure with a connector switched off passes the packages it built (--package), and the lane checks and consumes those rows only. The first package to find motionCore also puts the installed usd-motion-plugins prefix on the consumer's CMAKE_PREFIX_PATH; the transport and the wire format find nothing.",
   "packages": [
     {
       "name": "motionConnectorCore",
@@ -19,15 +19,18 @@
     },
     {
       "name": "motionConnectorVmc",
-      "header": "motionConnectorVmc/Connector.h"
+      "header": "motionConnectorVmc/Connector.h",
+      "profile": "vmc.v1"
     },
     {
       "name": "motionConnectorMocopi",
-      "header": "motionConnectorMocopi/Connector.h"
+      "header": "motionConnectorMocopi/Connector.h",
+      "profile": "mocopi.body.v1"
     },
     {
       "name": "motionConnectorVrchatOsc",
-      "header": "motionConnectorVrchatOsc/FrameAssembler.h"
+      "header": "motionConnectorVrchatOsc/FrameAssembler.h",
+      "profile": "vrchat-osc.trackers.v1"
     }
   ]
 }

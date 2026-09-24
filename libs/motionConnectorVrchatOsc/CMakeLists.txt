@@ -38,35 +38,14 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _vrchatosc_version LIMIT_COUNT 1)
-    string(STRIP "${_vrchatosc_version}"
-           _vrchatosc_version)
-else()
-    set(_vrchatosc_version "0.1.0")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
 
 project(motionConnectorVrchatOsc
-    VERSION ${_vrchatosc_version}
+    VERSION ${MOTIONCONNECTORS_VERSION}
     DESCRIPTION "VRChat OSC tracker input adapter for the canonical motion pipeline"
     LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT DEFINED MOTIONCONNECTORVRCHATOSC_BUILD_TESTS)
-    if(DEFINED MOTIONCONNECTORS_BUILD_TESTS)
-        set(_vrchatosc_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
-    else()
-        set(_vrchatosc_tests_default "${PROJECT_IS_TOP_LEVEL}")
-    endif()
-    option(MOTIONCONNECTORVRCHATOSC_BUILD_TESTS "Build motionConnectorVrchatOsc tests"
-           ${_vrchatosc_tests_default})
-endif()
+motionconnectors_component_project()
 
 # In the composed workspace build this is already an in-tree target; a
 # standalone configure of this directory resolves its installed package.
@@ -124,10 +103,9 @@ add_library(motionConnectorVrchatOsc STATIC
     src/UdpReceiver.cpp)
 add_library(motionConnectorVrchatOsc::motionConnectorVrchatOsc ALIAS motionConnectorVrchatOsc)
 set_target_properties(motionConnectorVrchatOsc PROPERTIES
-    EXPORT_NAME motionConnectorVrchatOsc
     POSITION_INDEPENDENT_CODE ON)
 
-target_compile_features(motionConnectorVrchatOsc PUBLIC cxx_std_17)
+target_compile_features(motionConnectorVrchatOsc PUBLIC cxx_std_20)
 target_compile_definitions(motionConnectorVrchatOsc PUBLIC MOTIONCONNECTORVRCHATOSC_STATIC)
 target_include_directories(motionConnectorVrchatOsc
     PUBLIC
@@ -153,37 +131,10 @@ if(MSVC)
     target_compile_options(motionConnectorVrchatOsc PUBLIC /utf-8)
 endif()
 
-include(GNUInstallDirs)
-install(TARGETS motionConnectorVrchatOsc
-    EXPORT motionConnectorVrchatOscTargets
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+motionconnectors_install_package(TARGET motionConnectorVrchatOsc)
 install(DIRECTORY profiles/ DESTINATION "${CMAKE_INSTALL_DATADIR}/motion-connectors/profiles")
 
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/motionConnectorVrchatOscConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVrchatOscConfig.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVrchatOsc")
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVrchatOscConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-install(EXPORT motionConnectorVrchatOscTargets
-    FILE motionConnectorVrchatOscTargets.cmake
-    NAMESPACE motionConnectorVrchatOsc::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVrchatOsc")
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVrchatOscConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVrchatOscConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVrchatOsc")
-
 if(MOTIONCONNECTORVRCHATOSC_BUILD_TESTS)
-    enable_testing()
-    find_package(Python3 COMPONENTS Interpreter QUIET)
     add_subdirectory(tests)
 endif()
 

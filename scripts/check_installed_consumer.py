@@ -18,9 +18,15 @@ The list is empty until the first import, and the lane runs anyway: what it
 proves before then is that the install, the leak scan and a consumer outside
 the repository work, so the first package lands in a lane that already runs.
 
+A configure with a connector switched off installs fewer packages. The root
+build passes the ones it built as `--package NAME`, and the lane then checks
+and consumes exactly those rows -- each of which must exist in the list, so a
+new library still cannot install without one. With no `--package`, every row
+is expected. `--usd-root` is left out when nothing built reaches OpenUSD.
+
   check_installed_consumer.py --build-dir build/windows-msvc --config Release
-      --usd-root C:/usd/openusd-26.08 [--generator Ninja --make-program ...]
-      [--keep DIR]
+      [--usd-root C:/usd/openusd-26.08] [--package NAME ...]
+      [--generator Ninja --make-program ...] [--keep DIR]
 """
 
 from __future__ import annotations
@@ -38,7 +44,6 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 CONSUMER = REPO / "tests" / "installed_consumer"
 DOC_DIR = pathlib.Path("share", "doc", "motion-connectors")
 PROFILE_DIR = pathlib.Path("share", "motion-connectors", "profiles")
-PROFILE_FILES = ("vmc.v1.json", "mocopi.body.v1.json", "vrchat-osc.trackers.v1.json")
 
 
 def run(command: list, **kwargs) -> subprocess.CompletedProcess:
@@ -57,9 +62,11 @@ def check_prefix(prefix: pathlib.Path, build_dir: pathlib.Path,
     for name in ("LICENSE", "README.md"):
         if not (prefix / DOC_DIR / name).is_file():
             errors.append(f"the prefix has no {(DOC_DIR / name).as_posix()}")
-    for name in PROFILE_FILES:
-        if not (prefix / PROFILE_DIR / name).is_file():
-            errors.append(f"the prefix has no {(PROFILE_DIR / name).as_posix()}")
+    for package in packages:
+        if "profile" in package:
+            name = f"{package['profile']}.json"
+            if not (prefix / PROFILE_DIR / name).is_file():
+                errors.append(f"the prefix has no {(PROFILE_DIR / name).as_posix()}")
 
     # Libraries install under CMAKE_INSTALL_LIBDIR, which GNUInstallDirs makes
     # lib64 on some Linux distributions.
@@ -101,7 +108,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--build-dir", required=True, type=pathlib.Path)
     parser.add_argument("--config", default="Release")
-    parser.add_argument("--usd-root", required=True, type=pathlib.Path)
+    parser.add_argument("--usd-root", type=pathlib.Path,
+                        help="the OpenUSD install; omitted when no package "
+                             "built reaches OpenUSD")
+    parser.add_argument("--package", action="append", default=[],
+                        help="a package this build installed; repeat for each. "
+                             "Without any, every row of packages.json is "
+                             "expected")
     parser.add_argument("--external-prefix", action="append", default=[],
                         type=pathlib.Path,
                         help="a package this workspace consumes from another "
@@ -123,8 +136,18 @@ def main() -> int:
 
     version = (REPO / "VERSION").read_text(encoding="utf-8").strip()
     major_minor = ".".join(version.split(".")[:2])
-    packages = json.loads((CONSUMER / "packages.json").read_text(
-        encoding="utf-8"))["packages"]
+    listing = json.loads((CONSUMER / "packages.json").read_text(encoding="utf-8"))
+    packages = listing["packages"]
+    if args.package:
+        listed = {package["name"] for package in packages}
+        unlisted = sorted(set(args.package) - listed)
+        if unlisted:
+            print(f"the build installs {', '.join(unlisted)}, which "
+                  "tests/installed_consumer/packages.json does not list; add "
+                  "a row for each", file=sys.stderr)
+            return 1
+        packages = [p for p in packages if p["name"] in set(args.package)]
+        listing["packages"] = packages
 
     scratch_owner = None
     if args.keep:
@@ -147,11 +170,17 @@ def main() -> int:
             return 1
         print(f"the prefix holds the documentation and {len(packages)} "
               f"package(s), and names no build location")
-        run([sys.executable, str(REPO / "scripts" / "check_source_profiles.py"),
-             "--prefix", prefix])
+        profiles = [p["profile"] for p in packages if "profile" in p]
+        if profiles:
+            run([sys.executable, str(REPO / "scripts" / "check_source_profiles.py"),
+                 "--prefix", prefix]
+                + [arg for profile in profiles for arg in ("--profile", profile)])
 
         source = work / "consumer-src"
         shutil.copytree(CONSUMER, source)
+        # The copy lists what this build installed, which is what it consumes.
+        (source / "packages.json").write_text(
+            json.dumps(listing, indent=2) + "\n", encoding="utf-8")
         build = work / "consumer-build"
         # The consumer sees the install prefix, OpenUSD, and every package
         # this workspace consumes from another repository. The last of those
@@ -159,7 +188,8 @@ def main() -> int:
         # motionCore, and a consumer that cannot find it cannot link -- which
         # is exactly what a downstream consumer of THIS repository will face.
         prefix_path = ";".join(
-            [prefix.as_posix(), args.usd_root.as_posix()]
+            [prefix.as_posix()]
+            + ([args.usd_root.as_posix()] if args.usd_root else [])
             + [external.as_posix() for external in args.external_prefix])
         configure = ["cmake", "-S", source, "-B", build,
                      f"-DCMAKE_PREFIX_PATH={prefix_path}",
@@ -184,9 +214,9 @@ def main() -> int:
             print("the consumer built no installed_consumer", file=sys.stderr)
             return 1
         env = dict(os.environ)
-        env["PATH"] = os.pathsep.join([str(prefix / "bin"),
-                                       str(args.usd_root / "bin"),
-                                       str(args.usd_root / "lib"),
+        usd_paths = ([str(args.usd_root / "bin"), str(args.usd_root / "lib")]
+                     if args.usd_root else [])
+        env["PATH"] = os.pathsep.join([str(prefix / "bin"), *usd_paths,
                                        env.get("PATH", "")])
         result = run([probes[0]], env=env, stdout=subprocess.PIPE)
         want = f"consumed {len(packages)} package(s)"

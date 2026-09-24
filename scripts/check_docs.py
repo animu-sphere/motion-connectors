@@ -16,9 +16,9 @@ every Markdown file, this fails when:
 External links (`http:`, `https:`, `mailto:`) are not fetched.
 
 Mirrors -- docs/architecture/WORKSPACE.md §4: the repository-root VERSION is
-the single product version. openstrata.toml, every component manifest and
-every CMake fallback mirror it, and every range a manifest requires a sibling
-in admits it. The OpenUSD pin in cmake/PIN_MODULE is the release
+the single product version. openstrata.toml and every component manifest
+mirror it (CMake reads it and restates nothing), and every range a manifest
+requires a sibling in admits it. The OpenUSD pin in cmake/PIN_MODULE is the release
 docs/architecture/DEPENDENCIES.md names and every CI cell requires. CHANGELOG.md
 has a section for VERSION or an `[Unreleased]` one.
 
@@ -237,10 +237,9 @@ def check_mirrors(root: pathlib.Path) -> list[str]:
     for manifest in sorted(root.glob("*/*/openstrata.*.yaml")):
         expect(manifest, r"^\s+version:\s*([0-9][^\s#]*)", version, "version")
         errors.extend(check_ranges(root, manifest, version))
-    for cmake in sorted(root.glob("*/*/CMakeLists.txt")):
-        if "../../VERSION" in cmake.read_text(encoding="utf-8"):
-            expect(cmake, r'set\(_\w+_version "([^"]+)"\)', version,
-                   "standalone fallback version")
+    # No CMake project restates the number: every CMakeLists.txt takes
+    # MOTIONCONNECTORS_VERSION from cmake/MotionConnectorsProject.cmake, which
+    # reads VERSION and has no fallback to drift.
 
     changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
     if f"## [{version}]" not in changelog and "## [Unreleased]" not in changelog:
