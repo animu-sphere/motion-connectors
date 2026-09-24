@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+# The interpreter this suite runs under, found in this directory's own scope
+# (cmake/MotionConnectorsProject.cmake says why).
+motionconnectors_find_test_python()
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would print
 # "passed" and return 0 without having checked anything. Undefine it for the test
@@ -272,10 +276,10 @@ if(Python3_Interpreter_FOUND)
     # reach, they inherit the same rule.
     #
     # `Python3_Interpreter_FOUND` is trustworthy *here* and is not at the root:
-    # the adapter's own CMakeLists re-runs find_package(Python3 Interpreter) in
-    # this scope. A test guarded on it in the wrong scope does not fail, it
-    # silently never registers -- so if this entry ever disappears from
-    # `ctest -N`, that is the first thing to check.
+    # motionconnectors_find_test_python() at the top of this file re-runs
+    # find_package(Python3 Interpreter) in this scope. A test guarded on it in
+    # the wrong scope does not fail, it silently never registers -- so if this
+    # entry ever disappears from `ctest -N`, that is the first thing to check.
     add_test(NAME motionConnectorVrchatOsc_boundaries
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/check_boundaries.py"

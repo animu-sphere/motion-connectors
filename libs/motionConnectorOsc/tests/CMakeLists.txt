@@ -9,6 +9,10 @@
 # capture format over an adapter's fixtures. That half stays where those
 # fixtures live, and arrives with the VMC connector.
 
+# The interpreter this suite runs under, found in this directory's own scope
+# (cmake/MotionConnectorsProject.cmake says why).
+motionconnectors_find_test_python()
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would print
 # "passed" and return 0 without having checked anything. Undefine it for the

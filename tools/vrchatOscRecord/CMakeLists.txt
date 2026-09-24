@@ -12,35 +12,14 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _vrchatoscrecord_version LIMIT_COUNT 1)
-    string(STRIP "${_vrchatoscrecord_version}" _vrchatoscrecord_version)
-else()
-    set(_vrchatoscrecord_version "0.1.0")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
 
-project(vrchatOscRecordTool
-    VERSION ${_vrchatoscrecord_version}
+project(vrchatOscRecord
+    VERSION ${MOTIONCONNECTORS_VERSION}
     DESCRIPTION "VRChat OSC session recorder"
     LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT DEFINED VRCHATOSCRECORD_BUILD_TESTS)
-    if(DEFINED MOTIONCONNECTORVRCHATOSC_BUILD_TESTS)
-        set(_vrchatoscrecord_tests_default
-            "${MOTIONCONNECTORVRCHATOSC_BUILD_TESTS}")
-    else()
-        set(_vrchatoscrecord_tests_default "${PROJECT_IS_TOP_LEVEL}")
-    endif()
-    option(VRCHATOSCRECORD_BUILD_TESTS "Build vrchat_osc_record tests"
-           ${_vrchatoscrecord_tests_default})
-endif()
+motionconnectors_component_project()
 
 # A standalone configure of this directory resolves each as an installed
 # package; the composed build already has the in-tree targets.
@@ -57,7 +36,7 @@ if(NOT TARGET motionRecording::motionRecording)
     find_package(motionRecording REQUIRED CONFIG)
 endif()
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vrchat_osc_record
     src/Options.cpp
@@ -66,7 +45,7 @@ add_executable(vrchat_osc_record
     src/main.cpp)
 motionconnectors_use_utf8_code_page(vrchat_osc_record)
 
-target_compile_features(vrchat_osc_record PRIVATE cxx_std_17)
+target_compile_features(vrchat_osc_record PRIVATE cxx_std_20)
 # Three edges, and the second of them is the one WORKSPACE.md §2 wrote a
 # paragraph for. `motionConnectorTracking` is granted to an adapter's *tool* and refused
 # to its library, because which tracker is on which body region is an operator's
@@ -97,24 +76,8 @@ if(MSVC)
     target_compile_definitions(vrchat_osc_record PRIVATE NOMINMAX _USE_MATH_DEFINES)
 endif()
 
-# Staged into the tool's own bin/, the way `motion_capture` and `motion_retarget`
-# are: `ost plugin package` reads the directories openstrata.tool.yaml declares
-# rather than a build tree, so a tool that only lands in build/ is refused at
-# packaging with PRECONDITION_FAILED.
-set_target_properties(vrchat_osc_record PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-foreach(_cfg DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-    set_target_properties(vrchat_osc_record PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_${_cfg} "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-endforeach()
-
-include(GNUInstallDirs)
 install(TARGETS vrchat_osc_record RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 if(VRCHATOSCRECORD_BUILD_TESTS)
-    enable_testing()
-    if(NOT Python3_Interpreter_FOUND)
-        find_package(Python3 COMPONENTS Interpreter QUIET)
-    endif()
     add_subdirectory(tests)
 endif()

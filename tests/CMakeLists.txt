@@ -73,12 +73,29 @@ foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
     endif()
 endforeach()
 
+# The packages this configure installs, as each component registered them
+# (cmake/MotionConnectorsPackage.cmake). With a connector switched off, the lane
+# checks and consumes the packages that were built -- and every one of them must
+# still have its row in installed_consumer/packages.json.
+get_property(_consumer_packages GLOBAL PROPERTY MOTIONCONNECTORS_PACKAGES)
+set(_consumer_package_args "")
+foreach(_package IN LISTS _consumer_packages)
+    list(APPEND _consumer_package_args --package "${_package}")
+endforeach()
+
+# No OpenUSD root when nothing that reaches OpenUSD was built.
+set(_consumer_usd_args "")
+if(_usd_root)
+    set(_consumer_usd_args --usd-root "${_usd_root}")
+endif()
+
 add_test(NAME workspace_installed_consumer
     COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
         "${PROJECT_SOURCE_DIR}/scripts/check_installed_consumer.py"
         --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>"
-        --usd-root "${_usd_root}"
+        ${_consumer_usd_args}
+        ${_consumer_package_args}
         ${_consumer_prefixes}
         ${_consumer_toolchain})
 set_tests_properties(workspace_installed_consumer PROPERTIES

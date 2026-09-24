@@ -17,6 +17,10 @@
 # identity rather than protocol: no connector's suite owns it, and a decoder
 # may not read it. Its test names a magic that is nobody's.
 
+# The interpreter this suite runs under, found in this directory's own scope
+# (cmake/MotionConnectorsProject.cmake says why).
+motionconnectors_find_test_python()
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would print
 # "verified" and return 0 without having checked anything. Undefine it for the

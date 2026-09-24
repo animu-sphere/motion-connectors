@@ -9,34 +9,14 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION")
-    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION"
-         _vmc_version LIMIT_COUNT 1)
-    string(STRIP "${_vmc_version}" _vmc_version)
-else()
-    set(_vmc_version "0.1.0")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
 
 project(motionConnectorVmc
-    VERSION ${_vmc_version}
+    VERSION ${MOTIONCONNECTORS_VERSION}
     DESCRIPTION "VMC Protocol input adapter for the canonical motion pipeline"
     LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(NOT DEFINED MOTIONCONNECTORVMC_BUILD_TESTS)
-    if(DEFINED MOTIONCONNECTORS_BUILD_TESTS)
-        set(_vmc_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
-    else()
-        set(_vmc_tests_default "${PROJECT_IS_TOP_LEVEL}")
-    endif()
-    option(MOTIONCONNECTORVMC_BUILD_TESTS "Build motionConnectorVmc tests"
-           ${_vmc_tests_default})
-endif()
+motionconnectors_component_project()
 
 # OpenUSD arrives only through motionCore's Gf value types. The pin travels with
 # the find_package call rather than with the root project, because a standalone
@@ -44,7 +24,7 @@ endif()
 if(NOT pxr_FOUND)
     find_package(pxr REQUIRED CONFIG)
 endif()
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsOpenUsd.cmake")
 
 # In the composed workspace build both are already in-tree targets; a standalone
 # configure resolves their installed packages.
@@ -97,10 +77,9 @@ add_library(motionConnectorVmc STATIC
     src/VmcMessage.cpp)
 add_library(motionConnectorVmc::motionConnectorVmc ALIAS motionConnectorVmc)
 set_target_properties(motionConnectorVmc PROPERTIES
-    EXPORT_NAME motionConnectorVmc
     POSITION_INDEPENDENT_CODE ON)
 
-target_compile_features(motionConnectorVmc PUBLIC cxx_std_17)
+target_compile_features(motionConnectorVmc PUBLIC cxx_std_20)
 target_compile_definitions(motionConnectorVmc PUBLIC MOTIONCONNECTORVMC_STATIC)
 target_include_directories(motionConnectorVmc
     PUBLIC
@@ -129,37 +108,10 @@ if(MSVC)
     target_compile_options(motionConnectorVmc PUBLIC /utf-8)
 endif()
 
-include(GNUInstallDirs)
-install(TARGETS motionConnectorVmc
-    EXPORT motionConnectorVmcTargets
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+motionconnectors_install_package(TARGET motionConnectorVmc)
 install(DIRECTORY profiles/ DESTINATION "${CMAKE_INSTALL_DATADIR}/motion-connectors/profiles")
 
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/motionConnectorVmcConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVmcConfig.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVmc")
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVmcConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-install(EXPORT motionConnectorVmcTargets
-    FILE motionConnectorVmcTargets.cmake
-    NAMESPACE motionConnectorVmc::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVmc")
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVmcConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/motionConnectorVmcConfigVersion.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/motionConnectorVmc")
-
 if(MOTIONCONNECTORVMC_BUILD_TESTS)
-    enable_testing()
-    find_package(Python3 COMPONENTS Interpreter QUIET)
     add_subdirectory(tests)
 endif()
 

@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+# The interpreter this suite runs under, found in this directory's own scope
+# (cmake/MotionConnectorsProject.cmake says why).
+motionconnectors_find_test_python()
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would
 # print "passed" and return 0 without having checked anything. Undefine it for
@@ -248,10 +252,10 @@ if(Python3_Interpreter_FOUND)
     # motionCore, and the sampling and recording packages.
     #
     # `Python3_Interpreter_FOUND` is trustworthy *here* and is not at the root:
-    # the adapter's own CMakeLists re-runs find_package(Python3 Interpreter) in
-    # this scope after pxrConfig.cmake has clobbered it with a Development-only
-    # re-find. A test guarded on it above that line does not fail, it silently
-    # never registers -- so if this entry ever disappears from `ctest -N`, that
+    # motionconnectors_find_test_python() at the top of this file re-runs
+    # find_package(Python3 Interpreter) in this scope after pxrConfig.cmake has
+    # clobbered it with a Development-only re-find. A test guarded on it in a
+    # scope that call does not reach does not fail, it silently never registers -- so if this entry ever disappears from `ctest -N`, that
     # is the first thing to check.
     add_test(NAME motionConnectorMocopi_boundaries
         COMMAND "${Python3_EXECUTABLE}"
