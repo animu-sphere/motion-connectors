@@ -166,7 +166,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **The `ost` pin is 0.23.4.** 0.23.4 applies the runtime check to
+- **The `ost` pin is 0.23.6.** 0.23.5 stages bundle and tool outputs per
+  target instead of in the source tree (`usd-mmd-plugins`' ost report 01):
+  `ost build` stages each tool from the build tree into its member's
+  `.strata/targets/<target>/tool-stage/bin`. It also exposes a published
+  bundle's or tool's pinned paths to the root CMake suites (`usd-vrm-plugins`'
+  ost report 46), which nothing here pins yet. 0.23.6 fixes 0.23.5's
+  workspace bundle packaging (report 47); this repository ships no bundle.
+  Re-pinned with the ecosystem.
+
+- **The `ost` pin was 0.23.4.** 0.23.4 applies the runtime check to
   `ost library build` and `ost plugin build` as well, so a member build tree
   configured against another runtime is discarded there too. It also adds pins
   for a published bundle and a published test tool (`usd-vrm-plugins`' ost
