@@ -35,7 +35,6 @@ The owning document holds the question; this list only schedules it.
 
 | Id | Question | Owner | Blocks |
 | --- | --- | --- | --- |
-| CC-O3 | `MotionStream` shape (feeds `usd-motion-plugins` MC-O5) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.1.0 |
 | CS-O1 | Where the change-of-basis primitive lives | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | v0.1.0 convergence |
 | CS-O3 | Conversion as code or profile data | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | CS-O1 |
 | WS-O2 | Where the tracker solve lives | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.1.0 convergence |

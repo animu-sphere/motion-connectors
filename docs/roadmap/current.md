@@ -20,8 +20,9 @@ into the shared layer.
 - ✅ Resolve `Poll` result and skipped-frame semantics (`CC-O6`): one frame per
   poll, cumulative buffer counters, oldest-drop `Ordered` and back-pressure
   `Lossless` behavior.
-- ⬜ Agree on the `MotionStream` intake boundary with `usd-motion-plugins`
-  (`CC-O3`).
+- ✅ Agree on the `MotionStream` intake boundary with `usd-motion-plugins`
+  (`CC-O3`): `Poll(MotionFrame&)` feeds actor-scoped `LiveCaptureSource::Push`,
+  and `IMotionSource::Sample` reads at evaluation time.
 - ✅ Resolve the profile identifier and representation rules (`SP-O1`, `SP-O2`)
   with connector-owned JSON profiles installed under
   `share/motion-connectors/profiles/`.
