@@ -105,6 +105,11 @@ file per profile, installed under `share/motion-connectors/profiles/`. The
 connector's runtime contract still carries the profile ID, while the profile
 data is the declarative source description consumed by tools and validation;
 the connector does not branch on profile contents.
+For fixed protocols the decoder's conversion is code (`CS-O3`,
+[COORDINATE_SYSTEMS §6](COORDINATE_SYSTEMS.md#6-open-questions)). Validation
+checks that the installed profile declares the measured handedness, up and
+forward axes, unit and rotation form exercised by the connector's conversion
+tests. Recorded readers may instead select a basis from a producer profile.
 
 The representation is `openstrata.motion.source-profile/v1`. It uses the
 fields in §3, with `jointSet` entries carrying `source`, `parent` and

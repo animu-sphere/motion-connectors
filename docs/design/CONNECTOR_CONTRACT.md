@@ -161,12 +161,21 @@ owner:
 | Decision | Owner | May know |
 | --- | --- | --- |
 | **Decode** — bytes to `TrackerObservation` | the connector | addresses, type tags, argument order; no body roles |
-| **Assignment** — which tracker is which body region | a generic policy (`motionTracking`) | tracker count, rest geometry, an operator's explicit statement; never a protocol address literal |
-| **Solve** — assigned observations to a sparse `MotionPose` | the motion layer | the shared joint vocabulary; never an avatar |
+| **Assignment** — which tracker is which body region | `motionConnectorTracking` | tracker identities, regions, an operator's explicit statement; never a protocol address literal |
+| **Solve** — assigned observations to a sparse `MotionPose` | `motionConnectorTracking` | assigned canonical observations and the shared joint vocabulary; never an avatar |
+
+WS-O2 was decided on 2026-09-24: both generic steps remain in
+`motionConnectorTracking`. The direct solve consumes `TrackerRegion` and an
+operator's assignment, which are connector-side observations rather than
+fields of `MotionPose`. Moving that solve into `usd-motion-plugins` would make
+the motion layer depend on this repository or copy its region contract. The
+current solve has no protocol addresses or target-avatar semantics; a later
+IK solve can take explicit target rest geometry without changing the
+observation boundary. Its tests are `motionConnectorTracking_trackerAssignment`
+and `motionConnectorTracking_trackerSolve`.
 
 Explicit assignment by an operator is the default; automatic assignment is a
-later aid over the same contract. Where assignment and solve live across the
-repository boundary is `WS-O2`.
+later aid over the same contract.
 
 ## 5. State
 
@@ -190,8 +199,12 @@ enum class ConnectorState { Disconnected, Connecting, Connected, Degraded, Error
   `usd-vrm-plugins` for both VMC and mocopi.
 - `ConnectorState` is the connection's state, not the tracking's. Whether a
   frame can say *tracking lost for this joint* without using an absent joint or
-  a low confidence is `usd-motion-plugins`' MC-O6, and mocopi's native stream
-  is the first producer that reports it (`CC-O4`).
+  a low confidence is `usd-motion-plugins`' MC-O6. CC-O4 was closed on
+  2026-09-24: the measured mocopi native grammar carries no such state or
+  per-joint confidence, and VMC does not report it either. A missing or
+  refused bone is absent from `validRotations` and the connector reports an
+  incomplete frame; it is not labelled "tracking lost" without a source field
+  that says so. `MOCOPI_TRACKING_LOST` remains reserved and unraised.
 
 ## 6. Time
 
@@ -331,13 +344,14 @@ file format.
 ## 13. Open questions
 
 CC-O3 was resolved by the first shared-connector to live-intake test on
-2026-09-24 (§8).
+2026-09-24 (§8). CC-O4 was closed by the measured mocopi grammar and its
+missing-bone tests (§5); MC-O6 remains open upstream for a producer that
+actually reports tracking state.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source whose data does not fit `HumanJoint` version 1 (Connector Phase 4, MediaPipe, at the latest) |
 | CC-O2 | Landmark sources: MediaPipe reports joint **positions**, not rotations. Is a landmark set an observation like a tracker (§4), solved downstream, or does the connector solve rotations itself? Design policy §26 says a connector emits "the best faithful normalized observation", which argues for the former | Connector Phase 4 |
-| CC-O4 | Per-joint tracking loss (`usd-motion-plugins` MC-O6): mocopi's native stream reports it; VMC does not | v0.1.0 convergence |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |
 | CC-O8 | The wire representation of `MotionFrame` for WebSocket and JS (design policy §37): JSON first for debuggability, with the ABI left open | v0.2.0 |
