@@ -25,6 +25,21 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The WebSocket connector is designed.** The new
+  `docs/design/WEBSOCKET_CONNECTOR.md` owns how
+  `openstrata.motion.frame/v1` messages travel over WebSocket. RFC 6455 is
+  implemented inside `motionConnectorWebSocket`, with no third-party library,
+  so the connector stays caller-driven and its framing refusals stay
+  properties of its own parse. An endpoint listens or connects, and receives
+  or sends, independently. The subprotocol `openstrata.motion.frame.v1` is
+  required. A request carrying `Origin` is refused unless allow-listed,
+  because a loopback bind does not stop a web page. One message is one frame:
+  the connector rewrites `frameNumber` and `receiveTimestamp`, reports a
+  sender restart, a gap and a timestamp regression, and carries everything
+  else verbatim. The `WEBSOCKET_*` diagnostic set (14 codes) is frozen there.
+  Received messages are captured in the transport's packet-capture format.
+  TLS (`WSC-O1`) and several receiving peers (`WSC-O2`) stay open, and
+  `FW-O2` moves to `motion_connect bridge`.
 - **CC-O8 settles the `MotionFrame` wire representation.** Version 1 is JSON,
   one object per frame, identified as `openstrata.motion.frame/v1`. Joints
   are keyed by name, an absent value is an absent key, numbers round-trip

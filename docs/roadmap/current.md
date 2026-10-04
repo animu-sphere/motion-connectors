@@ -49,15 +49,17 @@ v0.2.0 carries the WebSocket transport, the capture/bridge commands, Python
 bindings and the record-stream example
 ([status table](README.md#status-at-a-glance)). The wire codec,
 `motionConnectorWire`, has landed
-([capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)), so the
-WebSocket connector can start on it:
+([capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)), and the
+WebSocket connector is designed
+([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)), so it can be
+built:
 
-- ⬜ `motionConnectorWebSocket`: `MotionFrame` over WebSocket, both
-  directions, decoding through `motionConnectorWire` and stamping its own
-  `receiveTimestamp` and `frameNumber`
-  ([FRAME_WIRE_FORMAT §7](../design/FRAME_WIRE_FORMAT.md#7-encoding-is-not-receiving)).
-- ⬜ `FW-O2`, whether state and diagnostics cross the wire, settled with the
-  WebSocket connector and `bridge`.
+- ⬜ `motionConnectorWebSocket`: `WebSocketConnector` and
+  `WebSocketFrameSender`, listening or connecting, over this repository's own
+  RFC 6455 subset; its `WEBSOCKET_*` codes in DIAGNOSTICS.md; the framing and
+  message corpora of its §9; a loopback test of both directions in both roles.
+- ⬜ `FW-O2`, whether state and diagnostics cross the wire, settled with
+  `bridge`, which is the producer that has an upstream state to forward.
 
 One decision still comes before the bindings, because it fixes what crosses a
 language boundary:

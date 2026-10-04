@@ -22,8 +22,8 @@
   refuses.
 - **Out:** the meaning of the fields
   ([CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) §3–§6, the motion contract
-  §5–§7); WebSocket framing, connection state and reconnects (the WebSocket
-  connector's); a C ABI (`CC-O7`); a motion file format.
+  §5–§7); WebSocket framing, connection state and reconnects
+  ([WEBSOCKET_CONNECTOR.md](WEBSOCKET_CONNECTOR.md)); a C ABI (`CC-O7`); a motion file format.
 
 **The wire format is a message format, not a file format.** A WebSocket
 session is kept for diagnosis and test corpora the way every other session is
@@ -253,7 +253,8 @@ delivers follows CONNECTOR_CONTRACT §3 and §6: its `receiveTimestamp` is read
 from the receiving process's clock at receipt, and its `frameNumber` is its
 own. The sender's values arrive as the input to that connector's frame
 assembly (§7), which decides — with the connector, and tested — how a sender
-restart or a gap in the sender's `frameNumber` is reported. Timestamps from
+restart or a gap in the sender's `frameNumber` is reported
+([WEBSOCKET_CONNECTOR §7](WEBSOCKET_CONNECTOR.md#7-frame-assembly)). Timestamps from
 two machines are not compared without an estimated offset, and the format does
 not pretend otherwise.
 
@@ -274,4 +275,4 @@ CC-O8 is resolved by §2 ([CONNECTOR_CONTRACT §13](CONNECTOR_CONTRACT.md#13-ope
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | FW-O1 | A binary encoding of the same logical message (MessagePack, CBOR, FlatBuffers, Protobuf or a custom layout), negotiated beside version 1 rather than replacing it | a measured session whose size or parse cost JSON does not meet |
-| FW-O2 | Whether connector state and diagnostics cross the wire, as messages of their own beside frames, so a bridged consumer sees a `Degraded` source as the sender did | `motionConnectorWebSocket` and `motion_connect bridge` (v0.2.0) |
+| FW-O2 | Whether connector state and diagnostics cross the wire, as messages of their own beside frames, so a bridged consumer sees a `Degraded` source as the sender did. The WebSocket connector carries frames only, and its state is its link's ([WEBSOCKET_CONNECTOR §6](WEBSOCKET_CONNECTOR.md#6-the-session-and-its-state)) | `motion_connect bridge` (v0.2.0), the producer that has an upstream state to forward |

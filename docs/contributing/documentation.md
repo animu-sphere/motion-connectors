@@ -67,7 +67,7 @@ Design and architecture documents number their sections, and a number never
 changes meaning. **Sibling repositories cite them** ("the connectors policy
 §42"). A revision adds subsections or appends sections. Open questions are
 identified by prefix and number (`CC-O1`, `CS-O1`, `SP-O1`, `FW-O1`,
-`WS-O1`, `DIAG-O1`) and never reused.
+`WSC-O1`, `WS-O1`, `DIAG-O1`) and never reused.
 
 ## Evidence
 
