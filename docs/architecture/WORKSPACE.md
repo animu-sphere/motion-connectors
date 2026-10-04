@@ -76,8 +76,16 @@ dependency (§17).
 | JS / TS package | binding | `bindings/js/` | `openConnector`, `frames()` async iterator, the WASM bridge (design policy §18) | new | reserved |
 | test corpus | data | `tests/data/<connector>/` | generated captures and recorded-session manifests (§5) | `usd-vrm-plugins`, with each connector | reserved |
 
-Whether the three record tools remain or fold into `motion_connect record`
-is WS-O3.
+The three record tools remain, one per connector (WS-O3, decided
+2026-10-04). They share transport and session flags, not behaviour: each
+tool's own options (`--staleness`, `--silence-timeout`, `--assign`,
+`--unplaced`), session report and trace transcription belong to its
+connector, and a recorded-session manifest names the tool that made it
+(`"tool": "mocopi_record"`), so the command is provenance. `motion_connect
+record`, when it lands, does not replace them: it captures through the shared
+connector contract, takes no connector's own options and writes no
+connector's session report, and it stays a capture/replay tool rather than a
+semantic motion recorder ([CONNECTOR_CONTRACT §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
 
 ### 1.4 Reserved, later
 
@@ -250,10 +258,11 @@ WS-O1, the names and layout, and WS-O7, the import order, were decided on
 2026-09-19 (§1.1 and §3). WS-O2 was decided on 2026-09-24: tracker assignment
 and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
+WS-O3 was decided on 2026-10-04: the three record tools remain, one per
+connector (§1.3).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| WS-O3 | The three imported record tools: keep them, or fold them into `motion_connect record` after the move (they share argument-parsing idiom, not behaviour, as measured in `usd-vrm-plugins`' OSC track §3.4) | v0.2.0 planning |
 | WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
 | WS-O5 | Distribution (`usd-vrm-plugins` BND-2): one GitHub release carrying per-connector artifacts, or separate downloads; one version for all connectors (recommended there) or one each; how a vendor SDK dependency is declared rather than discovered; whether hardware validation becomes a capability lane | the first release |
 | WS-O6 | Web module layout: under `src/` as design policy §16 lists them, or under `bindings/js/` as one npm package with the JS API | Connector Phase 4 |

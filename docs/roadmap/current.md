@@ -63,9 +63,12 @@ into the shared layer.
   from `--inspect`, and `vmc_record` lost `--max-frames` with the live
   export; the conversion is a transcription of a saved capture through
   `motionRecording`'s writer ([CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
-- ⬜ Decide whether the three raw capture tools remain separate or are folded
-  into `motion_connect record` (`WS-O3`). A future `record` command must remain
-  a connector capture/replay tool, not a semantic motion recorder.
+- ✅ Decide whether the three raw capture tools remain separate or are folded
+  into `motion_connect record` (`WS-O3`). They remain, one per connector: their
+  options, session reports and transcriptions are source-specific, and the
+  recorded manifests name them. A future `record` command does not replace
+  them and remains a connector capture/replay tool, not a semantic motion
+  recorder ([WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
 
 ### Operator evidence
 
