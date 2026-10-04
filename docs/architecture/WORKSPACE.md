@@ -235,13 +235,22 @@ pins this repository the way it already pins that one.
   finalized changelog section, builds and tests the workspace on the PR lane's
   targets and digest-pinned runtimes, then packages every member and creates
   one GitHub release.
-- **One OCI repository, tagged per member.** Each library and each CLI is
-  pushed to `ghcr.io/animu-sphere/motion-connectors` as
+- **One OCI repository, tagged per member.** Each member is pushed to
+  `ghcr.io/animu-sphere/motion-connectors` as
   `<member>-<version>-<target>`. The release notes and a release asset carry
   the pin table: one row per member per target with its archive digest and
   OCI source, generated from what was pushed. A consumer names those rows
   in its `requires.libraries` / `requires.tools`. A library's installed
-  source profiles travel inside its artifact.
+  source profiles travel inside its artifact (`ost library package` puts
+  `share/motion-connectors/profiles/` in the archive).
+- **The libraries are published first; the CLIs follow `ost`.** `ost`
+  packages a workspace tool only through `ost plugin package --workspace`,
+  which refuses a workspace with no plugin bundle (`ost` 0.23.14:
+  `no plugin bundles found in the workspace member set`), and this repository
+  has none. Until `ost` packages a tool in a bundle-free workspace, a release
+  publishes the libraries, and the CLIs ship as source in the release's
+  source archive. Each tool keeps its `openstrata.tool.yaml` so that it
+  publishes unchanged when `ost` can package it.
 - **A vendor SDK is declared, never discovered.** It appears in its
   connector's manifest and nowhere else, and only that connector's artifact
   requires it. None of the v0.1.0 connectors uses one; the first that does
@@ -293,7 +302,8 @@ and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
 WS-O3 was decided on 2026-10-04: the three record tools remain, one per
 connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
-per tag, and one artifact per member in one OCI repository (§4.1).
+per tag, and one artifact per member in one OCI repository, the CLIs once
+`ost` can package them (§4.1).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |

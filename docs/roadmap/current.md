@@ -78,11 +78,14 @@ into the shared layer.
 ### Release
 
 - ✅ Decide how the connectors are distributed (`WS-O5`): one version, one
-  GitHub release per tag, and every library and CLI pushed per target to one
-  OCI repository with a generated pin table
+  GitHub release per tag, and every member pushed per target to one OCI
+  repository with a generated pin table
   ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
-- ⬜ Add `release.yml`, modelled on `usd-motion-plugins`', with a dry run
-  through `workflow_dispatch` before the first tag.
+- ⬜ Add `release.yml`, modelled on `usd-motion-plugins`', publishing the
+  seven libraries, with a dry run through `workflow_dispatch` before the first
+  tag.
+- ⬜ Publish the four CLIs once `ost` packages a workspace tool without a
+  plugin bundle; until then they ship as source.
 - ⬜ Tag v0.1.0 with its release record under `docs/releases/`.
 
 ### Operator evidence

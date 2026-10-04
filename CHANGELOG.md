@@ -8,14 +8,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **WS-O5 settles distribution.** Every library and CLI is released at the
-  root `VERSION` as its own artifact. A `vX.Y.Z` tag creates one GitHub
-  release and pushes each member per target to
+- **WS-O5 settles distribution.** Every member is released at the root
+  `VERSION` as its own artifact. A `vX.Y.Z` tag creates one GitHub release
+  and pushes each member per target to
   `ghcr.io/animu-sphere/motion-connectors` as `<member>-<version>-<target>`.
   The release carries a generated digest pin table, as `usd-motion-plugins`
-  does. A vendor SDK is declared in its connector's manifest; none is used.
-  Recorded-session replay stays an operator's local run. WORKSPACE §4.1
-  records it.
+  does. The seven libraries publish first. The CLIs ship as source until
+  `ost` packages a workspace tool without a plugin bundle; it currently
+  refuses. A vendor SDK is declared in its connector's manifest; none is
+  used. Recorded-session replay stays an operator's local run. WORKSPACE
+  §4.1 records it.
 - **The installed `motion_connect` runs from a clean prefix.**
   `workspace_installed_consumer` now runs `motion_connect`'s `list`, `dump`,
   `inspect` and argument checks against the copy in the install prefix, with
