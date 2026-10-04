@@ -8,6 +8,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **VMC and VRChat OSC convert through `motionCore`'s basis operation
+  (CS-O1).** Every `usd-motion-plugins` pin — `motionCore`, `motionSampling`
+  and `motionRecording`, in all five libraries and `vrchat_osc_record` — moves
+  to the digests in v0.5.2's pin table. `VmcBasis` and `TrackingSpaceBasis`
+  state each connector's measured reflection through X as a
+  `SignedPermutationBasis`, and `ToCanonicalPosition` / `ToCanonicalRotation`
+  apply it with `ApplyBasisToPosition` / `ApplyBasisToRotation` instead of
+  local sign flips. VMC's output is unchanged; VRChat OSC's rotation is now
+  normalised in double rather than float. Euler composition stays in the
+  VRChat OSC connector.
 - **The documentation states ownership instead of status.** The root README
   follows the shared shape (Scope, Architecture, Components, Documentation,
   Build, License) and no longer carries a current milestone. The
@@ -19,9 +29,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   archive, the canonical basis at `usd-motion-plugins`' contract, and three
   mocopi headers lose a malformed URL.
 - **CS-O1 has a shared library home.** `usd-motion-plugins` 0.5.2 source adds
-  the signed-permutation operation to `motionCore`. The connector adapters
-  will consume it after the package is published and their digest pins are
-  updated.
+  the signed-permutation operation to `motionCore`.
 - **CS-O3 fixes the conversion policy for the imported connectors.** Their
   protocol decoders choose the measured basis in code. Installed profiles
   describe the same basis, with stronger validation for axes, unit and

@@ -95,11 +95,8 @@ CheckMappable(const TrackerMessage& message, TrackerChannel expected, const void
 pxr::GfVec3f
 ToCanonicalPosition(const std::array<float, 3>& position) noexcept
 {
-    // The reflection, written the way the header states it rather than as a
-    // loop over `TrackingSpaceMirroredComponent`: three components spelled out
-    // are checkable by eye, and a reader comparing this against the sibling
-    // adapter's line should see the same line.
-    return pxr::GfVec3f(-position[0], position[1], position[2]);
+    return openstrata::motion::ApplyBasisToPosition(
+        TrackingSpaceBasis, pxr::GfVec3f(position[0], position[1], position[2]));
 }
 
 pxr::GfQuatf
@@ -112,14 +109,10 @@ ToCanonicalRotation(const std::array<float, 3>& eulerDegrees) noexcept
     const pxr::GfQuatf sender = AxisRotation(1, eulerDegrees[1]) *
                                 AxisRotation(0, eulerDegrees[0]) * AxisRotation(2, eulerDegrees[2]);
 
-    // `(w, det(M) * M v)` for `M = diag(-1, 1, 1)`: the mirror negates the
-    // first component and the determinant negates all three, which leaves the
-    // first alone and flips the other two.
-    const pxr::GfVec3f imaginary = sender.GetImaginary();
-    pxr::GfQuatf canonical(sender.GetReal(),
-                           pxr::GfVec3f(imaginary[0], -imaginary[1], -imaginary[2]));
-    canonical.Normalize();
-    return canonical;
+    // `(w, det(M) * M v)` for `M = diag(-1, 1, 1)`, normalised in double: the
+    // mirror negates the first component and the determinant negates all
+    // three, which leaves the first alone and flips the other two.
+    return openstrata::motion::ApplyBasisToRotation(TrackingSpaceBasis, sender);
 }
 
 std::string

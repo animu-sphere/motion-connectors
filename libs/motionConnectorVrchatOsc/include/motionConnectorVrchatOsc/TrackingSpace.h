@@ -108,16 +108,13 @@
 // form the recorded half writes as a `CanonicalBasis`. Nothing is scaled: the
 // unit is metres on both sides.
 //
-// **This is the third place in the tree that carries this arithmetic**, after
-// `vrmAdapterVmc/SkeletonMap.cpp` and `motionSource/CanonicalConversion.cpp`,
-// and it is written out here rather than shared because sharing it needs a home
-// an adapter is allowed to reach: `motionSource` is the recorded half and
-// [WORKSPACE.md §2](../../../../../docs/architecture/WORKSPACE.md) gives an
-// adapter four edges that do not include it. What this adapter adds that
-// neither sibling has is the Euler composition — VMC sends quaternions — so the
-// case for a shared basis primitive in `motionCore` is stronger after this file
-// than before it, and that is a contract change rather than a refactor
-// ([§10](../../../../../docs/roadmap/osc-and-vrchat-trackers.md#10-contract-changes-this-plan-requires)).
+// The arithmetic is not written out here. It was, as the third copy after the
+// VMC adapter and `motionSource`'s recorded converter, until `usd-motion-plugins`
+// 0.5.2 gave `motionCore` the shared signed-permutation operation (CS-O1,
+// [COORDINATE_SYSTEMS.md §2](../../../../../docs/design/COORDINATE_SYSTEMS.md#2-conversion-happens-once-in-the-connector)).
+// This adapter states the basis as `TrackingSpaceBasis` and calls it. What
+// stays here is what neither sibling has: the Euler composition, which is
+// source-specific and happens before the mirror.
 //
 // ## What this layer refuses, which is one thing
 //
@@ -141,6 +138,8 @@
 #include "motionConnectorVrchatOsc/Diagnostics.h"
 #include "motionConnectorVrchatOsc/TrackerMessage.h"
 #include "motionConnectorVrchatOsc/api.h"
+
+#include "motionCore/BasisConversion.h"
 
 #include "pxr/base/gf/quatf.h"
 #include "pxr/base/gf/vec3f.h"
@@ -173,6 +172,16 @@ inline constexpr int TrackingSpaceMirroredComponent = 0;
 // of the conversion applies to the imaginary part — the same `det(M)` the
 // recorded half's `CanonicalBasis` carries.
 inline constexpr int TrackingSpaceDeterminant = -1;
+
+// The three constants above as the `motionCore` basis both conversions below
+// apply: identity order, `TrackingSpaceMirroredComponent` negated,
+// `TrackingSpaceDeterminant`, `TrackingSpaceUnitInMeters`.
+inline constexpr openstrata::motion::SignedPermutationBasis TrackingSpaceBasis{
+    {0, 1, 2},
+    {TrackingSpaceMirroredComponent == 0, TrackingSpaceMirroredComponent == 1,
+     TrackingSpaceMirroredComponent == 2},
+    TrackingSpaceDeterminant,
+    TrackingSpaceUnitInMeters};
 
 // The sender's position into the canonical one, with no validity check: a
 // non-finite input converts to a non-finite output rather than being caught
