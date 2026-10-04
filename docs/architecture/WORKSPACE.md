@@ -238,7 +238,10 @@ It leaves a manifest: capture hash, recording tool version, sender and device
 identity and version, the measured statistics, expected diagnostics and
 counts, validation date, redistribution status. Generated captures are
 reproduced by committed code, and a `--check` mode fails when a committed
-capture no longer matches its generator. This is `usd-vrm-plugins`' corpus rule
+capture no longer matches its generator. An operator who kept a session's
+bytes replays the manifest rows against them with
+`scripts/check_recorded_sessions.py`, which is never part of CI
+([building guide](../guides/building.md#replaying-the-recorded-device-sessions)). This is `usd-vrm-plugins`' corpus rule
 (adapter plan §9.2), carried unchanged.
 
 ## 6. Invariants

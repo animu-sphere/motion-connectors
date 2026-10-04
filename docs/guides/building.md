@@ -85,3 +85,29 @@ Build output stays in the build tree. The runtime layout -- `bin/`, `lib/`,
 | `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package the build installed, each of which `tests/installed_consumer/packages.json` must list; when the build has `motion_connect`, the installed one passes `list`, `dump`, `inspect` and argument checks from the prefix |
 
 `ctest -LE installed-consumer` leaves the second project out.
+
+## Replaying the recorded device sessions
+
+The mocopi and VRChat OSC device sessions are manifest rows with no bytes in
+the repository ([WORKSPACE.md §5](../architecture/WORKSPACE.md#5-test-data)).
+An operator who kept the captures names their directory at configure time,
+and `workspace_recorded_sessions` replays every row against it:
+
+```powershell
+$env:MOTIONCONNECTORS_RECORDED_SESSIONS = "$HOME/mocopi_sessions"
+ost build
+ost test
+```
+
+`-DMOTIONCONNECTORS_RECORDED_SESSIONS=<dir>` does the same on a plain CMake
+configure. Captures are found by their sha256, so the directory's layout does
+not matter. For each row, `scripts/check_recorded_sessions.py` requires the
+record tool's `--inspect` to reproduce the receive statistics, the length
+census and the per-address counts. A saved `<capture>.inspect.txt` beside the
+capture must match the new output byte for byte. The raised diagnostics must
+be exactly `expectedDiagnostics`. For mocopi, `--export-trace` must reproduce
+each session's frames, sender rate and hips path. Finally,
+`motion_connect inspect` must deliver the same frames through the shared
+contract. Without the variable the test is not registered, so CI never runs
+it. A row whose capture is absent is skipped; `--require-all` makes it a
+failure.

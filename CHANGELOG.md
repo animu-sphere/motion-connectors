@@ -83,6 +83,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **The recorded device sessions can be replayed against their manifests.**
+  `scripts/check_recorded_sessions.py` finds each mocopi and VRChat OSC
+  manifest row's capture by sha256 in an operator's directory. It checks the
+  row's receive statistics, length census, per-address counts and diagnostics
+  through the record tool's `--inspect`, and any saved `.inspect.txt`. For
+  mocopi it also checks each session's frames, sender rate and hips path
+  through `--export-trace`, and that `motion_connect inspect` delivers the same
+  frames. Setting `MOTIONCONNECTORS_RECORDED_SESSIONS` registers it as
+  `workspace_recorded_sessions`; CI has no bytes and never runs it. All
+  eleven sessions pass on the current tree.
 - **`motionConnectorCore` and the first shared-contract VMC and mocopi adapters.** The new
   core provides `IMotionConnector`, `MotionFrame`, timing, actor and tracker
   values, capability descriptors, and the thread-safe bounded

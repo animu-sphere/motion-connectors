@@ -56,7 +56,11 @@ into the shared layer.
   every committed capture, using each protocol's required end-of-capture
   handling, and `workspace_installed_consumer` consumes the installed package
   set outside the repository and runs the installed `motion_connect`'s
-  `list`, `dump` and `inspect` against captures copied out of it.
+  `list`, `dump` and `inspect` against captures copied out of it. The eleven
+  recorded mocopi and VRChat OSC device sessions, replayed from an operator's
+  copy with `scripts/check_recorded_sessions.py` on 2026-10-04, still
+  reproduce every manifest reading and deliver the same frames through
+  `motion_connect`.
 - ✅ Audit the imported `--export-trace` paths. All three tools delegate the
   file format to `motionRecording::WriteCaptureTraceFile`.
 - ✅ Remove VMC's live semantic export and settle where offline
