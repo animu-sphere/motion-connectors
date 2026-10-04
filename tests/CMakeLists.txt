@@ -108,3 +108,32 @@ add_test(NAME workspace_installed_consumer
         ${_consumer_toolchain})
 set_tests_properties(workspace_installed_consumer PROPERTIES
     LABELS "installed-consumer")
+
+# The device sessions behind the recorded manifests leave no bytes in the
+# repository (docs/architecture/WORKSPACE.md §5). An operator who kept them
+# names their directory, and this test replays every manifest row against it
+# through the record tools and motion_connect. CI has no bytes and no such
+# directory, so the test exists only on an operator's configure, named by
+# -DMOTIONCONNECTORS_RECORDED_SESSIONS or the environment variable of that name.
+if(NOT MOTIONCONNECTORS_RECORDED_SESSIONS
+   AND DEFINED ENV{MOTIONCONNECTORS_RECORDED_SESSIONS})
+    set(MOTIONCONNECTORS_RECORDED_SESSIONS "$ENV{MOTIONCONNECTORS_RECORDED_SESSIONS}")
+endif()
+if(MOTIONCONNECTORS_RECORDED_SESSIONS AND TARGET motion_connect)
+    add_test(NAME workspace_recorded_sessions
+        COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
+            "${PROJECT_SOURCE_DIR}/scripts/check_recorded_sessions.py"
+            --sessions "${MOTIONCONNECTORS_RECORDED_SESSIONS}"
+            --mocopi-record "$<TARGET_FILE:mocopi_record>"
+            --vrchat-osc-record "$<TARGET_FILE:vrchat_osc_record>"
+            --motion-connect "$<TARGET_FILE:motion_connect>")
+    set_tests_properties(workspace_recorded_sessions PROPERTIES
+        LABELS "recorded-sessions")
+    if(WIN32 AND _usd_root)
+        get_filename_component(_sessions_python_dir "${MOTIONCONNECTORS_TEST_PYTHON}"
+                               DIRECTORY)
+        set_tests_properties(workspace_recorded_sessions PROPERTIES
+            ENVIRONMENT_MODIFICATION
+                "PATH=path_list_prepend:${_usd_root}/bin;PATH=path_list_prepend:${_usd_root}/lib;PATH=path_list_prepend:${_sessions_python_dir}")
+    endif()
+endif()
