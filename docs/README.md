@@ -26,7 +26,7 @@ structure, evidence or incomplete work according to the ownership table below.
   rules and the decisions made when the policy was adopted. Release scope and
   ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
   the policy by section number.
-- Three focused contracts own one area each, and on that area they win over
+- Four focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the
     connector interface, `MotionFrame`, tracker observations, state, time,
@@ -35,7 +35,9 @@ structure, evidence or incomplete work according to the ownership table below.
     canonical basis, conversion rules, and each source's declared and
     measured basis;
   - [design/SOURCE_PROFILES.md](design/SOURCE_PROFILES.md) covers profile
-    identifiers, what a profile declares, and joint naming.
+    identifiers, what a profile declares, and joint naming;
+  - [design/FRAME_WIRE_FORMAT.md](design/FRAME_WIRE_FORMAT.md) covers how a
+    `MotionFrame` is spelled as bytes across a process boundary.
 - The motion values themselves (`MotionPose`, `RootMotion`,
   `MotionChannelSet`, `SourceMetadata` and the `MotionStream` intake) are
   owned by `usd-motion-plugins`' `MOTION_CONTRACT.md`. This repository does

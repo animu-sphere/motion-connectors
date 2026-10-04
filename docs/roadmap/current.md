@@ -44,13 +44,21 @@ against its manifest with `scripts/check_recorded_sessions.py`
 
 ## Next: v0.2.0
 
-v0.2.0 carries the WebSocket transport, the capture/bridge commands, Python
-bindings and the record-stream example
-([status table](README.md#status-at-a-glance)). Two decisions come before any
-of its code, because both fix what crosses a process boundary:
+v0.2.0 carries the wire codec, the WebSocket transport, the capture/bridge
+commands, Python bindings and the record-stream example
+([status table](README.md#status-at-a-glance)). The wire representation is
+decided ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)), so the codec
+and the WebSocket connector can start:
 
-- ⬜ `CC-O8`, the `MotionFrame` wire representation
-  ([CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions)).
+- ⬜ `motionConnectorWire`: encode and decode `openstrata.motion.frame/v1`,
+  with a generated corpus testing every refusal in
+  [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses).
+- ⬜ `FW-O2`, whether state and diagnostics cross the wire, settled with the
+  WebSocket connector and `bridge`.
+
+One decision still comes before the bindings, because it fixes what crosses a
+language boundary:
+
 - ⬜ `CC-O7`, a C ABI, which the Python bindings stand on
   ([CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions)).
 

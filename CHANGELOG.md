@@ -6,6 +6,18 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **CC-O8 settles the `MotionFrame` wire representation.** Version 1 is JSON,
+  one object per frame, identified as `openstrata.motion.frame/v1`. Joints
+  are keyed by name, an absent value is an absent key, numbers round-trip
+  exactly, and 64-bit counters are decimal strings. A reader refuses unknown
+  keys, so adding a field is a new version. It is a message format, not a
+  file format, and it is not the ABI. A binary encoding (`FW-O1`) and state
+  and diagnostics on the wire (`FW-O2`) stay open. The new
+  `docs/design/FRAME_WIRE_FORMAT.md` owns it, and WORKSPACE reserves
+  `motionConnectorWire` for the codec.
+
 ## [0.1.0] - 2026-10-04
 
 ### Changed
