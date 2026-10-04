@@ -8,6 +8,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **`vmc_record` exports a trace only from a saved capture.** `--export-trace`
+  and `--sender-session` now go with `--inspect` alone, as in `mocopi_record`
+  and `vrchat_osc_record`; a live session given `--export-trace` is refused
+  with exit 2. `--max-frames` and its `--max-frames reached` stop reason are
+  removed, because a recording no longer holds poses. Record first, then run
+  `vmc_record --inspect session.vmcpackets --export-trace session.trace`. The
+  tool also refuses an empty `--export-trace` and a trace path that names the
+  capture being read, however it is spelled. CONNECTOR_CONTRACT §12 records
+  offline transcription through `motionRecording` as the one place
+  capture-to-trace conversion is invoked.
 - **VMC and VRChat OSC convert through `motionCore`'s basis operation
   (CS-O1).** Every `usd-motion-plugins` pin — `motionCore`, `motionSampling`
   and `motionRecording`, in all five libraries and `vrchat_osc_record` — moves

@@ -57,13 +57,12 @@ into the shared layer.
   handling, and `workspace_installed_consumer` consumes the installed package
   set outside the repository.
 - ✅ Audit the imported `--export-trace` paths. All three tools delegate the
-  file format to `motionRecording::WriteCaptureTraceFile`; mocopi and VRChat
-  OSC export only from `--inspect`, while VMC also accumulates poses and
-  exports during live capture with a second `--max-frames` bound.
-- ⬜ Remove or move VMC's live semantic export and settle where offline
-  capture-to-trace conversion is invoked. Raw packet/session capture remains
-  here; a semantic `motion-capture-trace` must have one recording owner in
-  `usd-motion-plugins`.
+  file format to `motionRecording::WriteCaptureTraceFile`.
+- ✅ Remove VMC's live semantic export and settle where offline
+  capture-to-trace conversion is invoked. All three tools now export only
+  from `--inspect`, and `vmc_record` lost `--max-frames` with the live
+  export; the conversion is a transcription of a saved capture through
+  `motionRecording`'s writer ([CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
 - ⬜ Decide whether the three raw capture tools remain separate or are folded
   into `motion_connect record` (`WS-O3`). A future `record` command must remain
   a connector capture/replay tool, not a semantic motion recorder.

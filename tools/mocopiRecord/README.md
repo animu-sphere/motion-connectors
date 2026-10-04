@@ -102,29 +102,28 @@ recorded months ago — which is why it prints the capture's own `provenance` li
 and a live session does not. On a live run the operator typed those values a
 moment ago.
 
-## Imported compatibility export: `--export-trace`
+## Exporting a trace: `--export-trace`, from a file
 
 ```text
 session.mocopipackets → mocopi_record --inspect --export-trace → session.trace
                       → motion_record → a motion stage → a consumer's retarget
 ```
 
-The imported implementation can derive a `motion-capture-trace` from a
-committed raw capture. That export is a compatibility path, not this
-repository's canonical recording boundary: semantic motion recording belongs
-to `usd-motion-plugins`. The v0.1.0 convergence work must keep raw capture and
-replay authoritative and either move this export downstream or redefine it as a
-`MotionFrame` diagnostic export.
+The export transcribes a saved raw capture into a `motion-capture-trace`. It
+is not a second recording boundary: semantic motion recording belongs to
+`usd-motion-plugins`, whose `motionRecording` owns the writer and the format,
+and raw capture and replay stay authoritative here
+([CONNECTOR §12](../../docs/design/CONNECTOR_CONTRACT.md#12-raw-capture)).
 
-**It goes with `--inspect`, and only there.** The sibling tool exports from a
-live session too; this one refuses to, and the refusal is the tool's own design
-rather than a missing feature:
+**It goes with `--inspect`, and only there**, as in both sibling tools. The
+refusal is the tool's own design rather than a missing feature:
 
 - a recording here runs **no decoder at all**, which is the property everything
   above is built on. A live export would spend it to save a command.
 - this tool accumulates datagrams and nothing else. A live export accumulates a
   1320-byte pose per frame beside the capture the datagram bound was sized for,
-  which is the second bound in a second unit the sibling had to grow.
+  which is a second bound in a second unit — the one `vmc_record` carried until
+  it, too, stopped exporting live.
 - an exported trace is then a pure function of committed bytes: the same capture
   exports the same trace on any machine, with no device.
 

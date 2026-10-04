@@ -52,9 +52,10 @@ struct Options
     // there is always at least one: `maxDatagrams` has a default and the other
     // two are off until asked for.
     //
-    // There is no `--max-frames` here and there cannot be. The sibling needs a
-    // second bound because it accumulates a second thing — one pose per decoded
-    // frame — and this tool accumulates datagrams alone.
+    // There is no `--max-frames` here and there cannot be. A second bound is
+    // needed only by a tool that accumulates a second thing — one pose per
+    // decoded frame — and this tool accumulates datagrams alone. `vmc_record`
+    // carried one until it stopped exporting during a recording.
     double durationSeconds = 0.0; // 0: until interrupted
     double idleSeconds = 0.0;     // 0: never
     std::size_t maxDatagrams = 0; // 0: the default, applied at parse

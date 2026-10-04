@@ -36,6 +36,11 @@
 // with no sender at all, and it is also the answer to "is this fixture still
 // what I thought it was" for a capture recorded months ago.
 //
+// `--export-trace` belongs to `--inspect` alone. A recording decodes to report
+// and holds nothing it decoded: the trace is derived afterwards from the file,
+// so it is a pure function of the capture and cannot cost a live session
+// memory or a write it might fail (TraceExport.h).
+//
 // ## Stopping
 //
 // A recorder that only stops on Ctrl-C cannot be run from a script, and one
@@ -61,7 +66,9 @@
 
 #include <csignal>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
+#include <system_error>
 #include <string>
 #include <vector>
 
@@ -120,6 +127,21 @@ bool
 WriteTrace(const vmcRecordTool::Options& options, vmcRecordTool::TraceCollector& collector,
            bool quiet)
 {
+    // The second half of the refusal `ParseOptions` makes on the spelling. That
+    // one catches `--inspect x --export-trace x`; this catches the same file
+    // named two ways, which no comparison of strings can see. `equivalent`
+    // answers only when both paths exist, and a trace path that does not exist
+    // yet cannot be the capture, so the error code is discarded: "not the same
+    // file" and "one of them is not there" are the same answer here.
+    std::error_code aliased;
+    if (std::filesystem::equivalent(options.inspectPath, options.traceExportPath, aliased))
+    {
+        std::cerr << "vmc_record: " << options.traceExportPath
+                  << " is the capture being read, named differently; writing "
+                     "the trace there would destroy it\n";
+        return false;
+    }
+
     collector.Close();
     const std::vector<openstrata::motion::MotionClip>& sessions = collector.GetSessions();
 
@@ -275,7 +297,6 @@ RunRecord(const vmcRecordTool::Options& options)
     capture.listenEndpoint = receiver.GetBoundEndpoint();
 
     vmcRecordTool::SessionReport report;
-    vmcRecordTool::TraceCollector trace;
     report.SetStopReason(vmcRecordTool::StopReason::Interrupted);
 
     vmc::ReceivedDatagram datagram;
@@ -308,10 +329,6 @@ RunRecord(const vmcRecordTool::Options& options)
             report.ObserveDatagram(datagram.peer, datagram.bytes.size(), datagram.receiveTime);
             source.PushDatagram(datagram.bytes, datagram.receiveTime, &log);
             report.ObserveFrames(source.GetFramesFromLastPush());
-            if (!options.traceExportPath.empty())
-            {
-                trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
-            }
             report.ObserveDiagnostics(log, seen);
             ReportDiagnostics(log, seen, options.quiet);
             // The list is a session's worth of history nobody reads twice: the
@@ -321,17 +338,6 @@ RunRecord(const vmcRecordTool::Options& options)
             if (report.GetDatagramCount() >= options.maxDatagrams)
             {
                 report.SetStopReason(vmcRecordTool::StopReason::MaxDatagrams);
-                running = false;
-            }
-            // The second bound, and only while there is a second thing being
-            // accumulated. Checked here rather than beside the duration checks
-            // below so it reads next to the bound it parallels -- both are
-            // about what this process is holding, not about how long it has
-            // been running.
-            if (running && !options.traceExportPath.empty() &&
-                trace.GetFrameCount() >= options.maxFrames)
-            {
-                report.SetStopReason(vmcRecordTool::StopReason::MaxFrames);
                 running = false;
             }
             break;
@@ -379,10 +385,6 @@ RunRecord(const vmcRecordTool::Options& options)
     const std::size_t seen = log.size();
     source.Flush(&log);
     report.ObserveFrames(source.GetFramesFromLastPush());
-    if (!options.traceExportPath.empty())
-    {
-        trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
-    }
     report.ObserveDiagnostics(log, seen);
 
     // The receiver is deliberately not closed here. `Close` clears the bound
@@ -429,18 +431,8 @@ RunRecord(const vmcRecordTool::Options& options)
         }
     }
 
-    // After the capture, always. The verbatim bytes are the record a session
-    // cannot be re-run to recover; the trace is derived from them and can be
-    // written again from the capture by `--inspect --export-trace`. So the
-    // derived artifact never gets to be the reason the raw one was not written.
-    bool exported = true;
-    if (!options.traceExportPath.empty())
-    {
-        exported = WriteTrace(options, trace, options.quiet);
-    }
-
     report.Print(stdout, source, &receiver);
-    return written && exported ? 0 : 1;
+    return written ? 0 : 1;
 }
 
 } // namespace
