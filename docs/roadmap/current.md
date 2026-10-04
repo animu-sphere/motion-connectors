@@ -81,9 +81,11 @@ into the shared layer.
   GitHub release per tag, and every member pushed per target to one OCI
   repository with a generated pin table
   ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
-- ⬜ Add `release.yml`, modelled on `usd-motion-plugins`', publishing the
+- 🚧 Add `release.yml`, modelled on `usd-motion-plugins`', publishing the
   seven libraries, with a dry run through `workflow_dispatch` before the first
-  tag.
+  tag. The workflow, `scripts/make_release_notes.py` and the notes template
+  are in; `workflow_dispatch` reaches it only from the default branch, so the
+  dry run follows the merge.
 - ⬜ Publish the four CLIs once `ost` packages a workspace tool without a
   plugin bundle; until then they ship as source.
 - ⬜ Tag v0.1.0 with its release record under `docs/releases/`.

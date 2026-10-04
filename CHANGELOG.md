@@ -93,6 +93,18 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **A release workflow.** `.github/workflows/release.yml` runs on a `vX.Y.Z`
+  tag equal to `VERSION`. It builds and tests on the PR lane's three cells,
+  then builds, tests and packages each of the seven libraries with
+  `ost library`. Each library is pushed per target to
+  `ghcr.io/animu-sphere/motion-connectors`, and the workflow drafts one GitHub
+  release. The release carries the archives, their manifests, a source
+  archive, `SHA256SUMS` and a pin table generated from what was pushed.
+  `workflow_dispatch` runs the same lanes as a dry run that pushes nothing.
+  `scripts/make_release_notes.py` renders the notes from the changelog and
+  `docs/contributing/RELEASE_NOTES_TEMPLATE.md`, and refuses a heading not
+  written as `## [X.Y.Z] - YYYY-MM-DD`. `scripts/check_docs.py` fails when
+  the workflow's hand-written `ost` pin drifts from `openstrata.ci.yaml`.
 - **The recorded device sessions can be replayed against their manifests.**
   `scripts/check_recorded_sessions.py` finds each mocopi and VRChat OSC
   manifest row's capture by sha256 in an operator's directory. It checks the

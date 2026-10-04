@@ -1,0 +1,543 @@
+# Release workflow (hand-authored). The ost-*.yml workflows are generated from
+# openstrata.ci.yaml; this one is not -- but its runtime/bootstrap pins MIRROR
+# openstrata.ci.yaml, so update both together. scripts/check_docs.py compares
+# the `ost` pin and fails on drift, because regenerating the PR lanes never
+# updates this file and a green PR lane proves nothing about it
+# (usd-vrm-plugins' ost reports 39 and 42 are what that check is made of).
+#
+# It follows usd-motion-plugins' release.yml, so a consumer pins this
+# repository the way it already pins that one (WORKSPACE.md §4.1, WS-O5).
+#
+# Pushing a tag `vX.Y.Z` (which must equal the repo VERSION file and have a
+# finalized CHANGELOG section) builds and tests the whole workspace on the
+# same three OS cells and digest-pinned runtimes as the PR lane, packages
+# every library, and PUBLISHES each as a digest-pinned OpenStrata artifact
+# that another repository can name in its `requires.libraries`.
+#
+# THE LIBRARIES ARE THE RELEASE. Consumers reach this repository only through
+# installed packages (WORKSPACE.md §2.3). The release's real output is a table
+# of digests, one row per library per target, which the `publish` job
+# generates from what it actually pushed rather than from anything
+# hand-written. It ships as a release asset AND inside the notes. A library's
+# source profiles travel inside its archive.
+#
+# THE CLIs ARE NOT PUBLISHED YET. `ost` packages a workspace tool only through
+# `ost plugin package --workspace`, which refuses a workspace with no plugin
+# bundle, and this repository has none. Until it can, the four CLIs ship in
+# the source archive, and each keeps its openstrata.tool.yaml so it publishes
+# unchanged later (WORKSPACE.md §4.1).
+#
+# ONE OCI REPOSITORY, TAGGED PER LIBRARY: `ghcr.io/animu-sphere/motion-connectors`
+# with the tag `<library>-<version>-<target>`. A freshly pushed GHCR package is
+# private and is made public only through the web UI, once per PACKAGE -- one
+# repository is one flip.
+#
+# The two digests are not interchangeable. `artifact_digest` is the archive's
+# own content digest and is what a consumer pins; `oci_digest` is the manifest
+# digest, which changes on every republish. The pin table carries both, in the
+# fields that take each.
+#
+# `workflow_dispatch` is a dry run: the same build/package lanes, the same pin
+# table (with local digests and no `source`, because nothing was pushed),
+# everything uploaded as workflow artifacts, no registry write and no release
+# object created.
+#
+# Fork-PR safety: runs only on tag push / manual dispatch, never on
+# pull_request; the token stays read-only except where a job declares
+# otherwise.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OCI_REPOSITORY: "ghcr.io/animu-sphere/motion-connectors"
+  # Dependency order (WORKSPACE.md §2.1). `ost library build` resolves the
+  # closure itself, so this order is not a correctness requirement -- it keeps
+  # each prerequisite built before the library that consumes it.
+  LIBRARIES: "motionConnectorTransport motionConnectorOsc motionConnectorCore motionConnectorTracking motionConnectorVmc motionConnectorMocopi motionConnectorVrchatOsc"
+
+jobs:
+  preflight:
+    name: preflight (tag = VERSION, changelog finalized)
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_release: ${{ steps.version.outputs.is_release }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Resolve the release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          file_version="$(tr -d '[:space:]' < VERSION)"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            tag_version="${GITHUB_REF_NAME#v}"
+            if [ "$tag_version" != "$file_version" ]; then
+              echo "::error title=release preflight::tag ${GITHUB_REF_NAME} does not match VERSION file ($file_version)" ; exit 1
+            fi
+            echo "version=$tag_version" >> "$GITHUB_OUTPUT"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$file_version" >> "$GITHUB_OUTPUT"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check the changelog section renders (finalized on a real release)
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra=""
+          if [ "${{ steps.version.outputs.is_release }}" != "true" ]; then
+            extra="--allow-unreleased"
+          fi
+          python3 scripts/make_release_notes.py --version "${{ steps.version.outputs.version }}" $extra > /dev/null
+
+  build:
+    name: ${{ matrix.name }}
+    needs: preflight
+    runs-on: ${{ matrix.runs_on }}
+    env:
+      OST_HOME: ${{ format('{0}/.ost-ci-home', github.workspace) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: release-windows
+            cache_cell: workspace-pr-windows
+            runtime_artifact: sha256:ebb0c7da509ee14ada19ee5b461de6996aad0024b5c9640f12dde76912e849b5
+            runtime_remote: "oci://ghcr.io/animu-sphere/openstrata-runtime-cy2026-usd@sha256:d3ff79a6f330558c3b9a427a927d340fe3dcab1fe89107faa0ea9f66a104b7bf"
+            platform: cy2026
+            profile: usd
+            runs_on: ["windows-2022"]
+            require_openusd: cy2026/windows/x86_64/gl
+            # The Windows runtime bundles no interpreter, and `ost runtime
+            # validate` links and RUNS a C++ consumer that loads python313.dll
+            # through pxr (usd-vrm-plugins' ost report 42 §7).
+            host_python: "3.13"
+          - name: release-macos-arm64
+            cache_cell: workspace-pr-macos-arm64
+            runtime_artifact: sha256:8d1322126b8f3aa4dd1791184603d7e1b4571bd4d6d89dd80bb75bdf5eef397c
+            runtime_remote: "oci://ghcr.io/animu-sphere/openstrata-runtime-cy2026-usd@sha256:8486d94286b60cc20b53c926757f1802442569f9d9a7eecdadf2c9895b2efeb6"
+            platform: cy2026
+            profile: usd
+            runs_on: ["macos-15"]
+            require_openusd: cy2026/macos/arm64/metal
+            host_python: "3.13"
+          - name: release-linux
+            cache_cell: workspace-pr-linux
+            runtime_artifact: sha256:3bf31789daa60ef650df35ab276bd67d0c0ee44a960311f78835cc0962efe261
+            runtime_remote: "oci://ghcr.io/animu-sphere/openstrata-runtime-cy2026-usd@sha256:8d2d599489ee623044f4360ad3a2b979e2966e6ad2f949e5aa9083570e59cc4f"
+            platform: cy2026
+            profile: usd
+            runs_on: ["ubuntu-24.04"]
+            require_openusd: cy2026/linux/x86_64/gl
+            host_python: "3.13"
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # OpenUSD 26.08 bundles MaterialX 1.39.5, whose exported
+      # MaterialXConfig.cmake runs `find_dependency(X11 REQUIRED COMPONENTS Xt)`
+      # on non-Apple UNIX, so every Linux consumer of the runtime needs the X11
+      # headers merely to run find_package(pxr). The generated lanes declare it
+      # as `host_packages`; this file is outside that contract.
+      - name: Install X11 dev headers required by MaterialX 1.39.5
+        if: ${{ runner.os == 'Linux' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libx11-dev libxt-dev
+      - name: Bootstrap the pinned ost (release asset, checksum-verified)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ost-ci
+          case "${RUNNER_OS}-${RUNNER_ARCH}" in
+            Linux-X64)   triple=x86_64-unknown-linux-musl ; ext=tar.xz ;;
+            macOS-ARM64) triple=aarch64-apple-darwin ; ext=tar.xz ;;
+            macOS-X64)   triple=x86_64-apple-darwin ; ext=tar.xz ;;
+            Windows-X64) triple=x86_64-pc-windows-msvc ; ext=zip ;;
+            *) echo "::error title=ost bootstrap::no ost release asset for ${RUNNER_OS}-${RUNNER_ARCH}" ; exit 1 ;;
+          esac
+          asset="ost-cli-${triple}.${ext}"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.6"
+          curl -fsSLo "$asset" "$base/$asset"
+          curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
+          actual="$( (command -v sha256sum > /dev/null && sha256sum "$asset" || shasum -a 256 "$asset") | cut -d' ' -f1 )"
+          published="$(cut -d' ' -f1 "$asset.sha256")"
+          if [ "$actual" != "$published" ]; then
+            echo "::error title=ost bootstrap::$asset hashes to $actual but the release publishes $published" ; exit 1
+          fi
+          mkdir -p .ost-ci/bootstrap-bin
+          if [ "$ext" = "zip" ]; then
+            powershell -NoProfile -Command "Expand-Archive -LiteralPath '$asset' -DestinationPath '.ost-ci/bootstrap-bin' -Force"
+          else
+            tar -xf "$asset" -C .ost-ci/bootstrap-bin
+          fi
+          bin="$(find .ost-ci/bootstrap-bin -type f \( -name ost -o -name ost.exe \) | head -n 1)"
+          if [ -z "$bin" ]; then echo "::error title=ost bootstrap::no ost binary inside $asset" ; exit 1 ; fi
+          chmod +x "$bin" 2> /dev/null || true
+          bindir="$(cd "$(dirname "$bin")" && pwd)"
+          # GITHUB_PATH must hold a native path: a POSIX /d/a/... entry is
+          # visible to bash but not to Windows CreateProcess.
+          if command -v cygpath > /dev/null; then bindir="$(cygpath -w "$bindir")"; fi
+          echo "$bindir" >> "$GITHUB_PATH"
+      - name: Check ost is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(ost --version)"
+          echo "$version"
+          if [ "$version" != "ost 0.23.6" ]; then
+            echo "::error title=ost bootstrap::expected 'ost 0.23.6', got '$version'" ; exit 1
+          fi
+      - name: Restore the artifact registry cache (speed only, never correctness)
+        if: ${{ vars.OST_CI_DISABLE_CACHE != 'true' }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ost-ci-home/artifacts
+          key: ost-registry-0.23.6-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
+      - name: Pull the pinned runtime SDK from its remote reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The cache-hit test uses the SAME predicate as the gate below: a
+          # cached record that verifies without evidence but fails the gate
+          # would skip the pull and wedge the lane, because `artifact pull`
+          # cannot add evidence to a digest already in the registry.
+          if ost artifact show "${{ matrix.runtime_artifact }}" --json > /dev/null 2>&1 \
+             && ost artifact verify "${{ matrix.runtime_artifact }}" --minimum-trust local \
+                  --require-sbom --require-provenance --json > /dev/null; then
+            echo "pinned runtime already present and verified (cache hit) -- skipping the remote pull"
+          else
+            rm -rf "${OST_HOME}/artifacts"
+            ost artifact pull "${{ matrix.runtime_remote }}" --expect-artifact "${{ matrix.runtime_artifact }}" --require-kind runtime --require-openusd "${{ matrix.require_openusd }}" --require-openusd-version "26.08" --json
+          fi
+      - name: Verify and materialize the pinned runtime SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Never weaker than the gate `ost ci generate` renders into the PR
+          # lanes that feed this one.
+          ost artifact verify ${{ matrix.runtime_artifact }} --minimum-trust local --require-sbom --require-provenance --require-openusd "${{ matrix.require_openusd }}" --require-openusd-version "26.08"
+          ost runtime pull ${{ matrix.platform }} --profile ${{ matrix.profile }} --from-artifact ${{ matrix.runtime_artifact }} --force
+      # The usd-motion-plugins libraries every connector links, pinned by
+      # digest in each library's manifest, as the PR lane pulls them.
+      - name: Pull digest-pinned external library artifacts
+        shell: bash
+        run: ost library pull --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json
+      - name: Set up host Python matching the runtime ABI
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.host_python }}
+      - name: Validate the materialized runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ost-ci
+          # After the interpreter is on PATH, not before: `consumer-link` runs
+          # the executable it builds.
+          ost runtime validate ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > .ost-ci/runtime-validate.json
+      - name: Build the workspace root tree (libraries + CLI tools)
+        shell: bash
+        run: ost build --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --progress plain
+      - name: Run the whole CTest suite
+        shell: bash
+        run: ost test --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
+      - name: Build, test and package every library as its own artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ost-ci/libraries
+          for lib in ${LIBRARIES}; do
+            echo "::group::$lib"
+            ost library build "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
+            ost library test "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
+            ost library package "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > ".ost-ci/libraries/$lib.json"
+            echo "::endgroup::"
+          done
+      - name: Stage the release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.preflight.outputs.version }}"
+          mkdir -p release-stage/packages
+          # Counted from the tree, not from the list above: a library that is
+          # added under libs/ but not to LIBRARIES must fail here rather than
+          # quietly not ship.
+          want_libs="$(ls -d libs/*/ | wc -l | tr -d ' ')"
+          got_libs="$(echo ${LIBRARIES} | wc -w | tr -d ' ')"
+          if [ "$want_libs" -ne "$got_libs" ]; then
+            echo "::error title=release packaging::libs/ holds $want_libs libraries but LIBRARIES names $got_libs" ; exit 1
+          fi
+          # Each dist directory holds manifest.json beside the archive, which
+          # is exactly what `ost artifact import` takes, so the whole directory
+          # is staged and the publish job imports from it.
+          for lib in ${LIBRARIES}; do
+            json=".ost-ci/libraries/$lib.json"
+            archive="$(jq -er '.data.archive' "$json")"
+            digest="$(jq -er '.data.archive_digest' "$json")"
+            target="$(jq -er '.data.target' "$json")"
+            got_version="$(jq -er '.data.library.version' "$json")"
+            if [ "$got_version" != "$version" ]; then
+              echo "::error title=release packaging::$lib packaged version $got_version but the release is $version" ; exit 1
+            fi
+            if command -v cygpath > /dev/null; then archive="$(cygpath -u "$archive")"; fi
+            dist_dir="$(dirname "$archive")"
+            if [ ! -f "$dist_dir/manifest.json" ]; then
+              echo "::error title=release packaging::$lib has no manifest.json beside its archive, so it cannot be imported and published" ; exit 1
+            fi
+            mkdir -p "release-stage/packages/$lib"
+            cp -R "$dist_dir/." "release-stage/packages/$lib/"
+            cp "$archive" release-stage/
+            cp "$dist_dir/manifest.json" "release-stage/$lib-$version-$target.manifest.json"
+            printf '%s\t%s\t%s\t%s\n' "$lib" "$version" "$target" "$digest" >> release-stage/library-digests.tsv
+          done
+          ls -l release-stage
+      - name: Upload the staged artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.name }}
+          path: release-stage/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: publish the library artifacts
+    needs: [preflight, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      OST_HOME: ${{ format('{0}/.ost-ci-home', github.workspace) }}
+      # `ost` does not read the docker/oras credential store. A push runs the
+      # registry token exchange, which needs user + password.
+      #
+      # UNPROVEN UNTIL THE FIRST TAG: `GITHUB_TOKEN` with `packages: write`
+      # is expected to create this repository's first GHCR package, as it did
+      # for usd-motion-plugins. If it is refused, the failure names which fix
+      # applies (a rejected credential means a PAT with `write:packages` is
+      # needed instead, as a secret). The package is private when created, and
+      # making it public is a one-time manual flip in its settings.
+      OST_REGISTRY_USER: ${{ github.actor }}
+      OST_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Download the per-target artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          path: staged
+      - name: Bootstrap the pinned ost (release asset, checksum-verified)
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="ost-cli-x86_64-unknown-linux-musl.tar.xz"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.6"
+          curl -fsSLo "$asset" "$base/$asset"
+          curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
+          actual="$(sha256sum "$asset" | cut -d' ' -f1)"
+          published="$(cut -d' ' -f1 "$asset.sha256")"
+          if [ "$actual" != "$published" ]; then
+            echo "::error title=ost bootstrap::$asset hashes to $actual but the release publishes $published" ; exit 1
+          fi
+          mkdir -p .ost-ci/bootstrap-bin
+          tar -xf "$asset" -C .ost-ci/bootstrap-bin
+          bin="$(find .ost-ci/bootstrap-bin -type f -name ost | head -n 1)"
+          chmod +x "$bin"
+          echo "$(cd "$(dirname "$bin")" && pwd)" >> "$GITHUB_PATH"
+      - name: Import every library artifact into the local registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ost-ci
+          for dir in staged/*/packages/*; do
+            [ -f "$dir/manifest.json" ] || { echo "::error title=publish::$dir has no manifest.json" ; exit 1 ; }
+            ost artifact import "$dir" --json > /dev/null
+          done
+          echo "imported $(ls -d staged/*/packages/* | wc -l) package(s)"
+          # One row per (library, target), read from what the build jobs
+          # actually produced rather than from a list written here.
+          cat staged/*/library-digests.tsv | sort -u > .ost-ci/artifacts.tsv
+          cat .ost-ci/artifacts.tsv
+      - name: Push each library to the OCI repository
+        if: ${{ needs.preflight.outputs.is_release == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > .ost-ci/pushed.tsv
+          while IFS=$'\t' read -r name ver target digest; do
+            tag="${name}-${ver}-${target}"
+            out=".ost-ci/push-${tag}.json"
+            ost artifact push "$digest" "oci://${OCI_REPOSITORY}:${tag}" --json > "$out" < /dev/null
+            oci="$(jq -er '.data.oci_digest' "$out")"
+            art="$(jq -er '.data.artifact_digest' "$out")"
+            if [ "$art" != "$digest" ]; then
+              echo "::error title=publish::pushing $tag reported artifact digest $art, expected $digest" ; exit 1
+            fi
+            printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$ver" "$target" "$digest" "$oci" >> .ost-ci/pushed.tsv
+            echo "pushed $tag -> $oci"
+          done < .ost-ci/artifacts.tsv
+      - name: Build the consumer pin table
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.preflight.outputs.version }}"
+          released="${{ needs.preflight.outputs.is_release }}"
+          mkdir -p out
+          if [ "$released" = "true" ]; then
+            rows=.ost-ci/pushed.tsv
+          else
+            # A dry run publishes nothing, so there is no `source` to name and
+            # the table says so rather than inventing an unreachable locator.
+            rows=.ost-ci/dry.tsv
+            awk -F'\t' '{print $0 "\t"}' .ost-ci/artifacts.tsv > "$rows"
+          fi
+          # What the table MUST contain, counted from the tree and from the
+          # build jobs that ran -- not from a number written here. A target
+          # whose archive silently never arrived would otherwise ship a pin
+          # table that is correct about everything it mentions and missing a
+          # platform.
+          want_libs="$(ls -d libs/*/ | wc -l | tr -d ' ')"
+          want_targets="$(ls -d staged/release-* | wc -l | tr -d ' ')"
+          echo "expecting $want_libs library(ies) on $want_targets target(s)"
+          python3 - "$rows" "$version" "$released" "${OCI_REPOSITORY}" "$want_libs" "$want_targets" <<'PY'
+          import json, pathlib, sys
+          rows_path, version, released, repository = sys.argv[1:5]
+          want_libs, want_targets = int(sys.argv[5]), int(sys.argv[6])
+          pins: dict[str, dict] = {}
+          for line in pathlib.Path(rows_path).read_text().splitlines():
+              if not line.strip():
+                  continue
+              parts = line.split("\t")
+              name, ver, target, digest = parts[:4]
+              oci = parts[4] if len(parts) > 4 else ""
+              entry = {"digest": digest}
+              if oci:
+                  entry["source"] = f"oci://{repository}@{oci}"
+              pins.setdefault(name, {})[target] = entry
+          if len(pins) != want_libs:
+              raise SystemExit(
+                  f"::error title=publish::the pin table has {len(pins)} "
+                  f"library(ies), but libs/ holds {want_libs}: {sorted(pins)}")
+          for name, targets in sorted(pins.items()):
+              if len(targets) != want_targets:
+                  raise SystemExit(
+                      f"::error title=publish::{name} has {len(targets)} "
+                      f"target(s), expected {want_targets}: {sorted(targets)}")
+          out = pathlib.Path("out")
+          out.mkdir(exist_ok=True)
+          document = {"version": version, "published": released == "true",
+                      "repository": repository, "libraries": pins}
+          (out / "external-library-pins.json").write_text(
+              json.dumps(document, indent=2, sort_keys=True) + "\n")
+          major, minor = version.split(".")[:2]
+          lower, upper = f"{major}.{minor}", f"{major}.{int(minor) + 1}"
+          md = []
+          if released != "true":
+              md.append("> Dry run: nothing was pushed, so no `source` is named. "
+                        "The digests are this build's.\n")
+          for name in sorted(pins):
+              md.append(f"<details><summary><code>{name}</code></summary>\n")
+              md.append("```yaml")
+              md.append("requires:")
+              md.append("  libraries:")
+              md.append(f"    - id: {name}")
+              md.append(f'      version: ">={lower},<{upper}"')
+              md.append("      artifact:")
+              md.append("        targets:")
+              for target in sorted(pins[name]):
+                  entry = pins[name][target]
+                  md.append(f"          {target}:")
+                  md.append(f"            digest: {entry['digest']}")
+                  if "source" in entry:
+                      md.append(f"            source: {entry['source']}")
+              md.append("```")
+              md.append("\n</details>\n")
+          (out / "external-library-pins.md").write_text("\n".join(md) + "\n")
+          print(f"{len(pins)} library(ies) in the pin table")
+          PY
+          cat out/external-library-pins.md
+      - name: Upload the pin table
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pins
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: assemble release (draft)
+    needs: [preflight, build, publish]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Download the per-target artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          path: staged
+      - name: Collect the release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.preflight.outputs.version }}"
+          mkdir -p dist-release
+          # Only the flat files: `packages/` holds the import directories the
+          # publish job consumed, and their archives are already here.
+          find staged -maxdepth 2 -type f \( -name '*.tar.zst' -o -name '*.manifest.json' \) -exec cp {} dist-release/ \;
+          cp staged/pins/external-library-pins.* dist-release/
+          git archive --format=tar.gz --prefix="motion-connectors-$version/" \
+            -o "dist-release/motion-connectors-$version-src.tar.gz" HEAD
+      - name: Write SHA256SUMS over every release file
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist-release
+          sha256sum $(ls | grep -v '^SHA256SUMS$') > SHA256SUMS
+          cat SHA256SUMS
+      - name: Render the release notes from the changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra=""
+          if [ "${{ needs.preflight.outputs.is_release }}" != "true" ]; then
+            extra="--allow-unreleased"
+          fi
+          python3 scripts/make_release_notes.py \
+            --version "${{ needs.preflight.outputs.version }}" \
+            --pins dist-release/external-library-pins.md \
+            --checksums dist-release/SHA256SUMS \
+            --out release-notes.md $extra
+      - name: Create the draft GitHub release
+        if: ${{ needs.preflight.outputs.is_release == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" \
+            --draft \
+            --title "motion-connectors ${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            dist-release/*
+      - name: Upload the dry-run bundle (workflow_dispatch only)
+        if: ${{ needs.preflight.outputs.is_release != 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dry-run-release
+          path: |
+            dist-release/
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 7
