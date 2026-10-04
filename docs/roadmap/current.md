@@ -44,15 +44,17 @@ against its manifest with `scripts/check_recorded_sessions.py`
 
 ## Next: v0.2.0
 
-v0.2.0 carries the wire codec, the WebSocket transport, the capture/bridge
-commands, Python bindings and the record-stream example
-([status table](README.md#status-at-a-glance)). The wire representation is
-decided ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)), so the codec
-and the WebSocket connector can start:
+v0.2.0 carries the WebSocket transport, the capture/bridge commands, Python
+bindings and the record-stream example
+([status table](README.md#status-at-a-glance)). The wire codec,
+`motionConnectorWire`, has landed
+([capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)), so the
+WebSocket connector can start on it:
 
-- ⬜ `motionConnectorWire`: encode and decode `openstrata.motion.frame/v1`,
-  with a generated corpus testing every refusal in
-  [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses).
+- ⬜ `motionConnectorWebSocket`: `MotionFrame` over WebSocket, both
+  directions, decoding through `motionConnectorWire` and stamping its own
+  `receiveTimestamp` and `frameNumber`
+  ([FRAME_WIRE_FORMAT §7](../design/FRAME_WIRE_FORMAT.md#7-encoding-is-not-receiving)).
 - ⬜ `FW-O2`, whether state and diagnostics cross the wire, settled with the
   WebSocket connector and `bridge`.
 

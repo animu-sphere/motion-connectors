@@ -30,6 +30,7 @@ contract violation without knowing which connector produced it:
 | --- | --- |
 | transport | bind, receive, capture-file failures |
 | wire format (OSC) | malformed packets, as protocol-neutral events |
+| frame wire format (`motionConnectorWire`) | a refused `openstrata.motion.frame/v1` message, `WIRE_*` |
 | each connector | its protocol's semantics and frame assembly, frozen before its decoder |
 | connector core | state transitions, buffer overflow, contract violations (non-finite values, clock regressions) |
 
@@ -67,6 +68,22 @@ through; this repository never re-codes it.
 | `VRCHAT_OSC_COORDINATE_INVALID` | warning | yes | `motionConnectorVrchatOsc` | A coordinate is non-finite or has a zero-length rotation. |
 | `VRCHAT_OSC_SOCKET_BIND_FAILED` | error | no | `motionConnectorVrchatOsc` | The receiver cannot bind its listen address and port. |
 | `VRCHAT_OSC_CALIBRATION_REQUIRED` | warning | yes | `motionConnectorVrchatOsc` | The stream is uncalibrated and cannot yet name its tracking space. |
+| `WIRE_MESSAGE_TOO_LARGE` | warning | yes | `motionConnectorWire` | The message is over the declared maximum size; nothing was parsed. |
+| `WIRE_MESSAGE_MALFORMED` | warning | yes | `motionConnectorWire` | The message is not JSON text, or not UTF-8; the writer raises it for a string that is not UTF-8. |
+| `WIRE_NESTING_TOO_DEEP` | warning | yes | `motionConnectorWire` | The message nests deeper than the format's six levels. |
+| `WIRE_KEY_DUPLICATE` | warning | yes | `motionConnectorWire` | An object has the same key twice; the writer raises it for a repeated channel. |
+| `WIRE_FORMAT_UNKNOWN` | warning | yes | `motionConnectorWire` | `format` names a version this reader was not built for. |
+| `WIRE_KEY_UNKNOWN` | warning | yes | `motionConnectorWire` | A key version 1 does not have, at any depth. |
+| `WIRE_KEY_MISSING` | warning | yes | `motionConnectorWire` | A required key is absent. |
+| `WIRE_TYPE_MISMATCH` | warning | yes | `motionConnectorWire` | A value has the wrong JSON type or array length; `null` is always one. |
+| `WIRE_VALUE_UNKNOWN` | warning | yes | `motionConnectorWire` | A clock, source kind or contact word outside its vocabulary. |
+| `WIRE_JOINT_UNKNOWN` | warning | yes | `motionConnectorWire` | A joint name the vocabulary does not have. |
+| `WIRE_CONFIDENCE_MISMATCH` | warning | yes | `motionConnectorWire` | `confidence` and `joints` do not have the same keys. |
+| `WIRE_NUMBER_OUT_OF_RANGE` | warning | yes | `motionConnectorWire` | A number overflows the `float` or `double` it is read into. |
+| `WIRE_QUATERNION_INVALID` | warning | yes | `motionConnectorWire` | A rotation is zero or not unit length. |
+| `WIRE_COUNTER_INVALID` | warning | yes | `motionConnectorWire` | A counter string is not a decimal `uint64` without a leading zero. |
+| `WIRE_ID_DUPLICATE` | warning | yes | `motionConnectorWire` | An actor appears twice in a frame, or a tracker twice in an actor. |
+| `WIRE_VALUE_NOT_FINITE` | warning | yes | `motionConnectorWire` | The writer was handed a non-finite number, which JSON cannot spell. |
 
 ## 3. Imported families
 
@@ -81,6 +98,13 @@ The enum order and the stable strings are tested together in each adapter.
 
 `liveTransport` and `osc` hold no code enum of their own: they report through
 the connector that links them.
+
+`motionConnectorWire` is not imported, and it is the one shared library with
+a code set of its own, `WIRE_*` (16 codes): a refused frame message is the same
+event whichever connector or tool decoded it, so the codec names it
+([FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)).
+Its enum order and stable strings are tested together in
+`motionConnectorWire_frameWire`, and every reader code has a corpus message.
 
 ## 4. Resolved decisions
 

@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# The codec's edge set is the shared contract and the pose inside it
+# (WORKSPACE.md §2.1); no transport and no JSON package.
+if(NOT TARGET gf AND NOT TARGET pxr::gf)
+    find_dependency(pxr CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionCore::motionCore)
+    find_dependency(motionCore CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_dependency(motionConnectorCore CONFIG REQUIRED)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/motionConnectorWireTargets.cmake")
+check_required_components(motionConnectorWire)

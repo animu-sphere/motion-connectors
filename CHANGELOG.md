@@ -6,6 +6,23 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`motionConnectorWire`, the `MotionFrame` wire codec.** `EncodeFrame` and
+  `DecodeFrame` write and read `openstrata.motion.frame/v1`, one JSON message
+  per frame, as FRAME_WIRE_FORMAT §3–§6 spell it; those sections are now
+  binding. Decode after encode is the identity, and re-encoding a decoded
+  message writes the same bytes. The reader refuses every §6 case as a
+  `WIRE_*` code (16 codes, now in DIAGNOSTICS.md) whose subject is a path into
+  the message, and leaves the frame untouched. The writer refuses what the
+  reader would refuse, non-finite numbers included. The JSON parser is the
+  library's own, so there is no third-party dependency. A generated corpus of
+  59 messages (5 canonical, 3 accepted, 51 refused) is checked by
+  `motionConnectorWire_corpus` and kept in step with its generator by
+  `motionConnectorWire_messageGen`. The library is an `ost` member, a release
+  artifact and an installed-consumer package. A counter string is now also
+  refused with a leading zero, so it has one spelling (§4.3).
+
 ### Changed
 
 - **CC-O8 settles the `MotionFrame` wire representation.** Version 1 is JSON,

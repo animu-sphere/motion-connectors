@@ -1,8 +1,9 @@
 # `MotionFrame` wire format
 
-> Status: **accepted**, 2026-10-04 (CC-O8). Nothing here is implemented yet;
-> the capability matrix says what is. A section becomes **binding** when the
-> codec it describes lands with its tests.
+> Status: **accepted**, 2026-10-04 (CC-O8); §3–§6 are **binding** since
+> 2026-10-04, when `motionConnectorWire` landed with its suite and generated
+> corpus. §7's half about the receiving connector binds when the WebSocket
+> connector lands. The capability matrix says what is implemented.
 >
 > This document owns how a `MotionFrame` is **spelled as bytes** when it
 > crosses a process boundary: over WebSocket, into a browser, and to any other
@@ -177,7 +178,9 @@ space in it.
   no fixed precision to quantise a timestamp.
 - **A 64-bit counter is a decimal string** — `frameNumber`, `sequence` and
   `sequenceNumber`. A JavaScript reader parses JSON numbers as doubles and
-  would round a counter past 2^53 without saying so.
+  would round a counter past 2^53 without saying so. It is spelled one way:
+  digits only, with no sign and no leading zero, so a decoded counter
+  re-encodes to the string it came from.
 - **Non-finite values cannot be spelled.** JSON has no `NaN` or `Infinity`, so
   a writer that is handed one refuses the whole frame rather than emitting a
   file its reader refuses; a frame carrying one would already be a connector
@@ -221,17 +224,25 @@ Every message is untrusted (CONNECTOR_CONTRACT §10). A reader:
 - refuses invalid UTF-8, a duplicate key, nesting deeper than the format has,
   and a value of the wrong JSON type;
 - refuses an unknown joint name — a typo must not read as a missing limb —
-  and a joint in `confidence` that is not in `joints`;
+  and a `confidence` whose keys are not exactly `joints`' keys, in either
+  direction;
 - refuses a number that overflows its C++ type, a zero or non-unit quaternion
-  (by the motion contract's tolerance, as the trace's reader does), and a
-  counter string that is not a decimal `uint64`;
+  (by the motion contract's tolerance, as the trace's reader does: a squared
+  length within 1e-3 of one), and a counter string that is not a decimal
+  `uint64` spelled as §4.3 spells it;
 - refuses a duplicate `trackerId` within one actor and a duplicate `actor`
   within one frame.
 
-A refused message is a diagnostic in the codec's own namespace and a dropped
-message, never a crash and never a partly filled frame
-([DIAGNOSTICS.md](../reference/DIAGNOSTICS.md) gains the namespace with the
-code). The generated corpus tests each refusal.
+A refused message is a diagnostic in the codec's own `WIRE_*` namespace
+([DIAGNOSTICS.md](../reference/DIAGNOSTICS.md)) and a dropped message, never a
+crash and never a partly filled frame. Its subject is a path into the message
+(`$.actors[0].pose.joints.leftHand`), or `byte N` when the text is not JSON.
+The generated corpus tests each refusal.
+
+The writer refuses the same things rather than emitting them: a non-finite
+number (§4.3), a zero or non-unit quaternion, a repeated actor, tracker or
+channel, and a string that is not UTF-8. A message this codec wrote is one it
+reads.
 
 ## 7. Encoding is not receiving
 
