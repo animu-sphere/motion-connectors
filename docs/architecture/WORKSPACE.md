@@ -219,9 +219,47 @@ WORKSPACE.md §9.2), which this repository keeps from the receiving side:
 - Both build modes, `ost` and plain CMake, are kept working, and every package
   is consumed from a clean installed prefix in CI, where the installed
   `motion_connect` also runs.
-- How connectors are distributed — one release with separate artifacts, or
-  separate downloads — is WS-O5. `usd-vrm-plugins` left it open as BND-2 and
-  handed it here.
+- How connectors are distributed is §4.1 (WS-O5, decided 2026-10-04).
+  `usd-vrm-plugins` left it open as BND-2 and handed it here.
+
+### 4.1 Distribution
+
+The release follows `usd-motion-plugins`' release workflow, so a consumer
+pins this repository the way it already pins that one.
+
+- **One version, separate artifacts.** Every library and CLI is released at
+  the root `VERSION`, and each is its own artifact, so a consumer takes
+  exactly the connectors it names. A version per connector would buy a
+  compatibility matrix nobody needs (BND-2's recommendation).
+- **One release per tag.** Pushing `vX.Y.Z`, equal to `VERSION` and with a
+  finalized changelog section, builds and tests the workspace on the PR lane's
+  targets and digest-pinned runtimes, then packages every member and creates
+  one GitHub release.
+- **One OCI repository, tagged per member.** Each member is pushed to
+  `ghcr.io/animu-sphere/motion-connectors` as
+  `<member>-<version>-<target>`. The release notes and a release asset carry
+  the pin table: one row per member per target with its archive digest and
+  OCI source, generated from what was pushed. A consumer names those rows
+  in its `requires.libraries` / `requires.tools`. A library's installed
+  source profiles travel inside its artifact (`ost library package` puts
+  `share/motion-connectors/profiles/` in the archive).
+- **The libraries are published first; the CLIs follow `ost`.** `ost`
+  packages a workspace tool only through `ost plugin package --workspace`,
+  which refuses a workspace with no plugin bundle (`ost` 0.23.14:
+  `no plugin bundles found in the workspace member set`), and this repository
+  has none. Until `ost` packages a tool in a bundle-free workspace, a release
+  publishes the libraries, and the CLIs ship as source in the release's
+  source archive. Each tool keeps its `openstrata.tool.yaml` so that it
+  publishes unchanged when `ost` can package it.
+- **A vendor SDK is declared, never discovered.** It appears in its
+  connector's manifest and nowhere else, and only that connector's artifact
+  requires it. None of the v0.1.0 connectors uses one; the first that does
+  fixes the manifest field.
+- **Device validation stays an operator's run.** Recorded sessions are
+  replayed locally with `scripts/check_recorded_sessions.py` (§5), not in a
+  release or capability lane, because CI holds no device bytes. A capability
+  is claimed only from tests CI can run
+  ([CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md)).
 
 ## 5. Test data
 
@@ -263,10 +301,11 @@ WS-O1, the names and layout, and WS-O7, the import order, were decided on
 and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
 WS-O3 was decided on 2026-10-04: the three record tools remain, one per
-connector (§1.3).
+connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
+per tag, and one artifact per member in one OCI repository, the CLIs once
+`ost` can package them (§4.1).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
-| WS-O5 | Distribution (`usd-vrm-plugins` BND-2): one GitHub release carrying per-connector artifacts, or separate downloads; one version for all connectors (recommended there) or one each; how a vendor SDK dependency is declared rather than discovered; whether hardware validation becomes a capability lane | the first release |
 | WS-O6 | Web module layout: under `src/` as design policy §16 lists them, or under `bindings/js/` as one npm package with the JS API | Connector Phase 4 |
