@@ -39,7 +39,8 @@ against its manifest with `scripts/check_recorded_sessions.py`
   person's motion. A publishable one needs the vendor's `BVH Sender`, not a
   device.
 - ⬜ **A live session reaching an avatar from release artifacts alone.** It
-  composes this repository's release with an avatar repository's; where the
+  composes this repository's release with an avatar repository's. v0.1.0's
+  libraries are now published, so it waits only on the avatar side; where the
   composed test runs is `usd-avatar-runtime`'s once it exists.
 
 ## Next: v0.2.0
