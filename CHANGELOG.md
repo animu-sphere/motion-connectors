@@ -46,6 +46,18 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **`motion_connect bridge` is designed, and `FW-O2` is decided.** The new
+  `docs/design/MOTION_CONNECT.md` owns what the shared-contract CLI does
+  beyond reading one connector. `websocket` becomes a source of `list`,
+  `dump` and `inspect`. `bridge` polls one source connector, live or from a
+  capture, and hands each frame unchanged to `WebSocketFrameSender`, which
+  listens on loopback or connects. It sends nothing it did not poll. A
+  replayed capture waits for a peer and keeps its recorded pacing. Connector
+  state and diagnostics do not cross the wire in version 1 (`FW-O2`): a
+  receiver's state is its link's, a code belongs to the layer that raised it,
+  and silence and sparse frames already reach the receiver. The bridge prints
+  the upstream state and every diagnostic to its operator. How `record`
+  captures a UDP source is the new `CLI-O1`.
 - **The WebSocket connector is designed.** The new
   `docs/design/WEBSOCKET_CONNECTOR.md` owns how
   `openstrata.motion.frame/v1` messages travel over WebSocket. RFC 6455 is

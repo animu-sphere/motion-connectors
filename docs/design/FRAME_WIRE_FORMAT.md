@@ -272,8 +272,11 @@ a socket. The JS / TS package decodes the same message natively
 ## 9. Open questions
 
 CC-O8 is resolved by §2 ([CONNECTOR_CONTRACT §13](CONNECTOR_CONTRACT.md#13-open-questions)).
+FW-O2 was decided on 2026-10-04 with `motion_connect bridge`: connector state
+and diagnostics do not cross the wire in version 1. A version 1 session
+carries frames only, and an upstream state stays at the bridge
+([MOTION_CONNECT §4](MOTION_CONNECT.md#4-state-and-diagnostics-stay-at-the-bridge)).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | FW-O1 | A binary encoding of the same logical message (MessagePack, CBOR, FlatBuffers, Protobuf or a custom layout), negotiated beside version 1 rather than replacing it | a measured session whose size or parse cost JSON does not meet |
-| FW-O2 | Whether connector state and diagnostics cross the wire, as messages of their own beside frames, so a bridged consumer sees a `Degraded` source as the sender did. The WebSocket connector carries frames only, and its state is its link's ([WEBSOCKET_CONNECTOR §6](WEBSOCKET_CONNECTOR.md#6-the-session-and-its-state)) | `motion_connect bridge` (v0.2.0), the producer that has an upstream state to forward |

@@ -26,7 +26,7 @@ structure, evidence or incomplete work according to the ownership table below.
   rules and the decisions made when the policy was adopted. Release scope and
   ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
   the policy by section number.
-- Five focused contracts own one area each, and on that area they win over
+- Six focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the
     connector interface, `MotionFrame`, tracker observations, state, time,
@@ -40,7 +40,10 @@ structure, evidence or incomplete work according to the ownership table below.
     `MotionFrame` is spelled as bytes across a process boundary;
   - [design/WEBSOCKET_CONNECTOR.md](design/WEBSOCKET_CONNECTOR.md) covers how
     those messages travel over WebSocket: roles, the handshake, the RFC 6455
-    subset, session state and relayed-frame assembly.
+    subset, session state and relayed-frame assembly;
+  - [design/MOTION_CONNECT.md](design/MOTION_CONNECT.md) covers the
+    shared-contract CLI beyond reading one connector: its sources, what
+    `bridge` forwards and keeps, and what `record` captures.
 - The motion values themselves (`MotionPose`, `RootMotion`,
   `MotionChannelSet`, `SourceMetadata` and the `MotionStream` intake) are
   owned by `usd-motion-plugins`' `MOTION_CONTRACT.md`. This repository does
