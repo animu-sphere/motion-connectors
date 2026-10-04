@@ -111,9 +111,11 @@ expectation until a labelled session measures it.
 
 CS-O1's placement was decided on 2026-09-24: `motionCore` owns
 `SignedPermutationBasis`, `IsValidBasis`, `ApplyBasisToPosition` and
-`ApplyBasisToRotation` in its unreleased 0.5.2 source. The recorded
-`motionSource` converter calls it. VMC and VRChat OSC migrate after that
-package is published and their digest pins are updated. `motionConnectorCore`
+`ApplyBasisToRotation`, published in `usd-motion-plugins` 0.5.2. The recorded
+`motionSource` converter calls it. VMC and VRChat OSC call it too, with the pins
+at 0.5.2 (2026-10-04): each states its measured basis as a
+`SignedPermutationBasis` constant (`VmcBasis`, `TrackingSpaceBasis`) and its
+`ToCanonicalPosition` / `ToCanonicalRotation` apply it. `motionConnectorCore`
 cannot serve the recorded BVH path. Euler composition remains source-specific.
 
 CS-O3 was decided on 2026-09-24: a connector for a fixed wire protocol keeps
@@ -123,8 +125,7 @@ executable conversion policy at runtime ([SOURCE_PROFILES §5](SOURCE_PROFILES.m
 The profile check pins handedness, up, forward, unit and rotation form against
 the conversion tests. A recorded reader such as BVH still takes a variable
 basis from its producer profile, because different files can name different
-producers. Both call the same `motionCore` arithmetic when its new package is
-available to connectors.
+producers. Both call the same `motionCore` arithmetic.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |

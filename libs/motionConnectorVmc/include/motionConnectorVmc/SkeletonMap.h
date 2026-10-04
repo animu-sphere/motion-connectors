@@ -53,7 +53,9 @@
 // The rotation follows from the position: a reflection maps the rotation axis
 // as a vector, and reverses the sense of the rotation with the handedness, so
 // the two sign flips on the imaginary part are one flip from the axis and one
-// from the angle. Units are metres on both sides, so nothing is scaled.
+// from the angle. Units are metres on both sides, so nothing is scaled. The
+// adapter states that basis as `VmcBasis` below; the arithmetic is
+// `motionCore`'s signed-permutation operation (COORDINATE_SYSTEMS.md §2, CS-O1).
 //
 // **A rotation that is not an orientation is refused, not repaired.** VMC's
 // quaternions arrive un-normalised in practice, so they are normalised here —
@@ -79,6 +81,7 @@
 #include "motionConnectorVmc/VmcMessage.h"
 #include "motionConnectorVmc/api.h"
 
+#include "motionCore/BasisConversion.h"
 #include "motionCore/MotionPose.h"
 
 #include "pxr/base/gf/quatf.h"
@@ -98,6 +101,12 @@ MOTIONCONNECTORVMC_API std::string_view VmcHumanBoneName(openstrata::motion::Hum
 // The bone a VMC name denotes. Exact match on the Unity spelling; nullopt for
 // anything else, including the VRM 1.0 spelling of the same bone.
 MOTIONCONNECTORVMC_API std::optional<openstrata::motion::HumanJoint> FindVmcHumanBone(std::string_view name) noexcept;
+
+// The reflection through X above, as `motionCore` states a basis: canonical
+// component i reads the sender's component i, the first negated, determinant
+// -1, metres on both sides.
+inline constexpr openstrata::motion::SignedPermutationBasis VmcBasis{
+    {0, 1, 2}, {true, false, false}, -1, 1.0};
 
 // The sender's axes into the canonical ones, with no validity check: a
 // non-finite input converts to a non-finite output rather than being caught

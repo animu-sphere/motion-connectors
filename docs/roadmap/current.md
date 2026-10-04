@@ -39,9 +39,11 @@ into the shared layer.
 - ✅ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
   `vrchat-osc.trackers.v1`; profile IDs and JSON data are validated while
   target-avatar mapping remains outside this repository.
-- ⬜ Adopt `motionCore`'s shared basis operation in VMC and VRChat OSC after
-  its 0.5.2 package is published and update the pinned digests. Measure VMC's
-  two translation channels on two senders (`CS-O2`).
+- ✅ Adopt `motionCore`'s shared basis operation in VMC and VRChat OSC: every
+  `usd-motion-plugins` pin is at 0.5.2, and both connectors apply their
+  measured basis through `ApplyBasisToPosition` / `ApplyBasisToRotation`.
+  Measuring VMC's two translation channels (`CS-O2`) is operator evidence
+  below.
 - ⬜ Revisit actor identity with the first multi-actor source (`CC-O5`).
 
 ### Tools and evidence

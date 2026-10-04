@@ -357,6 +357,10 @@ TestThePublishedConstantsDescribeTheArithmetic()
     using vrchatOsc::TrackingSpaceMirroredComponent;
     using vrchatOsc::TrackingSpaceUnitInMeters;
 
+    // The basis the conversions apply is the one `motionCore` accepts, so the
+    // constants and the shared arithmetic cannot disagree about the mirror.
+    assert(openstrata::motion::IsValidBasis(vrchatOsc::TrackingSpaceBasis));
+
     // One unit along each axis converts to that many metres, and exactly the
     // named component comes back negated.
     for (int axis = 0; axis < 3; ++axis)

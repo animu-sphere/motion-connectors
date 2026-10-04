@@ -52,6 +52,7 @@ using vmc::MapVmcBoneTransform;
 using vmc::MapVmcRootTransform;
 using vmc::ToCanonicalPosition;
 using vmc::ToCanonicalRotation;
+using vmc::VmcBasis;
 using vmc::VmcBoneSample;
 using vmc::VmcHumanBoneName;
 using vmc::VmcMessage;
@@ -179,6 +180,15 @@ TestPositionsReflectThroughX()
     // conversion needs no second function for the other direction.
     const pxr::GfVec3f back = ToCanonicalPosition({converted[0], converted[1], converted[2]});
     assert(Near(back[0], 0.09f) && Near(back[1], 0.9f) && Near(back[2], -1.5f));
+}
+
+void
+TestTheBasisIsAValidReflection()
+{
+    // `motionCore` refuses a signed permutation whose determinant disagrees
+    // with its signs; the reflection through X is one mirror and so -1.
+    assert(openstrata::motion::IsValidBasis(VmcBasis));
+    assert(VmcBasis.determinant == -1);
 }
 
 void
@@ -663,6 +673,7 @@ main(int argc, char** argv)
     TestTheThumbIsRenamedAndNotJustRecased();
     TestTheVrm10SpellingIsNotAccepted();
     TestPositionsReflectThroughX();
+    TestTheBasisIsAValidReflection();
     TestRotationsReflectThroughXAndReverseSense();
     TestRotationsAreNormalised();
     TestARotationTooSmallToSquareIsStillNormalised();
