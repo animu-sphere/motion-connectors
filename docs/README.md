@@ -16,6 +16,7 @@ structure, evidence or incomplete work according to the ownership table below.
 | [reference/](reference/) | Facts about the current tree: what is implemented, which diagnostics exist. | [CAPABILITY_MATRIX.md](reference/CAPABILITY_MATRIX.md) · [DIAGNOSTICS.md](reference/DIAGNOSTICS.md) |
 | [roadmap/](roadmap/) | What is planned next (incomplete work only), and which release carries it. | [README.md](roadmap/README.md) · [current.md](roadmap/current.md) |
 | [guides/](guides/) | How to build and test the tree. | [building.md](guides/building.md) |
+| [releases/](releases/) | What each released version shipped, and how a release is cut. | [README.md](releases/README.md) · [v0.1.0.md](releases/v0.1.0.md) |
 | [contributing/](contributing/) | How to maintain these documents, and what a release publishes. | [documentation.md](contributing/documentation.md) · [RELEASE_NOTES_TEMPLATE.md](contributing/RELEASE_NOTES_TEMPLATE.md) |
 
 ## Canonical documents
