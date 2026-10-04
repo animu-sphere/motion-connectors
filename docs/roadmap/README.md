@@ -23,7 +23,7 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
-| v0.2.0: transport and bindings | `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | CC-O7 and CC-O8 | ⬜ |
+| v0.2.0: transport and bindings | `motionConnectorWire`; `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | CC-O7 | ⬜ |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe`; JS/TS package; WASM-friendly data ABI | WS-O4 and CC-O2 | ⬜ |
 | v0.4.0: XR and integration | `motionConnectorWebXR`; integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
 | later | `motionConnectorOpenXR`; generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
@@ -36,7 +36,7 @@ The owning document holds the question; this list only schedules it.
 | Id | Question | Owner | Blocks |
 | --- | --- | --- | --- |
 | CC-O7 | A C ABI | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Python bindings, v0.2.0 |
-| CC-O8 | `MotionFrame` wire representation | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.2.0 |
+| FW-O2 | Connector state and diagnostics over the wire | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | `motionConnectorWebSocket` and `bridge`, v0.2.0 |
 | WS-O4 | `motionConnectorCore`'s closure and WASM | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | WS-O6 | Web module layout | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
@@ -44,3 +44,4 @@ The owning document holds the question; this list only schedules it.
 | SP-O3 | Landmark profiles | [PROFILES §6](../design/SOURCE_PROFILES.md#6-open-questions) | v0.3.0 |
 | CS-O2 | VMC's two translation channels (`usd-motion-plugins` MC-O3) | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | a recorded session from two senders |
 | CC-O5 | `ActorId` type | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | the first multi-actor source |
+| FW-O1 | A binary encoding of `MotionFrame` | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | a measured session JSON does not meet |

@@ -356,7 +356,9 @@ transcription stays in each connector's own record tool (WS-O3, decided
 CC-O3 was resolved by the first shared-connector to live-intake test on
 2026-09-24 (§8). CC-O4 was closed by the measured mocopi grammar and its
 missing-bone tests (§5); MC-O6 remains open upstream for a producer that
-actually reports tracking state.
+actually reports tracking state. CC-O8 was decided on 2026-10-04: version 1 of
+the wire representation is JSON, `openstrata.motion.frame/v1`, owned by
+[FRAME_WIRE_FORMAT.md](FRAME_WIRE_FORMAT.md), and it is not the ABI.
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
@@ -364,4 +366,3 @@ actually reports tracking state.
 | CC-O2 | Landmark sources: MediaPipe reports joint **positions**, not rotations. Is a landmark set an observation like a tracker (§4), solved downstream, or does the connector solve rotations itself? Design policy §26 says a connector emits "the best faithful normalized observation", which argues for the former | Connector Phase 4 |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |
-| CC-O8 | The wire representation of `MotionFrame` for WebSocket and JS (design policy §37): JSON first for debuggability, with the ABI left open | v0.2.0 |

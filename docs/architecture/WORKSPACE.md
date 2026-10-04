@@ -32,6 +32,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterMocopi` | imported and adapted 2026-09-21, with its history; namespace `openstrata::connectors::mocopi`; its recorder is `tools/mocopiRecord/` |
 | `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames, `vrchat-osc.trackers.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | imported and adapted 2026-09-21, with its history; namespace `openstrata::connectors::vrchatOsc`; its recorder is `tools/vrchatOscRecord/` |
 | `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | imported 2026-09-20, with its history; namespace `openstrata::connectors::tracking`; consumes `usd-motion-plugins` `motionCore` |
+| `motionConnectorWire` | `libs/motionConnectorWire/` | the `MotionFrame` wire format: encode and decode `openstrata.motion.frame/v1` ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)); knows no socket | new | reserved |
 | `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions | new | reserved |
 | `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | OpenXR head, controllers, hands, body-tracking extensions | new | reserved |
 
@@ -118,7 +119,8 @@ motionConnectorVmc ────────→ motionConnectorCore, usd-motion-p
 motionConnectorMocopi ─────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
 motionConnectorVrchatOsc ──→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc (its CLI adds motionConnectorTracking, motionRecording)
 motionConnectorTracking ───→ usd-motion-plugins motionCore
-motionConnectorWebSocket ──→ motionConnectorCore, an optional WebSocket library
+motionConnectorWire ───────→ motionConnectorCore, usd-motion-plugins motionCore
+motionConnectorWebSocket ──→ motionConnectorCore, motionConnectorWire, an optional WebSocket library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
 tools/*, examples/* ───────→ the connectors they name; usd-motion-plugins libraries
 bindings/python ───────────→ motionConnectorCore, the connectors it exposes
@@ -138,7 +140,7 @@ shared connector contract; VMC, mocopi and VRChat OSC consume it.
 | any component → `usd-vrm-plugins`, `usd-mmd-plugins`, `usd-avatar-runtime` | the ecosystem's direction is one way ([§2.3](#23-the-ecosystem)) |
 | any library → OpenUSD `usd`, `sdf`, `usdGeom`, `usdSkel`, Hydra, OpenExec | no connector requires a `UsdStage` (design policy Rule 5) |
 | a connector → another connector | a runtime route is not a build dependency: a mocopi app can send VMC, and that creates no edge between the two (measured: `usd-vrm-plugins` adapter plan §2.1) |
-| `motionConnectorTransport` ↔ `motionConnectorOsc`, in either direction | a wire format needs no socket, and a socket knows no wire format |
+| `motionConnectorTransport` ↔ `motionConnectorOsc` or `motionConnectorWire`, in either direction | a wire format needs no socket, and a socket knows no wire format |
 | `motionConnectorCore` → any connector, transport, network, device or browser dependency | the core stays smaller than any SDK (design policy §28, Rule 9) |
 | `motionConnectorOsc` → a protocol address literal (`/VMC/…`, `/tracking/…`) | OSC wire format is a library; address semantics are a connector's |
 | `motionConnectorTracking` → a tracker region aliased to a `HumanJoint` | an alias turns assignment into a lookup and leaves the solve nothing to do (measured: `usd-vrm-plugins` OSC track §5.1) |
@@ -307,5 +309,5 @@ per tag, and one artifact per member in one OCI repository, the CLIs once
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only (CC-O8); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
+| WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md), which names no OpenUSD type); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
 | WS-O6 | Web module layout: under `src/` as design policy §16 lists them, or under `bindings/js/` as one npm package with the JS API | Connector Phase 4 |
