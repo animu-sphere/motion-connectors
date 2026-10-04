@@ -26,9 +26,11 @@
   rule; the RFC 6455 subset; session state; frame assembly for a relayed frame;
   the `WEBSOCKET_*` diagnostics; raw capture of received messages.
 - **Out:** the message itself (FRAME_WIRE_FORMAT); a binary encoding
-  (`FW-O1`); connector state and diagnostics as messages (`FW-O2`, decided
-  with `motion_connect bridge`); `motion_connect bridge`'s own options; TLS
-  (`WSC-O1`).
+  (`FW-O1`); connector state and diagnostics as messages, which version 1
+  does not carry (`FW-O2`,
+  [MOTION_CONNECT §4](MOTION_CONNECT.md#4-state-and-diagnostics-stay-at-the-bridge));
+  `motion_connect bridge`'s own options
+  ([MOTION_CONNECT §3](MOTION_CONNECT.md#3-bridge)); TLS (`WSC-O1`).
 
 ## 2. The decision
 
@@ -208,7 +210,8 @@ not the socket's.
 
 `ConnectorState` is the state of this link and not of the source behind it. A
 bridged VMC sender that is `Degraded` upstream reaches this connector as a
-quiet or sparse link. Carrying the upstream state across is `FW-O2`.
+quiet or sparse link. The upstream state is not carried across (`FW-O2`,
+[MOTION_CONNECT §4](MOTION_CONNECT.md#4-state-and-diagnostics-stay-at-the-bridge)).
 
 ## 7. Frame assembly
 

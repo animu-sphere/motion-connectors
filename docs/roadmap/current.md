@@ -52,17 +52,19 @@ codec and the WebSocket connector have landed, both directions
 commands can be built on them:
 
 - ⬜ `motion_connect bridge`: a source connector's frames out through
-  `WebSocketFrameSender`, as its frames were delivered
-  ([WEBSOCKET §7.1](../design/WEBSOCKET_CONNECTOR.md#71-sending)). `FW-O2`,
-  whether state and diagnostics cross the wire, is settled with it, since it
-  is the producer that has an upstream state to forward.
+  `WebSocketFrameSender`, as its frames were delivered, live or from a
+  capture, with `websocket` added as a source of `list`, `dump` and `inspect`.
+  It is designed in [MOTION_CONNECT §2–§4](../design/MOTION_CONNECT.md#3-bridge),
+  and done when §6's tests pass. `FW-O2` was decided with it: state and
+  diagnostics stay at the bridge.
 - ⬜ `motion_connect record`: a raw capture through the shared contract
-  ([WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
-  For WebSocket that is `WebSocketConnector`'s own capture, in the
+  ([MOTION_CONNECT §5](../design/MOTION_CONNECT.md#5-record)). For WebSocket
+  that is `WebSocketConnector`'s own capture, in the
   `!websocket-packet-capture` format
-  ([WEBSOCKET §9](../design/WEBSOCKET_CONNECTOR.md#9-raw-capture)).
+  ([WEBSOCKET §9](../design/WEBSOCKET_CONNECTOR.md#9-raw-capture)). How it
+  reaches a UDP source's datagrams is `CLI-O1`, decided before it is built.
 
-One decision still comes before the bindings, because it fixes what crosses a
+One more decision comes before the bindings, because it fixes what crosses a
 language boundary:
 
 - ⬜ `CC-O7`, a C ABI, which the Python bindings stand on
