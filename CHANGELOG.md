@@ -8,6 +8,27 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motionConnectorWebSocket`, `MotionFrame` over WebSocket.**
+  `WebSocketConnector` receives `openstrata.motion.frame/v1` messages as an
+  `IMotionConnector`, and `WebSocketFrameSender` sends them; either one
+  listens or connects. WEBSOCKET_CONNECTOR.md is now binding. RFC 6455 is the
+  library's own, so there is no third-party dependency: the opening handshake
+  requires the subprotocol `openstrata.motion.frame.v1` and refuses an
+  `Origin` that is not allow-listed, and every framing refusal in §5 is seen
+  in the frame header, closes the connection with its status, and names its
+  byte. One message is one frame. The connector rewrites `frameNumber` and
+  `receiveTimestamp`, carries everything else verbatim, and reports a sender
+  restart, a gap, a timestamp regression and a profile mismatch. A codec
+  refusal drops one message and passes its `WIRE_*` code through. A listener
+  holds one receiving peer and answers a second with 503. A sender serves up
+  to 8 peers from one encoding, each with a bounded queue. A connect role
+  retries at 0.5 s, doubling to 5 s. Received messages can be captured in the
+  transport's format as `!websocket-packet-capture`. The 14 `WEBSOCKET_*`
+  codes are in DIAGNOSTICS.md. Two generated corpora come with it: 56 byte
+  streams for the handshake and framing, and 8 message captures for §7's
+  rows. A loopback suite runs both directions in both roles. The library is
+  built by default (`MOTIONCONNECTORS_BUILD_WEBSOCKET`), and is an `ost`
+  member, a release artifact and an installed-consumer package.
 - **`motionConnectorWire`, the `MotionFrame` wire codec.** `EncodeFrame` and
   `DecodeFrame` write and read `openstrata.motion.frame/v1`, one JSON message
   per frame, as FRAME_WIRE_FORMAT §3–§6 spell it; those sections are now

@@ -1,0 +1,20 @@
+!websocket-stream-capture 1
+sender example.synthetic
+sourceId client-masked-server-frame
+
+d 0.000000 181
+  48 54 54 50 2f 31 2e 31 20 31 30 31 20 53 77 69  |HTTP/1.1 101 Swi|
+  74 63 68 69 6e 67 20 50 72 6f 74 6f 63 6f 6c 73  |tching Protocols|
+  0d 0a 55 70 67 72 61 64 65 3a 20 77 65 62 73 6f  |..Upgrade: webso|
+  63 6b 65 74 0d 0a 43 6f 6e 6e 65 63 74 69 6f 6e  |cket..Connection|
+  3a 20 55 70 67 72 61 64 65 0d 0a 53 65 63 2d 57  |: Upgrade..Sec-W|
+  65 62 53 6f 63 6b 65 74 2d 41 63 63 65 70 74 3a  |ebSocket-Accept:|
+  20 73 33 70 50 4c 4d 42 69 54 78 61 51 39 6b 59  | s3pPLMBiTxaQ9kY|
+  47 7a 7a 68 5a 52 62 4b 2b 78 4f 6f 3d 0d 0a 53  |GzzhZRbK+xOo=..S|
+  65 63 2d 57 65 62 53 6f 63 6b 65 74 2d 50 72 6f  |ec-WebSocket-Pro|
+  74 6f 63 6f 6c 3a 20 6f 70 65 6e 73 74 72 61 74  |tocol: openstrat|
+  61 2e 6d 6f 74 69 6f 6e 2e 66 72 61 6d 65 2e 76  |a.motion.frame.v|
+  31 0d 0a 0d 0a                                   |1....|
+
+d 0.001000 8
+  81 82 37 fa 21 3d 4c 87                          |..7.!=L.|

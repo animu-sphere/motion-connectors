@@ -2,8 +2,9 @@
 
 > Status: **accepted**, 2026-10-04 (CC-O8); §3–§6 are **binding** since
 > 2026-10-04, when `motionConnectorWire` landed with its suite and generated
-> corpus. §7's half about the receiving connector binds when the WebSocket
-> connector lands. The capability matrix says what is implemented.
+> corpus, and §7's half about the receiving connector since
+> `motionConnectorWebSocket` landed the same day. The capability matrix says
+> what is implemented.
 >
 > This document owns how a `MotionFrame` is **spelled as bytes** when it
 > crosses a process boundary: over WebSocket, into a browser, and to any other

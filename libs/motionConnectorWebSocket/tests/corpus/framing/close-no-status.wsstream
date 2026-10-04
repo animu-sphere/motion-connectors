@@ -1,0 +1,21 @@
+!websocket-stream-capture 1
+sender example.synthetic
+sourceId close-no-status
+
+d 0.000000 205
+  47 45 54 20 2f 20 48 54 54 50 2f 31 2e 31 0d 0a  |GET / HTTP/1.1..|
+  48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e 31 3a  |Host: 127.0.0.1:|
+  38 37 36 35 0d 0a 55 70 67 72 61 64 65 3a 20 77  |8765..Upgrade: w|
+  65 62 73 6f 63 6b 65 74 0d 0a 43 6f 6e 6e 65 63  |ebsocket..Connec|
+  74 69 6f 6e 3a 20 55 70 67 72 61 64 65 0d 0a 53  |tion: Upgrade..S|
+  65 63 2d 57 65 62 53 6f 63 6b 65 74 2d 4b 65 79  |ec-WebSocket-Key|
+  3a 20 78 33 4a 4a 48 4d 62 44 4c 31 45 7a 4c 6b  |: x3JJHMbDL1EzLk|
+  68 39 47 42 68 58 44 77 3d 3d 0d 0a 53 65 63 2d  |h9GBhXDw==..Sec-|
+  57 65 62 53 6f 63 6b 65 74 2d 56 65 72 73 69 6f  |WebSocket-Versio|
+  6e 3a 20 31 33 0d 0a 53 65 63 2d 57 65 62 53 6f  |n: 13..Sec-WebSo|
+  63 6b 65 74 2d 50 72 6f 74 6f 63 6f 6c 3a 20 6f  |cket-Protocol: o|
+  70 65 6e 73 74 72 61 74 61 2e 6d 6f 74 69 6f 6e  |penstrata.motion|
+  2e 66 72 61 6d 65 2e 76 31 0d 0a 0d 0a           |.frame.v1....|
+
+d 0.001000 6
+  88 80 37 fa 21 3d                                |..7.!=|

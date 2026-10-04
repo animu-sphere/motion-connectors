@@ -29,3 +29,10 @@
 # read by the same suite and by the generator's --check, so it keeps LF.
 *.frame.json binary
 libs/motionConnectorWire/tests/corpus/expectations.txt text eol=lf
+
+# The WebSocket connector's corpora: byte streams and message captures, in the
+# packet-capture format, compared byte for byte by the generator's --check.
+# A stream carries CR LF inside its HTTP heads, which `text` would strip.
+*.wsstream binary
+*.websocketpackets binary
+libs/motionConnectorWebSocket/tests/corpus/*/expectations.txt text eol=lf

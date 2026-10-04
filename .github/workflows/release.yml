@@ -60,7 +60,7 @@ env:
   # Dependency order (WORKSPACE.md §2.1). `ost library build` resolves the
   # closure itself, so this order is not a correctness requirement -- it keeps
   # each prerequisite built before the library that consumes it.
-  LIBRARIES: "motionConnectorTransport motionConnectorOsc motionConnectorCore motionConnectorWire motionConnectorTracking motionConnectorVmc motionConnectorMocopi motionConnectorVrchatOsc"
+  LIBRARIES: "motionConnectorTransport motionConnectorOsc motionConnectorCore motionConnectorWire motionConnectorTracking motionConnectorVmc motionConnectorMocopi motionConnectorVrchatOsc motionConnectorWebSocket"
 
 jobs:
   preflight:

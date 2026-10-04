@@ -23,7 +23,7 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
-| v0.2.0: transport and bindings | `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | CC-O7 | 🚧 |
+| v0.2.0: transport and bindings | capture/bridge commands; Python bindings; record-stream example | CC-O7 | 🚧 |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe`; JS/TS package; WASM-friendly data ABI | WS-O4 and CC-O2 | ⬜ |
 | v0.4.0: XR and integration | `motionConnectorWebXR`; integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
 | later | `motionConnectorOpenXR`; generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |

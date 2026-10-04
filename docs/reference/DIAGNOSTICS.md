@@ -68,6 +68,20 @@ through; this repository never re-codes it.
 | `VRCHAT_OSC_COORDINATE_INVALID` | warning | yes | `motionConnectorVrchatOsc` | A coordinate is non-finite or has a zero-length rotation. |
 | `VRCHAT_OSC_SOCKET_BIND_FAILED` | error | no | `motionConnectorVrchatOsc` | The receiver cannot bind its listen address and port. |
 | `VRCHAT_OSC_CALIBRATION_REQUIRED` | warning | yes | `motionConnectorVrchatOsc` | The stream is uncalibrated and cannot yet name its tracking space. |
+| `WEBSOCKET_SOCKET_BIND_FAILED` | error | no | `motionConnectorWebSocket` | The listener cannot bind its address and port, or its socket failed. |
+| `WEBSOCKET_CONNECT_FAILED` | warning | yes | `motionConnectorWebSocket` | A connect role's peer refused or is unreachable; once per episode. |
+| `WEBSOCKET_HANDSHAKE_REFUSED` | warning | yes | `motionConnectorWebSocket` | An opening handshake failed: not an upgrade, a wrong path, no subprotocol, a head over 8 KiB or too slow. |
+| `WEBSOCKET_ORIGIN_REFUSED` | warning | yes | `motionConnectorWebSocket` | A request's `Origin` is not on the allow list. |
+| `WEBSOCKET_PEER_REFUSED` | info | yes | `motionConnectorWebSocket` | A peer arrived when the receiving session or the sender's peer bound was full; answered 503. |
+| `WEBSOCKET_PROTOCOL_VIOLATION` | warning | yes | `motionConnectorWebSocket` | An RFC 6455 framing violation or invalid UTF-8; the connection was closed with 1002 or 1007. |
+| `WEBSOCKET_MESSAGE_TOO_LARGE` | warning | yes | `motionConnectorWebSocket` | A message would exceed the bound; closed with 1009, or, sending, refused. |
+| `WEBSOCKET_UNSUPPORTED_MESSAGE` | warning | yes | `motionConnectorWebSocket` | A binary message; closed with 1003. |
+| `WEBSOCKET_PEER_DISCONNECTED` | info | yes | `motionConnectorWebSocket` | The peer closed or the connection reset. |
+| `WEBSOCKET_SOURCE_TIMEOUT` | warning | yes | `motionConnectorWebSocket` | No message arrived within the silence timeout; once per episode. |
+| `WEBSOCKET_SOURCE_RESTARTED` | info | yes | `motionConnectorWebSocket` | The sender's `frameNumber` went back, or a new connection began after frames. |
+| `WEBSOCKET_FRAME_GAP` | info | yes | `motionConnectorWebSocket` | The sender's `frameNumber` skipped; the subject is the missing range. |
+| `WEBSOCKET_TIMESTAMP_REGRESSION` | warning | yes | `motionConnectorWebSocket` | An actor's pose timestamp did not advance; the whole frame was dropped. |
+| `WEBSOCKET_PROFILE_MISMATCH` | warning | yes | `motionConnectorWebSocket` | A frame's profile is not the configured one; the frame was dropped. |
 | `WIRE_MESSAGE_TOO_LARGE` | warning | yes | `motionConnectorWire` | The message is over the declared maximum size; nothing was parsed. |
 | `WIRE_MESSAGE_MALFORMED` | warning | yes | `motionConnectorWire` | The message is not JSON text, or not UTF-8; the writer raises it for a string that is not UTF-8. |
 | `WIRE_NESTING_TOO_DEEP` | warning | yes | `motionConnectorWire` | The message nests deeper than the format's six levels. |
@@ -105,6 +119,15 @@ event whichever connector or tool decoded it, so the codec names it
 ([FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)).
 Its enum order and stable strings are tested together in
 `motionConnectorWire_frameWire`, and every reader code has a corpus message.
+
+`motionConnectorWebSocket` is not imported either. Its `WEBSOCKET_*` set (14
+codes) was frozen in
+[WEBSOCKET_CONNECTOR §8](../design/WEBSOCKET_CONNECTOR.md#8-diagnostics)
+before the code existed, and both directions raise from it. A `WIRE_*` code
+from the codec passes through it unchanged. Its enum order and stable strings
+are tested together in `motionConnectorWebSocket_connector`; the framing
+corpus raises every code a byte stream can, and the message corpus every code
+of §7.
 
 ## 4. Resolved decisions
 

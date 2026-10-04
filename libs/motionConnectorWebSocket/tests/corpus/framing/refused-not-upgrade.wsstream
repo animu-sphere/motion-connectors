@@ -1,0 +1,16 @@
+!websocket-stream-capture 1
+sender example.synthetic
+sourceId refused-not-upgrade
+
+d 0.000000 164
+  47 45 54 20 2f 20 48 54 54 50 2f 31 2e 31 0d 0a  |GET / HTTP/1.1..|
+  48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e 31 3a  |Host: 127.0.0.1:|
+  38 37 36 35 0d 0a 53 65 63 2d 57 65 62 53 6f 63  |8765..Sec-WebSoc|
+  6b 65 74 2d 4b 65 79 3a 20 78 33 4a 4a 48 4d 62  |ket-Key: x3JJHMb|
+  44 4c 31 45 7a 4c 6b 68 39 47 42 68 58 44 77 3d  |DL1EzLkh9GBhXDw=|
+  3d 0d 0a 53 65 63 2d 57 65 62 53 6f 63 6b 65 74  |=..Sec-WebSocket|
+  2d 56 65 72 73 69 6f 6e 3a 20 31 33 0d 0a 53 65  |-Version: 13..Se|
+  63 2d 57 65 62 53 6f 63 6b 65 74 2d 50 72 6f 74  |c-WebSocket-Prot|
+  6f 63 6f 6c 3a 20 6f 70 65 6e 73 74 72 61 74 61  |ocol: openstrata|
+  2e 6d 6f 74 69 6f 6e 2e 66 72 61 6d 65 2e 76 31  |.motion.frame.v1|
+  0d 0a 0d 0a                                      |....|

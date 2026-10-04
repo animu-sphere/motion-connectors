@@ -1,8 +1,11 @@
 # WebSocket connector
 
-> Status: **accepted**, 2026-10-04. Nothing here is implemented yet; each
-> section becomes **binding** when `motionConnectorWebSocket` lands with the
-> tests that section names. The capability matrix says what is implemented.
+> Status: **accepted**, 2026-10-04, and **binding** since 2026-10-04, when
+> `motionConnectorWebSocket` landed with the tests each section names: §3–§6
+> by `motionConnectorWebSocket_loopback` and `_framingCorpus`, §7 by
+> `_connector` and `_messageCorpus`, §8 by `_connector`'s code table, and §9
+> by both corpora and the loopback suite's capture. The capability matrix says
+> what is implemented.
 >
 > This document owns how `openstrata.motion.frame/v1` messages travel over
 > WebSocket: who listens, the opening handshake, the subset of RFC 6455 this
