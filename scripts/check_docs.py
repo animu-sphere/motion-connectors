@@ -27,6 +27,10 @@ connector-owned, while their cross-connector naming decision is documented in
 DIAGNOSTICS.md (DIAG-O1 is resolved). This checker covers links, mirrors and
 dependency ranges; the adapter tests cover the catalog entries.
 
+Release lane -- .github/workflows/release.yml is hand-authored, so it must
+bootstrap the `ost` openstrata.ci.yaml pins at every site that decides
+behaviour.
+
   check_docs.py             check the repository
   check_docs.py --selftest  check the slug and link rules against known cases
 """
@@ -327,6 +331,59 @@ def selftest() -> int:
     return 0
 
 
+def check_release_lane_ost_pin(root: pathlib.Path) -> list[str]:
+    """`.github/workflows/release.yml` bootstraps the `ost` the contract pins.
+
+    The release workflow is hand-authored, because the CI contract cannot
+    express the verbs a release turns on: packaging every member, and pushing
+    each library to the registry consumers pin it from. So `ost ci generate`
+    never touches it and `ost ci validate` says nothing about it, and a green
+    PR lane proves nothing about the lane that publishes. usd-vrm-plugins let
+    exactly this drift across three releases (its ost report 39) and added the
+    same check afterwards.
+
+    Only the three sites that decide behaviour are read: the asset URL, the
+    assertion that checks what was installed, and the registry cache key. The
+    header comment names versions on purpose -- it is prose about this file's
+    history, and a check that read it would forbid the file from having one.
+    """
+    errors: list[str] = []
+    lane_path = root / ".github" / "workflows" / "release.yml"
+    if not lane_path.is_file():
+        return errors
+    contract = (root / "openstrata.ci.yaml").read_text(encoding="utf-8")
+    m = re.search(r'^bootstrap:\s*$.*?^\s+version:\s*"([^"]+)"',
+                  contract, re.M | re.S)
+    if not m:
+        return ["openstrata.ci.yaml declares no bootstrap.ost.version"]
+    pinned = m.group(1)
+    lane = lane_path.read_text(encoding="utf-8")
+    sites = {
+        "the release asset URL":
+            r"open-strata/releases/download/v(\d+\.\d+\.\d+)",
+        "the post-install assertion":
+            r'!=\s*"ost (\d+\.\d+\.\d+)"',
+        "the registry cache key":
+            r"key: ost-registry-(\d+\.\d+\.\d+)-",
+    }
+    for what, pattern in sites.items():
+        found = set(re.findall(pattern, lane))
+        if not found:
+            errors.append(
+                f".github/workflows/release.yml: {what} names no `ost` "
+                f"version. It bootstraps one by hand, so every pin site must "
+                f"stay readable or this check silently stops checking it")
+            continue
+        wrong = sorted(v for v in found if v != pinned)
+        if wrong:
+            errors.append(
+                f".github/workflows/release.yml: {what} says ost "
+                f"{', '.join(wrong)} but openstrata.ci.yaml pins {pinned}. It "
+                f"is hand-authored, so regeneration will not fix it and no PR "
+                f"lane will report it")
+    return errors
+
+
 def main() -> int:
     if sys.argv[1:] == ["--selftest"]:
         return selftest()
@@ -334,6 +391,7 @@ def main() -> int:
     files = markdown_files(REPO)
     errors = [e for path in files for e in check_file(path, cache)]
     errors += check_mirrors(REPO)
+    errors += check_release_lane_ost_pin(REPO)
     if errors:
         print("\n".join(errors), file=sys.stderr)
         print(f"{len(errors)} problem(s)", file=sys.stderr)
