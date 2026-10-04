@@ -25,7 +25,6 @@ TraceCollector::Observe(const std::vector<vmc::VmcFrame>& frames,
         openstrata::motion::MotionClip& session = _sessions.back();
         session.samples.push_back(frame.pose);
         session.source = metadata;
-        ++_frames;
     }
 }
 

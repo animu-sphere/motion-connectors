@@ -79,11 +79,11 @@ struct Options
     // there is always at least one: `maxDatagrams` has a default and the other
     // two are off until asked for.
     //
-    // There is still no `--max-frames` here, and the export is why the sentence
-    // needed rewriting rather than deleting. The sibling tools carry that bound
-    // because they accumulate poses *during a recording*; this tool's export
-    // runs against a file that is already bounded by the datagram count that
-    // wrote it, so the second unit has nothing to bound.
+    // There is still no `--max-frames` here. Such a bound is needed only by a
+    // tool that accumulates poses *during a recording*, which none of the three
+    // does any more; this tool's export runs against a file that is already
+    // bounded by the datagram count that wrote it, so the second unit has
+    // nothing to bound.
     double durationSeconds = 0.0; // 0: until interrupted
     double idleSeconds = 0.0;     // 0: never
     std::size_t maxDatagrams = 0; // 0: the default, applied at parse

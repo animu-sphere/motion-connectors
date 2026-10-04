@@ -27,11 +27,11 @@ struct Options
     // half of this tool: the same report, from a file instead of a wire.
     std::string inspectPath;
 
-    // The canonical trace to write beside the report: what the adapter
+    // The canonical trace to derive from a recorded capture: what the adapter
     // delivered, in the format `motion_capture` replays (TraceExport.h). It
-    // belongs to neither mode in particular -- a live session and a recorded
-    // capture deliver the same frames -- which is why it is not one of the
-    // session-only flags `--inspect` refuses.
+    // goes with `--inspect` and is refused otherwise -- a recording holds
+    // datagrams and nothing derived from them, which is what keeps the capture
+    // the one record a session leaves while it runs.
     std::string traceExportPath;
 
     // Which of the *sender's* sessions to export, 1-based. Zero means "the only
@@ -57,16 +57,13 @@ struct Options
     // there is always at least one: `maxDatagrams` has a default and the other
     // two are off until asked for.
     //
-    // `maxFrames` is the second memory bound and applies only while exporting,
-    // because it bounds the poses `TraceCollector` holds rather than the
-    // datagrams the capture does. The two are not interchangeable: a bundled
-    // sender emits one frame per datagram and a per-message one takes fifty,
-    // so a single bound in either unit is wrong for the other sender by that
-    // factor.
+    // There is no `--max-frames` any more. It bounded the poses a live export
+    // held beside the capture; the export now reads a file, which the datagram
+    // bound that wrote it has already bounded, so a second unit has nothing
+    // left to bound.
     double durationSeconds = 0.0; // 0: until interrupted
     double idleSeconds = 0.0;     // 0: never
     std::size_t maxDatagrams = 0; // 0: the default below, applied at parse
-    std::size_t maxFrames = 0;    // 0: the default below, when exporting
 
     bool dryRun = false;
 

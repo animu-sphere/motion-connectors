@@ -76,9 +76,8 @@ namespace vrchatOscRecordTool
 // stopped early because the socket failed are different sessions, and a capture
 // file cannot tell them apart afterwards.
 //
-// There is no `MaxFrames` here. The siblings have one because they accumulate
-// poses as well as datagrams; nothing in this tool assembles a frame, so a
-// reason that could never be reached would be a claim that it could.
+// There is no `MaxFrames` here. Nothing in a recording here assembles a frame,
+// so a reason that could never be reached would be a claim that it could.
 enum class StopReason : std::uint8_t
 {
     Interrupted,

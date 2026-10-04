@@ -35,21 +35,21 @@
 // A capture with one session -- every capture a sender did not restart during --
 // needs no such flag and is the ordinary case.
 //
-// ## A pose is expensive, and a session is bounded in two units now
+// ## The export reads a file, never a socket
 //
-// `sizeof(openstrata::motion::MotionPose)` is 1320 bytes: fifty-five quaternions and a
-// confidence array, most of it unused by any one sender. A bundled sender emits
-// one frame per datagram, so a recording bounded only by `--max-datagrams` and
-// its million-datagram default would hold **1.26 GB** of poses here on top of
-// the capture the bound was sized for. That bound exists to be a memory bound
-// (Options.cpp), so the export cannot quietly stand outside it.
+// Until 2026-10-04 this tool also collected poses during a live recording, and
+// the siblings did not. That cost a second memory bound in a second unit:
+// `sizeof(openstrata::motion::MotionPose)` is 1320 bytes, so a bundled sender at
+// the million-datagram default would have held 1.26 GB of poses beside the
+// capture, and `--max-frames` existed only to stop that. It also made a live
+// session carry a second write that could fail.
 //
-// Datagrams are the wrong unit for it: two senders differ by a factor of fifty
-// in datagrams per frame, and a datagram bound tight enough for a bundled
-// sender would cut a per-message sender's session to under a minute. So the
-// second accumulation carries its own bound in its own unit, `--max-frames`,
-// and reaching it ends the session the way every other bound does -- with the
-// capture written and the report saying which condition stopped it.
+// Now `--export-trace` goes with `--inspect` alone, as in both sibling tools. A
+// recording writes datagrams; a trace is derived from the file afterwards, which
+// makes it a pure function of committed bytes -- the same capture exports the
+// same trace on any machine, with no sender. The serialisation is
+// `motionRecording`'s, so the format keeps its one owner in
+// `usd-motion-plugins`; what stays here is the transcription from a `VmcFrame`.
 //
 // ## What the trace does not carry, and why that is not a loss
 //
@@ -94,15 +94,6 @@ class TraceCollector
     void Observe(const std::vector<vmc::VmcFrame>& frames,
                  const openstrata::motion::SourceMetadata& metadata);
 
-    // How many frames are held, across every session. The caller's stop
-    // condition reads this rather than the report's frame count, which counts
-    // frames a session emitted before an export was ever asked for.
-    std::size_t
-    GetFrameCount() const noexcept
-    {
-        return _frames;
-    }
-
     // Finalises every session: the time range from its own first and last
     // sample, and a frame rate measured from them. Idempotent.
     //
@@ -122,7 +113,6 @@ class TraceCollector
 
   private:
     std::vector<openstrata::motion::MotionClip> _sessions;
-    std::size_t _frames = 0;
     bool _closed = false;
 };
 

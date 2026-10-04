@@ -50,13 +50,16 @@ namespace vmcRecordTool
 // point: a recording that stopped early because a flag said so and one that
 // stopped early because the socket failed are different sessions, and a capture
 // file cannot tell them apart afterwards.
+//
+// There is no `MaxFrames`. It ended a session on the poses a live export held;
+// a recording now holds datagrams alone, and a reason that could never be
+// reached would be a claim that it could.
 enum class StopReason : std::uint8_t
 {
     Interrupted,
     Duration,
     IdleTimeout,
     MaxDatagrams,
-    MaxFrames,
     EndOfCapture,
     ReceiveFailed,
 };

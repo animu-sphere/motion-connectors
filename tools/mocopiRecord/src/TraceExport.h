@@ -18,10 +18,9 @@
 //
 // ## The export reads a file, and a session still decodes nothing
 //
-// This is the one place this tool differs from `vmc_record`, and it is a
-// decision rather than a stage of completion. `--export-trace` is accepted with
-// `--inspect` alone: a recording writes datagrams, and a trace is derived from
-// the file afterwards.
+// This is a decision rather than a stage of completion, and `vmc_record`
+// adopted it on 2026-10-04. `--export-trace` is accepted with `--inspect` alone:
+// a recording writes datagrams, and a trace is derived from the file afterwards.
 //
 // Two things say so. `main.cpp`'s whole argument is that no decoder runs inside
 // a recording -- the sibling states it as a rule about ordering and this tool
@@ -31,7 +30,7 @@
 // this tool accumulates datagrams alone. A live export accumulates
 // `sizeof(openstrata::motion::MotionPose)` = 1320 bytes per frame beside the capture the
 // datagram bound was sized for, which is the second bound in its own unit the
-// sibling had to grow.
+// sibling carried until it dropped its live export.
 //
 // What the restriction costs is one command, and what it buys is that an
 // exported trace is a pure function of committed bytes: the same capture exports

@@ -134,6 +134,32 @@ compares poses, this one compares the artifact an operator actually keeps. It is
 a separate CTest name for the same reason the library's socket tests are: a
 runner that forbids binding excludes it and loses nothing else.
 
+## Exporting a trace: `--export-trace`, from a file
+
+```sh
+vmc_record --inspect walk-01.vmcpackets --export-trace walk-01.trace
+```
+
+`--export-trace` transcribes what the connector delivered from a saved capture
+into a `motion-capture-trace`, which `usd-motion-plugins`' tools replay knowing
+nothing about VMC. The writer and the format are `motionRecording`'s
+([CONNECTOR §12](../../docs/design/CONNECTOR_CONTRACT.md#12-raw-capture)).
+
+**It goes with `--inspect`, and only there**, as in both sibling tools. A live
+session given `--export-trace` is refused: record first, then export from the
+file. A recording holds datagrams and nothing derived from them, so it needs
+one memory bound rather than two, and an exported trace is a pure function of
+the capture — the same file exports the same trace on any machine.
+
+**One trace is one session.** A sender restart puts its clock back, so a
+capture can hold two sessions whose timestamps overlap; the export is refused
+until `--sender-session` names one. A session stopped by `--max-datagrams` in
+the middle of a per-message frame reaches the same shape: the flushed half
+frame is stamped from the receive clock and reads as a restart.
+
+The trace is never written over the capture it reads, however the path is
+spelled.
+
 ## What it does not do
 
 It does not retarget, author a stage, or open an avatar.

@@ -33,22 +33,6 @@ namespace
 // An operator recording longer says so.
 constexpr std::size_t kDefaultMaxDatagrams = 1000000;
 
-// The same argument for the second thing a session accumulates, in the unit
-// that thing is measured in. `--export-trace` holds one `openstrata::motion::MotionPose`
-// per delivered frame, and a pose is **1320 bytes** -- fifty-five quaternions
-// and a confidence array, most of which any one sender leaves untouched.
-//
-// The datagram bound above cannot stand in for this one. A bundled sender emits
-// one frame per datagram, so a million datagrams would be a million poses and
-// 1.26 GB of them; a per-message sender takes around fifty datagrams per frame,
-// so a datagram bound tight enough for the first would end the second's session
-// inside a minute. Two accumulations, two units, two bounds.
-//
-// 200,000 frames is about 264 MB of poses -- the same order as the capture
-// bound above, which is the property worth keeping -- and is an hour and a half
-// at 30 Hz.
-constexpr std::size_t kDefaultMaxFrames = 200000;
-
 // Two hours. Not a limit on what a session may be, a limit on what a mistyped
 // flag may cost: `--duration 3600000` should fail at the prompt rather than
 // forty days later.
@@ -240,12 +224,14 @@ GetUsage()
            "                         model title - see the report's 'model' line.\n"
            "  --dry-run              Listen and report, write nothing.\n"
            "\n"
-           "Exporting (works on a live session and on --inspect alike):\n"
+           "Exporting (with --inspect, and only there):\n"
            "  --export-trace PATH    Write what the adapter delivered as a\n"
            "                         motion-capture-trace - the canonical form\n"
            "                         motion_capture replays, carrying no VMC\n"
-           "                         vocabulary. This is the whole of this\n"
-           "                         adapter's hand-off to the product's tools.\n"
+           "                         vocabulary. It runs against a file: a\n"
+           "                         recording holds datagrams alone, and a trace\n"
+           "                         exported from committed bytes is the same\n"
+           "                         trace on any machine.\n"
            "  --sender-session N     Which of the SENDER's sessions to export,\n"
            "                         1-based. Needed only when the sender\n"
            "                         restarted mid-recording: one trace is one\n"
@@ -256,11 +242,6 @@ GetUsage()
            "  --duration S           Stop after S seconds of session.\n"
            "  --idle-timeout S       Stop after S seconds with nothing arriving.\n"
            "  --max-datagrams N      Stop after N datagrams (default 1000000).\n"
-           "  --max-frames N         Stop after N delivered frames (default\n"
-           "                         200000). Bounds what --export-trace holds in\n"
-           "                         memory, which the datagram bound cannot: a\n"
-           "                         bundled sender emits one frame per datagram\n"
-           "                         and a per-message one takes about fifty.\n"
            "  Ctrl-C stops at any point and still writes what was recorded.\n"
            "\n"
            "Reading:\n"
@@ -380,11 +361,19 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
         }
         else if (argument == "--export-trace")
         {
-            // Not a session flag: --inspect delivers the same frames a socket
-            // does, and refusing to export from a capture would leave the CI
-            // path unable to produce the artifact the live path produces.
             if (!TakeValue(arguments, &i, argument, &options->traceExportPath, error))
             {
+                return false;
+            }
+            // Present-but-empty is refused rather than ignored: an empty path
+            // is indistinguishable afterwards from the flag never having been
+            // given, so the tool would read the capture, write nothing, and
+            // exit 0 -- a silent default that cannot be told apart from being
+            // obeyed.
+            if (options->traceExportPath.empty())
+            {
+                *error = "--export-trace names the trace to write and was "
+                         "given an empty path";
                 return false;
             }
         }
@@ -463,22 +452,6 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
                 return false;
             }
         }
-        else if (argument == "--max-frames")
-        {
-            session("--max-frames");
-            if (!TakeCount(arguments, &i, argument, static_cast<double>(kDefaultMaxFrames) * 10.0,
-                           &options->maxFrames, error))
-            {
-                return false;
-            }
-            if (options->maxFrames == 0)
-            {
-                *error = "--max-frames expects at least 1; the same reason "
-                         "--max-datagrams does, for the poses the exported "
-                         "trace holds";
-                return false;
-            }
-        }
         else if (argument == "--staleness")
         {
             double seconds = 0.0;
@@ -527,23 +500,24 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
     {
         options->maxDatagrams = kDefaultMaxDatagrams;
     }
-    if (options->maxFrames == 0)
-    {
-        options->maxFrames = kDefaultMaxFrames;
-    }
-
     if (options->senderSession != 0 && options->traceExportPath.empty())
     {
         *error = "--sender-session says which session to export, so it needs "
                  "--export-trace";
         return false;
     }
-    if (!options->traceExportPath.empty() && options->dryRun)
+
+    // The export must not be pointed at the capture it is reading: the capture
+    // is the session that cannot be re-recorded, and the trace is derived from
+    // it and can be rebuilt from nothing else. This catches the one spelling
+    // that can be refused at the prompt; `WriteTrace` asks the filesystem,
+    // which catches the rest (`./x`, an absolute path, a link) -- the sibling
+    // tool measured that the string check alone still destroyed the file.
+    if (!options->traceExportPath.empty() && options->traceExportPath == options->inspectPath)
     {
-        // The same rule --output already follows. A flag that writes a file is
-        // not silently disabled by the flag that says nothing is written.
-        *error = "--dry-run writes nothing, so --export-trace has nothing to "
-                 "act on";
+        *error = "--export-trace names the same path as --inspect, and writing "
+                 "the trace there would destroy the capture it was derived "
+                 "from";
         return false;
     }
 
@@ -555,11 +529,6 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
         // what a capture *becomes* rather than how one is taken: `--staleness`
         // and `--restart-backwards` are how it is read, and `--export-trace`
         // with `--sender-session` is what is written out of it.
-        //
-        // `--max-frames` is not among them, and that is deliberate: it is a
-        // stop condition, and a file has already stopped. Honouring it here
-        // would silently truncate an export of a capture the operator can see
-        // the whole of.
         if (sessionFlag)
         {
             *error = std::string("--inspect reads a recorded capture and opens "
@@ -568,6 +537,18 @@ ParseOptions(const std::vector<std::string>& arguments, Options* options, bool* 
             return false;
         }
         return true;
+    }
+
+    if (!options->traceExportPath.empty())
+    {
+        // A recording holds datagrams and nothing derived from them, so there
+        // is nothing in a live session for this flag to read (TraceExport.h).
+        // The message names the two commands rather than only refusing: the
+        // recording the operator wants is still the right first step.
+        *error = "--export-trace derives a trace from a recorded capture, so it "
+                 "goes with --inspect: record the session first, then export "
+                 "from the file";
+        return false;
     }
 
     if (options->outputPath.empty() && !options->dryRun)

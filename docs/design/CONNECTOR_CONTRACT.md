@@ -341,6 +341,15 @@ whole of recording here. Recording **canonical motion** — the
 `motionRecording` (design policy §25), and this repository invents no motion
 file format.
 
+A record tool may still **transcribe** a saved capture into that format,
+offline: `<tool> --inspect <capture> --export-trace <trace>` replays the
+capture through the unchanged connector and hands the delivered frames to
+`motionRecording::WriteCaptureTraceFile`, which owns the serialisation. That
+is the only place the conversion is invoked. No tool converts during a live
+recording — a recording holds datagrams and nothing derived from them — so a
+trace is a pure function of a capture, reproducible with no device. Whether
+the three tools' transcriptions later move behind `motion_connect` is WS-O3.
+
 ## 13. Open questions
 
 CC-O3 was resolved by the first shared-connector to live-intake test on
