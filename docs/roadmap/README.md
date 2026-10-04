@@ -36,7 +36,7 @@ The owning document holds the question; this list only schedules it.
 | Id | Question | Owner | Blocks |
 | --- | --- | --- | --- |
 | CC-O7 | A C ABI | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Python bindings, v0.2.0 |
-| FW-O2 | Connector state and diagnostics over the wire | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | `motionConnectorWebSocket` and `bridge`, v0.2.0 |
+| FW-O2 | Connector state and diagnostics over the wire | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | `bridge`, v0.2.0 |
 | WS-O4 | `motionConnectorCore`'s closure and WASM | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | WS-O6 | Web module layout | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
@@ -44,4 +44,6 @@ The owning document holds the question; this list only schedules it.
 | SP-O3 | Landmark profiles | [PROFILES §6](../design/SOURCE_PROFILES.md#6-open-questions) | v0.3.0 |
 | CS-O2 | VMC's two translation channels (`usd-motion-plugins` MC-O3) | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | a recorded session from two senders |
 | CC-O5 | `ActorId` type | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | the first multi-actor source |
+| WSC-O2 | More than one receiving WebSocket peer | [WEBSOCKET §11](../design/WEBSOCKET_CONNECTOR.md#11-open-questions) | the first multi-actor source |
+| WSC-O1 | TLS for the WebSocket connector | [WEBSOCKET §11](../design/WEBSOCKET_CONNECTOR.md#11-open-questions) | a session across an untrusted network |
 | FW-O1 | A binary encoding of `MotionFrame` | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | a measured session JSON does not meet |
