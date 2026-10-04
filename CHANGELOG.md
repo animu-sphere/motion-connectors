@@ -6,6 +6,8 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-04
+
 ### Changed
 
 - **WS-O5 settles distribution.** Every member is released at the root

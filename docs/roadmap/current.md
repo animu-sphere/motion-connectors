@@ -1,100 +1,22 @@
-# Current: converge imported connectors onto the shared contract
+# Current: after v0.1.0
 
-Status: 🚧 v0.1.0 convergence in progress (2026-09-21).
+Status: ⬜ v0.1.0's scope is complete ([release record](../releases/v0.1.0.md));
+this page holds what it carried forward and what v0.2.0 needs decided first.
 
-PRs #1–#8 imported the transport, OSC, tracker, VMC, mocopi and VRChat OSC
-implementations with their tests, capture corpora and record tools. Those
-source-specific paths are described in the [capability matrix](../reference/CAPABILITY_MATRIX.md)
-and the import history is in the [changelog](../../CHANGELOG.md). The current
-milestone is no longer an import exercise: it is the work that makes the
-imported paths conform to one connector API without moving source semantics
-into the shared layer.
+## Carried from v0.1.0
 
-## Work remaining
-
-### Shared contract
-
-- ✅ Add `motionConnectorCore` with `IMotionConnector`, `ConnectorConfig`,
-  `ConnectorState`, `ConnectorCapabilities`, `MotionFrame`, `FrameTiming`,
-  actor identity and the bounded `Latest` / `Ordered` / `Lossless` buffer.
-- ✅ Resolve `Poll` result and skipped-frame semantics (`CC-O6`): one frame per
-  poll, cumulative buffer counters, oldest-drop `Ordered` and back-pressure
-  `Lossless` behavior.
-- ✅ Agree on the `MotionStream` intake boundary with `usd-motion-plugins`
-  (`CC-O3`): `Poll(MotionFrame&)` feeds actor-scoped `LiveCaptureSource::Push`,
-  and `IMotionSource::Sample` reads at evaluation time.
-- ✅ Resolve the profile identifier and representation rules (`SP-O1`, `SP-O2`)
-  with connector-owned JSON profiles installed under
-  `share/motion-connectors/profiles/`.
-- ✅ Resolve `DIAG-O1` before v0.1.0: all three imported diagnostic families
-  use `VMC_*`, `MOCOPI_*` and `VRCHAT_OSC_*` consistently in the catalog,
-  tests, recorders and recorded-session manifests.
-
-### Source convergence
-
-- ✅ Adapt VMC, mocopi and VRChat OSC Trackers to the shared connector contract
-  without replacing their tested source-specific assembly. `VmcConnector`,
-  `MocopiConnector` and `VrchatOscConnector` now wrap their tested source
-  paths; tracker frames remain observations and are not assigned to an avatar.
-- ✅ Implement installed source profiles for `vmc.v1`, `mocopi.body.v1` and
-  `vrchat-osc.trackers.v1`; profile IDs and JSON data are validated while
-  target-avatar mapping remains outside this repository.
-- ✅ Adopt `motionCore`'s shared basis operation in VMC and VRChat OSC: every
-  `usd-motion-plugins` pin is at 0.5.2, and both connectors apply their
-  measured basis through `ApplyBasisToPosition` / `ApplyBasisToRotation`.
-  Measuring VMC's two translation channels (`CS-O2`) is operator evidence
-  below.
-- ⬜ Revisit actor identity with the first multi-actor source (`CC-O5`).
-
-### Tools and evidence
-
-- ✅ Add `motion_connect dump`, `list` and `inspect` over `MotionFrame`; the
-  remaining CLI work is the later `record` / `bridge` scope.
-- ✅ Re-run the imported capture/replay evidence through the unified contract
-  and verify the packages from a clean installed prefix. The three connector
-  corpus tests exercise the hardware-free `PushDatagram` → `Poll` path for
-  every committed capture, using each protocol's required end-of-capture
-  handling, and `workspace_installed_consumer` consumes the installed package
-  set outside the repository and runs the installed `motion_connect`'s
-  `list`, `dump` and `inspect` against captures copied out of it. The eleven
-  recorded mocopi and VRChat OSC device sessions, replayed from an operator's
-  copy with `scripts/check_recorded_sessions.py` on 2026-10-04, still
-  reproduce every manifest reading and deliver the same frames through
-  `motion_connect`.
-- ✅ Audit the imported `--export-trace` paths. All three tools delegate the
-  file format to `motionRecording::WriteCaptureTraceFile`.
-- ✅ Remove VMC's live semantic export and settle where offline
-  capture-to-trace conversion is invoked. All three tools now export only
-  from `--inspect`, and `vmc_record` lost `--max-frames` with the live
-  export; the conversion is a transcription of a saved capture through
-  `motionRecording`'s writer ([CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
-- ✅ Decide whether the three raw capture tools remain separate or are folded
-  into `motion_connect record` (`WS-O3`). They remain, one per connector: their
-  options, session reports and transcriptions are source-specific, and the
-  recorded manifests name them. A future `record` command does not replace
-  them and remains a connector capture/replay tool, not a semantic motion
-  recorder ([WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
-
-### Release
-
-- ✅ Decide how the connectors are distributed (`WS-O5`): one version, one
-  GitHub release per tag, and every member pushed per target to one OCI
-  repository with a generated pin table
-  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
-- 🚧 Add `release.yml`, modelled on `usd-motion-plugins`', publishing the
-  seven libraries, with a dry run through `workflow_dispatch` before the first
-  tag. The workflow, `scripts/make_release_notes.py` and the notes template
-  are in; `workflow_dispatch` reaches it only from the default branch, so the
-  dry run follows the merge.
 - ⬜ Publish the four CLIs once `ost` packages a workspace tool without a
-  plugin bundle; until then they ship as source.
-- ⬜ Tag v0.1.0 with its release record under `docs/releases/`.
+  plugin bundle; until then they ship as source
+  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
+- ⬜ Revisit actor identity with the first multi-actor source (`CC-O5`).
 
 ### Operator evidence
 
 Carried from `usd-vrm-plugins`, which shipped these connectors through its
 v0.8.0 without them. None closes by writing code; each is a recorded session
-and a manifest, and none gates a pull request.
+and a manifest, and none gates a pull request. A recorded session is replayed
+against its manifest with `scripts/check_recorded_sessions.py`
+([building guide](../guides/building.md#replaying-the-recorded-device-sessions)).
 
 - ⬜ **A VMC relay or sender session, compared at the canonical layer.** Two
   observation paths of one mocopi session agree to a median 0.084° per bone
@@ -117,27 +39,24 @@ and a manifest, and none gates a pull request.
   person's motion. A publishable one needs the vendor's `BVH Sender`, not a
   device.
 - ⬜ **A live session reaching an avatar from release artifacts alone.** It
-  composes this repository's release with an avatar repository's, so it
-  waits for this repository's first release; where the composed test runs is
-  `usd-avatar-runtime`'s once it exists.
+  composes this repository's release with an avatar repository's; where the
+  composed test runs is `usd-avatar-runtime`'s once it exists.
 
-## Completion criteria
+## Next: v0.2.0
 
-v0.1.0 is complete when:
+v0.2.0 carries the WebSocket transport, the capture/bridge commands, Python
+bindings and the record-stream example
+([status table](README.md#status-at-a-glance)). Two decisions come before any
+of its code, because both fix what crosses a process boundary:
 
-- the three imported source categories produce the same `MotionFrame` contract;
-- VMC loopback and all imported captures replay deterministically through that
-  path in CI;
-- source profiles, timing, state, diagnostics and buffer behavior have tests;
-- the three imported diagnostic families have been renamed consistently before
-  v0.1.0;
-- `motion_connect dump`, `list` and `inspect` work from an installed prefix;
-- malformed input remains refused without hardware or a live peer; and
-- the sibling repository consumes none of the moved implementations.
+- ⬜ `CC-O8`, the `MotionFrame` wire representation
+  ([CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions)).
+- ⬜ `CC-O7`, a C ABI, which the Python bindings stand on
+  ([CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions)).
 
 ## Later releases
 
-The later sequence remains: WebSocket transport and Python bindings, browser
-MediaPipe and the JS/WASM boundary, WebXR, OpenXR and advanced sources. Their
-open decisions stay in the owning design or architecture document and are
-scheduled in [roadmap/README.md](README.md); this page does not duplicate them.
+The later sequence remains: browser MediaPipe and the JS/WASM boundary,
+WebXR, OpenXR and advanced sources. Their open decisions stay in the owning
+design or architecture document and are scheduled in
+[roadmap/README.md](README.md); this page does not duplicate them.

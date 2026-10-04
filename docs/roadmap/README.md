@@ -9,9 +9,10 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started · ⛔ blocked
 
 | Document | Contents |
 | --- | --- |
-| [current.md](current.md) | The current v0.1.0 convergence milestone and its completion criteria. |
+| [current.md](current.md) | What v0.1.0 carried forward, and the decisions v0.2.0 needs first. |
 
-The completed import is recorded in the [changelog](../../CHANGELOG.md) and
+Shipped releases are recorded in [releases/](../releases/README.md). The
+completed import is recorded in the [changelog](../../CHANGELOG.md) and
 the current component identities are recorded in
 [architecture/WORKSPACE.md](../architecture/WORKSPACE.md). It is not an open
 roadmap sequence.
@@ -22,8 +23,7 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
-| v0.1.0: shared contract convergence | `motionConnectorCore`; source profiles; VMC, mocopi and VRChat OSC adaptation; diagnostics; `motion_connect dump`, `list`, `inspect`; replay and installed-package evidence; the release workflow | `usd-motion-plugins` motion contract decisions | 🚧 |
-| v0.2.0: transport and bindings | `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | v0.1.0, CC-O7 and CC-O8 | ⬜ |
+| v0.2.0: transport and bindings | `motionConnectorWebSocket`; capture/bridge commands; Python bindings; record-stream example | CC-O7 and CC-O8 | ⬜ |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe`; JS/TS package; WASM-friendly data ABI | WS-O4 and CC-O2 | ⬜ |
 | v0.4.0: XR and integration | `motionConnectorWebXR`; integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
 | later | `motionConnectorOpenXR`; generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
