@@ -1,0 +1,23 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# The connector's edges (WORKSPACE.md §2.1): the shared contract and the pose
+# inside it, the frame codec, and the transport's diagnostic vehicle and
+# capture format. No third-party library.
+if(NOT TARGET gf AND NOT TARGET pxr::gf)
+    find_dependency(pxr CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionCore::motionCore)
+    find_dependency(motionCore CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_dependency(motionConnectorCore CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionConnectorWire::motionConnectorWire)
+    find_dependency(motionConnectorWire CONFIG REQUIRED)
+endif()
+if(NOT TARGET motionConnectorTransport::motionConnectorTransport)
+    find_dependency(motionConnectorTransport CONFIG REQUIRED)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/motionConnectorWebSocketTargets.cmake")
+check_required_components(motionConnectorWebSocket)

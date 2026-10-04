@@ -45,21 +45,22 @@ against its manifest with `scripts/check_recorded_sessions.py`
 
 ## Next: v0.2.0
 
-v0.2.0 carries the WebSocket transport, the capture/bridge commands, Python
-bindings and the record-stream example
-([status table](README.md#status-at-a-glance)). The wire codec,
-`motionConnectorWire`, has landed
-([capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)), and the
-WebSocket connector is designed
-([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)), so it can be
-built:
+v0.2.0 carries the capture/bridge commands, Python bindings and the
+record-stream example ([status table](README.md#status-at-a-glance)). The wire
+codec and the WebSocket connector have landed, both directions
+([capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)), so the
+commands can be built on them:
 
-- ⬜ `motionConnectorWebSocket`: `WebSocketConnector` and
-  `WebSocketFrameSender`, listening or connecting, over this repository's own
-  RFC 6455 subset; its `WEBSOCKET_*` codes in DIAGNOSTICS.md; the framing and
-  message corpora of its §9; a loopback test of both directions in both roles.
-- ⬜ `FW-O2`, whether state and diagnostics cross the wire, settled with
-  `bridge`, which is the producer that has an upstream state to forward.
+- ⬜ `motion_connect bridge`: a source connector's frames out through
+  `WebSocketFrameSender`, as its frames were delivered
+  ([WEBSOCKET §7.1](../design/WEBSOCKET_CONNECTOR.md#71-sending)). `FW-O2`,
+  whether state and diagnostics cross the wire, is settled with it, since it
+  is the producer that has an upstream state to forward.
+- ⬜ `motion_connect record`: a raw capture through the shared contract
+  ([WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
+  For WebSocket that is `WebSocketConnector`'s own capture, in the
+  `!websocket-packet-capture` format
+  ([WEBSOCKET §9](../design/WEBSOCKET_CONNECTOR.md#9-raw-capture)).
 
 One decision still comes before the bindings, because it fixes what crosses a
 language boundary:

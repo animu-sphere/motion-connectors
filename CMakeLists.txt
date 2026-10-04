@@ -42,11 +42,14 @@ option(MOTIONCONNECTORS_BUILD_TESTS "Build motion-connectors tests" ${PROJECT_IS
 option(MOTIONCONNECTORS_BUILD_VMC "Build the VMC connector" ON)
 option(MOTIONCONNECTORS_BUILD_MOCOPI "Build the mocopi connector" ON)
 option(MOTIONCONNECTORS_BUILD_VRCHAT_OSC "Build the VRChat OSC connector" ON)
+# ON, though it is not a v0.1.0 connector: it brings no third-party dependency,
+# because RFC 6455 is implemented inside it (WEBSOCKET_CONNECTOR §2, §10).
+option(MOTIONCONNECTORS_BUILD_WEBSOCKET "Build the WebSocket connector" ON)
 option(MOTIONCONNECTORS_BUILD_TOOLS "Build the command-line tools" ${PROJECT_IS_TOP_LEVEL})
 
 set(_connectors_any_connector OFF)
 if(MOTIONCONNECTORS_BUILD_VMC OR MOTIONCONNECTORS_BUILD_MOCOPI
-   OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC)
+   OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC OR MOTIONCONNECTORS_BUILD_WEBSOCKET)
     set(_connectors_any_connector ON)
 endif()
 
@@ -122,6 +125,14 @@ if(MOTIONCONNECTORS_BUILD_VRCHAT_OSC)
     if(MOTIONCONNECTORS_BUILD_TOOLS)
         add_subdirectory("tools/vrchatOscRecord")
     endif()
+endif()
+
+# WebSocket carries the frame wire format rather than a device's protocol, so
+# it links the core, the frame codec and the transport and no usd-motion-plugins
+# package beyond motionCore (WORKSPACE.md §2.1). It has no recorder of its own:
+# its raw capture is `motion_connect record`'s, when that lands.
+if(MOTIONCONNECTORS_BUILD_WEBSOCKET)
+    add_subdirectory("libs/motionConnectorWebSocket")
 endif()
 
 # The shared-contract CLI. It links every v0.1.0 connector so `list` reports

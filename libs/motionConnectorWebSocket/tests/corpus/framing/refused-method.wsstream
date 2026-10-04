@@ -1,0 +1,18 @@
+!websocket-stream-capture 1
+sender example.synthetic
+sourceId refused-method
+
+d 0.000000 206
+  50 4f 53 54 20 2f 20 48 54 54 50 2f 31 2e 31 0d  |POST / HTTP/1.1.|
+  0a 48 6f 73 74 3a 20 31 32 37 2e 30 2e 30 2e 31  |.Host: 127.0.0.1|
+  3a 38 37 36 35 0d 0a 55 70 67 72 61 64 65 3a 20  |:8765..Upgrade: |
+  77 65 62 73 6f 63 6b 65 74 0d 0a 43 6f 6e 6e 65  |websocket..Conne|
+  63 74 69 6f 6e 3a 20 55 70 67 72 61 64 65 0d 0a  |ction: Upgrade..|
+  53 65 63 2d 57 65 62 53 6f 63 6b 65 74 2d 4b 65  |Sec-WebSocket-Ke|
+  79 3a 20 78 33 4a 4a 48 4d 62 44 4c 31 45 7a 4c  |y: x3JJHMbDL1EzL|
+  6b 68 39 47 42 68 58 44 77 3d 3d 0d 0a 53 65 63  |kh9GBhXDw==..Sec|
+  2d 57 65 62 53 6f 63 6b 65 74 2d 56 65 72 73 69  |-WebSocket-Versi|
+  6f 6e 3a 20 31 33 0d 0a 53 65 63 2d 57 65 62 53  |on: 13..Sec-WebS|
+  6f 63 6b 65 74 2d 50 72 6f 74 6f 63 6f 6c 3a 20  |ocket-Protocol: |
+  6f 70 65 6e 73 74 72 61 74 61 2e 6d 6f 74 69 6f  |openstrata.motio|
+  6e 2e 66 72 61 6d 65 2e 76 31 0d 0a 0d 0a        |n.frame.v1....|

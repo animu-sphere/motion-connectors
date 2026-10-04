@@ -35,6 +35,10 @@
       "name": "motionConnectorVrchatOsc",
       "header": "motionConnectorVrchatOsc/FrameAssembler.h",
       "profile": "vrchat-osc.trackers.v1"
+    },
+    {
+      "name": "motionConnectorWebSocket",
+      "header": "motionConnectorWebSocket/Connector.h"
     }
   ]
 }

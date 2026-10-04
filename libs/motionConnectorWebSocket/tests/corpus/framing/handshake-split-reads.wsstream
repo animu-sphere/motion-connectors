@@ -1,0 +1,25 @@
+!websocket-stream-capture 1
+sender example.synthetic
+sourceId handshake-split-reads
+
+d 0.000000 10
+  47 45 54 20 2f 20 48 54 54 50                    |GET / HTTP|
+
+d 0.001000 50
+  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 31 32 37 2e  |/1.1..Host: 127.|
+  30 2e 30 2e 31 3a 38 37 36 35 0d 0a 55 70 67 72  |0.0.1:8765..Upgr|
+  61 64 65 3a 20 77 65 62 73 6f 63 6b 65 74 0d 0a  |ade: websocket..|
+  43 6f                                            |Co|
+
+d 0.002000 165
+  6e 6e 65 63 74 69 6f 6e 3a 20 55 70 67 72 61 64  |nnection: Upgrad|
+  65 0d 0a 53 65 63 2d 57 65 62 53 6f 63 6b 65 74  |e..Sec-WebSocket|
+  2d 4b 65 79 3a 20 78 33 4a 4a 48 4d 62 44 4c 31  |-Key: x3JJHMbDL1|
+  45 7a 4c 6b 68 39 47 42 68 58 44 77 3d 3d 0d 0a  |EzLkh9GBhXDw==..|
+  53 65 63 2d 57 65 62 53 6f 63 6b 65 74 2d 56 65  |Sec-WebSocket-Ve|
+  72 73 69 6f 6e 3a 20 31 33 0d 0a 53 65 63 2d 57  |rsion: 13..Sec-W|
+  65 62 53 6f 63 6b 65 74 2d 50 72 6f 74 6f 63 6f  |ebSocket-Protoco|
+  6c 3a 20 6f 70 65 6e 73 74 72 61 74 61 2e 6d 6f  |l: openstrata.mo|
+  74 69 6f 6e 2e 66 72 61 6d 65 2e 76 31 0d 0a 0d  |tion.frame.v1...|
+  0a 81 8e 37 fa 21 3d 4c d8 52 4d 5b 93 55 1f 0d  |...7.!=L.RM[.U..|
+  8e 53 48 52 87                                   |.SHR.|
