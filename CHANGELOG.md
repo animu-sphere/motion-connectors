@@ -8,6 +8,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The installed `motion_connect` runs from a clean prefix.**
+  `workspace_installed_consumer` now runs `motion_connect`'s `list`, `dump`,
+  `inspect` and argument checks against the copy in the install prefix, with
+  one capture per connector copied out of the repository, whenever the build
+  has `motion_connect`. Before, the lane consumed only the libraries, and the
+  v0.1.0 criterion that the CLI works from an installed prefix had no test.
 - **WS-O3 keeps the three record tools.** `vmc_record`, `mocopi_record` and
   `vrchat_osc_record` remain, one per connector, and are not folded into
   `motion_connect record`. They share transport and session flags, but their

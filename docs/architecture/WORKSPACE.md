@@ -217,7 +217,8 @@ WORKSPACE.md §9.2), which this repository keeps from the receiving side:
   separate `ost` component. A build that asks only for VMC configures no
   OpenXR, WebSocket or browser dependency (design policy §28, §41).
 - Both build modes, `ost` and plain CMake, are kept working, and every package
-  is consumed from a clean installed prefix in CI.
+  is consumed from a clean installed prefix in CI, where the installed
+  `motion_connect` also runs.
 - How connectors are distributed — one release with separate artifacts, or
   separate downloads — is WS-O5. `usd-vrm-plugins` left it open as BND-2 and
   handed it here.

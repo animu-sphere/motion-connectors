@@ -89,6 +89,13 @@ if(_usd_root)
     set(_consumer_usd_args --usd-root "${_usd_root}")
 endif()
 
+# motion_connect is built only with every connector, and tools/ is configured
+# before this directory, so the target says whether the prefix must hold it.
+set(_consumer_tool_args "")
+if(TARGET motion_connect)
+    set(_consumer_tool_args --motion-connect)
+endif()
+
 add_test(NAME workspace_installed_consumer
     COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"
         "${PROJECT_SOURCE_DIR}/scripts/check_installed_consumer.py"
@@ -97,6 +104,7 @@ add_test(NAME workspace_installed_consumer
         ${_consumer_usd_args}
         ${_consumer_package_args}
         ${_consumer_prefixes}
+        ${_consumer_tool_args}
         ${_consumer_toolchain})
 set_tests_properties(workspace_installed_consumer PROPERTIES
     LABELS "installed-consumer")
