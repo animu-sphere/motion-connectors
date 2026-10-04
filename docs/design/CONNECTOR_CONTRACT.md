@@ -347,8 +347,9 @@ capture through the unchanged connector and hands the delivered frames to
 `motionRecording::WriteCaptureTraceFile`, which owns the serialisation. That
 is the only place the conversion is invoked. No tool converts during a live
 recording — a recording holds datagrams and nothing derived from them — so a
-trace is a pure function of a capture, reproducible with no device. Whether
-the three tools' transcriptions later move behind `motion_connect` is WS-O3.
+trace is a pure function of a capture, reproducible with no device. The
+transcription stays in each connector's own record tool (WS-O3, decided
+2026-10-04; [WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
 
 ## 13. Open questions
 

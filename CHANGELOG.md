@@ -8,6 +8,13 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **WS-O3 keeps the three record tools.** `vmc_record`, `mocopi_record` and
+  `vrchat_osc_record` remain, one per connector, and are not folded into
+  `motion_connect record`. They share transport and session flags, but their
+  own options, session reports and trace transcriptions are source-specific,
+  and recorded-session manifests name the tool that made them. A later
+  `motion_connect record` captures through the shared connector contract
+  without replacing them.
 - **`vmc_record` exports a trace only from a saved capture.** `--export-trace`
   and `--sender-session` now go with `--inspect` alone, as in `mocopi_record`
   and `vrchat_osc_record`; a live session given `--export-trace` is refused

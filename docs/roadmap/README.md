@@ -37,7 +37,6 @@ The owning document holds the question; this list only schedules it.
 | --- | --- | --- | --- |
 | CC-O7 | A C ABI | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Python bindings, v0.2.0 |
 | CC-O8 | `MotionFrame` wire representation | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.2.0 |
-| WS-O3 | Record tools vs `motion_connect record` | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.2.0 planning |
 | WS-O4 | `motionConnectorCore`'s closure and WASM | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | WS-O6 | Web module layout | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
