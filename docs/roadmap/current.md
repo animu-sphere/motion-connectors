@@ -75,6 +75,16 @@ into the shared layer.
   them and remains a connector capture/replay tool, not a semantic motion
   recorder ([WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
 
+### Release
+
+- ✅ Decide how the connectors are distributed (`WS-O5`): one version, one
+  GitHub release per tag, and every library and CLI pushed per target to one
+  OCI repository with a generated pin table
+  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
+- ⬜ Add `release.yml`, modelled on `usd-motion-plugins`', with a dry run
+  through `workflow_dispatch` before the first tag.
+- ⬜ Tag v0.1.0 with its release record under `docs/releases/`.
+
 ### Operator evidence
 
 Carried from `usd-vrm-plugins`, which shipped these connectors through its

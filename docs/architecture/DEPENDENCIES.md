@@ -70,7 +70,7 @@ change that adds it.
 | a filtering, IK or retargeting library | these exist once, downstream (design policy §26) |
 | an ML framework or model runtime in native code | a model-based tracker runs in its own package (MediaPipe in the browser), and a generator sits behind `usd-motion-plugins`' generator interface |
 | `usd-vrm-plugins`, `usd-mmd-plugins`, `usd-avatar-runtime` | the dependency direction is one way ([WORKSPACE.md §2.3](WORKSPACE.md#23-the-ecosystem)) |
-| a vendor SDK discovered at build time | a vendor SDK is declared in the connector's manifest (WS-O5) or not used |
+| a vendor SDK discovered at build time | a vendor SDK is declared in the connector's manifest ([WORKSPACE.md §4.1](WORKSPACE.md#41-distribution)) or not used |
 
 ## 6. Data
 
