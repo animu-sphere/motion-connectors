@@ -12,7 +12,12 @@ proves the prefix works on its own:
   2. tests/installed_consumer/, copied out of the repository, configures
      against the prefix and OpenUSD alone, finds every listed package at the
      repository's major.minor, links its exported target, builds, and reports
-     that it consumed exactly as many packages as the list names.
+     that it consumed exactly as many packages as the list names;
+  3. with `--motion-connect`, the installed `motion_connect` lists the
+     connectors, replays a capture copied out of the repository for each
+     through `inspect`, opens and stops `dump`, and refuses a bad argument --
+     tools/motionConnect/tests/test_motion_connect.py's checks, pointed at
+     the prefix instead of the build tree.
 
 The list is empty until the first import, and the lane runs anyway: what it
 proves before then is that the install, the leak scan and a consumer outside
@@ -26,7 +31,7 @@ is expected. `--usd-root` is left out when nothing built reaches OpenUSD.
 
   check_installed_consumer.py --build-dir build/windows-msvc --config Release
       [--usd-root C:/usd/openusd-26.08] [--package NAME ...]
-      [--generator Ninja --make-program ...] [--keep DIR]
+      [--generator Ninja --make-program ...] [--motion-connect] [--keep DIR]
 """
 
 from __future__ import annotations
@@ -44,6 +49,16 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 CONSUMER = REPO / "tests" / "installed_consumer"
 DOC_DIR = pathlib.Path("share", "doc", "motion-connectors")
 PROFILE_DIR = pathlib.Path("share", "motion-connectors", "profiles")
+MOTION_CONNECT_TEST = REPO / "tools" / "motionConnect" / "tests" / "test_motion_connect.py"
+# One committed capture per connector, as tools/motionConnect/tests replays.
+MOTION_CONNECT_CAPTURES = (
+    ("vmc", "vmc.v1",
+     "libs/motionConnectorVmc/tests/corpus/neutral-standing-30hz.vmcpackets"),
+    ("mocopi", "mocopi.body.v1",
+     "libs/motionConnectorMocopi/tests/corpus/neutral-standing-60hz.mocopipackets"),
+    ("vrchat-osc", "vrchat-osc.trackers.v1",
+     "libs/motionConnectorVrchatOsc/tests/corpus/generated/one-tracker.vrchatoscpackets"),
+)
 
 
 def run(command: list, **kwargs) -> subprocess.CompletedProcess:
@@ -102,6 +117,29 @@ def check_prefix(prefix: pathlib.Path, build_dir: pathlib.Path,
     return errors
 
 
+def check_motion_connect(prefix: pathlib.Path, work: pathlib.Path,
+                         env: dict) -> int:
+    tool = prefix / "bin" / executable("motion_connect")
+    if not tool.is_file():
+        print(f"the prefix has no bin/{executable('motion_connect')}",
+              file=sys.stderr)
+        return 1
+    captures = work / "captures"
+    captures.mkdir()
+    checks = [["--mode", "list"], ["--mode", "arguments"]]
+    for source, profile, capture in MOTION_CONNECT_CAPTURES:
+        copy = captures / pathlib.Path(capture).name
+        shutil.copyfile(REPO / capture, copy)
+        checks.append(["--mode", "inspect", "--source", source,
+                       "--capture", copy, "--profile", profile])
+        checks.append(["--mode", "dump", "--source", source])
+    for check in checks:
+        run([sys.executable, MOTION_CONNECT_TEST, "--tool", tool, *check],
+            env=env, cwd=work)
+    print(f"ok  the installed motion_connect passed {len(checks)} check(s)")
+    return 0
+
+
 def main() -> int:
     # Paths are printed, and a console's code page may not spell them.
     sys.stdout.reconfigure(errors="backslashreplace")
@@ -130,6 +168,9 @@ def main() -> int:
     parser.add_argument("--python-executable")
     parser.add_argument("--python-library")
     parser.add_argument("--python-include-dir")
+    parser.add_argument("--motion-connect", action="store_true",
+                        help="the build installs motion_connect; run it from "
+                             "the prefix")
     parser.add_argument("--keep", type=pathlib.Path,
                         help="work here instead of a deleted temporary directory")
     args = parser.parse_args()
@@ -216,7 +257,13 @@ def main() -> int:
         env = dict(os.environ)
         usd_paths = ([str(args.usd_root / "bin"), str(args.usd_root / "lib")]
                      if args.usd_root else [])
+        external_paths = [str(external / name) for external in args.external_prefix
+                          for name in ("bin", "lib")]
+        # OpenUSD's libraries load the Python they were built against.
+        python_paths = ([str(pathlib.Path(args.python_executable).parent)]
+                        if args.python_executable else [])
         env["PATH"] = os.pathsep.join([str(prefix / "bin"), *usd_paths,
+                                       *external_paths, *python_paths,
                                        env.get("PATH", "")])
         result = run([probes[0]], env=env, stdout=subprocess.PIPE)
         want = f"consumed {len(packages)} package(s)"
@@ -225,6 +272,8 @@ def main() -> int:
                   file=sys.stderr)
             return 1
         print(f"ok  {want} from outside the repository")
+        if args.motion_connect and check_motion_connect(prefix, work, env):
+            return 1
         print("installed-consumer lane passed")
         return 0
     except subprocess.CalledProcessError as error:

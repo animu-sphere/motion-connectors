@@ -55,7 +55,8 @@ into the shared layer.
   corpus tests exercise the hardware-free `PushDatagram` → `Poll` path for
   every committed capture, using each protocol's required end-of-capture
   handling, and `workspace_installed_consumer` consumes the installed package
-  set outside the repository.
+  set outside the repository and runs the installed `motion_connect`'s
+  `list`, `dump` and `inspect` against captures copied out of it.
 - ✅ Audit the imported `--export-trace` paths. All three tools delegate the
   file format to `motionRecording::WriteCaptureTraceFile`.
 - ✅ Remove VMC's live semantic export and settle where offline
