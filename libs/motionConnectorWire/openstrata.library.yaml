@@ -1,0 +1,37 @@
+# OpenStrata plain-library descriptor. motionConnectorWire is the `MotionFrame`
+# wire format, `openstrata.motion.frame/v1`
+# (docs/design/FRAME_WIRE_FORMAT.md): a pure encode and decode that knows no
+# socket (docs/architecture/WORKSPACE.md §1.1).
+#
+# A library, not a plugin bundle: it registers nothing with OpenUSD and has no
+# plugInfo.json.
+#
+# Its edges are WORKSPACE §2.1's: the shared contract it spells, and
+# `motionCore`, whose pose and joint vocabulary the message carries. The
+# `motionCore` pin is the one every library here carries, usd-motion-plugins
+# v0.5.2's archive digests.
+schema: openstrata.library/v1alpha1
+library:
+  id: motionConnectorWire
+  # Mirrors the repository-root VERSION (docs/architecture/WORKSPACE.md §4).
+  version: 0.1.0
+requires:
+  libraries:
+    - id: motionConnectorCore
+      version: ">=0.1,<0.2"
+    - id: motionCore
+      version: ">=0.5,<0.6"
+      artifact:
+        targets:
+          cy2026-linux-x86_64-py313-usd:
+            digest: sha256:c91e824f83e9daaad903561f2acf5c2bfaf02773406a9be8b89ab75136bb03ac
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:e56dd0916ae5a34d346bb5152cbb49ef4b49374e3e612bff0b613b767afe8360
+          cy2026-macos-arm64-py313-usd:
+            digest: sha256:9ca3835e8eb4dabef80867f1bebe4a4583745411ecef992b446d5bc4717e391f
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:08b8b83b3139325b64f32bba96223c5f726c412e2d7b5a1b3f3e9aa6704f6571
+          cy2026-windows-x86_64-py313-usd:
+            digest: sha256:1d2ac0bce7211539c008a0a584088d9acdebdada39f020ab489e3d7796eb29cb
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:9f05cf3b1c5c4663ef5350b3d37a0a1512b7692a72b993b2c25e50ed4c38de08
+cmake:
+  package: motionConnectorWire
+  target: motionConnectorWire::motionConnectorWire

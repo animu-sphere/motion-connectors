@@ -23,3 +23,9 @@
 # which is the whole of what a byte-compare corpus needs on a Windows
 # checkout.
 *.trace binary
+
+# Frame wire messages are compared byte for byte, and some are deliberately
+# not UTF-8 (libs/motionConnectorWire/tests/corpus). Their expectations file is
+# read by the same suite and by the generator's --check, so it keeps LF.
+*.frame.json binary
+libs/motionConnectorWire/tests/corpus/expectations.txt text eol=lf

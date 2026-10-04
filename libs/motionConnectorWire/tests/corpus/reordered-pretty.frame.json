@@ -1,0 +1,7 @@
+{
+  "actors": [],
+  "timing": { "sourceClock": "none", "receiveTimestamp": 0 },
+  "sourceProfile": "p",
+  "frameNumber": "1",
+  "format": "openstrata.motion.frame/v1"
+}

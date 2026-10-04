@@ -54,7 +54,7 @@ Each is isolated to its connector and is off unless that connector is built
 | `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
 | `motionConnectorMocopi` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
 | `motionConnectorVrchatOsc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
-| `motionConnectorWire` | `motionConnectorCore` and `motionCore`; a JSON parser, implemented here or chosen with the codec against [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses) | installed sibling packages; third party if chosen |
+| `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is implemented here, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
 | `motionConnectorWebSocket` | `motionConnectorWire`; a WebSocket library, optional; TLS optional on top | third party, chosen with the connector |
 | `motionConnectorOpenXR` | the OpenXR loader | third party |
 | `motionConnectorMediaPipe` | the MediaPipe Tasks package | npm |

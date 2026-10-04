@@ -1,0 +1,1 @@
+{"format":"openstrata.motion.frame/v1","frameNumber":"1","sourceProfile":"p","timing":{"receiveTimestamp":1.0E0,"sourceClock":"none"},"actors":[{"actor":"0","trackers":[{"trackerId":"t","position":[-0.0,1e-50,0.50],"rotation":[0.9995,0,0,0],"confidence":1E-0}]}]}

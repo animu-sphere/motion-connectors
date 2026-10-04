@@ -54,9 +54,9 @@ Every connector is optional (WORKSPACE.md §4), and each is one CMake option:
 | `MOTIONCONNECTORS_BUILD_TOOLS` | `ON` at the top level | the recorders, and `motion_connect` when all three connectors are on |
 | `MOTIONCONNECTORS_BUILD_TESTS` | `ON` at the top level | every component's tests and the workspace tests |
 
-The transport and the wire format depend on nothing and are always built. The
-core and the tracker layer link `usd-motion-plugins`' `motionCore`, and are
-built whenever any connector is. With every connector off, configure asks for
+The transport and the OSC wire format depend on nothing and are always built.
+The core, the `MotionFrame` wire format and the tracker layer link
+`usd-motion-plugins`' `motionCore`, and are built whenever any connector is. With every connector off, configure asks for
 no OpenUSD at all:
 
 ```powershell
@@ -80,6 +80,7 @@ Build output stays in the build tree. The runtime layout -- `bin/`, `lib/`,
 | Test | Checks |
 | --- | --- |
 | `workspace_docs`, `workspace_docs_selftest` | every relative link and anchor resolves; every version and OpenUSD pin mirror agrees (`scripts/check_docs.py`) |
+| `motionConnectorWire_corpus`, `_messageGen` | every generated `openstrata.motion.frame/v1` message decodes, re-encodes or is refused exactly as `expectations.txt` says, and the committed corpus is what its generator writes |
 | `motionConnector*_*Corpus` | each committed VMC, mocopi and VRChat OSC capture reaches the shared connector's `MotionFrame` path with stable frame counts |
 | `motion_connect_inspect_*` | the CLI replays representative captures through the shared contract |
 | `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package the build installed, each of which `tests/installed_consumer/packages.json` must list; when the build has `motion_connect`, the installed one passes `list`, `dump`, `inspect` and argument checks from the prefix |

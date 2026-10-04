@@ -23,9 +23,9 @@
 # OpenXR, WebSocket or browser dependency. The v0.1.0 connectors default ON, so
 # `ost build` and a bare configure build the whole product; a connector that
 # brings a third-party dependency of its own is added OFF, in the change that
-# creates it. The transport and the wire format depend on nothing and are
-# always built; the core and the tracker layer link usd-motion-plugins'
-# motionCore, and are built whenever any connector is.
+# creates it. The transport and the OSC wire format depend on nothing and are
+# always built; the core, the frame wire format and the tracker layer link
+# usd-motion-plugins' motionCore, and are built whenever any connector is.
 cmake_minimum_required(VERSION 3.22)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/MotionConnectorsProject.cmake")
@@ -63,7 +63,7 @@ endif()
 # (DEPENDENCIES.md §1). It is resolved here rather than in the first component
 # that needs it because pxrConfig.cmake's imported targets are directory-scoped:
 # found inside libs/motionConnectorCore, they would be invisible to its
-# siblings. A build of the transport and the wire format alone asks for no
+# siblings. A build of the transport and the OSC wire format alone asks for no
 # OpenUSD at all.
 if(_connectors_any_connector)
     find_package(pxr REQUIRED CONFIG)
@@ -78,16 +78,19 @@ if(MOTIONCONNECTORS_BUILD_TESTS)
     motionconnectors_find_test_python()
 endif()
 
-# The shared leaves. The transport and the wire format have an empty edge set
-# and no option of their own.
+# The shared leaves. The transport and the OSC wire format have an empty edge
+# set and no option of their own.
 add_subdirectory("libs/motionConnectorTransport")
 add_subdirectory("libs/motionConnectorOsc")
-# The core and the tracker layer link usd-motion-plugins' motionCore, which is
-# not in this tree: its descriptor pins the published artifact per target and
-# `ost` puts it on CMAKE_PREFIX_PATH before the build, so the find_package in
-# each resolves against a materialized package rather than a sibling.
+# The core, the frame wire format and the tracker layer link usd-motion-plugins'
+# motionCore, which is not in this tree: its descriptor pins the published
+# artifact per target and `ost` puts it on CMAKE_PREFIX_PATH before the build,
+# so the find_package in each resolves against a materialized package rather
+# than a sibling. The frame wire format spells the core's MotionFrame, so it
+# follows the core.
 if(_connectors_any_connector)
     add_subdirectory("libs/motionConnectorCore")
+    add_subdirectory("libs/motionConnectorWire")
     add_subdirectory("libs/motionConnectorTracking")
 endif()
 

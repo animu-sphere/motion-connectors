@@ -30,6 +30,7 @@ row's status.
 | UDP receive and the opt-in datagram queue on a socket | supported — the VMC, mocopi and VRChat OSC receiver/loopback suites and their recorders' loopback names | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
 | Replay of a capture through a connector | supported — `motionConnectorVmc_connectorCorpus`, `motionConnectorMocopi_connectorCorpus`, `motionConnectorVrchatOsc_connectorCorpus` plus the source-layer corpus and loopback readings | [CONNECTOR §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture) | — (arrived with the connectors) | v0.1.0 |
 | OSC 1.0 wire format: packets, nested bundles in wire order, type tags, arguments, a refusal naming the byte | supported — `motionConnectorOsc_oscPacket` | [WORKSPACE §1.1](../architecture/WORKSPACE.md#11-native-libraries) | — (imported 2026-09-19) | v0.1.0 |
+| `MotionFrame` wire format `openstrata.motion.frame/v1`: encode, decode, byte-identical re-encoding, every §6 refusal as a `WIRE_*` code with a path | supported — `motionConnectorWire_frameWire`, `_corpus`, `_messageGen` | [FRAME_WIRE_FORMAT §3–§6](../design/FRAME_WIRE_FORMAT.md#3-the-message) | — (new 2026-10-04) | v0.2.0 |
 | `TrackerObservation`, assignment, tracker solve | supported — `motionConnectorTracking_trackerAssignment`, `_trackerSolve`, and end to end through `vrchat_osc_record_export` | [CONNECTOR §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation) | — (imported 2026-09-20) | v0.1.0 |
 
 ## 2. Sources
