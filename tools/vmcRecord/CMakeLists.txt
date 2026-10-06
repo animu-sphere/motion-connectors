@@ -25,14 +25,10 @@ endif()
 if(NOT TARGET motionRecording::motionRecording)
     find_package(motionRecording REQUIRED CONFIG)
 endif()
-if(NOT TARGET motionSampling::motionSampling)
-    find_package(motionSampling REQUIRED CONFIG)
-endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vmc_record
-    src/LiveSource.cpp
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
@@ -40,11 +36,10 @@ add_executable(vmc_record
 motionconnectors_use_utf8_code_page(vmc_record)
 
 target_compile_features(vmc_record PRIVATE cxx_std_20)
-# Intake composition and semantic export are tool dependencies.
+# Only semantic export consumes the downstream writer.
 target_link_libraries(vmc_record PRIVATE
     motionConnectorVmc::motionConnectorVmc
-    motionRecording::motionRecording
-    motionSampling::motionSampling)
+    motionRecording::motionRecording)
 
 if(MSVC)
     target_compile_options(vmc_record PRIVATE /utf-8)

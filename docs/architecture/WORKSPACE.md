@@ -16,7 +16,7 @@ VRChat OSC implementations, along with their record tools. Unimplemented identit
 Boundary revision (2026-10-06): **target dependency contract accepted**.
 §2.1 records the implemented acquisition graph. VMC and mocopi use
 `VmcFrameSource` / `MocopiFrameSource`; their former motion source compositions
-are private to recorder tools and consumer integration tests.
+are private to consumer integration tests.
 The shape follows
 the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
@@ -150,12 +150,17 @@ vmc_record / mocopi_record / vrchat_osc_record
 VMC and mocopi libraries have only the target edges above. Their frame sources
 own decode, source assembly, restart/session facts and diagnostic datagram
 identity; their connectors own bounded acquisition queues. Former
-intake/sampling/restart-policy compositions live in each recorder's private
-`src/LiveSource.*`, are not installed, and consume the same library-owned
-acquisition paths. Recorders and consumer integration tests declare downstream
-dependencies explicitly. Raw/export separation remains migration debt under
-[Boundary Phase B](../roadmap/boundary-implementation.md#boundary-phase-b--recorder-integration);
-VRChat OSC's recorder already declares `motionRecording` at tool level.
+intake/sampling/restart-policy compositions live in each connector's
+`tests/consumer/LiveSource.*`, are not installed, and consume the same
+library-owned acquisition paths. Consumer integration tests declare their
+sampling/recording dependencies explicitly. Recorder raw capture and inspection
+construct no downstream intake. Each recorder invokes its private
+`TraceExport.cpp` only for `--inspect --export-trace`, using `motionRecording`'s
+writer; VMC and mocopi replay through their acquisition frame sources, and
+VRChat OSC performs the operator-configured tracker solve in the export path.
+VMC reports acquisition facts and omits the former downstream `intake:` line.
+The packaged `motionRecording` dependency requires `motionSampling` in the
+artifact closure; this is a packaging pin, not a direct recorder CMake link.
 
 ### 2.2 Forbidden
 

@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "TraceExport.h"
+#include "motionConnectorVrchatOsc/TrackerMessage.h"
+#include "Export.h"
+#include "Options.h"
+#include "motionConnectorVrchatOsc/PacketCapture.h"
+#include "motionRecording/CaptureTrace.h"
+
+#include <filesystem>
+#include <iostream>
+#include <map>
+#include <system_error>
 
 #include <algorithm>
 #include <string_view>
@@ -302,6 +312,210 @@ PrintSolveReport(std::FILE* out, const SolveReport& report)
         std::fprintf(out, "%s %s", i == 0 ? "" : ",", report.unplaced[i].c_str());
     }
     std::fprintf(out, "\n");
+}
+
+// Decodes a capture, solves each frame against the operator's statement, and
+// writes the canonical trace `--export-trace` asked for. Returns false when
+// nothing could be written, having said why; the caller prints its report
+// either way, for the reason `RunRecord` gives about the capture file.
+//
+// **This runs a second pass over the same datagrams, and the repetition is the
+// point.** The envelope report and the address inventory are derived from bytes
+// alone, so nothing a decoder or a solve makes of a packet can move a number in
+// either — the rule this tool is built on, kept in the one mode that decodes at
+// all (TraceExport.h). Folding the passes together would save two loops and
+// cost the only claim `--inspect` has.
+bool
+ExportTrace(const Options& options,
+            const vrchatOsc::PacketCapture& capture)
+{
+    // The second half of the refusal `ParseOptions` makes on the spelling. That
+    // one catches `--inspect x --export-trace x`; this catches the same file
+    // named two ways — `./x`, an absolute path, a symlink, a hard link — which
+    // no comparison of strings can see. `equivalent` answers only when both
+    // paths exist, and a trace path that does not exist yet cannot be the
+    // capture, so the error code is discarded rather than reported: "these are
+    // not the same file" and "one of them is not there" are the same answer
+    // here.
+    std::error_code aliased;
+    if (std::filesystem::equivalent(options.inspectPath, options.traceExportPath, aliased))
+    {
+        std::cerr << "vrchat_osc_record: " << options.traceExportPath
+                  << " is the capture being read, named differently; writing "
+                     "the trace there would destroy it\n";
+        return false;
+    }
+
+    vrchatOsc::TrackerFrameAssembler assembler;
+    // The capture's own peer, so a replayed session's diagnostics name what the
+    // live one's would have named. A capture that recorded none falls back to
+    // its path, which is what the corpus tests read.
+    assembler.SetSource(capture.peerEndpoint.empty() ? options.inspectPath : capture.peerEndpoint);
+
+    // The provenance the adapter refuses to invent and the operator already
+    // stated. `protocol` is this file's to fill because no type in the adapter
+    // holds one: `motionConnectorVrchatOsc` produces no pose, so it carries no
+    // `SourceMetadata` for a frame assembler to stamp — which is the
+    // library's edge set showing through rather than an omission.
+    openstrata::motion::SourceMetadata metadata;
+    metadata.kind = openstrata::motion::MotionSourceKind::LiveCapture;
+    metadata.protocol = "vrchat-osc";
+    metadata.provider = capture.sender;
+    metadata.sourceId = capture.sourceId;
+
+    vrchatOscRecordTool::TraceCollector trace(options.assignment, options.solve);
+    std::vector<vrchatOsc::TrackerFrame> frames;
+    std::vector<vrchatOsc::Diagnostic> log;
+    // First of each code, and how many there were. An eight-datagram frame that
+    // is short one address raises one diagnostic per frame, so a 2000-frame
+    // session with a strap off would otherwise write 2000 lines over the report
+    // an operator ran this for.
+    std::map<vrchatOsc::DiagnosticCode, std::pair<std::string, std::size_t>> seen;
+    const auto drain = [&seen, &log]()
+    {
+        for (const vrchatOsc::Diagnostic& diagnostic : log)
+        {
+            auto& entry = seen[diagnostic.code];
+            if (entry.second == 0)
+            {
+                entry.first = vrchatOsc::FormatDiagnostic(diagnostic);
+            }
+            ++entry.second;
+        }
+        log.clear();
+    };
+
+    for (const vrchatOsc::RecordedDatagram& datagram : capture.datagrams)
+    {
+        const vrchatOsc::TrackerPacket packet =
+            vrchatOsc::DecodeTrackerDatagram(datagram.bytes);
+        // The decoder's own refusals, which it raises without a source or a
+        // timestamp because it knows neither. Stamped here, where both are
+        // known, exactly as `InventoryAddresses` stamps them.
+        for (vrchatOsc::Diagnostic diagnostic : packet.diagnostics)
+        {
+            diagnostic.source = assembler.GetSource();
+            diagnostic.timestamp = datagram.receiveTime;
+            log.push_back(std::move(diagnostic));
+        }
+        drain();
+
+        frames.clear();
+        // The peer-carrying overload. A capture written before the format could
+        // say who sent a datagram passes empty throughout and never sees a
+        // restart, which is the assembler's stated behaviour rather than a
+        // fallback (FrameAssembler.h).
+        assembler.Push(packet, datagram.receiveTime,
+                       datagram.peer.empty() ? capture.peerEndpoint : datagram.peer, &frames, &log);
+        drain();
+        trace.Observe(frames, metadata);
+    }
+
+    // The frame still open at the end of the stream, which on this wire is the
+    // ordinary case rather than an edge one: a frame closes on the next frame's
+    // first repeat or on a gap, and a capture that ends mid-burst has neither.
+    // The sibling recorder has no line here because one mocopi datagram is one
+    // frame; this one does, and the difference is the frame policy.
+    frames.clear();
+    assembler.Flush(&frames, &log);
+    drain();
+    trace.Observe(frames, metadata);
+
+    trace.Close();
+    const std::vector<openstrata::motion::MotionClip>& sessions = trace.GetSessions();
+
+    if (!options.quiet)
+    {
+        for (const auto& entry : seen)
+        {
+            std::cerr << "vrchat_osc_record: " << entry.second.first;
+            if (entry.second.second > 1)
+            {
+                std::cerr << " (and " << (entry.second.second - 1) << " more of "
+                          << vrchatOsc::DiagnosticCodeString(entry.first) << ")";
+            }
+            std::cerr << "\n";
+        }
+    }
+
+    // The solve report goes to stdout with the rest of the report, and it is
+    // printed whether or not a trace was written. A session that solved nothing
+    // is the one an operator most needs it for: it is what tells a misspelled
+    // tracker identity from a strap that was never worn.
+    vrchatOscRecordTool::PrintSolveReport(stdout, trace.GetReport());
+
+    if (sessions.empty())
+    {
+        std::cerr << "vrchat_osc_record: no frame reached a pose, so there is "
+                     "no trace to write; the solve lines above say whether the "
+                     "assignment or the traffic is why\n";
+        return false;
+    }
+
+    std::size_t index = 0;
+    if (options.sourceSession != 0)
+    {
+        if (options.sourceSession > sessions.size())
+        {
+            std::cerr << "vrchat_osc_record: --source-session " << options.sourceSession
+                      << ": this capture holds " << sessions.size() << " session(s)\n";
+            return false;
+        }
+        index = options.sourceSession - 1;
+    }
+    else if (sessions.size() > 1)
+    {
+        // Refused rather than resolved. Picking the first would silently
+        // discard a recording, and concatenating them would assert a continuity
+        // of tracking *space* across a restart that nothing here can check --
+        // which is this wire's version of the sibling tools' refusal and not
+        // theirs, because the receiver's clock does not go back (TraceExport.h).
+        std::cerr << "vrchat_osc_record: the sender restarted, so this capture "
+                     "holds "
+                  << sessions.size()
+                  << " sessions from different peers, each calibrated on its "
+                     "own; one trace is one session, so name the one to export "
+                     "with --source-session 1.."
+                  << sessions.size() << "\n";
+        return false;
+    }
+
+    const openstrata::motion::MotionClip& session = sessions[index];
+    if (!openstrata::motion::WriteCaptureTraceFile(options.traceExportPath, session))
+    {
+        // The writer refuses before its first byte when a value cannot be
+        // spelled in that format, so a refusal here leaves the path untouched
+        // rather than half-written.
+        std::cerr << "vrchat_osc_record: could not write " << options.traceExportPath << "\n";
+        return false;
+    }
+    if (!options.quiet)
+    {
+        std::cerr << "vrchat_osc_record: wrote " << session.samples.size() << " solved frame(s)";
+        if (sessions.size() > 1)
+        {
+            std::cerr << " of session " << (index + 1) << " of " << sessions.size();
+        }
+        std::cerr << " over " << (session.endTime - session.startTime) << " s at "
+                  << session.nominalFrameRate << " Hz to " << options.traceExportPath << "\n";
+
+        // The largest thing the trace carries beside the rotations, said at the
+        // point it crosses -- the sibling tool's line, for its reason. Here it
+        // is also the one number that says whether `--no-root-motion` did what
+        // was asked: a session exported under it reports every frame as
+        // carrying no root record.
+        const vrchatOscRecordTool::HipsMotion& hips = trace.GetHipsMotion()[index];
+        std::cerr << "vrchat_osc_record: the trace carries " << hips.pathMetres
+                  << " m of hips path (" << hips.netMetres << " m net) as root motion";
+        if (hips.framesWithoutRoot != 0)
+        {
+            std::cerr << "; " << hips.framesWithoutRoot
+                      << " frame(s) carried no root record and are not in that "
+                         "sum";
+        }
+        std::cerr << "\n";
+    }
+    return true;
 }
 
 } // namespace vrchatOscRecordTool

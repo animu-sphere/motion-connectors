@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "SessionReport.h"
 
-#include "motionRecording/LiveCaptureSource.h"
 
 #include <algorithm>
 #include <cmath>
@@ -212,12 +211,11 @@ SessionReport::ObserveDiagnostics(const std::vector<vmc::Diagnostic>& log,
 }
 
 void
-SessionReport::Print(std::FILE* out, const vmc::VmcLiveSource& source,
+SessionReport::Print(std::FILE* out, const vmc::VmcFrameSource& source,
                      const vmc::UdpReceiver* receiver) const
 {
-    const vmc::VmcLiveSourceStats& bridge = source.GetStats();
+    const vmc::VmcFrameSourceStats& bridge = source.GetStats();
     const vmc::VmcFrameStats& assembly = source.GetAssembler().GetStats();
-    const openstrata::motion::LiveCaptureStats& intake = source.GetIntake().GetStats();
 
     if (receiver)
     {
@@ -327,22 +325,6 @@ SessionReport::Print(std::FILE* out, const vmc::VmcLiveSource& source,
                  static_cast<unsigned long long>(_frames - _framesFromReceiveClock),
                  static_cast<unsigned long long>(_framesFromReceiveClock),
                  static_cast<unsigned long long>(assembly.sessionRestarts));
-
-    std::fprintf(out,
-                 "intake:      %llu frame(s) delivered, %llu admitted, "
-                 "%llu refused; %llu session reset(s)\n",
-                 static_cast<unsigned long long>(bridge.framesDelivered),
-                 static_cast<unsigned long long>(bridge.framesAdmitted),
-                 static_cast<unsigned long long>(bridge.framesRefused),
-                 static_cast<unsigned long long>(bridge.sessionsReset));
-    if (intake.framesRejectedOutOfOrder != 0 || intake.framesRejectedStale != 0)
-    {
-        std::fprintf(out,
-                     "             the intake refused %llu out of order and "
-                     "%llu stale\n",
-                     static_cast<unsigned long long>(intake.framesRejectedOutOfOrder),
-                     static_cast<unsigned long long>(intake.framesRejectedStale));
-    }
 
     _PrintEvidence(out);
     _PrintDiagnostics(out);

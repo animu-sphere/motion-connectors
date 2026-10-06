@@ -41,7 +41,11 @@ is worth keeping. What it produces is a report, and a report is not a filter.
 ## Two modes, one report
 
 `--inspect` decodes a recorded capture and prints the same block, opening no
-socket. That is what makes this tool testable in CI over the committed corpus
+socket. Both paths consume `VmcFrameSource` observations directly, without
+a downstream motion intake. The report therefore contains acquisition facts
+and no `intake:` admission statistics. Trace export runs a separate acquisition
+replay in `TraceExport.cpp`, then calls `motionRecording`'s writer.
+That is what makes this tool testable in CI over the committed corpus
 with no sender at all, and it is also the answer to "is this fixture still what
 I thought it was" for a capture recorded months ago.
 
@@ -54,7 +58,6 @@ frames:      5 emitted, 0 incomplete; 0 refused out of order, 0 refused empty
 cadence:     30 Hz mean, interval 0.0333328-0.0333347 s, over 0.133333 s of sender clock
 bones:       21 of 55 observed; 105 accepted, 0 duplicated, 0 unsupported, 0 malformed
 clock:       5 frame(s) stamped by the sender, 0 by the receiver; 0 restart(s)
-intake:      5 frame(s) delivered, 5 admitted, 0 refused; 0 session reset(s)
 hips offset: 5 frame(s), |offset| 0.9-0.9 m, moved at most 0 m from the first (constant: rig geometry, not translation)
              first (0, 0.9, 0)
 root:        5 frame(s) with a position, moved at most 0 m from (0, 0, 0) (constant)

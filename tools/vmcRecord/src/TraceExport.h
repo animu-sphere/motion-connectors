@@ -28,7 +28,7 @@
 //
 // The alternatives were both worse. Splicing the second session onto the first
 // manufactures continuity out of a discontinuity, which is the class of
-// invention LiveSource.h refuses at the layer below. Writing one file and
+// invention the source frame assembler refuses. Writing one file and
 // letting it stall hides a restart inside a file that looks complete.
 //
 // So sessions are collected separately and the caller says which one it wants.

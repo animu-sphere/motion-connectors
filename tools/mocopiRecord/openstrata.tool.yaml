@@ -1,4 +1,4 @@
-# Recorder composition declares intake and trace export dependencies.
+# The recorder declares motionRecording for semantic export only.
 schema: openstrata.tool/v1alpha1
 tool:
   id: mocopi_record
@@ -11,6 +11,7 @@ requires:
   libraries:
     - id: motionConnectorMocopi
       version: ">=0.1,<0.2"
+    # Artifact closure pin: motionRecording 0.5.2 requires motionSampling.
     - id: motionSampling
       version: ">=0.5,<0.6"
       artifact:

@@ -50,8 +50,9 @@ Each is isolated to its connector and is off unless that connector is built
 
 The table records **current dependencies** for existing components and
 intended SDK dependencies for reserved components. The accepted target in
-[WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository) is implemented by VMC and mocopi; their recorders and consumer integration
-tests own downstream intake and recording dependencies.
+[WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository) is implemented by VMC and mocopi; their consumer integration
+tests own downstream intake/sampling dependencies. Recorders use `motionRecording`
+only for semantic export; its packaged closure includes `motionSampling`.
 
 | Connector | Dependency | Kind |
 | --- | --- | --- |

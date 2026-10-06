@@ -10,7 +10,7 @@ foreach(_mocopi_dependency IN ITEMS motionRecording motionSampling)
         find_package(${_mocopi_dependency} REQUIRED CONFIG)
     endif()
 endforeach()
-set(_mocopi_composition "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/mocopiRecord/src")
+set(_mocopi_composition "${CMAKE_CURRENT_SOURCE_DIR}/consumer")
 
 add_executable(motionConnectorMocopi_frameSource_tests test_frame_source.cpp)
 target_link_libraries(motionConnectorMocopi_frameSource_tests PRIVATE

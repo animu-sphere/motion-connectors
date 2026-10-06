@@ -558,8 +558,17 @@ def read_trace(path: pathlib.Path) -> tuple[dict[str, str], list[dict]]:
 def export(tool: pathlib.Path, capture: pathlib.Path, trace: pathlib.Path,
            *arguments: str) -> str:
     """One export, returning the report on stdout."""
-    return run_tool(tool, "--inspect", str(capture), "--export-trace",
-                    str(trace), "--assign", ASSIGNMENT, "--quiet", *arguments)
+    observation_report = run_tool(tool, "--inspect", str(capture), "--quiet")
+    report = run_tool(tool, "--inspect", str(capture), "--export-trace",
+                      str(trace), "--assign", ASSIGNMENT, "--quiet", *arguments)
+    if not report.startswith(observation_report):
+        fail("trace export changed the raw envelope/address report")
+    first_bytes = trace.read_bytes()
+    run_tool(tool, "--inspect", str(capture), "--export-trace",
+             str(trace), "--assign", ASSIGNMENT, "--quiet", *arguments)
+    if trace.read_bytes() != first_bytes:
+        fail("the same VRChat OSC capture produced different trace bytes")
+    return report
 
 
 def solve_line(report: str, label: str) -> str:

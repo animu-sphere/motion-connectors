@@ -203,8 +203,8 @@ motionConnectorMocopi -> motionConnectorCore, motionCore,
 
 `MocopiFrameSource` owns decode, normalization, assembly, restart facts and
 source diagnostics. It does not implement `IMotionSource` or own motion intake.
-`MocopiLiveSource` is now private to the recorder and its consumer integration
-tests in [`tools/mocopiRecord/src/LiveSource.h`](../../tools/mocopiRecord/src/LiveSource.h).
+`MocopiLiveSource` is private to consumer integration
+tests in [`tests/consumer/LiveSource.h`](tests/consumer/LiveSource.h).
 That composition declares sampling and recording packages directly and preserves
 its existing reset/refuse policy and sampled-pose evidence.
 
@@ -310,8 +310,7 @@ consumer the receiver above was waiting for: `mocopi_record --output` turns a
 source aimed at this port into a capture file, and `--inspect` reads one back
 with no socket at all. It ships in the same artifact as the library
 ([WORKSPACE.md §5](../../docs/architecture/WORKSPACE.md)) and links the
-connector for acquisition plus motionSampling/motionRecording for private
-intake and semantic export. Raw capture produces an acquisition file.
+connector for acquisition plus `motionRecording` for semantic export only. Raw capture produces an acquisition file.
 
 It decodes nothing, so its report is about the datagram *envelope*: the counts,
 the peers, the arrival rate on the receive clock, a census of distinct payload

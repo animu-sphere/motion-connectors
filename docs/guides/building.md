@@ -96,7 +96,10 @@ When VMC or mocopi is built, `workspace_installed_consumer` also compiles every 
 header of that connector and runs its acquisition classes with discovery of `motionSampling`,
 `motionRecording`, `motionRetarget` and `motionUsd` disabled. Their existing
 intake/sampling/restart-policy tests link downstream packages explicitly and
-carry the `consumer-integration` label.
+carry the `consumer-integration` label. The private intake compositions live
+under each connector's `tests/consumer/`. Recorder raw capture and inspection
+use acquisition paths alone; `--export-trace` invokes the downstream writer
+in a separate replay pass. VMC no longer prints downstream `intake:` statistics.
 
 `ctest -LE installed-consumer` leaves the second project out.
 
