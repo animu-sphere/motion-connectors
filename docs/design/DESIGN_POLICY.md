@@ -24,6 +24,8 @@
 > never changes what a number means. §46 records how this policy was reconciled
 > with the sibling repositories' contracts on adoption; where a sketch in §1–§45
 > and §46 disagree, §46 is the decision and the sketch is the motivation.
+> The accepted boundary clarification of 2026-10-06 is §47; where it narrows
+> an earlier sketch or import decision, §47 governs the intended boundary.
 
 ---
 
@@ -153,10 +155,11 @@ The connector should terminate at a **canonical motion boundary**.
 The logical flow is:
 
 ```text
-MotionSource
-    -> MotionFrame
-  -> usd-motion-plugins MotionPose intake
-  -> MotionStream
+external source
+    -> source acquisition / decode / assembly / normalization
+    -> MotionFrame                         (connector library ends)
+    -> downstream runtime intake adapter
+    -> usd-motion-plugins MotionStream
 ```
 
 `MotionFrame` is the connector boundary. `MotionPose` and `MotionStream` are
@@ -486,7 +489,8 @@ These mechanisms belong mostly in the stream/motion layer rather than individual
 
 For live tracking, low latency is generally more important than preserving every frame.
 
-Default policy:
+Acquisition queue sketch (the concrete modes are
+[CONNECTOR_CONTRACT §8](CONNECTOR_CONTRACT.md#8-buffering-push-and-pull)):
 
 ```text
 producer
@@ -494,10 +498,10 @@ producer
    v
 small bounded ring buffer
    |
-   +--> drop stale frames if consumer falls behind
+   +--> counted queue replacement / overflow, by the selected delivery mode
    |
    v
-latest usable pose
+Poll(MotionFrame&)
 ```
 
 Modes may include:
@@ -519,6 +523,11 @@ Recommended default for capture / recording:
 ```text
 ordered
 ```
+
+These are caller-selected queue delivery modes, not a connector's semantic
+stale/missing-pose policy. A connector reports source observations;
+downstream intake decides hold, interpolation, semantic dropping and
+continuity handling (§47.2).
 
 ---
 
@@ -975,7 +984,8 @@ A connector may provide a raw diagnostic capture facility, but canonical recordi
 
 ## 26. Filtering and Smoothing
 
-Tracking filters should generally live in the motion layer.
+Generic tracking filters and smoothing belong in `usd-motion-plugins`;
+connector libraries do not own them.
 
 Examples:
 
@@ -989,7 +999,7 @@ IK correction
 pose interpolation
 ```
 
-These should not be reimplemented independently in every connector.
+These are not implemented in connector libraries, including private helpers.
 
 The connector should emit the best faithful normalized observation it can.
 
@@ -1030,6 +1040,13 @@ WebSocket and remote-stream integrations should not implicitly expose listening 
 ## 28. Dependency Policy
 
 Keep `motionConnectorCore` very small.
+
+A connector library may depend on `motionCore`, but must not depend on
+`motionSampling`, `motionRecording`, `motionRetarget`, or `motionUsd`.
+Tools, examples and runtime integration may consume those downstream
+libraries; they must not introduce a reverse dependency from a connector.
+The imported live-source composition is transitional, not an exception to
+the target contract ([§47](#47-external-acquisition-boundary)).
 
 `motionConnectorCore` may consume the foundation value types exposed by
 `usd-motion-plugins` `motionCore` (`gf`, `tf`, `vt`), but it must not open or
@@ -1430,15 +1447,11 @@ The recommended final shape is:
 
 ## 44. Immediate Next Steps
 
-Recommended next implementation tasks:
-
-1. Implement `motionConnectorCore` and resolve its poll, buffer and state semantics.
-2. Freeze the source profile and diagnostic identifier rules.
-3. Adapt VMC, mocopi and VRChat OSC to the shared contract.
-4. Add `motion_connect dump`, `list` and `inspect`.
-5. Re-run the imported replay corpus through the unified path.
-6. Verify clean installed-package consumption and sibling cleanup.
-7. Add WebSocket transport, bindings and later browser/XR sources.
+The current incomplete tasks belong to
+[roadmap/current.md](../roadmap/current.md), with the boundary implementation
+sequence and completion criteria in
+[roadmap/boundary-implementation.md](../roadmap/boundary-implementation.md).
+§47 fixes the acquisition boundary that those tasks must preserve.
 
 The most important architectural decision is to stabilize the **MotionFrame /
 MotionPose intake boundary** before adding more source integrations.
@@ -1510,8 +1523,9 @@ or a tiny dependency-neutral core". It is `usd-motion-plugins`: its
 `MOTION_CONTRACT.md` defines `MotionPose`, `RootMotion`, `MotionChannelSet`,
 `SourceMetadata` and the `MotionStream` intake rules. A source in
 `motion-connectors` delivers those shared values in a `MotionFrame`, and
-its workspace contract already records the edge `motion-connectors →
-usd-motion-plugins` (`motion-core`, `motion-recording`).
+its workspace contract records the edge `motion-connectors →
+usd-motion-plugins`: connector libraries consume `motionCore`; semantic
+recording dependencies belong to tools or downstream integration (§47).
 
 So §5.1's `JointPose` / `MotionPose` sketch is **not a second pose type**. What
 this repository defines is what lies around a pose: the connector interface,
@@ -1630,4 +1644,149 @@ instead (WS-O1, decided 2026-09-19):
 The web modules' layout stays open (WS-O6), because it is a JavaScript
 package's shape and not a CMake one. Binding in
 [WORKSPACE.md §1.1](../architecture/WORKSPACE.md#11-native-libraries).
+
+---
+
+## 47. External acquisition boundary
+
+Accepted on 2026-10-06. This section fixes `motion-connectors` as the
+**external acquisition edge**. It clarifies ownership; implementation work
+and completion criteria are in
+[roadmap/boundary-implementation.md](../roadmap/boundary-implementation.md).
+The imported VMC/mocopi live-source composition still exceeds this target,
+as [WORKSPACE §2.1](../architecture/WORKSPACE.md#21-inside-the-repository)
+records. This documentation change does not claim that it has been removed.
+
+> `motion-connectors` owns what was observed.
+> `usd-motion-plugins` owns how that motion is treated.
+
+### 47.1 Acquisition ownership and the stopping point
+
+Connectors own connectivity (UDP, WebSocket, browser APIs and native/device
+SDKs), source/protocol decode, frame assembly, source sequences, source and
+receive clocks, restart/session detection, capabilities, connection state,
+tracker observations and protocol diagnostics. VMC, mocopi, VRChat OSC,
+OpenXR, WebXR and MediaPipe follow the same boundary, as do future IMU suits,
+optical mocap, depth cameras and dedicated tracking devices.
+
+```text
+device / browser / SDK / protocol / network
+    → decode
+    → frame assembly
+    → source coordinate / unit / joint-name normalization
+    → MotionFrame
+    → END of connector library
+```
+
+`MotionFrame` is an acquisition envelope. It carries optional shared
+`MotionPose` values and observations, with timing, sequence and provenance;
+connection state and diagnostics are reported alongside it under
+[CONNECTOR_CONTRACT §3, §5, §6 and §9](CONNECTOR_CONTRACT.md#3-motionframe).
+This does not add fields to the current frame or wire format.
+`MotionPose` stays owned by
+[`usd-motion-plugins`' motion contract](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md).
+A connector may construct it through `motionCore`, without deciding how it
+is sampled, filtered, recorded or retargeted.
+
+Source-native basis and units, and protocol joint names mapped to
+`HumanJoint` where appropriate, are source interpretation. Their conversion
+to right-handed, +Y up, +Z forward, metres and seconds remains here and is
+performed once ([COORDINATE_SYSTEMS.md](COORDINATE_SYSTEMS.md)). Generic motion
+transformation, target-skeleton mapping and rest-pose correction stay downstream.
+
+### 47.2 Observations and temporal interpretation
+
+> A connector emits observations. It does not own their temporal interpretation.
+>
+> A connector reports discontinuity. It does not invent continuity.
+
+Report observed restarts, missing/stale/duplicate input and sender-clock
+resets with source evidence. Do not turn those facts into hold,
+interpolation, smoothing, semantic dropping, bind/unbind, continuity repair
+or a semantic reset policy. Malformed-input refusal, source-specific frame
+assembly and bounded acquisition queues still belong here; they are not a
+`MotionStream` intake or semantic buffer.
+
+Interpolation, smoothing, generic filtering, semantic buffering, intake
+policy, semantic recording, `motion-capture-trace` implementation and generic
+retargeting belong to `usd-motion-plugins`. Connectors own no UsdStage/UsdSkel
+authoring, OpenExec motion evaluation, VRM/MMD semantics, physics or runtime
+scheduling. These non-goals also exclude target-skeleton logic and a
+connector-owned `MotionPose` type.
+
+### 47.3 Library responsibilities and dependency invariants
+
+| Layer | Owns | Must not own |
+| --- | --- | --- |
+| `motionConnectorCore` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, bounded acquisition queue if needed | filtering, sampling, recording, retargeting, USD, OpenExec, protocols or device SDKs |
+| `motionConnectorTransport` | UDP receive, datagram queues, packet capture, transport diagnostics | VMC addresses, OSC semantics, `MotionFrame` semantics or motion policy |
+| `motionConnectorOsc` | packets, bundles, type tags, arguments | VMC/VRChat addresses, socket ownership or motion semantics |
+| `motionConnectorWire`, `motionConnectorWebSocket` | `MotionFrame` transport and `openstrata.motion.frame/v1` | canonical semantic motion recording |
+| source adapters | protocol/SDK interpretation and normalized observations | downstream motion treatment or runtime composition |
+
+The required invariants are:
+
+1. A connector library may depend on `motionCore`, but must not depend on
+   `motionSampling`, `motionRecording`, `motionRetarget`, or `motionUsd`.
+2. A connector library must not open or author a `UsdStage`.
+3. A connector reports source observations; temporal interpretation belongs
+   downstream.
+4. Protocol-specific code never enters `motionConnectorCore`.
+5. Transport libraries never know protocol semantics.
+
+Connector leaves (`motionConnectorCore`, `motionConnectorTransport`,
+`motionConnectorOsc`, `motionConnectorWire`) and isolated OS/device/browser
+dependencies are allowed according to
+[WORKSPACE §2](../architecture/WORKSPACE.md#2-dependency-directions).
+
+### 47.4 Capture and recorder integration
+
+Raw datagram/packet/protocol/session capture, source-specific replay and
+diagnostic capture remain here. Semantic `MotionPose` stream recording,
+canonical traces, clips and semantic replay belong to `usd-motion-plugins`.
+Do not duplicate its serializer or trace semantics here.
+
+`vmc_record`, `mocopi_record` and `vrchat_osc_record` remain in this
+repository for source-specific options, session provenance and raw capture.
+Semantic export such as `--export-trace` is CLI integration:
+
+```text
+record tool → connector library
+record tool → motionRecording       (semantic export only)
+```
+
+There is no `connector library → motionRecording` edge in the target.
+`VmcLiveSource` and `MocopiLiveSource` are transitional composition layers:
+retain decode, assembly, restart detection and source diagnostics, but remove
+`IMotionSource` inheritance, `LiveCaptureSource` ownership, `PoseBuffer` and
+sampling policy, and converge on `MotionFrame` emission. Runtime intake
+composition belongs downstream, with `usd-avatar-runtime` the first choice.
+
+### 47.5 Tracking and placement decisions
+
+Keep `TrackerObservation` and the existing `motionConnectorTracking` for
+now; the 2026-09-24 import decision is not a permanent placement rule for
+generic solve. Tracking-space normalization, source tracker IDs, raw
+observations, availability and source hints stay here.
+
+Reassess generic tracker assignment, anatomical solve, pose reconstruction,
+confidence fusion and multi-tracker motion synthesis for `usd-motion-plugins`
+when the algorithm works without a source/device name, is reusable across
+connectors and generically produces `MotionPose`. Any move must avoid the
+reverse dependency and duplicate observation contracts noted in §46.4.
+
+For each new feature, apply these placement rules:
+
+- Protocol/SDK interpretation or source-native basis interpretation:
+  `motion-connectors`.
+- Generic motion logic meaningful without a network/device, including
+  filtering, interpolation, retargeting and semantic recording:
+  `usd-motion-plugins`.
+- Connector-to-motion-runtime orchestration: `usd-avatar-runtime`.
+
+OpenXR is the next reference source for this boundary: loader acquisition of
+head/controllers/hands/body observations, source normalization, then
+`MotionFrame`, with no filter, retargeter, recorder, stage or avatar semantics.
+WebXR and MediaPipe follow the same contract; generic body reconstruction
+must not be fixed inside a connector.
 

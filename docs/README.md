@@ -26,6 +26,9 @@ structure, evidence or incomplete work according to the ownership table below.
   rules and the decisions made when the policy was adopted. Release scope and
   ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
   the policy by section number.
+  The accepted [external acquisition boundary (§47)](design/DESIGN_POLICY.md#47-external-acquisition-boundary)
+  fixes library responsibility at `MotionFrame`; its implementation phases
+  are tracked in [the boundary roadmap](roadmap/boundary-implementation.md).
 - Six focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the

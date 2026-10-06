@@ -13,6 +13,10 @@ behind the shared boundary.**
 The build and CI tree holds the transport, OSC, tracking, VMC, mocopi and
 VRChat OSC implementations, along with their record tools. Unimplemented identities below remain
 *reserved* until the change that creates them lands, and their rows say so.
+Boundary revision (2026-10-06): **target dependency contract accepted**.
+§2.1 states the target and separately records the imported VMC/mocopi
+dependencies that still need removal; this revision changes documentation,
+not their implementation.
 The shape follows
 the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
@@ -81,7 +85,7 @@ The three record tools remain, one per connector (WS-O3, decided
 2026-10-04). They share transport and session flags, not behaviour: each
 tool's own options (`--staleness`, `--silence-timeout`, `--assign`,
 `--unplaced`), session report and trace transcription belong to its
-connector, and a recorded-session manifest names the tool that made it
+CLI integration layer, and a recorded-session manifest names the tool that made it
 (`"tool": "mocopi_record"`), so the command is provenance. `motion_connect
 record`, when it lands, does not replace them: it captures through the shared
 connector contract, takes no connector's own options and writes no
@@ -111,12 +115,15 @@ semantic motion recorder ([CONNECTOR_CONTRACT §12](../design/CONNECTOR_CONTRACT
 
 ### 2.1 Inside the repository
 
+**Target library edges, accepted 2026-10-06.** Reserved components remain
+reserved under §1; this diagram does not claim that they exist.
+
 ```text
 motionConnectorCore ───────→ usd-motion-plugins motionCore
 motionConnectorTransport ──→ (standard library, OS sockets)
 motionConnectorOsc ────────→ (standard library)
-motionConnectorVmc ────────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport, motionConnectorOsc
-motionConnectorMocopi ─────→ motionConnectorCore, usd-motion-plugins motionCore, motionSampling, motionRecording; motionConnectorTransport
+motionConnectorVmc ────────→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc
+motionConnectorMocopi ─────→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorTransport
 motionConnectorVrchatOsc ──→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorTransport, motionConnectorOsc (its CLI adds motionConnectorTracking, motionRecording)
 motionConnectorTracking ───→ usd-motion-plugins motionCore
 motionConnectorWire ───────→ motionConnectorCore, usd-motion-plugins motionCore
@@ -127,11 +134,32 @@ bindings/python ───────────→ motionConnectorCore, the co
 web modules ───────────────→ browser APIs, the MediaPipe package; no native library
 ```
 
-The imported pose connectors currently link the installed
-`usd-motion-plugins` packages that provide their bridge: `motionCore`,
-`motionSampling` and/or `motionRecording`. The tracker connector uses
-`motionConnectorCore` and `motionCore`. `motionConnectorCore` provides the
-shared connector contract; VMC, mocopi and VRChat OSC consume it.
+`motionConnectorCore` provides the shared connector contract; source adapters
+emit `MotionFrame` and end there. Only tools, examples and runtime integration
+may add `motionSampling` / `motionRecording` for downstream motion treatment.
+The three source recorders stay here, with this target composition:
+
+```text
+vmc_record / mocopi_record / vrchat_osc_record
+    → their connector library             (raw capture / source replay)
+    → motionRecording                     (semantic export only)
+```
+
+**Current transitional edges, verified in the tree on 2026-10-06:**
+
+| Library | Additional current dependencies | Why they must change |
+| --- | --- | --- |
+| `motionConnectorVmc` | `motionSampling`, `motionRecording` | `VmcLiveSource` implements `IMotionSource` and owns `LiveCaptureSource` |
+| `motionConnectorMocopi` | `motionSampling`, `motionRecording` | `MocopiLiveSource` implements `IMotionSource` and owns `LiveCaptureSource` |
+
+Their CMake link declarations, installed package configs and library
+manifests still expose these edges. VMC/mocopi recorders currently inherit
+them transitively; VRChat OSC's recorder already declares `motionRecording`
+at tool level. These are migration debt, not allowed target library edges.
+[Boundary Phases A and B](../roadmap/boundary-implementation.md) remove the
+composition and make semantic export a direct tool dependency. Source
+decode, assembly, restart/session detection and diagnostics remain in the
+connectors, with replay parity preserved.
 
 ### 2.2 Forbidden
 
@@ -139,10 +167,12 @@ shared connector contract; VMC, mocopi and VRChat OSC consume it.
 | --- | --- |
 | any component → `usd-vrm-plugins`, `usd-mmd-plugins`, `usd-avatar-runtime` | the ecosystem's direction is one way ([§2.3](#23-the-ecosystem)) |
 | any library → OpenUSD `usd`, `sdf`, `usdGeom`, `usdSkel`, Hydra, OpenExec | no connector requires a `UsdStage` (design policy Rule 5) |
+| any connector library → `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd`, directly or transitively | acquisition ends at `MotionFrame`; existing VMC/mocopi edges in §2.1 are debt scheduled for removal |
 | a connector → another connector | a runtime route is not a build dependency: a mocopi app can send VMC, and that creates no edge between the two (measured: `usd-vrm-plugins` adapter plan §2.1) |
 | `motionConnectorTransport` ↔ `motionConnectorOsc` or `motionConnectorWire`, in either direction | a wire format needs no socket, and a socket knows no wire format |
-| `motionConnectorCore` → any connector, transport, network, device or browser dependency | the core stays smaller than any SDK (design policy §28, Rule 9) |
+| `motionConnectorCore` → any connector, transport, network, device or browser dependency, or protocol implementation | the core contains only contract values, state, capabilities, timing and bounded acquisition queues (design policy §28, Rule 9) |
 | `motionConnectorOsc` → a protocol address literal (`/VMC/…`, `/tracking/…`) | OSC wire format is a library; address semantics are a connector's |
+| `motionConnectorTransport` → protocol or `MotionFrame` semantics | transport owns bytes, queues, capture and diagnostics, not motion policy |
 | `motionConnectorTracking` → a tracker region aliased to a `HumanJoint` | an alias turns assignment into a lookup and leaves the solve nothing to do (measured: `usd-vrm-plugins` OSC track §5.1) |
 | any library → a filter, retargeter or recorder of its own | these exist once, downstream |
 | a component → a sibling's source tree | siblings are consumed as installed packages |
@@ -171,6 +201,17 @@ edge declared in the component's manifest and validated by
 (`motionConnectorCore` links nothing beyond `motionCore`); an include and
 literal scan refusing OpenUSD stage headers everywhere, and protocol address
 literals in `motionConnectorOsc` and `motionConnectorTransport`.
+
+The target gates additionally reject `motionSampling`, `motionRecording`,
+`motionRetarget` and `motionUsd` in every connector library's dependency
+closure, and stage/UsdSkel headers (`pxr/usd/usd/`, `pxr/usd/usdSkel/`) or
+OpenExec includes in library code. `motionConnectorCore` must contain no
+protocol implementation; transport must contain no protocol semantics.
+Existing source-boundary checks still permit the imported live-source edges;
+the stronger dependency gate is pending
+[Boundary Phase E](../roadmap/boundary-implementation.md#boundary-phase-e--ci-enforcement).
+Apply dependency restrictions to libraries, not recorder tools or consumer
+integration tests that deliberately exercise downstream intake/export.
 
 ## 3. Moving code in
 
@@ -295,6 +336,13 @@ bytes replays the manifest rows against them with
 5. A capability is claimed only with a test behind it
    ([CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md)).
 6. The design policy's §42 rules hold.
+7. A connector library may depend on `motionCore`, but must not depend on
+   `motionSampling`, `motionRecording`, `motionRetarget` or `motionUsd`;
+   §2.1 records the current violations to remove.
+8. A connector emits observations and reports discontinuity. Temporal
+   interpretation and continuity policy belong downstream.
+9. A connector library never opens or authors a `UsdStage`; protocol-specific
+   code never enters core, and transport never knows protocol semantics.
 
 ## 7. Open questions
 
@@ -302,6 +350,9 @@ WS-O1, the names and layout, and WS-O7, the import order, were decided on
 2026-09-19 (§1.1 and §3). WS-O2 was decided on 2026-09-24: tracker assignment
 and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
+The 2026-10-06 boundary clarification retains them for now and requires a
+later placement review for generic algorithms under
+[DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
 WS-O3 was decided on 2026-10-04: the three record tools remain, one per
 connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
 per tag, and one artifact per member in one OCI repository, the CLIs once

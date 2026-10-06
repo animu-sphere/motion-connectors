@@ -3,6 +3,19 @@
 Status: ⬜ v0.1.0's scope is complete ([release record](../releases/v0.1.0.md));
 this page holds what it carried forward and what v0.2.0 needs decided first.
 
+## Boundary implementation first
+
+The accepted 2026-10-06 acquisition boundary is
+[DESIGN_POLICY §47](../design/DESIGN_POLICY.md#47-external-acquisition-boundary).
+Its incomplete work and completion criteria are in
+[boundary-implementation.md](boundary-implementation.md): remove VMC/mocopi
+live-source composition and downstream library edges (Boundary A), isolate
+recorder export (B), enforce the dependency invariant (E), then implement
+OpenXR as the reference source (C) before WebXR/MediaPipe (D). Generic tracking
+solve placement is reviewed afterwards. Release assignment is in the
+[status table](README.md#status-at-a-glance); none of this is marked complete
+by the documentation update.
+
 ## Carried from v0.1.0
 
 - ⬜ Publish the four CLIs once `ost` packages a workspace tool without a
@@ -72,7 +85,8 @@ language boundary:
 
 ## Later releases
 
-The later sequence remains: browser MediaPipe and the JS/WASM boundary,
-WebXR, OpenXR and advanced sources. Their open decisions stay in the owning
+Source expansion follows the boundary plan: OpenXR reference first, then
+browser MediaPipe/WebXR with the JS/WASM boundary, and advanced sources.
+Their open decisions stay in the owning
 design or architecture document and are scheduled in
 [roadmap/README.md](README.md); this page does not duplicate them.

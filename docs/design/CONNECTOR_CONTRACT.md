@@ -7,6 +7,10 @@
 > matrix says what is implemented.
 > A section becomes **binding** when the code it describes lands here with its
 > tests.
+> Boundary clarification **accepted** 2026-10-06: connector libraries end at
+> observations/`MotionFrame`; imported VMC/mocopi live-source composition is
+> transitional and its removal is planned, not implemented by this revision
+> ([boundary roadmap](../roadmap/boundary-implementation.md)).
 >
 > This document owns what lies **around** a pose: the connector interface,
 > `MotionFrame`, tracker observations, state, capabilities, receive-side time,
@@ -31,6 +35,16 @@
   smoothing, canonical recording (`usd-motion-plugins`' `motionRecording`),
   anything that opens a `UsdStage`, avatar-format semantics, scheduling
   (`usd-avatar-runtime`).
+
+> A connector emits observations. It does not own their temporal interpretation.
+
+Source-specific sequence/clock interpretation, restart/session detection,
+capabilities, connection state and diagnostics belong here. `MotionStream`
+intake policy, semantic buffering and recording, generic retargeting and
+target-skeleton mapping do not. A connector library may use `motionCore` to
+construct the shared pose, but must not depend on `motionSampling`,
+`motionRecording`, `motionRetarget` or `motionUsd`
+([WORKSPACE §2](../architecture/WORKSPACE.md#2-dependency-directions)).
 
 Every connector ends where the design policy's §45 says it ends:
 
@@ -104,8 +118,9 @@ sparser.
 
 ## 3. `MotionFrame`
 
-A `MotionFrame` is everything one connector observed for one instant, for one
-or more actors:
+A `MotionFrame` is an **acquisition envelope**: everything one connector
+observed for one instant, for one or more actors. An actor may carry a shared
+pose, tracker observations, or both; a connector's output ends here:
 
 ```cpp
 struct ActorFrame {
@@ -165,14 +180,20 @@ owner:
 | **Solve** — assigned observations to a sparse `MotionPose` | `motionConnectorTracking` | assigned canonical observations and the shared joint vocabulary; never an avatar |
 
 WS-O2 was decided on 2026-09-24: both generic steps remain in
-`motionConnectorTracking`. The direct solve consumes `TrackerRegion` and an
-operator's assignment, which are connector-side observations rather than
-fields of `MotionPose`. Moving that solve into `usd-motion-plugins` would make
-the motion layer depend on this repository or copy its region contract. The
-current solve has no protocol addresses or target-avatar semantics; a later
-IK solve can take explicit target rest geometry without changing the
-observation boundary. Its tests are `motionConnectorTracking_trackerAssignment`
-and `motionConnectorTracking_trackerSolve`.
+`motionConnectorTracking` for now. The direct solve consumes `TrackerRegion`
+and an operator's assignment. Its tests are
+`motionConnectorTracking_trackerAssignment` and
+`motionConnectorTracking_trackerSolve`.
+
+The 2026-10-06 clarification keeps that implementation while reopening its
+long-term placement. Source tracking-space normalization, IDs, raw
+observations, availability and source hints stay connector-owned. Generic
+assignment, anatomical solve, pose reconstruction, confidence fusion and
+multi-tracker synthesis are candidates for `usd-motion-plugins` when they
+work without source/device names, are reusable across connectors and are
+generic `MotionPose` algorithms. A move must resolve the observation/region
+type boundary without a reverse dependency or a copied contract
+([DESIGN_POLICY §47.5](DESIGN_POLICY.md#475-tracking-and-placement-decisions)).
 
 Explicit assignment by an operator is the default; automatic assignment is a
 later aid over the same contract.
@@ -206,6 +227,14 @@ enum class ConnectorState { Disconnected, Connecting, Connected, Degraded, Error
   incomplete frame; it is not labelled "tracking lost" without a source field
   that says so. `MOCOPI_TRACKING_LOST` remains reserved and unraised.
 
+> A connector reports discontinuity. It does not invent continuity.
+
+Restarts, missing/stale/duplicate input and sender-clock resets are observed
+facts. The connector reports them; hold, interpolation, smoothing, semantic
+drop, bind/unbind, continuity repair and semantic reset decisions belong to
+the downstream consumer. Source assembly reset and malformed-input refusal
+are acquisition operations, not motion-runtime reset policy.
+
 ## 6. Time
 
 ```cpp
@@ -225,10 +254,12 @@ struct FrameTiming {
   contract's §4 and §9 require, so a recorded session replays byte for byte.
   A connector whose source has no clock stamps the pose with
   `receiveTimestamp` and says so with `ClockDomain::None` on `sourceClock`.
-- **Timestamps into a stream strictly increase.** A connector that sees its
-  source clock go backwards reports it (a restart or a fault) rather than
-  passing it on; the stream's intake would refuse it anyway, but the connector
-  is the only layer that can tell a restart from a fault.
+- **Stream ordering is a downstream intake rule.** A connector that sees its
+  source clock go backwards reports the observed reset/restart or fault with
+  source evidence; it does not rewrite timestamps to make them monotone or
+  suppress an observation merely to satisfy stream intake. Source-specific
+  refusal of duplicate/late protocol input is part of declared assembly (§7).
+  The consumer chooses whether to reject, reset or realign its motion intake.
 - Clock-offset estimation, resampling and jitter buffers belong to the stream
   layer, not to a connector (design policy §11).
 
@@ -281,6 +312,9 @@ Poll(MotionFrame&)                 ← the only public read
 - The connector buffer is **not** the stream. `usd-motion-plugins`' stream
   intake still applies its own ordering, confidence and bounds; the connector
   buffer exists so that a socket thread and a tick never share a frame.
+- Queue delivery/overflow modes manage acquisition capacity. They do not
+  select semantic stale/missing-pose policy, interpolate, hold values or
+  repair continuity. The consumer chooses its delivery mode.
 - **CC-O3 is resolved:** the connector's public read is `Poll(MotionFrame&)`.
   A consumer routes each actor's `MotionPose` to that actor's
   `LiveCaptureSource`, sets the stream provenance with `SetSourceMetadata`,
@@ -290,6 +324,16 @@ Poll(MotionFrame&)                 ← the only public read
   exercises the handoff and preservation of the source timestamp; the motion
   layer owns clock alignment and intake policy. No second `MotionStream` type
   is required by this boundary.
+
+The handoff above is a **consumer integration example**, not a connector
+library responsibility. `usd-avatar-runtime` is the first choice for a motion
+intake adapter that routes `MotionFrame` to `usd-motion-plugins`. Tools,
+examples and integration tests may compose the two; connector libraries must
+end at `MotionFrame`. `VmcLiveSource` and `MocopiLiveSource` currently compose
+acquisition with `LiveCaptureSource` and `IMotionSource` inside the imported
+libraries. That transitional composition must lose intake ownership and
+sampling policy while retaining source decode/assembly/restart diagnostics
+([Boundary Phase A](../roadmap/boundary-implementation.md#boundary-phase-a--thin-vmc-and-mocopi-libraries)).
 
 ## 9. Diagnostics
 
@@ -351,6 +395,17 @@ trace is a pure function of a capture, reproducible with no device. The
 transcription stays in each connector's own record tool (WS-O3, decided
 2026-10-04; [WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data)).
 
+The target dependency is `record tool → connector library`, with a direct
+`record tool → motionRecording` dependency only for semantic export.
+`connector library → motionRecording` is forbidden. Raw capture and trace
+transcription are separate paths, and the tool uses the downstream writer
+rather than implementing `motion-capture-trace`. VMC/mocopi currently obtain
+that dependency transitively through their live-source libraries;
+[Boundary Phases A and B](../roadmap/boundary-implementation.md) remove that
+coupling. Diagnostic frame capture and `openstrata.motion.frame/v1` transport
+remain connector concerns; canonical traces, `MotionClip` and semantic replay
+remain motion concerns.
+
 ## 13. Open questions
 
 CC-O3 was resolved by the first shared-connector to live-intake test on
@@ -363,6 +418,6 @@ the wire representation is JSON, `openstrata.motion.frame/v1`, owned by
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source whose data does not fit `HumanJoint` version 1 (Connector Phase 4, MediaPipe, at the latest) |
-| CC-O2 | Landmark sources: MediaPipe reports joint **positions**, not rotations. Is a landmark set an observation like a tracker (§4), solved downstream, or does the connector solve rotations itself? Design policy §26 says a connector emits "the best faithful normalized observation", which argues for the former | Connector Phase 4 |
+| CC-O2 | Landmark sources: which observation envelope/profile carries MediaPipe joint **positions**, confidence and source hints? Generic body solve belongs downstream under §1 and design policy §47; select the representation without inventing rotations or duplicating the motion contract | Boundary Phase D, before MediaPipe |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |
