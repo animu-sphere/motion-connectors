@@ -1,16 +1,4 @@
-# OpenStrata workspace-tool descriptor. `mocopi_record` is the mocopi
-# connector's CLI: the one part of this connector a user runs, and the only
-# part that meets a real device (WORKSPACE.md §1 -- "each connector may also
-# carry one CLI").
-#
-# It requires the connector and nothing else. §2 *permits* a connector tool to
-# author a stage, which is what separates a tool from its library -- this one
-# does not, because recording datagrams and reporting on them needs no avatar.
-# Turning a canonical session into a clip is `usd-motion-plugins`'
-# `motion_record`, and duplicating that here would be the fork §2 forbids.
-#
-# The tool is a workspace member of its own, under the root tools/ where §2.1's
-# dependency diagram puts every tool, so `ost` discovers this file directly.
+# Recorder composition declares intake and trace export dependencies.
 schema: openstrata.tool/v1alpha1
 tool:
   id: mocopi_record
@@ -23,3 +11,29 @@ requires:
   libraries:
     - id: motionConnectorMocopi
       version: ">=0.1,<0.2"
+    - id: motionSampling
+      version: ">=0.5,<0.6"
+      artifact:
+        targets:
+          cy2026-linux-x86_64-py313-usd:
+            digest: sha256:65f8629cccdbec517399d4d1c66695254df24f36974b0b07715bc3bd38295ffe
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:06beaa343c0499f7d29c9cb15bdecbf6b5b24f64363850f7d034cd4575b5a047
+          cy2026-macos-arm64-py313-usd:
+            digest: sha256:81a164b7bc7e81bb9abf8a7cc8eef51bca0a5f437fe6f9a242ef2a9af14c2269
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:53e54984b1a76a0106e4b3ee8ba02ea3c4da0007ebe002e5cfeb54c1972fd90d
+          cy2026-windows-x86_64-py313-usd:
+            digest: sha256:9b374bb2d6425908a5bd9f7af05d801800a8d302824546aa9ed2e52f92fafb0d
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:4543727738ad2c198bba975a08b4f1ee39debda56f137d6ea9bfc7d24b3b1854
+    - id: motionRecording
+      version: ">=0.5,<0.6"
+      artifact:
+        targets:
+          cy2026-linux-x86_64-py313-usd:
+            digest: sha256:0cd010252deb1f4d145ed058d6e6a512eb916ac6a12aa63a2cab3a55e81d07d1
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:15f8a52d179f32088a5749ffaa3580ca1076e88a086e6dc9891510a12cfd1f82
+          cy2026-macos-arm64-py313-usd:
+            digest: sha256:11cd70c788805ec2745e2d8c82acd4a1191e7b379bfe439e67b08b2f31a8451c
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:31ba7ede419605c97956754d3907288b879f626fe45c6ccb864b3c5a415807b6
+          cy2026-windows-x86_64-py313-usd:
+            digest: sha256:2ab1b6e957ac6deaab26eeb197ca76365225354dbdf442ae02f26e4bed78bb1c
+            source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:44b6a855fad6acf8ed681a89900fa1fd6b690915596e239609c13116e79ec6e3

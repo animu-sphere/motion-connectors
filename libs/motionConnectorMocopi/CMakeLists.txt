@@ -4,8 +4,7 @@
 #
 # A plain static library, not a plugin bundle: it registers nothing with
 # OpenUSD and ships no plugInfo.json (WORKSPACE.md §1). It links motionCore,
-# motionConnectorCore, motionSampling, motionRecording and
-# motionConnectorTransport and nothing else; the CLI that may author a stage is
+# motionConnectorCore and motionConnectorTransport; the CLI that may author a stage is
 # a separate tool under the root
 # tools/.
 
@@ -37,16 +36,6 @@ endif()
 if(NOT TARGET motionConnectorCore::motionConnectorCore)
     find_package(motionConnectorCore REQUIRED CONFIG)
 endif()
-# What was one `motionRuntime` in usd-vrm-plugins is two packages here: the
-# frame assembler reads `motionSampling`'s source interface and the live source
-# writes `motionRecording`'s capture trace, so both are named rather than one
-# standing in for the other (usd-motion-plugins WORKSPACE.md §1.1).
-if(NOT TARGET motionSampling::motionSampling)
-    find_package(motionSampling REQUIRED CONFIG)
-endif()
-if(NOT TARGET motionRecording::motionRecording)
-    find_package(motionRecording REQUIRED CONFIG)
-endif()
 # The live half's shared leaf: the socket, the packet-capture format and the
 # diagnostic vehicle, which this adapter and its sibling had written twice
 # (WORKSPACE.md §2, osc-and-vrchat-trackers.md §3.2). Not a sibling edge and not
@@ -65,7 +54,7 @@ add_library(motionConnectorMocopi STATIC
     src/Connector.cpp
     src/Diagnostics.cpp
     src/FrameAssembler.cpp
-    src/LiveSource.cpp
+    src/FrameSource.cpp
     src/MotionPacket.cpp
     src/PacketChunk.cpp
     src/SkeletonMap.cpp
@@ -80,13 +69,11 @@ target_include_directories(motionConnectorMocopi
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>")
-# The five edges WORKSPACE.md §2 permits.
+# The acquisition edges WORKSPACE.md §2 permits.
 target_link_libraries(motionConnectorMocopi
     PUBLIC
         motionConnectorCore::motionConnectorCore
         motionCore::motionCore
-        motionSampling::motionSampling
-        motionRecording::motionRecording
         motionConnectorTransport::motionConnectorTransport)
 
 # No `ws2_32` here any more, and its absence is the clearest single measurement

@@ -329,11 +329,11 @@ The handoff above is a **consumer integration example**, not a connector
 library responsibility. `usd-avatar-runtime` is the first choice for a motion
 intake adapter that routes `MotionFrame` to `usd-motion-plugins`. Tools,
 examples and integration tests may compose the two; connector libraries must
-end at `MotionFrame`. `VmcLiveSource` and `MocopiLiveSource` currently compose
-acquisition with `LiveCaptureSource` and `IMotionSource` inside the imported
-libraries. That transitional composition must lose intake ownership and
-sampling policy while retaining source decode/assembly/restart diagnostics
-([Boundary Phase A](../roadmap/boundary-implementation.md#boundary-phase-a--thin-vmc-and-mocopi-libraries)).
+end at `MotionFrame`. Source decode, assembly, restart detection and source
+diagnostics stay in acquisition libraries. `LiveCaptureSource`, `IMotionSource`
+and sampling/restart policy belong to consumer composition. The implemented
+VMC/mocopi split and acceptance evidence are recorded in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract).
 
 ## 9. Diagnostics
 

@@ -23,7 +23,7 @@ which is the first layer here that knows a humanoid exists, then
 [**frame assembly**](include/motionConnectorMocopi/FrameAssembler.h) — the layer that
 decides whether a datagram is a frame, whether it is complete, and whether the
 source restarted — and finally the
-[**live-source bridge**](include/motionConnectorMocopi/LiveSource.h). The
+[**acquisition frame source**](include/motionConnectorMocopi/FrameSource.h). The
 shared adapter is [`MocopiConnector`](include/motionConnectorMocopi/Connector.h),
 which preserves those tested paths and exposes non-blocking `Poll`; its focused
 test is `motionConnectorMocopi_connector`. The imported replay and loopback
@@ -194,15 +194,19 @@ A plain static CMake library with an `openstrata.library.yaml`, exactly like
 its siblings here — **not** a plugin bundle. It registers nothing with OpenUSD
 and ships no `plugInfo.json`, because
 [WORKSPACE.md §2](../../docs/architecture/WORKSPACE.md) keeps it away from every
-file-format bundle and from OpenExec. It has exactly five dependencies, and
-they are the five its manifest declares — four of them published
-`usd-motion-plugins` artifacts, pinned there by digest per target:
+file-format bundle and from OpenExec. It has three dependencies, declared in its manifest:
 
 ```text
-motionConnectorMocopi -> motionConnectorCore, motionCore, motionSampling,
-                         motionRecording,
+motionConnectorMocopi -> motionConnectorCore, motionCore,
                          motionConnectorTransport
 ```
+
+`MocopiFrameSource` owns decode, normalization, assembly, restart facts and
+source diagnostics. It does not implement `IMotionSource` or own motion intake.
+`MocopiLiveSource` is now private to the recorder and its consumer integration
+tests in [`tools/mocopiRecord/src/LiveSource.h`](../../tools/mocopiRecord/src/LiveSource.h).
+That composition declares sampling and recording packages directly and preserves
+its existing reset/refuse policy and sampled-pose evidence.
 
 `tests/check_boundaries.py` is what makes that a fact rather than an intention.
 It fails on a plugin manifest anywhere in the tree, on a stage/registration/exec
@@ -210,20 +214,13 @@ API in `include/` or `src/`, on a mention of the sibling adapter or a plugin
 bundle, on a `target_link_libraries` naming anything outside its allowlist, and
 on a binary whose imports leave the OpenUSD value-type layer.
 
-That allowlist is the five libraries above plus `ws2_32`, which is not a
-dependency direction — WORKSPACE.md §2 constrains which *workspace* libraries an
-connector may reach, and DESIGN_POLICY.md §8.2 puts the socket inside the
-connector
-deliberately. It arrived with the receiver rather than being reserved for it,
-which is the arrangement the scaffold commit asked for. `Threads::Threads` is
-still absent and is the half worth reading: the sibling links it for a datagram
-queue's mutex, this adapter has no queue, and adding the name "because a
-receiver usually needs one" is exactly the reservation the allowlist exists to
-catch.
+The allowlist permits these libraries and platform primitives supplied by
+transport. Installed-consumer tests include every public header with downstream
+sampling, recording, retargeting and USD package discovery disabled.
 
 It is no longer the *only* enforcement. This library is a workspace member
 here, so the graph gate loads the manifest beside it and validates every edge it
-declares, the three external ones included. What the script adds is what a graph
+declares, the external motionCore edge included. What the script adds is what a graph
 cannot see: a name reached in source with no link line behind it.
 
 ## The sibling adapter is not a dependency, and never becomes one
@@ -313,9 +310,8 @@ consumer the receiver above was waiting for: `mocopi_record --output` turns a
 source aimed at this port into a capture file, and `--inspect` reads one back
 with no socket at all. It ships in the same artifact as the library
 ([WORKSPACE.md §5](../../docs/architecture/WORKSPACE.md)) and links the
-connector and nothing else, which is less than §2 permits a tool — a
-connector's CLI may author a stage, and this one has no reason to: what it
-produces is a capture file.
+connector for acquisition plus motionSampling/motionRecording for private
+intake and semantic export. Raw capture produces an acquisition file.
 
 It decodes nothing, so its report is about the datagram *envelope*: the counts,
 the peers, the arrival rate on the receive clock, a census of distinct payload
@@ -433,8 +429,7 @@ ost build && ost test
 ```
 
 Standalone — this directory is its own CMake project, resolving
-`motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording` and
-`motionConnectorTransport` as installed
+`motionConnectorCore`, `motionCore` and `motionConnectorTransport` as installed
 packages rather than in-tree targets:
 
 ```sh
@@ -444,6 +439,6 @@ cmake --build build/mocopi
 ```
 
 `ost library build` is the route `ost` takes to the same configure, and it is
-what materializes the three pinned artifacts first. `ost plugin build` is not
+what materializes the pinned motionCore artifact first. `ost plugin build` is not
 it: that takes a *bundle* directory and refuses anything without an
 `openstrata.plugin.yaml`, which a connector does not have and must not grow.

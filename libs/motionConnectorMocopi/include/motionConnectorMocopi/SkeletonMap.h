@@ -149,9 +149,8 @@
 //
 // It is carried as values rather than as an `openstrata::motion::SourceRestPose`
 // because that type lives across an edge this library may not have
-// (WORKSPACE.md §2: a connector reaches `motionCore`, `motionSampling`,
-// `motionRecording` and `motionConnectorTransport` and
-// nothing else). A tool may compose the two, and that is where it happens.
+// (WORKSPACE.md §2: a connector reaches `motionConnectorCore`, `motionCore`
+// and `motionConnectorTransport`). A tool may compose the two, and that is where it happens.
 //
 // ## The codes this layer raises
 //
@@ -191,8 +190,7 @@
 #include <optional>
 #include <vector>
 
-namespace openstrata::connectors::mocopi
-{
+namespace openstrata::connectors::mocopi {
 
 // The parent of each joint of the measured rig, by id, with -1 for the root.
 // Measured: the column all five sessions sent, single-rooted and already in
@@ -256,8 +254,7 @@ MOTIONCONNECTORMOCOPI_API pxr::GfQuatf
 ToCanonicalRotation(const std::array<float, 4>& rotation) noexcept;
 
 // One canonical joint of one frame.
-struct BoneSample
-{
+struct BoneSample {
     openstrata::motion::HumanJoint bone = openstrata::motion::HumanJoint::Count;
 
     // Local to the semantic humanoid parent, composed along the path from just
@@ -271,8 +268,7 @@ struct BoneSample
 // Which joint of a session's rig carries which canonical bone, and what that
 // rig's rest pose is. Built from a skeleton packet, because that is the only
 // thing that says which rig a session is sending.
-struct SkeletonMap
-{
+struct SkeletonMap {
     // Identity rotations and zero translations until a skeleton packet fills
     // them, for the same reason `openstrata::motion::MotionPose` declares one: a rest
     // pose that is uninitialised memory makes a caller's mistake a different
@@ -340,11 +336,10 @@ struct SkeletonMap
 //
 // `diagnostics`, when given, is appended to and never cleared.
 MOTIONCONNECTORMOCOPI_API bool MakeSkeletonMap(const MotionSkeleton& skeleton, SkeletonMap* out,
-                                          std::vector<Diagnostic>* diagnostics = nullptr);
+                                               std::vector<Diagnostic>* diagnostics = nullptr);
 
 // What one frame said, in canonical terms.
-struct FrameMapping
-{
+struct FrameMapping {
     // In `openstrata::motion::HumanJoint` order rather than wire order, so two frames of the
     // same session produce the same sequence whatever order the device sent its
     // records in.
@@ -394,7 +389,7 @@ struct FrameMapping
 //
 // `diagnostics`, when given, is appended to and never cleared.
 MOTIONCONNECTORMOCOPI_API bool MapMotionFrame(const SkeletonMap& map, const MotionFrame& frame,
-                                         FrameMapping* out,
-                                         std::vector<Diagnostic>* diagnostics = nullptr);
+                                              FrameMapping* out,
+                                              std::vector<Diagnostic>* diagnostics = nullptr);
 
 } // namespace openstrata::connectors::mocopi

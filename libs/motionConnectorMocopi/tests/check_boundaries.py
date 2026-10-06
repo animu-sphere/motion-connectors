@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Enforce motionConnectorMocopi's leaf boundary.
 
-WORKSPACE.md §2 gives a connector library exactly five edges —
-motionConnectorCore, motionCore, motionSampling, motionRecording and
+WORKSPACE.md §2 gives a connector library exactly three edges —
+motionConnectorCore, motionCore and
 motionConnectorTransport — and forbids the rest: the consumer repositories' libraries, every USD file-format bundle,
 OpenExec, `ExecIr`, and every sibling connector. It also may not be a plugin
 bundle (§1), so a plugin manifest or a plugInfo.json anywhere under the
@@ -44,14 +44,14 @@ a section summary and nothing else — so pointing this check at the library wou
 make it a gate that cannot fail, which is worse than no gate. The linked test
 executable is the first artifact in which the adapter's real transitive imports
 exist, so it is the first one worth inspecting. It links the connector plus
-`motionCore`, `motionSampling`, `motionRecording` and
+`motionCore` and
 `motionConnectorCore`, `motionConnectorTransport` and nothing else, which is
 exactly the closure this boundary is about.
 
 It is no longer the only enforcement there is. This library is a workspace
 member here, so `openstrata.library.yaml` beside it is loaded and the workspace
 graph gate validates every edge it declares — including, since `ost` 0.23.x,
-the three that name a published `usd-motion-plugins` artifact by digest. What
+the motionCore edge naming a published `usd-motion-plugins` artifact by digest. What
 this script adds is what a graph cannot see: a name reached in source with no
 link line behind it.
 """
@@ -207,6 +207,7 @@ def main() -> int:
     # so the boundary the rule wanted is not there — the measurement the
     # sibling's import made, applied here before it can cost anything.
     forbidden_neighbours = re.compile(
+        r"motion(?:Sampling|Recording|Retarget|Usd)\w*|"
         r"motionConnector(?:Vmc|VrchatOsc|Tracking|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
         r"vrmAdapter|cgltf|ardy)\w*|"
@@ -254,7 +255,6 @@ def main() -> int:
         "motionconnectormocopi", "public", "private", "interface",
         "motionconnectorcore::motionconnectorcore",
         "motioncore::motioncore",
-        "motionsampling::motionsampling", "motionrecording::motionrecording",
         "motionconnectortransport::motionconnectortransport",
         "ws2_32", "threads::threads",
     }
@@ -265,7 +265,6 @@ def main() -> int:
                 errors.append(
                     "motionConnectorMocopi may link only motionConnectorCore, "
                     "motionCore, "
-                    "motionSampling, motionRecording, "
                     "motionConnectorTransport and the platform's own primitives; "
                     f"CMakeLists.txt links `{token}`")
 
@@ -295,6 +294,12 @@ def main() -> int:
     # guarded and present because a transitive Gf target needs it.
     config_path = source / "cmake" / "motionConnectorMocopiConfig.cmake.in"
     config = config_path.read_text(encoding="utf-8")
+    forbidden_downstream = re.compile(r"motion(?:Sampling|Recording|Retarget|Usd)\w*",
+                                     re.IGNORECASE)
+    for path in (config_path, source / "openstrata.library.yaml"):
+        text = re.sub(r"#[^\n]*", "", path.read_text(encoding="utf-8"))
+        if forbidden_downstream.search(text):
+            errors.append(f"downstream motion dependency is forbidden: {path}")
     resolved = set(re.findall(r"find_dependency\s*\(\s*([A-Za-z0-9_]+)", config))
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
                                 re.DOTALL):
