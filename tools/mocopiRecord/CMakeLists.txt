@@ -26,9 +26,16 @@ if(NOT TARGET motionConnectorMocopi::motionConnectorMocopi)
     find_package(motionConnectorMocopi REQUIRED CONFIG)
 endif()
 
+foreach(_mocopi_dependency IN ITEMS motionRecording motionSampling)
+    if(NOT TARGET ${_mocopi_dependency}::${_mocopi_dependency})
+        find_package(${_mocopi_dependency} REQUIRED CONFIG)
+    endif()
+endforeach()
+
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(mocopi_record
+    src/LiveSource.cpp
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
@@ -36,12 +43,9 @@ add_executable(mocopi_record
 motionconnectors_use_utf8_code_page(mocopi_record)
 
 target_compile_features(mocopi_record PRIVATE cxx_std_20)
-# The connector, and deliberately nothing else. §2 would permit this target to
-# author a stage the way a consumer's retarget CLI does; it does not need to,
-# and a link line is the cheapest place to keep that true.
-# `ws2_32` arrives transitively because the adapter declares it PUBLIC, which is
-# right: the socket this tool drives is the adapter's.
-target_link_libraries(mocopi_record PRIVATE motionConnectorMocopi::motionConnectorMocopi)
+# Downstream intake and semantic export belong to the recorder composition.
+target_link_libraries(mocopi_record PRIVATE motionConnectorMocopi::motionConnectorMocopi
+    motionRecording::motionRecording motionSampling::motionSampling)
 
 if(MSVC)
     target_compile_options(mocopi_record PRIVATE /utf-8)

@@ -14,9 +14,9 @@ The build and CI tree holds the transport, OSC, tracking, VMC, mocopi and
 VRChat OSC implementations, along with their record tools. Unimplemented identities below remain
 *reserved* until the change that creates them lands, and their rows say so.
 Boundary revision (2026-10-06): **target dependency contract accepted**.
-§2.1 states the target and separately records the remaining imported mocopi
-dependencies. VMC acquisition now uses `VmcFrameSource`; its former motion
-source composition is private to `vmc_record` and consumer integration tests.
+§2.1 records the implemented acquisition graph. VMC and mocopi use
+`VmcFrameSource` / `MocopiFrameSource`; their former motion source compositions
+are private to recorder tools and consumer integration tests.
 The shape follows
 the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
@@ -145,26 +145,17 @@ vmc_record / mocopi_record / vrchat_osc_record
     → motionRecording                     (semantic export only)
 ```
 
-**Current transitional edges, verified in the tree on 2026-10-06:**
+**Acquisition split, verified in the tree on 2026-10-06:**
 
-| Library | Additional current dependencies | Why they must change |
-| --- | --- | --- |
-| `motionConnectorMocopi` | `motionSampling`, `motionRecording` | `MocopiLiveSource` implements `IMotionSource` and owns `LiveCaptureSource` |
-
-Mocopi's CMake link declarations, installed package config and library
-manifest still expose these edges, and its recorder inherits them transitively.
-VMC's library has only the target edges above. `VmcFrameSource` owns decode,
-source assembly and diagnostic datagram identity; `VmcConnector` owns the
-bounded acquisition frame queue. VMC's former intake/sampling/restart-policy
-composition lives in the recorder's private `src/LiveSource.*`, is not
-installed, and consumes the same `VmcFrameSource` path. Its recorder and
-consumer integration tests declare downstream dependencies explicitly.
-VMC's raw/export separation remains migration debt under Phase B; VRChat OSC's
-recorder already declares `motionRecording` at tool level.
-[Boundary Phases A and B](../roadmap/boundary-implementation.md) remove the
-composition and make semantic export a direct tool dependency. Source
-decode, assembly, restart/session detection and diagnostics remain in the
-connectors, with replay parity preserved.
+VMC and mocopi libraries have only the target edges above. Their frame sources
+own decode, source assembly, restart/session facts and diagnostic datagram
+identity; their connectors own bounded acquisition queues. Former
+intake/sampling/restart-policy compositions live in each recorder's private
+`src/LiveSource.*`, are not installed, and consume the same library-owned
+acquisition paths. Recorders and consumer integration tests declare downstream
+dependencies explicitly. Raw/export separation remains migration debt under
+[Boundary Phase B](../roadmap/boundary-implementation.md#boundary-phase-b--recorder-integration);
+VRChat OSC's recorder already declares `motionRecording` at tool level.
 
 ### 2.2 Forbidden
 
@@ -172,7 +163,7 @@ connectors, with replay parity preserved.
 | --- | --- |
 | any component → `usd-vrm-plugins`, `usd-mmd-plugins`, `usd-avatar-runtime` | the ecosystem's direction is one way ([§2.3](#23-the-ecosystem)) |
 | any library → OpenUSD `usd`, `sdf`, `usdGeom`, `usdSkel`, Hydra, OpenExec | no connector requires a `UsdStage` (design policy Rule 5) |
-| any connector library → `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd`, directly or transitively | acquisition ends at `MotionFrame`; existing mocopi edges in §2.1 are debt scheduled for removal |
+| any connector library → `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd`, directly or transitively | acquisition ends at `MotionFrame` |
 | a connector → another connector | a runtime route is not a build dependency: a mocopi app can send VMC, and that creates no edge between the two (measured: `usd-vrm-plugins` adapter plan §2.1) |
 | `motionConnectorTransport` ↔ `motionConnectorOsc` or `motionConnectorWire`, in either direction | a wire format needs no socket, and a socket knows no wire format |
 | `motionConnectorCore` → any connector, transport, network, device or browser dependency, or protocol implementation | the core contains only contract values, state, capabilities, timing and bounded acquisition queues (design policy §28, Rule 9) |
@@ -212,10 +203,9 @@ The target gates additionally reject `motionSampling`, `motionRecording`,
 closure, and stage/UsdSkel headers (`pxr/usd/usd/`, `pxr/usd/usdSkel/`) or
 OpenExec includes in library code. `motionConnectorCore` must contain no
 protocol implementation; transport must contain no protocol semantics.
-VMC's source-boundary check rejects downstream motion includes, CMake links,
-package dependencies and manifest edges. Its installed-consumer probe disables
-discovery of all four downstream packages. Mocopi's existing check still permits
-its imported live-source edges; the workspace-wide dependency gate is pending
+VMC's and mocopi's source-boundary checks reject downstream motion includes, CMake links,
+package dependencies and manifest edges. Their installed-consumer probes disable
+discovery of all four downstream packages; the workspace-wide dependency gate is pending
 [Boundary Phase E](../roadmap/boundary-implementation.md#boundary-phase-e--ci-enforcement).
 Apply dependency restrictions to libraries, not recorder tools or consumer
 integration tests that deliberately exercise downstream intake/export.

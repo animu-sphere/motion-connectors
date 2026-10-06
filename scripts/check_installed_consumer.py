@@ -272,24 +272,31 @@ def main() -> int:
                   file=sys.stderr)
             return 1
         print(f"ok  {want} from outside the repository")
-        if any(p["name"] == "motionConnectorVmc" for p in packages):
-            # A VMC-only consumer must resolve and link with downstream package
+        for protocol, component, source_class, connector_class, exercise in (
+                ("vmc", "motionConnectorVmc", "VmcFrameSource", "VmcConnector",
+                 "source.Flush() != 0 || connector.Flush(0.0) != 0"),
+                ("mocopi", "motionConnectorMocopi", "MocopiFrameSource", "MocopiConnector",
+                 "source.PushDatagram(nullptr, 0, 0.0) != 0 || "
+                 "connector.PushDatagram(nullptr, 0, 0.0) != 0")):
+            if not any(p["name"] == component for p in packages):
+                continue
+            # An acquisition-only consumer must resolve and link with downstream package
             # discovery disabled, even if those packages exist in other prefixes.
-            isolated_source = work / "vmc-consumer-src"
-            isolated_build = work / "vmc-consumer-build"
+            isolated_source = work / f"{protocol}-consumer-src"
+            isolated_build = work / f"{protocol}-consumer-build"
             shutil.copytree(CONSUMER, isolated_source)
             (isolated_source / "packages.json").write_text(json.dumps({
-                "packages": [{"name": "motionConnectorVmc",
-                              "header": "motionConnectorVmc/FrameSource.h"}]
+                "packages": [{"name": component,
+                              "header": f"{component}/FrameSource.h"}]
             }) + "\n", encoding="utf-8")
-            headers = sorted((prefix / "include" / "motionConnectorVmc").glob("*.h"))
+            headers = sorted((prefix / "include" / component).glob("*.h"))
             (isolated_source / "main.cpp").write_text(
-                "\n".join(f'#include "motionConnectorVmc/{p.name}"' for p in headers)
+                "\n".join(f'#include "{component}/{p.name}"' for p in headers)
                 + '\n#include <cstdio>\nint main() {\n'
-                  '  openstrata::connectors::vmc::VmcFrameSource source;\n'
-                  '  openstrata::connectors::vmc::VmcConnector connector;\n'
-                  '  if (source.Flush() != 0 || connector.Flush(0.0) != 0) return 1;\n'
-                  '  std::puts("consumed VMC acquisition only");\n}\n',
+                  f'  openstrata::connectors::{protocol}::{source_class} source;\n'
+                  f'  openstrata::connectors::{protocol}::{connector_class} connector;\n'
+                  f'  if ({exercise}) return 1;\n'
+                  f'  std::puts("consumed {protocol} acquisition only");\n}}\n',
                 encoding="utf-8")
             isolated_configure = list(configure)
             isolated_configure[isolated_configure.index("-S") + 1] = isolated_source
@@ -301,10 +308,10 @@ def main() -> int:
             run(["cmake", "--build", isolated_build, "--config", args.config])
             probe = next(isolated_build.rglob(executable("installed_consumer")))
             isolated_result = run([probe], env=env, stdout=subprocess.PIPE)
-            if "consumed VMC acquisition only" not in isolated_result.stdout.splitlines():
-                print("the isolated VMC consumer did not exercise acquisition", file=sys.stderr)
+            if f"consumed {protocol} acquisition only" not in isolated_result.stdout.splitlines():
+                print(f"the isolated {protocol} consumer did not exercise acquisition", file=sys.stderr)
                 return 1
-            print("ok  installed VMC resolves without downstream motion packages")
+            print(f"ok  installed {protocol} resolves without downstream motion packages")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
         print("installed-consumer lane passed")

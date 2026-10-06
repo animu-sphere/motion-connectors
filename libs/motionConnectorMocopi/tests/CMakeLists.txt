@@ -4,6 +4,21 @@
 # (cmake/MotionConnectorsProject.cmake says why).
 motionconnectors_find_test_python()
 
+# Downstream dependencies are confined to consumer integration tests.
+foreach(_mocopi_dependency IN ITEMS motionRecording motionSampling)
+    if(NOT TARGET ${_mocopi_dependency}::${_mocopi_dependency})
+        find_package(${_mocopi_dependency} REQUIRED CONFIG)
+    endif()
+endforeach()
+set(_mocopi_composition "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/mocopiRecord/src")
+
+add_executable(motionConnectorMocopi_frameSource_tests test_frame_source.cpp)
+target_link_libraries(motionConnectorMocopi_frameSource_tests PRIVATE
+    motionConnectorMocopi::motionConnectorMocopi)
+target_compile_options(motionConnectorMocopi_frameSource_tests PRIVATE
+    $<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)
+add_test(NAME motionConnectorMocopi_frameSource COMMAND motionConnectorMocopi_frameSource_tests "${CMAKE_CURRENT_SOURCE_DIR}/corpus")
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would
 # print "passed" and return 0 without having checked anything. Undefine it for
@@ -125,7 +140,7 @@ add_test(NAME motionConnectorMocopi_liveSource
          COMMAND motionConnectorMocopi_liveSource_tests)
 
 set(_mocopi_tests
-    motionConnectorMocopi_connector motionConnectorMocopi_unit
+    motionConnectorMocopi_frameSource motionConnectorMocopi_connector motionConnectorMocopi_unit
     motionConnectorMocopi_packetCapture
     motionConnectorMocopi_motionPacket motionConnectorMocopi_skeletonMap
     motionConnectorMocopi_frameAssembler motionConnectorMocopi_liveSource
@@ -249,10 +264,10 @@ if(Python3_Interpreter_FOUND)
     # it is a check that cannot fail. This executable is the first artifact in
     # which the adapter's real transitive imports exist, and its link closure is
     # exactly the one the boundary is about: the connector core and adapter,
-    # motionCore, and the sampling and recording packages.
+    # motionCore and transport.
     #
     # `Python3_Interpreter_FOUND` is trustworthy *here* and is not at the root:
-    # motionconnectors_find_test_python() at the top of this file re-runs
+    # motionconnectors_find_test_python() at the top re-runs
     # find_package(Python3 Interpreter) in this scope after pxrConfig.cmake has
     # clobbered it with a Development-only re-find. A test guarded on it in a
     # scope that call does not reach does not fail, it silently never registers -- so if this entry ever disappears from `ctest -N`, that
@@ -276,4 +291,22 @@ if(Python3_Interpreter_FOUND)
                 "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_packets.py"
                 --check --output "${_mocopi_corpus}")
     endif()
+endif()
+
+# Preserve sampled-pose, restart policy and loopback evidence as consumer tests.
+foreach(_mocopi_consumer_target IN ITEMS motionConnectorMocopi_tests
+        motionConnectorMocopi_liveSource_tests motionConnectorMocopi_udpReceiver_tests)
+    target_link_libraries(${_mocopi_consumer_target} PRIVATE
+        motionRecording::motionRecording motionSampling::motionSampling)
+endforeach()
+foreach(_mocopi_composition_target IN ITEMS
+        motionConnectorMocopi_liveSource_tests motionConnectorMocopi_udpReceiver_tests)
+    target_include_directories(${_mocopi_composition_target} PRIVATE "${_mocopi_composition}")
+    target_sources(${_mocopi_composition_target} PRIVATE "${_mocopi_composition}/LiveSource.cpp")
+endforeach()
+set_tests_properties(motionConnectorMocopi_unit motionConnectorMocopi_liveSource
+    motionConnectorMocopi_udpReceiver PROPERTIES LABELS "consumer-integration")
+if(EXISTS "${_mocopi_corpus}")
+    set_tests_properties(motionConnectorMocopi_liveSourceCorpus motionConnectorMocopi_loopbackCorpus
+        PROPERTIES LABELS "consumer-integration")
 endif()

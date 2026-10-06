@@ -2,7 +2,7 @@
 #pragma once
 
 #include "motionConnectorMocopi/Diagnostics.h"
-#include "motionConnectorMocopi/LiveSource.h"
+#include "motionConnectorMocopi/FrameSource.h"
 #include "motionConnectorMocopi/UdpReceiver.h"
 #include "motionConnectorMocopi/api.h"
 
@@ -15,13 +15,11 @@
 #include <string>
 #include <vector>
 
-namespace openstrata::connectors::mocopi
-{
+namespace openstrata::connectors::mocopi {
 
 class MOTIONCONNECTORMOCOPI_API MocopiConnector final
-    : public openstrata::connectors::core::IMotionConnector
-{
-  public:
+    : public openstrata::connectors::core::IMotionConnector {
+public:
     MocopiConnector();
 
     openstrata::connectors::core::Status
@@ -34,31 +32,22 @@ class MOTIONCONNECTORMOCOPI_API MocopiConnector final
 
     // Hardware-free input paths used by replay and connector tests. Both paths
     // enqueue the same MotionFrame values that Poll returns after UDP receive.
-    std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size,
-                             double receiveTimestamp);
+    std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size, double receiveTimestamp);
     std::size_t PushPacket(const MotionPacket& packet, double receiveTimestamp);
 
-    const std::vector<Diagnostic>&
-    GetDiagnostics() const noexcept
-    {
-        return _diagnostics;
-    }
+    const std::vector<Diagnostic>& GetDiagnostics() const noexcept { return _diagnostics; }
 
-    void
-    ClearDiagnostics() noexcept
-    {
-        _diagnostics.clear();
-    }
+    void ClearDiagnostics() noexcept { _diagnostics.clear(); }
 
     openstrata::connectors::core::FrameBufferStats GetBufferStats() const noexcept;
 
-  private:
+private:
     std::size_t _EnqueueFrames(double receiveTimestamp);
     openstrata::connectors::core::MotionFrame _MakeFrame(const MocopiFrame& frame,
                                                          double receiveTimestamp);
 
     UdpReceiver _receiver;
-    MocopiLiveSource _source;
+    MocopiFrameSource _source;
     std::unique_ptr<openstrata::connectors::core::FrameBuffer> _buffer;
     openstrata::connectors::core::ConnectorState _state =
         openstrata::connectors::core::ConnectorState::Disconnected;

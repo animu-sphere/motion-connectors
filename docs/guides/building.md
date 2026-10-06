@@ -89,11 +89,12 @@ Build output stays in the build tree. The runtime layout -- `bin/`, `lib/`,
 | `motionConnectorWebSocket_loopback` | both directions in both roles over loopback sockets, the `Origin` and peer bounds, reconnects and silence. It binds sockets, so a lane that forbids binds excludes it by name |
 | `motion_connect_inspect_*` | the CLI replays representative captures through the shared contract |
 | `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package the build installed, each of which `tests/installed_consumer/packages.json` must list; when the build has `motion_connect`, the installed one passes `list`, `dump`, `inspect` and argument checks from the prefix |
+| `motionConnectorMocopi_frameSource` | source missing/loss/duplicate and restart facts, timestamps and diagnostic identity, with shared-connector parity over all captures |
 | `motionConnectorVmc_frameSource` | source observations retain missing/stale/duplicate facts, restart timestamps, receive-clock fallback and diagnostic identity without downstream intake policy |
 
-When VMC is built, `workspace_installed_consumer` also compiles every installed
-VMC header and runs its acquisition classes with discovery of `motionSampling`,
-`motionRecording`, `motionRetarget` and `motionUsd` disabled. VMC's existing
+When VMC or mocopi is built, `workspace_installed_consumer` also compiles every installed
+header of that connector and runs its acquisition classes with discovery of `motionSampling`,
+`motionRecording`, `motionRetarget` and `motionUsd` disabled. Their existing
 intake/sampling/restart-policy tests link downstream packages explicitly and
 carry the `consumer-integration` label.
 

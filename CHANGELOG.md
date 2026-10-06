@@ -8,6 +8,16 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **mocopi acquisition boundary.** `MocopiFrameSource` retains native decode,
+  source assembly, restart/rig facts, timestamps and diagnostic datagram identity.
+  `MocopiConnector` consumes it without downstream motion intake. The former
+  `MocopiLiveSource` public API moves to recorder-private composition; sampling
+  and recording dependencies leave the library CMake links, package config,
+  public headers and manifest. Recorder and consumer tests declare them directly.
+  Acquisition tests compare every capture through the shared connector; installed
+  consumption includes every header with all four downstream packages disabled.
+
+
 - **`motionConnectorWebSocket`, `MotionFrame` over WebSocket.**
   `WebSocketConnector` receives `openstrata.motion.frame/v1` messages as an
   `IMotionConnector`, and `WebSocketFrameSender` sends them; either one
