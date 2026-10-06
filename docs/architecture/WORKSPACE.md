@@ -208,10 +208,18 @@ The target gates additionally reject `motionSampling`, `motionRecording`,
 closure, and stage/UsdSkel headers (`pxr/usd/usd/`, `pxr/usd/usdSkel/`) or
 OpenExec includes in library code. `motionConnectorCore` must contain no
 protocol implementation; transport must contain no protocol semantics.
-VMC's and mocopi's source-boundary checks reject downstream motion includes, CMake links,
-package dependencies and manifest edges. Their installed-consumer probes disable
-discovery of all four downstream packages; the workspace-wide dependency gate is pending
-[Boundary Phase E](../roadmap/boundary-implementation.md#boundary-phase-e--ci-enforcement).
+`scripts/check_boundaries.py` scans every library's production sources, CMake
+files, package configs and manifest, and repeats the header/config scan on the
+clean installed prefix. `cmake/MotionConnectorsBoundaries.cmake` traverses actual
+target closures, including private static links, aliases, imported interfaces,
+configuration-specific imported library paths and generator-expression edges.
+It runs on standalone component builds even with tests disabled, at the end of
+workspace composition, and on each installed-consumer target. All configurations
+are checked conservatively; a forbidden edge in an inactive branch is refused.
+The installed consumer compiles every installed library header with discovery
+of all four downstream packages disabled. VMC and mocopi also retain their
+acquisition runtime probes. `workspace_boundaries`, `_selftest` and the SDK-free
+`boundaries-check` workflow check the scans and injected forbidden cases.
 Apply dependency restrictions to libraries, not recorder tools or consumer
 integration tests that deliberately exercise downstream intake/export.
 

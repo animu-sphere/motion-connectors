@@ -8,6 +8,17 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Workspace acquisition boundary enforcement (Boundary Phase E).** Library
+  production code, CMake declarations, package configs and manifests reject
+  downstream motion packages, stage/UsdSkel/OpenExec includes, core protocol
+  implementation, protocol address literals in OSC/transport and motion values
+  in transport. CMake checks actual target closures in workspace, standalone
+  and installed-consumer builds, including aliases, private static links,
+  generator expressions and imported library paths. Clean installed consumption
+  scans headers/configs and compiles every installed header with downstream
+  package discovery disabled. An SDK-free CI lane and mutation tests check
+  refusal cases while preserving downstream recorder/consumer composition.
+
 - **mocopi acquisition boundary.** `MocopiFrameSource` retains native decode,
   source assembly, restart/rig facts, timestamps and diagnostic datagram identity.
   `MocopiConnector` consumes it without downstream motion intake. The former

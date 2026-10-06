@@ -211,6 +211,8 @@ def main() -> int:
             return 1
         print(f"the prefix holds the documentation and {len(packages)} "
               f"package(s), and names no build location")
+        run([sys.executable, REPO / "scripts" / "check_boundaries.py",
+             "--prefix", prefix])
         profiles = [p["profile"] for p in packages if "profile" in p]
         if profiles:
             run([sys.executable, str(REPO / "scripts" / "check_source_profiles.py"),
@@ -219,6 +221,15 @@ def main() -> int:
 
         source = work / "consumer-src"
         shutil.copytree(CONSUMER, source)
+        shutil.copyfile(REPO / "cmake" / "MotionConnectorsBoundaries.cmake",
+                        source / "MotionConnectorsBoundaries.cmake")
+        # Compile every installed connector header, not only the sample header
+        # in packages.json, with downstream package discovery disabled below.
+        headers = sorted((prefix / "include").rglob("*.h"))
+        main = source / "main.cpp"
+        main.write_text("".join(
+            f'#include "{p.relative_to(prefix / "include").as_posix()}"\n'
+            for p in headers) + main.read_text(encoding="utf-8"), encoding="utf-8")
         # The copy lists what this build installed, which is what it consumes.
         (source / "packages.json").write_text(
             json.dumps(listing, indent=2) + "\n", encoding="utf-8")
@@ -236,6 +247,8 @@ def main() -> int:
                      f"-DCMAKE_PREFIX_PATH={prefix_path}",
                      f"-DMOTIONCONNECTORS_CONSUMER_VERSION={major_minor}",
                      f"-DCMAKE_BUILD_TYPE={args.config}"]
+        configure += [f"-DCMAKE_DISABLE_FIND_PACKAGE_{p}=TRUE" for p in
+                      ("motionSampling", "motionRecording", "motionRetarget", "motionUsd")]
         configure += [f"-D{name}={value}" for name, value in (
             ("Python3_EXECUTABLE", args.python_executable),
             ("Python3_LIBRARY", args.python_library),
@@ -285,6 +298,8 @@ def main() -> int:
             isolated_source = work / f"{protocol}-consumer-src"
             isolated_build = work / f"{protocol}-consumer-build"
             shutil.copytree(CONSUMER, isolated_source)
+            shutil.copyfile(REPO / "cmake" / "MotionConnectorsBoundaries.cmake",
+                            isolated_source / "MotionConnectorsBoundaries.cmake")
             (isolated_source / "packages.json").write_text(json.dumps({
                 "packages": [{"name": component,
                               "header": f"{component}/FrameSource.h"}]

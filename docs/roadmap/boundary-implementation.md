@@ -12,9 +12,9 @@ Release assignment is maintained only in
 
 Use **Boundary Phase A–E** when referring to this plan, so it cannot be
 confused with the older Connector Phases or a sibling's migration phases.
-Remaining execution order is E, C, D, followed by the tracking placement
-review. Enforce the invariant before expanding the
-source set.
+Remaining execution order is C, D, followed by the tracking placement
+review. Boundary Phase E enforcement is recorded in
+[WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement).
 
 ## Boundary Phase A — Thin VMC and mocopi libraries
 
@@ -63,23 +63,11 @@ semantic recording into the connector.
 
 ## Boundary Phase E — CI enforcement
 
-- ⬜ Add dependency graph checks rejecting `motionSampling`,
-  `motionRecording`, `motionRetarget` and `motionUsd` in connector library
-  closures. Check CMake links, installed package dependencies and manifests
-  so an installed consumer cannot reintroduce a hidden edge.
-- ⬜ Extend include scans to reject `pxr/usd/usd/`, `pxr/usd/usdSkel/` and
-  OpenExec includes in connector library code.
-- ⬜ Keep protocol implementation out of `motionConnectorCore`; reject
-  VMC/VRChat address literals in `motionConnectorOsc` and transport layers.
-  Transport must also remain independent of `MotionFrame` semantics.
-- ⬜ Scope the gates to library ownership. Permit deliberate downstream
-  dependencies in tools, examples and consumer integration tests; no
-  allowlist may leave a forbidden edge in a connector library.
-
-Completion: CI and clean installed-consumer checks fail on each forbidden
-dependency/header/literal case and accept the intended library/tool split.
-The source replay evidence from Phase A still passes. Execute this phase
-after A/B and before C/D to prevent regressions during source expansion.
+Enforcement and installed-consumer evidence are recorded in
+[WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement), the
+[capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract) and the
+[changelog](../../CHANGELOG.md#unreleased). Source expansion follows these
+gates; this phase carries no remaining implementation checklist.
 
 ## Follow-up — Generic tracking placement
 

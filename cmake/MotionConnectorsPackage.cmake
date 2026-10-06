@@ -31,6 +31,7 @@
 # configure installs when a connector is switched off.
 
 include(CMakePackageConfigHelpers)
+include("${CMAKE_CURRENT_LIST_DIR}/MotionConnectorsBoundaries.cmake")
 
 function(motionconnectors_install_package)
     cmake_parse_arguments(PARSE_ARGV 0 _pkg "" "TARGET;NAMESPACE;COMPATIBILITY" "")
@@ -92,4 +93,8 @@ function(motionconnectors_install_package)
         DESTINATION "${_destination}")
 
     set_property(GLOBAL APPEND PROPERTY MOTIONCONNECTORS_PACKAGES ${_name})
+    # Defer in this component's directory to retain directory-scoped imports
+    # and guard standalone builds even when their tests are disabled.
+    cmake_language(EVAL CODE
+        "cmake_language(DEFER CALL motionconnectors_check_target_boundary [[${_name}]])")
 endfunction()

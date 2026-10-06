@@ -1,0 +1,21 @@
+# Library ownership gates need no SDK or hardware.
+name: boundaries-check
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boundaries:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Exercise forbidden source, declaration and CMake closure cases
+        run: python tests/test_boundaries.py
+      - name: Check all connector libraries
+        run: python scripts/check_boundaries.py
