@@ -108,7 +108,7 @@ if(MOTIONCONNECTORS_BUILD_VMC)
         add_subdirectory("tools/vmcRecord")
     endif()
 endif()
-# mocopi links three usd-motion-plugins packages and the transport leaf -- and
+# mocopi links motionCore and the transport leaf -- and
 # not the wire format, because this protocol is not OSC.
 if(MOTIONCONNECTORS_BUILD_MOCOPI)
     add_subdirectory("libs/motionConnectorMocopi")
@@ -151,6 +151,13 @@ endif()
 if(MOTIONCONNECTORS_BUILD_TESTS)
     add_subdirectory("tests")
 endif()
+
+# Check once more after workspace composition. Component-local deferred checks
+# retain import visibility; this catches links added by a parent afterwards.
+get_property(_boundary_packages GLOBAL PROPERTY MOTIONCONNECTORS_PACKAGES)
+foreach(_boundary_package IN LISTS _boundary_packages)
+    motionconnectors_check_target_boundary("${_boundary_package}")
+endforeach()
 
 # Not CMAKE_INSTALL_DOCDIR, which is share/doc/<PROJECT_NAME>: the installed
 # name is the repository's, and the installed-consumer lane checks it there.

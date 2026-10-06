@@ -36,6 +36,12 @@ if(_count GREATER 0)
     endforeach()
 endif()
 
+# Check each imported library's closure before linking the aggregate probe.
+include("${CMAKE_CURRENT_SOURCE_DIR}/MotionConnectorsBoundaries.cmake")
+foreach(_target IN LISTS _targets)
+    motionconnectors_check_target_boundary("${_target}")
+endforeach()
+
 # One translation unit that includes every package's public header, so a
 # header that reaches for something the package does not install fails here.
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/includes.h" "${_includes}")
