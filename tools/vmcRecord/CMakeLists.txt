@@ -2,11 +2,8 @@
 #
 # vmc_record — the VMC adapter's CLI.
 #
-# Added from the adapter's own CMakeLists rather than from the repository root,
-# because the tool ships *with* the adapter: WORKSPACE.md §5 names one artifact
-# carrying the library together with its CLI. That also means a standalone
-# configure of `adapters/liveCapture/vmc` builds both, which is the
-# configuration the artifact would be built from.
+# A workspace tool composed by the repository root. A standalone configure
+# consumes the installed connector plus explicit downstream motion packages.
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -25,9 +22,17 @@ if(NOT TARGET motionConnectorVmc::motionConnectorVmc)
     find_package(motionConnectorVmc REQUIRED CONFIG)
 endif()
 
+if(NOT TARGET motionRecording::motionRecording)
+    find_package(motionRecording REQUIRED CONFIG)
+endif()
+if(NOT TARGET motionSampling::motionSampling)
+    find_package(motionSampling REQUIRED CONFIG)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(vmc_record
+    src/LiveSource.cpp
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
@@ -35,11 +40,11 @@ add_executable(vmc_record
 motionconnectors_use_utf8_code_page(vmc_record)
 
 target_compile_features(vmc_record PRIVATE cxx_std_20)
-# The adapter, and deliberately nothing else. §2 would permit this target to
-# link `vrmRetarget` and OpenUSD's stage libraries the way `motion_retarget`
-# does; it does not need them, and a link line is the cheapest place to keep
-# that true.
-target_link_libraries(vmc_record PRIVATE motionConnectorVmc::motionConnectorVmc)
+# Intake composition and semantic export are tool dependencies.
+target_link_libraries(vmc_record PRIVATE
+    motionConnectorVmc::motionConnectorVmc
+    motionRecording::motionRecording
+    motionSampling::motionSampling)
 
 if(MSVC)
     target_compile_options(vmc_record PRIVATE /utf-8)

@@ -3,7 +3,7 @@
 """Enforce motionConnectorVmc's leaf boundary.
 
 WORKSPACE.md §2 gives an adapter library the declared edges — motionConnectorCore,
-motionCore, motionRuntime, motionConnectorTransport and osc — and forbids the rest: vrmSchema, every USD
+motionCore, motionConnectorTransport and motionConnectorOsc — and forbids the rest: vrmSchema, every USD
 file-format bundle, `vrmRetarget` (the library), OpenExec, `ExecIr`, and every
 sibling adapter. It also may not be a plugin bundle (§1), so a plugin manifest
 or a plugInfo.json anywhere under the adapter is a failure by itself.
@@ -32,7 +32,7 @@ a section summary and nothing else — so pointing this check at the library wou
 make it a gate that cannot fail, which is worse than no gate. The linked test
 executable is the first artifact in which the adapter's real transitive imports
 exist, so it is the first one worth inspecting. It links the adapter plus
-`motionConnectorCore`, `motionCore` and `motionRuntime` and nothing else, which is exactly the closure
+`motionConnectorCore`, `motionCore`, transport and OSC and nothing else, which is exactly the closure
 this boundary is about.
 """
 
@@ -201,6 +201,7 @@ def main() -> int:
     # second group carries one `\w*` for the whole alternation rather than one
     # per name and a boundary for the rest.
     forbidden_neighbours = re.compile(
+        r"motion(?:Sampling|Recording|Retarget|Usd)\w*|"
         r"motionConnector(?:Mocopi|VrchatOsc|Tracking|WebSocket|OpenXR)\w*|"
         r"\b(?:vrmSchema|vrmContainer|vrmRetarget|usdVrm|execMotion|execVrm|"
         r"vrmAdapter|cgltf|ardy)\w*|"
@@ -240,7 +241,6 @@ def main() -> int:
         "motionconnectorvmc", "public", "private", "interface",
         "motionconnectorcore::motionconnectorcore",
         "motioncore::motioncore",
-        "motionsampling::motionsampling", "motionrecording::motionrecording",
         "motionconnectortransport::motionconnectortransport",
         "motionconnectorosc::motionconnectorosc",
         "ws2_32", "threads::threads",
@@ -251,7 +251,7 @@ def main() -> int:
             if token.lower() not in allowed_link:
                 errors.append(
                     "motionConnectorVmc may link only motionConnectorCore, motionCore, "
-                    "motionSampling, motionRecording, motionConnectorTransport "
+                    "motionConnectorTransport "
                     f"and motionConnectorOsc; CMakeLists.txt links `{token}`")
 
     # An exported edge the package **config** does not resolve.
@@ -280,6 +280,12 @@ def main() -> int:
     # guarded and present because a transitive Gf target needs it.
     config_path = source / "cmake" / "motionConnectorVmcConfig.cmake.in"
     config = config_path.read_text(encoding="utf-8")
+    forbidden_downstream = re.compile(r"motion(?:Sampling|Recording|Retarget|Usd)\w*",
+                                     re.IGNORECASE)
+    for path in (config_path, source / "openstrata.library.yaml"):
+        text = re.sub(r"#[^\n]*", "", path.read_text(encoding="utf-8"))
+        if forbidden_downstream.search(text):
+            errors.append(f"downstream motion dependency is forbidden: {path}")
     resolved = set(re.findall(r"find_dependency\s*\(\s*([A-Za-z0-9_]+)", config))
     for arguments in re.findall(r"target_link_libraries\s*\((.*?)\)", cmake,
                                 re.DOTALL):

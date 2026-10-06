@@ -2,7 +2,7 @@
 #pragma once
 
 #include "motionConnectorVmc/Diagnostics.h"
-#include "motionConnectorVmc/LiveSource.h"
+#include "motionConnectorVmc/FrameSource.h"
 #include "motionConnectorVmc/UdpReceiver.h"
 #include "motionConnectorVmc/api.h"
 
@@ -15,13 +15,11 @@
 #include <string>
 #include <vector>
 
-namespace openstrata::connectors::vmc
-{
+namespace openstrata::connectors::vmc {
 
 class MOTIONCONNECTORVMC_API VmcConnector final
-    : public openstrata::connectors::core::IMotionConnector
-{
-  public:
+    : public openstrata::connectors::core::IMotionConnector {
+public:
     VmcConnector();
 
     openstrata::connectors::core::Status
@@ -34,35 +32,26 @@ class MOTIONCONNECTORVMC_API VmcConnector final
 
     // Hardware-free input paths used by replay and connector tests. Both paths
     // enqueue the same MotionFrame values that Poll returns after UDP receive.
-    std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size,
-                             double receiveTimestamp);
+    std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size, double receiveTimestamp);
     std::size_t PushPacket(const VmcPacket& packet, double receiveTimestamp);
 
     // Completes the frame left open by a replayed capture. Live UDP input has
     // no end marker, so Poll never needs this path.
     std::size_t Flush(double receiveTimestamp);
 
-    const std::vector<Diagnostic>&
-    GetDiagnostics() const noexcept
-    {
-        return _diagnostics;
-    }
+    const std::vector<Diagnostic>& GetDiagnostics() const noexcept { return _diagnostics; }
 
-    void
-    ClearDiagnostics() noexcept
-    {
-        _diagnostics.clear();
-    }
+    void ClearDiagnostics() noexcept { _diagnostics.clear(); }
 
     openstrata::connectors::core::FrameBufferStats GetBufferStats() const noexcept;
 
-  private:
+private:
     std::size_t _EnqueueFrames(double receiveTimestamp);
     openstrata::connectors::core::MotionFrame _MakeFrame(const VmcFrame& frame,
                                                          double receiveTimestamp);
 
     UdpReceiver _receiver;
-    VmcLiveSource _source;
+    VmcFrameSource _source;
     std::unique_ptr<openstrata::connectors::core::FrameBuffer> _buffer;
     openstrata::connectors::core::ConnectorState _state =
         openstrata::connectors::core::ConnectorState::Disconnected;

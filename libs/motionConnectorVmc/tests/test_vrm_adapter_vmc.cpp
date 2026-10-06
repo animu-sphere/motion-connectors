@@ -15,8 +15,7 @@
 
 namespace vmc = openstrata::connectors::vmc;
 
-namespace
-{
+namespace {
 
 using vmc::Diagnostic;
 using vmc::DiagnosticCode;
@@ -28,9 +27,14 @@ using vmc::DiagnosticSeverity;
 // reason to have a test at all: a renamed or dropped code is a contract break
 // that nothing else in the tree would notice.
 constexpr const char* kExpectedCodes[] = {
-    "VMC_PACKET_MALFORMED",   "VMC_UNSUPPORTED_MESSAGE", "VMC_TIMESTAMP_REGRESSION",
-    "VMC_DUPLICATE_BONE",     "VMC_INCOMPLETE_FRAME",    "VMC_SOURCE_RESTARTED",
-    "VMC_SOCKET_BIND_FAILED", "VMC_STALE_JOINT",
+    "VMC_PACKET_MALFORMED",
+    "VMC_UNSUPPORTED_MESSAGE",
+    "VMC_TIMESTAMP_REGRESSION",
+    "VMC_DUPLICATE_BONE",
+    "VMC_INCOMPLETE_FRAME",
+    "VMC_SOURCE_RESTARTED",
+    "VMC_SOCKET_BIND_FAILED",
+    "VMC_STALE_JOINT",
 };
 
 void
@@ -40,8 +44,7 @@ TestEveryCodeIsNamedOnceAndRoundTrips()
     assert(DiagnosticCodeCount == expected);
 
     std::set<std::string> seen;
-    for (std::size_t i = 0; i < DiagnosticCodeCount; ++i)
-    {
+    for (std::size_t i = 0; i < DiagnosticCodeCount; ++i) {
         const auto code = static_cast<DiagnosticCode>(i);
         const std::string name(vmc::DiagnosticCodeString(code));
 
@@ -64,21 +67,18 @@ TestOnlyABindFailureStopsTheSession()
     // The recoverable flag is what lets a caller distinguish a live session
     // that can continue from one that cannot, so exactly one code is fatal:
     // a receiver that never bound has nothing to recover into.
-    for (std::size_t i = 0; i < DiagnosticCodeCount; ++i)
-    {
+    for (std::size_t i = 0; i < DiagnosticCodeCount; ++i) {
         const auto code = static_cast<DiagnosticCode>(i);
         const bool fatal = code == DiagnosticCode::SocketBindFailed;
         assert(vmc::DiagnosticIsRecoverable(code) == !fatal);
-        assert((vmc::DiagnosticDefaultSeverity(code) == DiagnosticSeverity::Error) ==
-               fatal);
+        assert((vmc::DiagnosticDefaultSeverity(code) == DiagnosticSeverity::Error) == fatal);
     }
 }
 
 void
 TestMakeDiagnosticCannotDisagreeWithTheTable()
 {
-    const Diagnostic stale =
-        vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
+    const Diagnostic stale = vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
     assert(stale.severity == DiagnosticSeverity::Warning);
     assert(stale.recoverable);
     assert(stale.detail == "no update for 0.5 s");
@@ -89,13 +89,13 @@ TestMakeDiagnosticCannotDisagreeWithTheTable()
 void
 TestFormattingIsDeterministicAndOmitsAbsentFields()
 {
-    Diagnostic full =
-        vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
+    Diagnostic full = vmc::MakeDiagnostic(DiagnosticCode::StaleJoint, "no update for 0.5 s");
     full.source = "127.0.0.1:39539";
     full.timestamp = 1.5;
     // A humanoid bone name, spelled the way motionCore spells it -- the adapter
     // reports semantics, never a target joint index (§5.1).
-    full.subject = std::string(openstrata::motion::HumanJointName(openstrata::motion::HumanJoint::LeftHand));
+    full.subject =
+        std::string(openstrata::motion::HumanJointName(openstrata::motion::HumanJoint::LeftHand));
     full.sequence = 42;
 
     assert(vmc::FormatDiagnostic(full) ==
@@ -108,14 +108,9 @@ TestFormattingIsDeterministicAndOmitsAbsentFields()
 
 // A locale whose decimal point is a comma, constructed in-process so this test
 // depends on no system locale being installed anywhere.
-struct CommaDecimalPoint : std::numpunct<char>
-{
-  protected:
-    char
-    do_decimal_point() const override
-    {
-        return ',';
-    }
+struct CommaDecimalPoint : std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
 };
 
 void
@@ -139,9 +134,8 @@ TestFormattingSurvivesAHostileGlobalLocale()
 void
 TestTheDeclaredDependencyEdgesAreReal()
 {
-    // Both of the two edges this adapter's manifest declares -- and the only
-    // two WORKSPACE.md §2 permits it -- are exercised here, so the manifest
-    // cannot claim a dependency the library does not actually have.
+    // Consumer integration: motionRecording is explicitly linked by this test,
+    // separately from the connector's acquisition-only dependency closure.
     openstrata::motion::LiveCaptureSource source;
     openstrata::motion::MotionPose pose;
     pose.timestamp = 0.0;

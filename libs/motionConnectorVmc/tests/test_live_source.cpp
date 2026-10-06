@@ -19,7 +19,7 @@
 // cross-layer claim this pairing exists for: every frame the assembler emitted
 // was admitted by the intake, because the assembler's ordering contract is
 // exactly the one the intake requires.
-#include "motionConnectorVmc/LiveSource.h"
+#include "LiveSource.h"
 
 #include "motionConnectorVmc/Diagnostics.h"
 #include "motionConnectorVmc/FrameAssembler.h"
@@ -48,8 +48,7 @@
 
 namespace vmc = openstrata::connectors::vmc;
 
-namespace
-{
+namespace {
 
 using openstrata::motion::HumanJoint;
 using openstrata::motion::PoseSampleStatus;
@@ -67,8 +66,8 @@ constexpr std::array<float, 4> kUnityIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
 
 // The same short rig the assembler's tests use, so a claim here names four
 // bones rather than looping over fifty-five.
-constexpr std::array<HumanJoint, 4> kRig = {HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest,
-                                           HumanJoint::Head};
+constexpr std::array<HumanJoint, 4> kRig = {
+    HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest, HumanJoint::Head};
 
 VmcMessage
 TimeMessage(double seconds)
@@ -112,14 +111,13 @@ ModelMessage()
 
 VmcPacket
 BundledFrame(double seconds,
-             std::initializer_list<HumanJoint> bones = {HumanJoint::Hips, HumanJoint::Spine,
-                                                       HumanJoint::Chest, HumanJoint::Head})
+             std::initializer_list<HumanJoint> bones = {
+                 HumanJoint::Hips, HumanJoint::Spine, HumanJoint::Chest, HumanJoint::Head})
 {
     VmcPacket packet;
     packet.messages.push_back(TimeMessage(seconds));
     packet.messages.push_back(RootMessage());
-    for (const HumanJoint bone : bones)
-    {
+    for (const HumanJoint bone : bones) {
         packet.messages.push_back(BoneMessage(bone));
     }
     return packet;
@@ -143,10 +141,8 @@ std::size_t
 CountCode(const std::vector<Diagnostic>& diagnostics, DiagnosticCode code)
 {
     std::size_t count = 0;
-    for (const Diagnostic& diagnostic : diagnostics)
-    {
-        if (diagnostic.code == code)
-        {
+    for (const Diagnostic& diagnostic : diagnostics) {
+        if (diagnostic.code == code) {
             ++count;
         }
     }
@@ -157,27 +153,23 @@ CountCode(const std::vector<Diagnostic>& diagnostics, DiagnosticCode code)
 // Byte assembly, for the two claims a decoded packet cannot make
 // ---------------------------------------------------------------------------
 
-struct Bytes
-{
+struct Bytes {
     std::vector<std::uint8_t> data;
 
     // A NUL-terminated string padded to four bytes — always at least one NUL.
     // The padding is measured from the start of the datagram, which is correct
     // because nothing here builds a bundle.
-    Bytes&
-    Str(std::string_view text)
+    Bytes& Str(std::string_view text)
     {
         data.insert(data.end(), text.begin(), text.end());
         data.push_back(0);
-        while (data.size() % 4 != 0)
-        {
+        while (data.size() % 4 != 0) {
             data.push_back(0);
         }
         return *this;
     }
 
-    Bytes&
-    F32(float value)
+    Bytes& F32(float value)
     {
         std::uint32_t bits = 0;
         std::memcpy(&bits, &value, sizeof(bits));
@@ -270,8 +262,8 @@ TestAGapIsResolvedByThePolicyAndNotByTheAdapter()
     // the gap and held nothing forward; what happens next is the runtime's, and
     // the proof is that the answer changes without the adapter changing.
     for (const openstrata::motion::MissingJointPolicy policy :
-         {openstrata::motion::MissingJointPolicy::HoldLast, openstrata::motion::MissingJointPolicy::LeaveUnbound})
-    {
+         {openstrata::motion::MissingJointPolicy::HoldLast,
+          openstrata::motion::MissingJointPolicy::LeaveUnbound}) {
         VmcLiveSourceConfig config;
         config.intake.missingJoints = policy;
         VmcLiveSource source(config);
@@ -283,13 +275,10 @@ TestAGapIsResolvedByThePolicyAndNotByTheAdapter()
 
         assert(source.GetStats().framesAdmitted == 2);
         const openstrata::motion::MotionPose& newest = source.GetIntake().GetBuffer().GetNewest();
-        if (policy == openstrata::motion::MissingJointPolicy::HoldLast)
-        {
+        if (policy == openstrata::motion::MissingJointPolicy::HoldLast) {
             assert(newest.validRotations.count() == kRig.size());
             assert(source.GetIntake().GetStats().jointsHeld == 2);
-        }
-        else
-        {
+        } else {
             assert(newest.validRotations.count() == 2);
             assert(!newest.validRotations.test(static_cast<std::size_t>(HumanJoint::Chest)));
         }
@@ -309,10 +298,10 @@ TestAStaleBoneIsReportedAndNotUnbound()
     std::vector<Diagnostic> diagnostics;
 
     source.PushPacket(BundledFrame(1.0), 0.0, &diagnostics);
-    for (int index = 1; index != 5; ++index)
-    {
+    for (int index = 1; index != 5; ++index) {
         source.PushPacket(BundledFrame(1.0 + index * 0.05, {HumanJoint::Hips, HumanJoint::Spine}),
-                          0.0, &diagnostics);
+                          0.0,
+                          &diagnostics);
     }
     source.Flush(&diagnostics);
 
@@ -491,7 +480,8 @@ TestEveryDiagnosticOfOneDatagramCarriesItsNumber()
     source.PushDatagram(junk, 0.001, &diagnostics);
     // 2 and 3: a bone and a clock, decoding cleanly and raising nothing.
     source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
-                        0.002, &diagnostics);
+                        0.002,
+                        &diagnostics);
     source.PushDatagram(TimeDatagram(1.0f), 0.003, &diagnostics);
     // 4: refused by the VMC layer, which knows an address and not a session.
     source.PushDatagram(UnsupportedDatagram(), 0.004, &diagnostics);
@@ -499,14 +489,14 @@ TestEveryDiagnosticOfOneDatagramCarriesItsNumber()
     //    stamps its own packet serial — 4 by now, because the OSC layer's
     //    refusal was never handed to it.
     source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Spine), 0.0f, 0.0f, 0.0f, 0.0f),
-                        0.005, &diagnostics);
+                        0.005,
+                        &diagnostics);
 
     assert(diagnostics.size() == 3);
     assert(diagnostics[0].code == DiagnosticCode::PacketMalformed);
     assert(diagnostics[1].code == DiagnosticCode::UnsupportedMessage);
     assert(diagnostics[2].code == DiagnosticCode::PacketMalformed);
-    for (const Diagnostic& diagnostic : diagnostics)
-    {
+    for (const Diagnostic& diagnostic : diagnostics) {
         assert(diagnostic.source == "127.0.0.1:39539");
         assert(diagnostic.sequence.has_value());
     }
@@ -537,7 +527,8 @@ TestARefusedDatagramCostsItselfAndIsCounted()
 
     // A refused datagram is not a refused session.
     source.PushDatagram(BoneDatagram(VmcHumanBoneName(HumanJoint::Hips), 0.0f, 0.0f, 0.0f, 1.0f),
-                        0.002, &diagnostics);
+                        0.002,
+                        &diagnostics);
     source.PushDatagram(TimeDatagram(1.0f), 0.003, &diagnostics);
     assert(source.Flush(&diagnostics) == 1);
     assert(source.GetStats().datagramsDecoded == 2);
@@ -584,8 +575,8 @@ TestTheDatagramNeedNotOutliveThePush()
     assert(pose.validRotations.test(arm));
     assert(Near(pose.timestamp, 2.0));
     const pxr::GfQuatf identity(1.0f, pxr::GfVec3f(0.0f));
-    assert(std::abs(openstrata::motion::AngleBetween(pose.localRotations[arm], identity) - 0.7853981634f) <=
-           1e-4f);
+    assert(std::abs(openstrata::motion::AngleBetween(pose.localRotations[arm], identity) -
+                    0.7853981634f) <= 1e-4f);
     assert(pose.localRotations[arm].GetImaginary()[2] > 0.0f);
 }
 
@@ -655,8 +646,7 @@ TestTheSourceSurvivesHavingNowhereToReport()
 // exactly the ordering `LiveCaptureSource::Push` requires. `datagramsRefused` is
 // the number no other layer holds — a datagram the OSC layer refused never
 // reaches the assembler to be counted there.
-struct Expected
-{
+struct Expected {
     const char* file;
     std::size_t datagramsDecoded;
     std::size_t datagramsRefused;
@@ -687,15 +677,16 @@ Replay(const std::filesystem::path& path, VmcLiveSource* source,
 {
     vmc::PacketCapture capture;
     vmc::PacketCaptureError error;
-    if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error))
-    {
-        std::fprintf(stderr, "%s:%zu: %s\n", path.filename().string().c_str(), error.line,
+    if (!vmc::ReadPacketCaptureFile(path.string(), &capture, &error)) {
+        std::fprintf(stderr,
+                     "%s:%zu: %s\n",
+                     path.filename().string().c_str(),
+                     error.line,
                      error.message.c_str());
         return false;
     }
     source->SetSource(capture.sourceId);
-    for (const vmc::RecordedDatagram& datagram : capture.datagrams)
-    {
+    for (const vmc::RecordedDatagram& datagram : capture.datagrams) {
         source->PushDatagram(datagram.bytes, datagram.receiveTime, diagnostics);
     }
     source->Flush(diagnostics);
@@ -710,13 +701,11 @@ CheckTheRestartPolicyIsWhatCostsTheFrames(const std::filesystem::path& path)
     VmcLiveSourceConfig config;
     config.restart = SessionRestartPolicy::Refuse;
     VmcLiveSource refusing(config);
-    if (!Replay(path, &refusing, nullptr))
-    {
+    if (!Replay(path, &refusing, nullptr)) {
         return 1;
     }
     if (refusing.GetStats().framesDelivered != 6 || refusing.GetStats().framesAdmitted != 4 ||
-        refusing.GetStats().framesRefused != 2 || refusing.GetStats().sessionsReset != 0)
-    {
+        refusing.GetStats().framesRefused != 2 || refusing.GetStats().sessionsReset != 0) {
         std::fprintf(stderr,
                      "sender-restart under Refuse: %llu delivered, %llu "
                      "admitted, %llu refused, %llu reset -- expected 6, 4, 2, "
@@ -730,10 +719,10 @@ CheckTheRestartPolicyIsWhatCostsTheFrames(const std::filesystem::path& path)
     // And the session is over rather than merely behind: the buffer's head is
     // still the last frame of the clock that ended.
     if (!refusing.ConsumeSessionRestart() ||
-        refusing.GetIntake().GetBuffer().GetNewest().timestamp < 30.0)
-    {
-        std::fprintf(stderr, "sender-restart under Refuse: the stall is not visible to "
-                             "a caller\n");
+        refusing.GetIntake().GetBuffer().GetNewest().timestamp < 30.0) {
+        std::fprintf(stderr,
+                     "sender-restart under Refuse: the stall is not visible to "
+                     "a caller\n");
         return 1;
     }
     return 0;
@@ -742,23 +731,19 @@ CheckTheRestartPolicyIsWhatCostsTheFrames(const std::filesystem::path& path)
 int
 CheckCorpus(const std::filesystem::path& directory)
 {
-    if (!std::filesystem::is_directory(directory))
-    {
+    if (!std::filesystem::is_directory(directory)) {
         std::fprintf(stderr, "corpus directory not found: %s\n", directory.string().c_str());
         return 1;
     }
     std::vector<std::filesystem::path> captures;
     for (const std::filesystem::directory_entry& file :
-         std::filesystem::directory_iterator(directory))
-    {
-        if (file.is_regular_file() && file.path().extension() == ".vmcpackets")
-        {
+         std::filesystem::directory_iterator(directory)) {
+        if (file.is_regular_file() && file.path().extension() == ".vmcpackets") {
             captures.push_back(file.path());
         }
     }
     std::sort(captures.begin(), captures.end());
-    if (captures.empty())
-    {
+    if (captures.empty()) {
         std::fprintf(stderr, "no .vmcpackets fixtures in %s\n", directory.string().c_str());
         return 1;
     }
@@ -766,20 +751,16 @@ CheckCorpus(const std::filesystem::path& directory)
     int failures = 0;
     std::set<std::string> covered;
 
-    for (const std::filesystem::path& path : captures)
-    {
+    for (const std::filesystem::path& path : captures) {
         const std::string name = path.filename().string();
         const Expected* entry = nullptr;
-        for (const Expected& candidate : kExpected)
-        {
-            if (name == candidate.file)
-            {
+        for (const Expected& candidate : kExpected) {
+            if (name == candidate.file) {
                 entry = &candidate;
                 break;
             }
         }
-        if (!entry)
-        {
+        if (!entry) {
             std::fprintf(stderr,
                          "%s: no expected delivery in this test -- add one, or "
                          "the capture is in the corpus and reaches the runtime "
@@ -792,8 +773,7 @@ CheckCorpus(const std::filesystem::path& directory)
 
         VmcLiveSource source;
         std::vector<Diagnostic> diagnostics;
-        if (!Replay(path, &source, &diagnostics))
-        {
+        if (!Replay(path, &source, &diagnostics)) {
             ++failures;
             continue;
         }
@@ -802,16 +782,18 @@ CheckCorpus(const std::filesystem::path& directory)
         if (stats.datagramsDecoded != entry->datagramsDecoded ||
             stats.datagramsRefused != entry->datagramsRefused ||
             stats.framesAdmitted != entry->framesAdmitted ||
-            stats.sessionsReset != entry->sessionsReset)
-        {
+            stats.sessionsReset != entry->sessionsReset) {
             std::fprintf(stderr,
                          "%s: %llu decoded, %llu refused, %llu admitted, %llu "
                          "reset -- expected %zu, %zu, %zu, %zu\n",
-                         name.c_str(), static_cast<unsigned long long>(stats.datagramsDecoded),
+                         name.c_str(),
+                         static_cast<unsigned long long>(stats.datagramsDecoded),
                          static_cast<unsigned long long>(stats.datagramsRefused),
                          static_cast<unsigned long long>(stats.framesAdmitted),
                          static_cast<unsigned long long>(stats.sessionsReset),
-                         entry->datagramsDecoded, entry->datagramsRefused, entry->framesAdmitted,
+                         entry->datagramsDecoded,
+                         entry->datagramsRefused,
+                         entry->framesAdmitted,
                          entry->sessionsReset);
             ++failures;
             continue;
@@ -821,8 +803,7 @@ CheckCorpus(const std::filesystem::path& directory)
         // emitted was admitted, on every capture including the one that
         // restarts — so the two contracts meet rather than nearly meeting.
         if (stats.framesRefused != 0 ||
-            stats.framesDelivered != source.GetAssembler().GetStats().framesEmitted)
-        {
+            stats.framesDelivered != source.GetAssembler().GetStats().framesEmitted) {
             std::fprintf(
                 stderr,
                 "%s: the assembler emitted %llu frame(s) and the "
@@ -838,15 +819,16 @@ CheckCorpus(const std::filesystem::path& directory)
         // its own would show up here as a count that no longer matches.
         const std::size_t expectedBuffered =
             std::min(entry->buffered, source.GetIntake().GetBuffer().GetCapacity());
-        if (source.GetIntake().GetBuffer().GetSize() != expectedBuffered)
-        {
-            std::fprintf(stderr, "%s: %zu pose(s) buffered, expected %zu\n", name.c_str(),
-                         source.GetIntake().GetBuffer().GetSize(), expectedBuffered);
+        if (source.GetIntake().GetBuffer().GetSize() != expectedBuffered) {
+            std::fprintf(stderr,
+                         "%s: %zu pose(s) buffered, expected %zu\n",
+                         name.c_str(),
+                         source.GetIntake().GetBuffer().GetSize(),
+                         expectedBuffered);
             ++failures;
         }
 
-        if (name == "neutral-standing-30hz.vmcpackets")
-        {
+        if (name == "neutral-standing-30hz.vmcpackets") {
             // Recorded on the sender's clock at 12.5 s and sampled on a
             // consumer's at zero, which is the whole reason the intake keeps an
             // offset — and the reason this capture was recorded with two
@@ -858,8 +840,7 @@ CheckCorpus(const std::filesystem::path& directory)
             if (head.status != PoseSampleStatus::Sampled ||
                 between.status != PoseSampleStatus::Sampled ||
                 before.status != PoseSampleStatus::Held || !head.IsValid() ||
-                head.pose->validRotations.count() != 22)
-            {
+                head.pose->validRotations.count() != 22) {
                 std::fprintf(stderr,
                              "%s: the recorded session does not sample as a "
                              "22-bone rig on the consumer's clock\n",
@@ -868,27 +849,26 @@ CheckCorpus(const std::filesystem::path& directory)
             }
         }
 
-        if (name == "sender-restart-30hz.vmcpackets")
-        {
+        if (name == "sender-restart-30hz.vmcpackets") {
             failures += CheckTheRestartPolicyIsWhatCostsTheFrames(path);
         }
 
-        std::printf("%s: %llu pose(s) delivered\n", name.c_str(),
+        std::printf("%s: %llu pose(s) delivered\n",
+                    name.c_str(),
                     static_cast<unsigned long long>(stats.framesAdmitted));
     }
 
-    for (const Expected& entry : kExpected)
-    {
-        if (covered.find(entry.file) == covered.end())
-        {
-            std::fprintf(stderr, "%s: expected in this test, absent from %s\n", entry.file,
+    for (const Expected& entry : kExpected) {
+        if (covered.find(entry.file) == covered.end()) {
+            std::fprintf(stderr,
+                         "%s: expected in this test, absent from %s\n",
+                         entry.file,
                          directory.string().c_str());
             ++failures;
         }
     }
 
-    if (failures != 0)
-    {
+    if (failures != 0) {
         std::fprintf(stderr, "%d corpus capture(s) failed\n", failures);
         return 1;
     }
@@ -903,8 +883,7 @@ CheckCorpus(const std::filesystem::path& directory)
 int
 main(int argc, char** argv)
 {
-    if (argc > 1)
-    {
+    if (argc > 1) {
         return CheckCorpus(std::filesystem::path(argv[1]));
     }
 

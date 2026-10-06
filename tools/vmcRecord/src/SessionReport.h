@@ -27,7 +27,7 @@
 
 #include "motionConnectorVmc/Diagnostics.h"
 #include "motionConnectorVmc/FrameAssembler.h"
-#include "motionConnectorVmc/LiveSource.h"
+#include "LiveSource.h"
 #include "motionConnectorVmc/UdpReceiver.h"
 
 #include "motionCore/MotionPose.h"
@@ -43,8 +43,7 @@
 
 namespace vmc = openstrata::connectors::vmc;
 
-namespace vmcRecordTool
-{
+namespace vmcRecordTool {
 
 // Why the session ended. Exactly one of these is true of any run, which is the
 // point: a recording that stopped early because a flag said so and one that
@@ -54,8 +53,7 @@ namespace vmcRecordTool
 // There is no `MaxFrames`. It ended a session on the poses a live export held;
 // a recording now holds datagrams alone, and a reason that could never be
 // reached would be a claim that it could.
-enum class StopReason : std::uint8_t
-{
+enum class StopReason : std::uint8_t {
     Interrupted,
     Duration,
     IdleTimeout,
@@ -66,9 +64,8 @@ enum class StopReason : std::uint8_t
 
 const char* StopReasonText(StopReason reason) noexcept;
 
-class SessionReport
-{
-  public:
+class SessionReport {
+public:
     // One received datagram, before anything has decoded it.
     void ObserveDatagram(const std::string& peer, std::size_t bytes, double receiveTime);
 
@@ -82,41 +79,17 @@ class SessionReport
     // does not re-count it.
     void ObserveDiagnostics(const std::vector<vmc::Diagnostic>& log, std::size_t from);
 
-    void
-    SetStopReason(StopReason reason) noexcept
-    {
-        _stop = reason;
-    }
-    StopReason
-    GetStopReason() const noexcept
-    {
-        return _stop;
-    }
+    void SetStopReason(StopReason reason) noexcept { _stop = reason; }
+    StopReason GetStopReason() const noexcept { return _stop; }
 
-    std::uint64_t
-    GetDatagramCount() const noexcept
-    {
-        return _datagrams;
-    }
-    std::uint64_t
-    GetFrameCount() const noexcept
-    {
-        return _frames;
-    }
+    std::uint64_t GetDatagramCount() const noexcept { return _datagrams; }
+    std::uint64_t GetFrameCount() const noexcept { return _frames; }
 
     // Whether the session heard from more than one sender. The capture format
     // names one peer in its header, so this is the difference between a
     // fixture's provenance being true and being the first of several.
-    bool
-    HasMultiplePeers() const noexcept
-    {
-        return _peers.size() > 1;
-    }
-    const std::vector<std::string>&
-    GetPeers() const noexcept
-    {
-        return _peers;
-    }
+    bool HasMultiplePeers() const noexcept { return _peers.size() > 1; }
+    const std::vector<std::string>& GetPeers() const noexcept { return _peers; }
 
     // Prints the block. `receiver` is null when the session came off a file:
     // the socket lines are then omitted rather than printed as zeroes, because
@@ -124,7 +97,7 @@ class SessionReport
     void Print(std::FILE* out, const vmc::VmcLiveSource& source,
                const vmc::UdpReceiver* receiver) const;
 
-  private:
+private:
     void _PrintEvidence(std::FILE* out) const;
     void _PrintDiagnostics(std::FILE* out) const;
 
