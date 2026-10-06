@@ -10,6 +10,7 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started · ⛔ blocked
 | Document | Contents |
 | --- | --- |
 | [current.md](current.md) | What v0.1.0 carried forward, and the decisions v0.2.0 needs first. |
+| [boundary-implementation.md](boundary-implementation.md) | Boundary Phases A–E: thin VMC/mocopi libraries, recorder integration, CI gates, OpenXR reference, browser sources and tracking review. |
 
 Shipped releases are recorded in [releases/](../releases/README.md). The
 completed import is recorded in the [changelog](../../CHANGELOG.md) and
@@ -23,10 +24,11 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
+| boundary implementation: release assignment pending | Boundary A/B/E: VMC/mocopi dependency removal, recorder separation and CI gates; Boundary C: OpenXR reference; generic tracking review | A/B before E; E before C; C before browser Boundary D | ⬜ |
 | v0.2.0: transport and bindings | capture/bridge commands; Python bindings; record-stream example | CLI-O1 and CC-O7 | 🚧 |
-| v0.3.0: browser tracking | `motionConnectorMediaPipe`; JS/TS package; WASM-friendly data ABI | WS-O4 and CC-O2 | ⬜ |
-| v0.4.0: XR and integration | `motionConnectorWebXR`; integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
-| later | `motionConnectorOpenXR`; generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
+| v0.3.0: browser tracking | `motionConnectorMediaPipe` (Boundary D); JS/TS package; WASM-friendly data ABI | Boundary C reference; WS-O4 and CC-O2 | ⬜ |
+| v0.4.0: XR and integration | `motionConnectorWebXR` (Boundary D); integration examples with `usd-motion-plugins` | Boundary C reference; `usd-motion-plugins` v0.2.0 | ⬜ |
+| later | generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
 
 ## Open decisions
 
@@ -40,7 +42,7 @@ The owning document holds the question; this list only schedules it.
 | WS-O4 | `motionConnectorCore`'s closure and WASM | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | WS-O6 | Web module layout | [WORKSPACE §7](../architecture/WORKSPACE.md#7-open-questions) | v0.3.0 |
 | CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
-| CC-O2 | Landmark sources: observation or solved pose | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
+| CC-O2 | Landmark observation envelope/profile; generic solve stays downstream | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Boundary D, v0.3.0 |
 | SP-O3 | Landmark profiles | [PROFILES §6](../design/SOURCE_PROFILES.md#6-open-questions) | v0.3.0 |
 | CS-O2 | VMC's two translation channels (`usd-motion-plugins` MC-O3) | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | a recorded session from two senders |
 | CC-O5 | `ActorId` type | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | the first multi-actor source |
