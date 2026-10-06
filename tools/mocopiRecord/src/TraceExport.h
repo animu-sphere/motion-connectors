@@ -147,7 +147,7 @@ class TraceCollector
     // `metadata` is passed on every call for symmetry with the sibling and for
     // no other reason: this protocol has no `/VMC/Ext/VRM`-shaped handshake, so
     // a session's metadata is fixed before its first frame and cannot change
-    // under a collector mid-session (LiveSource.h). A caller amending it -- the
+    // under a collector mid-session (FrameSource.h). A caller amending it -- the
     // operator's `--sender` and `--source-id`, which are the capture header's
     // own and are the only provenance this protocol will ever have -- amends it
     // once.

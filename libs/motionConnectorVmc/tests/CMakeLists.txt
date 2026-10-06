@@ -11,7 +11,7 @@ endif()
 if(NOT TARGET motionSampling::motionSampling)
     find_package(motionSampling REQUIRED CONFIG)
 endif()
-set(_vmc_composition "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/vmcRecord/src")
+set(_vmc_composition "${CMAKE_CURRENT_SOURCE_DIR}/consumer")
 
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would
@@ -98,7 +98,7 @@ target_compile_options(motionConnectorVmc_frameAssembler_tests
 add_test(NAME motionConnectorVmc_frameAssembler
          COMMAND motionConnectorVmc_frameAssembler_tests)
 
-# Consumer integration evidence for the recorder's private intake composition.
+# Consumer integration evidence for downstream intake composition.
 add_executable(motionConnectorVmc_liveSource_tests test_live_source.cpp)
 target_link_libraries(motionConnectorVmc_liveSource_tests
     PRIVATE motionConnectorVmc::motionConnectorVmc)

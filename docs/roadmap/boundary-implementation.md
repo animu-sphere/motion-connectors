@@ -12,7 +12,7 @@ Release assignment is maintained only in
 
 Use **Boundary Phase A–E** when referring to this plan, so it cannot be
 confused with the older Connector Phases or a sibling's migration phases.
-Remaining execution order is B, E, C, D, followed by the tracking placement
+Remaining execution order is E, C, D, followed by the tracking placement
 review. Enforce the invariant before expanding the
 source set.
 
@@ -20,29 +20,16 @@ source set.
 
 Implemented acquisition boundaries and replay/installed-consumer evidence are
 recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)
-and [changelog](../../CHANGELOG.md#unreleased). Recorder raw/export separation
-continues in Phase B; workspace-wide enforcement continues in Phase E.
+and [changelog](../../CHANGELOG.md#unreleased). Workspace-wide enforcement
+continues in Phase E.
 
 ## Boundary Phase B — Recorder integration
 
-- ⬜ Separate raw capture/source replay from canonical trace transcription in
-  `vmc_record`, `mocopi_record` and `vrchat_osc_record`.
-- ⬜ Declare tool-level `motionRecording` dependencies for semantic export;
-  use it only on the export path. Keep raw capture as acquisition bytes and
-  source/session provenance.
-- ⬜ Route `--export-trace` through the downstream writer, with no copied
-  `motion-capture-trace` implementation. Preserve source-specific CLI
-  options, session reports and deterministic capture-to-trace evidence.
-- ⬜ Keep `MotionFrame`-to-motion-intake orchestration outside connector
-  libraries. Put the reusable runtime bridge in `usd-avatar-runtime` when
-  that integration is implemented.
-
-Completion: each recorder's composition is `tool → connector`, plus
-`tool → motionRecording` for semantic export; no connector library depends
-on the recorder or its downstream library. Existing inspect/export and raw
-capture tests pass, and export consumes faithfully emitted observations.
-Making export an optional build feature is an integration choice; it must
-not become a required connector dependency.
+Recorder composition and deterministic inspect/export evidence are recorded in
+the [capability matrix](../reference/CAPABILITY_MATRIX.md#3-tools-and-bindings)
+and [workspace contract](../architecture/WORKSPACE.md#21-inside-the-repository).
+Reusable `MotionFrame`-to-motion-intake orchestration remains outside connector
+libraries and belongs in `usd-avatar-runtime` when that integration is built.
 
 ## Boundary Phase C — OpenXR reference implementation
 

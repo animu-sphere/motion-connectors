@@ -1,5 +1,10 @@
 # vrchat_osc_record
 
+Raw capture, envelope reports and address inventory are independent of semantic
+export. Only `--inspect --export-trace` invokes `TraceExport.cpp`, which replays
+tracker observations, applies the operator's assignment and solve, and calls
+`motionRecording`'s trace writer.
+
 Records a live VRChat OSC session to a `vrchat-osc-packet-capture` file, and says
 what arrived. `--inspect` reports on a recorded capture with no socket at all,
 adds the address inventory the recording path deliberately does not, and — with

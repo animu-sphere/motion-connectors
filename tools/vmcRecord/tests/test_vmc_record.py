@@ -92,7 +92,7 @@ TOTAL_FRAMES = 22
 # bytes decoded to. Everything else -- when they arrived, from where, over which
 # socket -- is what the wire is allowed to have changed.
 MOTION_LABELS = ("decoded", "frames", "cadence", "bones", "expressions",
-                 "clock", "intake", "hips offset", "root")
+                 "clock", "hips offset", "root")
 
 
 def fail(message: str) -> None:
@@ -265,6 +265,9 @@ def check_trace_export(tool: pathlib.Path, corpus: pathlib.Path,
         capture = corpus / f"{name}.vmcpackets"
         sessions = expected["sessions"]
         target = workspace / f"{name}.trace"
+        observation_report = run_tool(tool, "--inspect", str(capture))
+        if "intake" in report_lines(observation_report):
+            fail(f"{name}: raw inspection reports downstream intake policy")
 
         if not sessions:
             # Nothing decoded into a frame. The export is refused with exit 1 --
@@ -305,7 +308,13 @@ def check_trace_export(tool: pathlib.Path, corpus: pathlib.Path,
             arguments = ["--inspect", str(capture), "--export-trace", str(path)]
             if len(sessions) > 1:
                 arguments += ["--sender-session", str(index)]
+            exported_report = run_tool(tool, *arguments)
+            if exported_report != observation_report:
+                fail(f"{name}: export changed the acquisition report")
+            first_bytes = path.read_bytes()
             run_tool(tool, *arguments)
+            if path.read_bytes() != first_bytes:
+                fail(f"{name}: the same capture produced different trace bytes")
 
             header, written = read_trace(path)
             if written != frames:

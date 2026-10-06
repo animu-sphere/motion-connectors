@@ -26,16 +26,13 @@ if(NOT TARGET motionConnectorMocopi::motionConnectorMocopi)
     find_package(motionConnectorMocopi REQUIRED CONFIG)
 endif()
 
-foreach(_mocopi_dependency IN ITEMS motionRecording motionSampling)
-    if(NOT TARGET ${_mocopi_dependency}::${_mocopi_dependency})
-        find_package(${_mocopi_dependency} REQUIRED CONFIG)
-    endif()
-endforeach()
+if(NOT TARGET motionRecording::motionRecording)
+    find_package(motionRecording REQUIRED CONFIG)
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
 add_executable(mocopi_record
-    src/LiveSource.cpp
     src/Options.cpp
     src/SessionReport.cpp
     src/TraceExport.cpp
@@ -43,9 +40,9 @@ add_executable(mocopi_record
 motionconnectors_use_utf8_code_page(mocopi_record)
 
 target_compile_features(mocopi_record PRIVATE cxx_std_20)
-# Downstream intake and semantic export belong to the recorder composition.
+# Only semantic export consumes the downstream writer.
 target_link_libraries(mocopi_record PRIVATE motionConnectorMocopi::motionConnectorMocopi
-    motionRecording::motionRecording motionSampling::motionSampling)
+    motionRecording::motionRecording)
 
 if(MSVC)
     target_compile_options(mocopi_record PRIVATE /utf-8)

@@ -11,7 +11,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **mocopi acquisition boundary.** `MocopiFrameSource` retains native decode,
   source assembly, restart/rig facts, timestamps and diagnostic datagram identity.
   `MocopiConnector` consumes it without downstream motion intake. The former
-  `MocopiLiveSource` public API moves to recorder-private composition; sampling
+  `MocopiLiveSource` public API moves to consumer integration composition; sampling
   and recording dependencies leave the library CMake links, package config,
   public headers and manifest. Recorder and consumer tests declare them directly.
   Acquisition tests compare every capture through the shared connector; installed
@@ -56,19 +56,29 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Recorder acquisition/export separation (Boundary Phase B).** All three
+  recorders isolate canonical transcription and the downstream trace writer in
+  `TraceExport.cpp`, invoked only by `--inspect --export-trace`. VMC raw reports
+  use `VmcFrameSource` and omit downstream `intake:` admission statistics;
+  mocopi export uses `MocopiFrameSource`. Both recorders drop direct sampling
+  links and retain artifact closure pins required by `motionRecording` 0.5.2.
+  Former intake compositions move to `tests/consumer/`, retaining their sampling
+  and restart-policy tests. Export preserves acquisition reports and deterministic
+  trace bytes, along with source-specific session/provenance behavior.
+
 - **VMC acquisition ends at `MotionFrame`.** `VmcConnector` now uses
   `VmcFrameSource` for decode, normalization, assembly and source diagnostics.
   The library, its installed package config and its manifest no longer depend
   on `motionSampling` or `motionRecording`. The former public
   `motionConnectorVmc/LiveSource.h` is removed; `VmcLiveSource` is now private
-  to `vmc_record`, whose downstream dependencies are explicit. Existing
-  sampling and restart-policy evidence remains as consumer integration tests.
+  to consumer integration tests, whose downstream dependencies are explicit.
+  Existing sampling and restart-policy evidence remains as consumer integration tests.
   A hardware-independent acquisition test covers missing/stale/duplicate
   observations, unchanged restart timestamps, receive-clock fallback and
   diagnostic identity. The installed-consumer lane also builds and runs VMC
-  with all four downstream motion packages disabled. Recorder reports and
-  trace exports keep their existing behavior; raw/export separation remains
-  Boundary Phase B work.
+  with all four downstream motion packages disabled. Recorder trace exports
+  retain their source observations; raw/export separation is recorded in the
+  Boundary Phase B entry above.
 - **`motion_connect bridge` is designed, and `FW-O2` is decided.** The new
   `docs/design/MOTION_CONNECT.md` owns what the shared-contract CLI does
   beyond reading one connector. `websocket` becomes a source of `list`,

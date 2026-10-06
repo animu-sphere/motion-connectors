@@ -20,14 +20,14 @@
 // are answered by evidence from a real sender or not at all, so the tool that
 // meets the first real sender is the one that has to collect it.
 //
-// Everything here is accumulated from `VmcLiveSource::GetFramesFromLastPush()`,
+// Everything here is accumulated from `VmcFrameSource::GetFramesFromLastPush()`,
 // which is valid only until the next push — so this class copies what it needs
 // per frame and holds no reference into the source.
 #pragma once
 
 #include "motionConnectorVmc/Diagnostics.h"
 #include "motionConnectorVmc/FrameAssembler.h"
-#include "LiveSource.h"
+#include "motionConnectorVmc/FrameSource.h"
 #include "motionConnectorVmc/UdpReceiver.h"
 
 #include "motionCore/MotionPose.h"
@@ -94,7 +94,7 @@ public:
     // Prints the block. `receiver` is null when the session came off a file:
     // the socket lines are then omitted rather than printed as zeroes, because
     // a bound endpoint a replay never had is not a fact about the replay.
-    void Print(std::FILE* out, const vmc::VmcLiveSource& source,
+    void Print(std::FILE* out, const vmc::VmcFrameSource& source,
                const vmc::UdpReceiver* receiver) const;
 
 private:

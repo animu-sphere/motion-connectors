@@ -1,10 +1,9 @@
 # mocopi_record
 
-The recorder owns its private `MocopiLiveSource` intake/restart composition,
-using the connector library's `MocopiFrameSource`. It declares `motionSampling`
-and `motionRecording` directly; those dependencies are absent from the installed
-connector library. Raw capture and trace export separation is tracked in
-[Boundary Phase B](../../docs/roadmap/boundary-implementation.md#boundary-phase-b--recorder-integration).
+Raw capture and inspection retain acquisition bytes and provenance. Only
+`--inspect --export-trace` replays through `MocopiFrameSource` and invokes
+`motionRecording`'s trace writer in `TraceExport.cpp`; no downstream intake
+is constructed. Existing intake/sampling evidence remains in consumer tests.
 
 The mocopi adapter's CLI, and the tool that obtains the bytes every layer above
 the transport will be built from.

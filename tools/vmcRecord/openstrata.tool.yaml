@@ -3,8 +3,7 @@
 # sender (WORKSPACE.md §1 — "each adapter may also carry one CLI, declared
 # beside it as an openstrata.tool.yaml").
 #
-# The connector owns acquisition. The recorder declares motionSampling and
-# motionRecording for its private intake composition and downstream trace writer.
+# The connector owns acquisition. Only semantic export uses motionRecording.
 #
 # `ost` 0.21.0 does not discover this file: workspace members are the project
 # root's immediate subdirectories and `libs/`, so nothing under
@@ -24,6 +23,7 @@ requires:
   libraries:
     - id: motionConnectorVmc
       version: ">=0.1,<0.2"
+    # Artifact closure pin: motionRecording 0.5.2 requires motionSampling.
     - id: motionSampling
       version: ">=0.5,<0.6"
       artifact:

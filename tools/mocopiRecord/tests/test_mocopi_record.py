@@ -1116,8 +1116,16 @@ def check_export(tool: pathlib.Path, workspace: pathlib.Path,
     # A capture of one session exports without being asked which, which is every
     # capture the source did not restart during.
     neutral = workspace / "neutral.trace"
+    observation_report = run_tool(tool, "--inspect", capture("neutral-standing-60hz"))
+    exported_report = run_tool(tool, "--inspect", capture("neutral-standing-60hz"),
+                               "--export-trace", str(neutral))
+    if exported_report != observation_report:
+        fail("trace export changed the raw acquisition report")
+    first_bytes = neutral.read_bytes()
     run_tool(tool, "--inspect", capture("neutral-standing-60hz"),
              "--export-trace", str(neutral))
+    if neutral.read_bytes() != first_bytes:
+        fail("the same mocopi capture produced different trace bytes")
     header, frames = read_trace(neutral)
     if len(frames) != 5:
         fail(f"neutral-standing-60hz exported {len(frames)} frame(s) of 5")

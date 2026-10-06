@@ -53,22 +53,18 @@
 // Interruption is a flag the loop checks, which is the shape `UdpReceiver`'s
 // bounded wait was built for: a thread parked in `recvfrom` can only be woken by
 // closing the socket underneath it, and that races the descriptor's reuse.
+#include "Export.h"
 #include "Options.h"
 #include "SessionReport.h"
-#include "TraceExport.h"
 
 #include "motionConnectorVmc/Diagnostics.h"
-#include "LiveSource.h"
+#include "motionConnectorVmc/FrameSource.h"
 #include "motionConnectorVmc/PacketCapture.h"
 #include "motionConnectorVmc/UdpReceiver.h"
 
-#include "motionRecording/CaptureTrace.h"
-
 #include <csignal>
 #include <cstdio>
-#include <filesystem>
 #include <iostream>
-#include <system_error>
 #include <string>
 #include <vector>
 
@@ -112,74 +108,6 @@ ReportDiagnostics(const std::vector<vmc::Diagnostic>& log, std::size_t from, boo
     }
 }
 
-// Writes the canonical trace the export flag asked for. Returns false when
-// nothing could be written, having said why -- the caller prints its report
-// either way, for the reason `RunRecord` gives about the capture file.
-//
-// A capture holding two sessions is refused rather than resolved. Picking the
-// first would silently discard a recording, and concatenating them would
-// manufacture a continuity the sender's clock denies (TraceExport.h).
-bool
-WriteTrace(const vmcRecordTool::Options& options, vmcRecordTool::TraceCollector& collector,
-           bool quiet)
-{
-    // The second half of the refusal `ParseOptions` makes on the spelling. That
-    // one catches `--inspect x --export-trace x`; this catches the same file
-    // named two ways, which no comparison of strings can see. `equivalent`
-    // answers only when both paths exist, and a trace path that does not exist
-    // yet cannot be the capture, so the error code is discarded: "not the same
-    // file" and "one of them is not there" are the same answer here.
-    std::error_code aliased;
-    if (std::filesystem::equivalent(options.inspectPath, options.traceExportPath, aliased)) {
-        std::cerr << "vmc_record: " << options.traceExportPath
-                  << " is the capture being read, named differently; writing "
-                     "the trace there would destroy it\n";
-        return false;
-    }
-
-    collector.Close();
-    const std::vector<openstrata::motion::MotionClip>& sessions = collector.GetSessions();
-
-    if (sessions.empty()) {
-        std::cerr << "vmc_record: nothing decoded into a frame, so there is no "
-                     "trace to write\n";
-        return false;
-    }
-
-    std::size_t index = 0;
-    if (options.senderSession != 0) {
-        if (options.senderSession > sessions.size()) {
-            std::cerr << "vmc_record: --sender-session " << options.senderSession
-                      << ": this recording holds " << sessions.size() << " session(s)\n";
-            return false;
-        }
-        index = options.senderSession - 1;
-    } else if (sessions.size() > 1) {
-        std::cerr << "vmc_record: the sender restarted, so this recording holds " << sessions.size()
-                  << " sessions whose clocks overlap; one trace is one session, "
-                     "so name the one to export with --sender-session 1.."
-                  << sessions.size() << "\n";
-        return false;
-    }
-
-    const openstrata::motion::MotionClip& session = sessions[index];
-    if (!openstrata::motion::WriteCaptureTraceFile(options.traceExportPath, session)) {
-        // The writer refuses before its first byte when a frame carries an
-        // expression name the format cannot spell, so a refusal here leaves the
-        // path untouched rather than half-written.
-        std::cerr << "vmc_record: could not write " << options.traceExportPath << "\n";
-        return false;
-    }
-    if (!quiet) {
-        std::cerr << "vmc_record: wrote " << session.samples.size() << " delivered frame(s)";
-        if (sessions.size() > 1) {
-            std::cerr << " of session " << (index + 1) << " of " << sessions.size();
-        }
-        std::cerr << " to " << options.traceExportPath << "\n";
-    }
-    return true;
-}
-
 int
 RunInspect(const vmcRecordTool::Options& options)
 {
@@ -194,16 +122,13 @@ RunInspect(const vmcRecordTool::Options& options)
         return 1;
     }
 
-    vmc::VmcLiveSourceConfig config;
-    config.frame = options.frame;
-    vmc::VmcLiveSource source(config);
+    vmc::VmcFrameSource source(options.frame);
     // The capture's own peer, so a replayed session's diagnostics name what the
     // live one's would have named. A capture that recorded none falls back to
     // its path, which is what the corpus tests use.
     source.SetSource(capture.peerEndpoint.empty() ? options.inspectPath : capture.peerEndpoint);
 
     vmcRecordTool::SessionReport report;
-    vmcRecordTool::TraceCollector trace;
     std::vector<vmc::Diagnostic> log;
     for (const vmc::RecordedDatagram& datagram : capture.datagrams) {
         // The record's own peer where the capture carries one, and the
@@ -213,9 +138,6 @@ RunInspect(const vmcRecordTool::Options& options)
                                datagram.receiveTime);
         source.PushDatagram(datagram.bytes, datagram.receiveTime, &log);
         report.ObserveFrames(source.GetFramesFromLastPush());
-        if (!options.traceExportPath.empty()) {
-            trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
-        }
         report.ObserveDiagnostics(log, 0);
         ReportDiagnostics(log, 0, options.quiet);
         // Cleared per datagram, exactly as the record loop does it: the report
@@ -229,14 +151,11 @@ RunInspect(const vmcRecordTool::Options& options)
     // this, and a replay that forgets it loses its last frame.
     source.Flush(&log);
     report.ObserveFrames(source.GetFramesFromLastPush());
-    if (!options.traceExportPath.empty()) {
-        trace.Observe(source.GetFramesFromLastPush(), source.GetSourceMetadata());
-    }
     report.ObserveDiagnostics(log, 0);
 
     bool exported = true;
     if (!options.traceExportPath.empty()) {
-        exported = WriteTrace(options, trace, options.quiet);
+        exported = vmcRecordTool::ExportTrace(options, capture);
     }
 
     report.SetStopReason(vmcRecordTool::StopReason::EndOfCapture);
@@ -265,9 +184,7 @@ RunRecord(const vmcRecordTool::Options& options)
                   << (receiver.IsLoopbackOnly() ? " (loopback only)" : "") << "\n";
     }
 
-    vmc::VmcLiveSourceConfig config;
-    config.frame = options.frame;
-    vmc::VmcLiveSource source(config);
+    vmc::VmcFrameSource source(options.frame);
     source.SetSource(receiver.GetBoundEndpoint());
 
     vmc::PacketCapture capture;

@@ -317,9 +317,10 @@ sampling poses or choosing how a downstream intake handles a restart.
 `VmcConnector` wraps it with the shared bounded `MotionFrame` queue.
 
 The former public `motionConnectorVmc/LiveSource.h` is no longer installed.
-Its intake composition is private to [`vmc_record`](../../tools/vmcRecord/src/LiveSource.h),
-which declares its sampling/recording dependencies directly and consumes the
-same `VmcFrameSource`. Existing live-source and loopback corpus tests exercise
+Its intake composition is private to [consumer integration tests](tests/consumer/LiveSource.h),
+which declare sampling/recording dependencies directly and consume the
+same `VmcFrameSource`. The recorder uses acquisition alone, adding
+`motionRecording` only for trace export. Existing live-source and loopback corpus tests exercise
 that consumer composition with separately declared dependencies. The installed
 consumer additionally builds all public VMC headers and runs the acquisition
 classes with downstream motion package discovery disabled.
