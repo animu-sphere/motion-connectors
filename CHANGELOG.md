@@ -46,6 +46,19 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **VMC acquisition ends at `MotionFrame`.** `VmcConnector` now uses
+  `VmcFrameSource` for decode, normalization, assembly and source diagnostics.
+  The library, its installed package config and its manifest no longer depend
+  on `motionSampling` or `motionRecording`. The former public
+  `motionConnectorVmc/LiveSource.h` is removed; `VmcLiveSource` is now private
+  to `vmc_record`, whose downstream dependencies are explicit. Existing
+  sampling and restart-policy evidence remains as consumer integration tests.
+  A hardware-independent acquisition test covers missing/stale/duplicate
+  observations, unchanged restart timestamps, receive-clock fallback and
+  diagnostic identity. The installed-consumer lane also builds and runs VMC
+  with all four downstream motion packages disabled. Recorder reports and
+  trace exports keep their existing behavior; raw/export separation remains
+  Boundary Phase B work.
 - **`motion_connect bridge` is designed, and `FW-O2` is decided.** The new
   `docs/design/MOTION_CONNECT.md` owns what the shared-contract CLI does
   beyond reading one connector. `websocket` becomes a source of `list`,

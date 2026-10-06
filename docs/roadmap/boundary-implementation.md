@@ -1,6 +1,6 @@
 # Connector boundary implementation
 
-Status: ⬜ **accepted plan, implementation pending**, 2026-10-06.
+Status: 🚧 **implementation in progress**, 2026-10-06.
 This page holds incomplete work for
 [DESIGN_POLICY §47](../design/DESIGN_POLICY.md#47-external-acquisition-boundary).
 The target dependency graph is
@@ -18,21 +18,23 @@ source set.
 
 ## Boundary Phase A — Thin VMC and mocopi libraries
 
-Targets: `motionConnectorVmc`, `motionConnectorMocopi`.
+Remaining target: `motionConnectorMocopi`. VMC's implemented boundary is
+recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)
+and [changelog](../../CHANGELOG.md#unreleased).
 
-- ⬜ Separate the imported `VmcLiveSource` composition, then
-  `MocopiLiveSource`: retain protocol decode, source frame assembly,
+- ⬜ Separate the imported `MocopiLiveSource` composition: retain protocol
+  decode, source frame assembly,
   source restart/session detection and source diagnostics.
 - ⬜ Remove `IMotionSource` inheritance, `LiveCaptureSource` ownership,
   `PoseBuffer` / sampling policy and semantic-recording responsibility from
-  connector libraries. Emit `MotionFrame` through `VmcConnector` /
-  `MocopiConnector` and stop there.
+  the mocopi connector library. Emit `MotionFrame` through `MocopiConnector`
+  and stop there.
 - ⬜ Remove `motionSampling` and `motionRecording` from library link lines,
   public headers, installed package configs and `openstrata.library.yaml`
-  manifests. Update architecture documentation with the actual graph.
+  manifests for mocopi. Update architecture documentation with the actual graph.
 - ⬜ Keep replay parity through the shared connector path, including source
   timestamps, sequences, missing/stale/duplicate observations, restart facts
-  and diagnostics. Keep downstream intake/handoff tests as consumer
+  and diagnostics for mocopi. Keep downstream intake/handoff tests as consumer
   integration tests with their dependencies declared separately.
 
 Completion: neither library's direct or transitive dependency graph contains

@@ -8,13 +8,13 @@ this page holds what it carried forward and what v0.2.0 needs decided first.
 The accepted 2026-10-06 acquisition boundary is
 [DESIGN_POLICY §47](../design/DESIGN_POLICY.md#47-external-acquisition-boundary).
 Its incomplete work and completion criteria are in
-[boundary-implementation.md](boundary-implementation.md): remove VMC/mocopi
+[boundary-implementation.md](boundary-implementation.md): finish removing mocopi
 live-source composition and downstream library edges (Boundary A), isolate
 recorder export (B), enforce the dependency invariant (E), then implement
 OpenXR as the reference source (C) before WebXR/MediaPipe (D). Generic tracking
 solve placement is reviewed afterwards. Release assignment is in the
-[status table](README.md#status-at-a-glance); none of this is marked complete
-by the documentation update.
+[status table](README.md#status-at-a-glance). Current implementation evidence
+lives in the [capability matrix](../reference/CAPABILITY_MATRIX.md).
 
 ## Carried from v0.1.0
 

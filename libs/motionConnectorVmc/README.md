@@ -1,8 +1,8 @@
 # motionConnectorVmc
 
 The VMC Protocol source adapter: OSC-over-UDP datagrams from any sender
-application in, source-normalized motion observations out. Its current API is
-source-specific; the v0.1.0 work adapts it to the shared `MotionFrame` contract.
+application in, source-normalized motion observations out through `VmcConnector`
+and the shared `MotionFrame` contract.
 
 ```text
 UDP datagram → OSC decode → VMC message decode → frame assembly
@@ -13,9 +13,9 @@ UDP datagram → OSC decode → VMC message decode → frame assembly
 The packet-capture format, OSC and VMC decoding, source joint map, frame
 assembler, live receiver, [`vmc_record`](../../tools/vmcRecord) and
 `VmcConnector` are tested in this repository. Replay and loopback evidence are
-hardware-free. The source-specific path remains intact beneath the shared
-adapter; mocopi and VRChat OSC adaptation are tracked in the [current
-roadmap](../../docs/roadmap/current.md).
+hardware-free. The source-specific acquisition path remains intact beneath the
+shared adapter. Implementation status is recorded in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
 
 ## What this is, structurally
 
@@ -27,15 +27,16 @@ nothing with OpenUSD and ships no `plugInfo.json`, because
 declares the installed motion packages and the shared transport/wire leaves:
 
 ```text
-motionConnectorVmc -> motionCore, motionSampling, motionRecording,
+motionConnectorVmc -> motionConnectorCore, motionCore,
                       motionConnectorTransport, motionConnectorOsc
 ```
 
 `tests/check_boundaries.py` is what makes that a fact rather than an intention.
 It fails on a plugin manifest anywhere in the tree, on a stage/registration/exec
 API in `include/` or `src/`, on a mention of a sibling adapter or a plugin
-bundle, on a `target_link_libraries` naming anything but the two permitted
-libraries, and on a binary whose imports leave the OpenUSD value-type layer.
+bundle, on a CMake link outside the declared acquisition dependencies, on a
+downstream sampling/recording/retarget/USD package dependency, and on a binary
+whose imports leave the OpenUSD value-type layer.
 
 That last one inspects the **test executable**, not the adapter's own archive.
 A static `.lib`/`.a` records no imports at all — `dumpbin /dependents` on one
@@ -309,16 +310,19 @@ was never sent.
 
 ## Source-specific live path
 
-[`LiveSource.h`](include/motionConnectorVmc/LiveSource.h) is the source-specific
-bridge at the end of this adapter. It forwards assembled source observations to
-the installed motion packages; it does not own retargeting, filtering,
-resampling, avatar binding or stage authoring. Those responsibilities remain
-downstream, and the shared `motionConnectorCore` adapter is still pending.
+[`FrameSource.h`](include/motionConnectorVmc/FrameSource.h) owns the source-specific
+acquisition path: decode, source-normalized frame assembly, restart detection
+and diagnostics. It emits observations without holding missing joints,
+sampling poses or choosing how a downstream intake handles a restart.
+`VmcConnector` wraps it with the shared bounded `MotionFrame` queue.
 
-The live-source corpus replays all committed captures without hardware and
-checks the source-specific ordering, restart behavior and provenance. The
-future `MotionFrame` adapter must preserve that evidence rather than introduce
-a second VMC frame-assembly path.
+The former public `motionConnectorVmc/LiveSource.h` is no longer installed.
+Its intake composition is private to [`vmc_record`](../../tools/vmcRecord/src/LiveSource.h),
+which declares its sampling/recording dependencies directly and consumes the
+same `VmcFrameSource`. Existing live-source and loopback corpus tests exercise
+that consumer composition with separately declared dependencies. The installed
+consumer additionally builds all public VMC headers and runs the acquisition
+classes with downstream motion package discovery disabled.
 
 ## The socket, and the thread it does not create
 

@@ -24,7 +24,7 @@ roadmap sequence.
 
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
-| boundary implementation: release assignment pending | Boundary A/B/E: VMC/mocopi dependency removal, recorder separation and CI gates; Boundary C: OpenXR reference; generic tracking review | A/B before E; E before C; C before browser Boundary D | ⬜ |
+| boundary implementation: release assignment pending | Boundary A/B/E: mocopi dependency removal, recorder separation and workspace CI gates; Boundary C: OpenXR reference; generic tracking review | A/B before E; E before C; C before browser Boundary D | 🚧 |
 | v0.2.0: transport and bindings | capture/bridge commands; Python bindings; record-stream example | CLI-O1 and CC-O7 | 🚧 |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe` (Boundary D); JS/TS package; WASM-friendly data ABI | Boundary C reference; WS-O4 and CC-O2 | ⬜ |
 | v0.4.0: XR and integration | `motionConnectorWebXR` (Boundary D); integration examples with `usd-motion-plugins` | Boundary C reference; `usd-motion-plugins` v0.2.0 | ⬜ |

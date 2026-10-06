@@ -13,7 +13,7 @@
 //
 // `OscPacket`, `OscMessage`, `OscArgument`, `OscBlob` and the two constants are
 // the same types they always were, reached through a `using` rather than
-// redeclared — so `VmcMessage.cpp`, `LiveSource.cpp` and every test that
+// redeclared — so `VmcMessage.cpp`, `FrameSource.cpp` and every test that
 // spelled `vmc::OscPacket` did not have to learn a second spelling.
 // `Diagnostics.h` did exactly this for `motionConnectorTransport`'s vehicle on 2026-08-24
 // and this follows it.
@@ -42,8 +42,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace openstrata::connectors::vmc
-{
+namespace openstrata::connectors::vmc {
 
 using osc::MaxOscBundleDepth;
 using osc::OscArgument;
@@ -59,7 +58,7 @@ using osc::OscTimeTagImmediate;
 // The refusal's text is the shared decoder's verbatim; the code, the severity
 // and the recoverability are this adapter's, from its own table.
 MOTIONCONNECTORVMC_API bool DecodeOscPacket(const std::uint8_t* bytes, std::size_t size,
-                                       OscPacket* packet, Diagnostic* diagnostic = nullptr);
+                                            OscPacket* packet, Diagnostic* diagnostic = nullptr);
 
 inline bool
 DecodeOscPacket(const std::vector<std::uint8_t>& datagram, OscPacket* packet,

@@ -4,6 +4,15 @@
 # (cmake/MotionConnectorsProject.cmake says why).
 motionconnectors_find_test_python()
 
+# Consumer integration dependencies do not enter the connector library closure.
+if(NOT TARGET motionRecording::motionRecording)
+    find_package(motionRecording REQUIRED CONFIG)
+endif()
+if(NOT TARGET motionSampling::motionSampling)
+    find_package(motionSampling REQUIRED CONFIG)
+endif()
+set(_vmc_composition "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/vmcRecord/src")
+
 # NDEBUG compiles `assert()` away, and the root CMakeLists defaults
 # single-config builds to Release -- so a suite built the normal way would
 # print "passed" and return 0 without having checked anything. Undefine it for
@@ -21,6 +30,12 @@ if(MSVC)
     target_compile_options(motionConnectorVmc_connector_tests PRIVATE /utf-8)
 endif()
 add_test(NAME motionConnectorVmc_connector COMMAND motionConnectorVmc_connector_tests)
+
+add_executable(motionConnectorVmc_frameSource_tests test_frame_source.cpp)
+target_link_libraries(motionConnectorVmc_frameSource_tests
+    PRIVATE motionConnectorVmc::motionConnectorVmc)
+target_compile_options(motionConnectorVmc_frameSource_tests PRIVATE ${_vmc_assertions})
+add_test(NAME motionConnectorVmc_frameSource COMMAND motionConnectorVmc_frameSource_tests)
 
 add_executable(motionConnectorVmc_connector_corpus_tests test_connector_corpus.cpp)
 target_link_libraries(motionConnectorVmc_connector_corpus_tests
@@ -83,8 +98,7 @@ target_compile_options(motionConnectorVmc_frameAssembler_tests
 add_test(NAME motionConnectorVmc_frameAssembler
          COMMAND motionConnectorVmc_frameAssembler_tests)
 
-# The bridge into the runtime, which is the last layer that is still this
-# adapter's: what it hands over is `motionRuntime`'s from there on.
+# Consumer integration evidence for the recorder's private intake composition.
 add_executable(motionConnectorVmc_liveSource_tests test_live_source.cpp)
 target_link_libraries(motionConnectorVmc_liveSource_tests
     PRIVATE motionConnectorVmc::motionConnectorVmc)
@@ -199,7 +213,7 @@ if(WIN32)
         list(APPEND _vmc_test_path
              "PATH=path_list_prepend:${_vmc_python_dir}")
     endif()
-    set_tests_properties(${_vmc_tests} PROPERTIES
+    set_tests_properties(${_vmc_tests} motionConnectorVmc_frameSource PROPERTIES
         ENVIRONMENT_MODIFICATION "${_vmc_test_path}")
 endif()
 
@@ -214,7 +228,7 @@ if(Python3_Interpreter_FOUND)
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/check_boundaries.py"
             "${CMAKE_CURRENT_SOURCE_DIR}/.."
-            "$<TARGET_FILE:motionConnectorVmc_tests>")
+            "$<TARGET_FILE:motionConnectorVmc_connector_corpus_tests>")
 
     # motionConnectorVmc_corpus proves the committed captures are canonical for the
     # C++ writer; this proves they still match the generator that authored
@@ -227,4 +241,24 @@ if(Python3_Interpreter_FOUND)
                 "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_packets.py"
                 --check --output "${_vmc_corpus}")
     endif()
+endif()
+
+# Preserve intake, sampling and restart-policy tests at the consumer boundary.
+foreach(_vmc_consumer_target IN ITEMS
+        motionConnectorVmc_tests motionConnectorVmc_connector_tests
+        motionConnectorVmc_liveSource_tests motionConnectorVmc_udpReceiver_tests)
+    target_link_libraries(${_vmc_consumer_target} PRIVATE
+        motionRecording::motionRecording motionSampling::motionSampling)
+endforeach()
+foreach(_vmc_composition_target IN ITEMS
+        motionConnectorVmc_liveSource_tests motionConnectorVmc_udpReceiver_tests)
+    target_include_directories(${_vmc_composition_target} PRIVATE "${_vmc_composition}")
+    target_sources(${_vmc_composition_target} PRIVATE "${_vmc_composition}/LiveSource.cpp")
+endforeach()
+set_tests_properties(motionConnectorVmc_unit motionConnectorVmc_connector
+    motionConnectorVmc_liveSource motionConnectorVmc_udpReceiver
+    PROPERTIES LABELS "consumer-integration")
+if(EXISTS "${_vmc_corpus}")
+    set_tests_properties(motionConnectorVmc_liveSourceCorpus motionConnectorVmc_loopbackCorpus
+        PROPERTIES LABELS "consumer-integration")
 endif()

@@ -3,9 +3,8 @@
 # motionConnectorVmc — the generic real-time input leaf.
 #
 # A plain static library, not a plugin bundle: it registers nothing with
-# OpenUSD and ships no plugInfo.json (WORKSPACE.md §1). It links motionCore,
-# motionSampling, motionRecording and motionConnectorTransport and nothing else; the CLI that may retarget
-# and author a stage is a separate tool under tools/.
+# OpenUSD and ships no plugInfo.json (WORKSPACE.md §1). Acquisition ends at
+# MotionFrame; the recorder owns downstream intake and semantic export.
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -34,16 +33,6 @@ endif()
 if(NOT TARGET motionConnectorCore::motionConnectorCore)
     find_package(motionConnectorCore REQUIRED CONFIG)
 endif()
-# What was one `motionRuntime` in usd-vrm-plugins is two packages here: the
-# frame assembler reads `motionSampling`'s source interface and the live source
-# writes `motionRecording`'s capture trace, so both are named rather than one
-# standing in for the other (usd-motion-plugins WORKSPACE.md §1.1).
-if(NOT TARGET motionSampling::motionSampling)
-    find_package(motionSampling REQUIRED CONFIG)
-endif()
-if(NOT TARGET motionRecording::motionRecording)
-    find_package(motionRecording REQUIRED CONFIG)
-endif()
 # The live half's shared leaf: the socket, the packet-capture format and the
 # diagnostic vehicle, which this adapter and its sibling had written twice
 # (WORKSPACE.md §2, osc-and-vrchat-trackers.md §3.2). Not a sibling edge and not
@@ -70,7 +59,7 @@ add_library(motionConnectorVmc STATIC
     src/Connector.cpp
     src/Diagnostics.cpp
     src/FrameAssembler.cpp
-    src/LiveSource.cpp
+    src/FrameSource.cpp
     src/OscPacket.cpp
     src/SkeletonMap.cpp
     src/UdpReceiver.cpp
@@ -89,8 +78,6 @@ target_link_libraries(motionConnectorVmc
     PUBLIC
         motionConnectorCore::motionConnectorCore
         motionCore::motionCore
-        motionSampling::motionSampling
-        motionRecording::motionRecording
         motionConnectorTransport::motionConnectorTransport
         motionConnectorOsc::motionConnectorOsc)
 

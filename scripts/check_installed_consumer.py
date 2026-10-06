@@ -272,6 +272,39 @@ def main() -> int:
                   file=sys.stderr)
             return 1
         print(f"ok  {want} from outside the repository")
+        if any(p["name"] == "motionConnectorVmc" for p in packages):
+            # A VMC-only consumer must resolve and link with downstream package
+            # discovery disabled, even if those packages exist in other prefixes.
+            isolated_source = work / "vmc-consumer-src"
+            isolated_build = work / "vmc-consumer-build"
+            shutil.copytree(CONSUMER, isolated_source)
+            (isolated_source / "packages.json").write_text(json.dumps({
+                "packages": [{"name": "motionConnectorVmc",
+                              "header": "motionConnectorVmc/FrameSource.h"}]
+            }) + "\n", encoding="utf-8")
+            headers = sorted((prefix / "include" / "motionConnectorVmc").glob("*.h"))
+            (isolated_source / "main.cpp").write_text(
+                "\n".join(f'#include "motionConnectorVmc/{p.name}"' for p in headers)
+                + '\n#include <cstdio>\nint main() {\n'
+                  '  openstrata::connectors::vmc::VmcFrameSource source;\n'
+                  '  openstrata::connectors::vmc::VmcConnector connector;\n'
+                  '  if (source.Flush() != 0 || connector.Flush(0.0) != 0) return 1;\n'
+                  '  std::puts("consumed VMC acquisition only");\n}\n',
+                encoding="utf-8")
+            isolated_configure = list(configure)
+            isolated_configure[isolated_configure.index("-S") + 1] = isolated_source
+            isolated_configure[isolated_configure.index("-B") + 1] = isolated_build
+            isolated_configure += [f"-DCMAKE_DISABLE_FIND_PACKAGE_{p}=TRUE" for p in
+                                   ("motionSampling", "motionRecording",
+                                    "motionRetarget", "motionUsd")]
+            run(isolated_configure)
+            run(["cmake", "--build", isolated_build, "--config", args.config])
+            probe = next(isolated_build.rglob(executable("installed_consumer")))
+            isolated_result = run([probe], env=env, stdout=subprocess.PIPE)
+            if "consumed VMC acquisition only" not in isolated_result.stdout.splitlines():
+                print("the isolated VMC consumer did not exercise acquisition", file=sys.stderr)
+                return 1
+            print("ok  installed VMC resolves without downstream motion packages")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
         print("installed-consumer lane passed")

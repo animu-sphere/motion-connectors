@@ -101,7 +101,7 @@ endif()
 # its own under tools/ (WORKSPACE.md §2.1) and is built with its connector
 # when the tools are.
 #
-# VMC links three usd-motion-plugins packages and both leaves.
+# VMC acquisition links motionCore and both leaves; its recorder owns intake/export.
 if(MOTIONCONNECTORS_BUILD_VMC)
     add_subdirectory("libs/motionConnectorVmc")
     if(MOTIONCONNECTORS_BUILD_TOOLS)

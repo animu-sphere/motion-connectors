@@ -27,7 +27,7 @@ Whether the web path can avoid this closure is
 | | |
 | --- | --- |
 | Target library links | `motionCore` (the canonical pose values); no `motionSampling`, `motionRecording`, `motionRetarget` or `motionUsd` in connector libraries |
-| Current transitional links | VMC/mocopi still link `motionSampling` and `motionRecording` for their imported live-source composition; these edges must be removed ([WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository)) |
+| Current transitional links | mocopi still links `motionSampling` and `motionRecording` for its imported live-source composition; these edges must be removed ([WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository)) |
 | Tools / examples / runtime integration | downstream sampling and semantic recording dependencies may be composed here; a recorder uses `motionRecording` directly for semantic export, not through its connector library |
 | Version | during 0.x, one exact `usd-motion-plugins` release per release here, until both sides agree a range. The same question is open in `usd-vrm-plugins`' migration track |
 | Consumed as | an installed package, never a source tree |
@@ -52,14 +52,14 @@ Each is isolated to its connector and is off unless that connector is built
 The table records **current dependencies** for existing components and
 intended SDK dependencies for reserved components. The accepted target in
 [WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository) removes
-`motionSampling` / `motionRecording` from VMC and mocopi; their current rows
-below remain factual until Boundary Phase A lands.
+`motionSampling` / `motionRecording` from mocopi. VMC now follows the target;
+its recorder and consumer integration tests own their downstream dependencies.
 
 | Connector | Dependency | Kind |
 | --- | --- | --- |
 | `motionConnectorTransport` | OS sockets | system |
 | `motionConnectorOsc` | none; the wire format is implemented here | — |
-| `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording`, transport and OSC | installed sibling packages |
+| `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorMocopi` | `motionConnectorCore`, `motionCore`, `motionSampling`, `motionRecording` and transport | installed sibling packages |
 | `motionConnectorVrchatOsc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is implemented here, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
@@ -75,7 +75,7 @@ change that adds it.
 
 | Dependency | Refused because |
 | --- | --- |
-| `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd` in connector libraries | libraries end at `MotionFrame`; the current VMC/mocopi live-source edges are transitional debt, not target exceptions ([boundary roadmap](../roadmap/boundary-implementation.md)) |
+| `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd` in connector libraries | libraries end at `MotionFrame`; the current mocopi live-source edges are transitional debt, not target exceptions ([boundary roadmap](../roadmap/boundary-implementation.md)) |
 | OpenUSD stage, Sdf, `usdSkel`, Hydra, OpenExec in any library | no connector requires a `UsdStage` (design policy Rule 5, §24) |
 | a filtering, IK or retargeting library | these exist once, downstream (design policy §26) |
 | an ML framework or model runtime in native code | a model-based tracker runs in its own package (MediaPipe in the browser), and a generator sits behind `usd-motion-plugins`' generator interface |

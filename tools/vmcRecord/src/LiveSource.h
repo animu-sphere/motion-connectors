@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Where the adapter ends and the motion runtime begins.
+// Recorder-side composition over the connector's acquisition path.
 //
 // This is the last layer of the VMC path and deliberately the thinnest. Every
 // layer below it converts or decides something about the protocol; this one
@@ -126,7 +126,7 @@
 #pragma once
 
 #include "motionConnectorVmc/Diagnostics.h"
-#include "motionConnectorVmc/FrameAssembler.h"
+#include "motionConnectorVmc/FrameSource.h"
 #include "motionConnectorVmc/VmcMessage.h"
 #include "motionConnectorVmc/api.h"
 
@@ -139,13 +139,11 @@
 #include <string>
 #include <vector>
 
-namespace openstrata::connectors::vmc
-{
+namespace openstrata::connectors::vmc {
 
 // What to do with the first frame of a new session. As above: the option this
 // enumeration does not offer is the one that would splice the two.
-enum class SessionRestartPolicy : std::uint8_t
-{
+enum class SessionRestartPolicy : std::uint8_t {
     // Drop the intake's buffered history and admit the new session's first
     // frame. The stream continues; the history recorded before the restart is
     // gone, because it describes a stream that has ended.
@@ -155,8 +153,7 @@ enum class SessionRestartPolicy : std::uint8_t
     Refuse,
 };
 
-struct VmcLiveSourceConfig
-{
+struct VmcLiveSourceConfig {
     VmcFrameConfig frame;
     openstrata::motion::LiveCaptureConfig intake;
     SessionRestartPolicy restart = SessionRestartPolicy::Reset;
@@ -165,8 +162,7 @@ struct VmcLiveSourceConfig
 // What this layer alone can count. Everything the assembler refused is in
 // `VmcFrameStats` and everything the intake refused is in `LiveCaptureStats`;
 // repeating either here would give an operator two numbers that can disagree.
-struct VmcLiveSourceStats
-{
+struct VmcLiveSourceStats {
     // Datagrams that decoded as OSC, and datagrams refused whole by that layer.
     // The second is the one number nothing else holds: a refused datagram never
     // reaches the assembler, so a session drowning in malformed traffic is
@@ -199,21 +195,14 @@ struct VmcLiveSourceStats
 // the moment it did. Read them back through `GetAssembler().GetConfig()` and
 // `GetIntake().GetConfig()`. The restart policy is the one setting that belongs
 // to neither half, so it is the one this class keeps.
-class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IMotionSource
-{
-  public:
+// Recorder-private composition, also exercised by consumer integration tests.
+// This header is not installed with motionConnectorVmc.
+class VmcLiveSource final : public openstrata::motion::IMotionSource {
+public:
     explicit VmcLiveSource(const VmcLiveSourceConfig& config = {});
 
-    SessionRestartPolicy
-    GetRestartPolicy() const noexcept
-    {
-        return _restart;
-    }
-    void
-    SetRestartPolicy(SessionRestartPolicy restart) noexcept
-    {
-        _restart = restart;
-    }
+    SessionRestartPolicy GetRestartPolicy() const noexcept { return _restart; }
+    void SetRestartPolicy(SessionRestartPolicy restart) noexcept { _restart = restart; }
 
     // The endpoint or fixture name every diagnostic this path raises is stamped
     // with. It is not provenance: `SourceMetadata::sourceId` is what the
@@ -244,9 +233,8 @@ class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IM
     std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size, double receiveTime,
                              std::vector<Diagnostic>* diagnostics = nullptr);
 
-    std::size_t
-    PushDatagram(const std::vector<std::uint8_t>& datagram, double receiveTime,
-                 std::vector<Diagnostic>* diagnostics = nullptr)
+    std::size_t PushDatagram(const std::vector<std::uint8_t>& datagram, double receiveTime,
+                             std::vector<Diagnostic>* diagnostics = nullptr)
     {
         return PushDatagram(datagram.data(), datagram.size(), receiveTime, diagnostics);
     }
@@ -272,22 +260,10 @@ class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IM
     openstrata::motion::SourceMetadata GetSourceMetadata() const override;
     bool GetTimeRange(double* startTime, double* endTime) const override;
 
-    openstrata::motion::LiveCaptureSource&
-    GetIntake() noexcept
-    {
-        return _intake;
-    }
-    const openstrata::motion::LiveCaptureSource&
-    GetIntake() const noexcept
-    {
-        return _intake;
-    }
+    openstrata::motion::LiveCaptureSource& GetIntake() noexcept { return _intake; }
+    const openstrata::motion::LiveCaptureSource& GetIntake() const noexcept { return _intake; }
 
-    const VmcFrameAssembler&
-    GetAssembler() const noexcept
-    {
-        return _assembler;
-    }
+    const VmcFrameAssembler& GetAssembler() const noexcept { return _source.GetAssembler(); }
 
     // The frames the last push produced, in order, including any the restart
     // policy or the intake then refused. Valid until the next push, which
@@ -296,24 +272,16 @@ class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IM
     // This is the window onto what a `MotionPose` cannot carry — see the
     // header. A caller that only wants poses never touches it; a recording tool
     // gathering the evidence Milestone B is missing reads it after every push.
-    const std::vector<VmcFrame>&
-    GetFramesFromLastPush() const noexcept
-    {
-        return _frames;
-    }
+    const std::vector<VmcFrame>& GetFramesFromLastPush() const noexcept { return _frames; }
 
-    const VmcLiveSourceStats&
-    GetStats() const noexcept
-    {
-        return _stats;
-    }
+    const VmcLiveSourceStats& GetStats() const noexcept { return _stats; }
 
     // This layer's tally only. The assembler's and the intake's are reset
     // through their own objects, so a caller that wants one of them says so.
-    void
-    ResetStats() noexcept
+    void ResetStats() noexcept
     {
         _stats = VmcLiveSourceStats();
+        _source.ResetStats();
     }
 
     // A new session on the same object: both halves forget the stream, and the
@@ -325,18 +293,13 @@ class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IM
     // first capture's is the same fault the latch exists to make visible.
     void Reset();
 
-  private:
+private:
     // Hands `_frames` to the intake, applying the restart policy on the way.
     // Returns how many were admitted.
     std::size_t _Deliver();
 
-    // Names the session and the datagram on every diagnostic a `PushDatagram`
-    // appended. The decode layers know neither: one is reading bytes and the
-    // other addresses, and a caller with one list must not have to tell which
-    // layer produced a line in order to know what it is about.
-    void _StampDatagram(std::vector<Diagnostic>* diagnostics, std::size_t from) const;
-
-    VmcFrameAssembler _assembler;
+    // Acquisition and diagnostic datagram identity have one library-owned path.
+    VmcFrameSource _source;
     openstrata::motion::LiveCaptureSource _intake;
     SessionRestartPolicy _restart;
 
@@ -344,10 +307,6 @@ class MOTIONCONNECTORVMC_API VmcLiveSource final : public openstrata::motion::IM
     // per-message sender this is called a hundred times a second. It outlives
     // the call only as the evidence window `GetFramesFromLastPush()` opens.
     std::vector<VmcFrame> _frames;
-
-    // Received datagrams, refused ones included, so a diagnostic can name the
-    // delivery it came from rather than the packet the assembler was handed.
-    std::uint64_t _datagramSerial = 0;
 
     // What the intake was last told, so the handshake is forwarded once rather
     // than on every frame that follows it.
