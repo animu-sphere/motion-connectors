@@ -25,5 +25,6 @@ members = [
     "libs/motionConnectorVrchatOsc",
     "tools/vrchatOscRecord",
     "libs/motionConnectorWebSocket",
+    "libs/motionConnectorOpenXR",
     "tools/motionConnect",
 ]

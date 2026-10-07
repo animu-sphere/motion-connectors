@@ -39,6 +39,11 @@
     {
       "name": "motionConnectorWebSocket",
       "header": "motionConnectorWebSocket/Connector.h"
+    },
+    {
+      "name": "motionConnectorOpenXR",
+      "header": "motionConnectorOpenXR/Connector.h",
+      "profile": "openxr.observations.v1"
     }
   ]
 }

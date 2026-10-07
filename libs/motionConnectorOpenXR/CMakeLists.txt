@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+cmake_minimum_required(VERSION 3.22)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsProject.cmake")
+project(motionConnectorOpenXR VERSION ${MOTIONCONNECTORS_VERSION}
+    DESCRIPTION "OpenXR acquisition to canonical tracker observations" LANGUAGES CXX)
+motionconnectors_component_project()
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_package(motionConnectorCore REQUIRED CONFIG)
+endif()
+if(NOT TARGET motionCore::motionCore)
+    find_package(motionCore REQUIRED CONFIG)
+endif()
+# The SDK is required only when this optional connector is selected.
+find_package(OpenXR 1.1.36 REQUIRED CONFIG)
+add_library(motionConnectorOpenXR STATIC src/Connector.cpp)
+add_library(motionConnectorOpenXR::motionConnectorOpenXR ALIAS motionConnectorOpenXR)
+set_target_properties(motionConnectorOpenXR PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_compile_features(motionConnectorOpenXR PUBLIC cxx_std_20)
+target_include_directories(motionConnectorOpenXR PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:include>")
+target_link_libraries(motionConnectorOpenXR PUBLIC
+    motionConnectorCore::motionConnectorCore OpenXR::openxr_loader)
+if(MSVC)
+    target_compile_options(motionConnectorOpenXR PUBLIC /utf-8)
+endif()
+motionconnectors_install_package(TARGET motionConnectorOpenXR)
+install(DIRECTORY profiles/ DESTINATION "${CMAKE_INSTALL_DATADIR}/motion-connectors/profiles")
+if(MOTIONCONNECTOROPENXR_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()

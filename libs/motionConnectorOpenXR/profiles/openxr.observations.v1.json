@@ -1,0 +1,923 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "openxr.observations.v1",
+  "source": "OpenXR",
+  "connector": "motionConnectorOpenXR",
+  "part": "observations",
+  "observationKind": "trackers",
+  "assignment": "external",
+  "jointSet": [],
+  "trackers": [
+    {
+      "source": "head",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "controller:left",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "controller:right",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:0",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:1",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:2",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:3",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:4",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:5",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:6",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:7",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:8",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:9",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:10",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:11",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:12",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:13",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:14",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:15",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:16",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:17",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:18",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:19",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:20",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:21",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:22",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:23",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:24",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:left:25",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:0",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:1",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:2",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:3",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:4",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:5",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:6",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:7",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:8",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:9",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:10",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:11",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:12",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:13",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:14",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:15",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:16",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:17",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:18",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:19",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:20",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:21",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:22",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:23",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:24",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "hand:right:25",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:0",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:1",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:2",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:3",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:4",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:5",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:6",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:7",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:8",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:9",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:10",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:11",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:12",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:13",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:14",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:15",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:16",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:17",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:18",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:19",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:20",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:21",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:22",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:23",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:24",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:25",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:26",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:27",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:28",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:29",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:30",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:31",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:32",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:33",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:34",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:35",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:36",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:37",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:38",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:39",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:40",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:41",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:42",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:43",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:44",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:45",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:46",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:47",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:48",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:49",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:50",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:51",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:52",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:53",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:54",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:55",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:56",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:57",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:58",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:59",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:60",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:61",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:62",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:63",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:64",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:65",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:66",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:67",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:68",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    },
+    {
+      "source": "body:69",
+      "channels": [
+        "position",
+        "rotation"
+      ]
+    }
+  ],
+  "basis": {
+    "handedness": "right",
+    "upAxis": "+Y",
+    "forwardAxis": "-Z",
+    "lengthUnit": "metres",
+    "rotation": {
+      "kind": "quaternion",
+      "componentOrder": "x,y,z,w"
+    },
+    "transformSpace": "tracking-space",
+    "evidence": "documented"
+  },
+  "confidence": {
+    "kind": "per-observation",
+    "range": [
+      0,
+      1
+    ],
+    "meaning": "XR_FB_body_tracking frame confidence copied to body observations; absent elsewhere"
+  },
+  "capabilities": [
+    "trackers",
+    "controllers",
+    "source-timestamps",
+    "confidence"
+  ],
+  "clock": {
+    "domain": "Device",
+    "unit": "seconds",
+    "timestamp": "XrTime / 1e9",
+    "sequence": null
+  },
+  "extensions": {
+    "hands": "XR_EXT_hand_tracking",
+    "body": "XR_FB_body_tracking"
+  }
+}

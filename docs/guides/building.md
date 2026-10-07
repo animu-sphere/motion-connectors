@@ -53,10 +53,20 @@ Every connector is optional (WORKSPACE.md §4), and each is one CMake option:
 | `MOTIONCONNECTORS_BUILD_MOCOPI` | `ON` | `motionConnectorMocopi`, and `mocopi_record` with the tools |
 | `MOTIONCONNECTORS_BUILD_VRCHAT_OSC` | `ON` | `motionConnectorVrchatOsc`, and `vrchat_osc_record` with the tools |
 | `MOTIONCONNECTORS_BUILD_WEBSOCKET` | `ON` | `motionConnectorWebSocket`; it brings no third-party library |
+| `MOTIONCONNECTORS_BUILD_OPENXR` | `OFF` | `motionConnectorOpenXR`; requires installed OpenXR-SDK ≥1.1.36 |
 | `MOTIONCONNECTORS_BUILD_TOOLS` | `ON` at the top level | the recorders, and `motion_connect` when all three connectors are on |
 | `MOTIONCONNECTORS_BUILD_TESTS` | `ON` at the top level | every component's tests and the workspace tests |
 
 The transport and the OSC wire format depend on nothing and are always built.
+
+To enable OpenXR, put its installed SDK on `CMAKE_PREFIX_PATH` or set
+`OpenXR_DIR` to the directory holding `OpenXRConfig.cmake`, then enable
+`MOTIONCONNECTORS_BUILD_OPENXR`. `motionConnectorOpenXR_connector` uses SDK
+fixtures with no runtime/headset. With the SDK enabled, the installed-consumer
+lane also consumes its installed package and profile through the same SDK path.
+The caller owns its live session and frame loop
+([usage](../../libs/motionConnectorOpenXR/README.md#session-ownership)).
+
 The core, the `MotionFrame` wire format and the tracker layer link
 `usd-motion-plugins`' `motionCore`, and are built whenever any connector is. With every connector off, configure asks for
 no OpenUSD at all:

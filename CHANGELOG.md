@@ -8,6 +8,17 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **OpenXR acquisition reference (Boundary Phase C).** Optional
+  `motionConnectorOpenXR` links the shared core and OpenXR loader (SDK ≥1.1.36).
+  It borrows caller-owned spaces and EXT hand/FB upper-body trackers, acquires
+  a selected SDK time and normalizes observations into bounded `MotionFrame`
+  queues. It preserves availability and FB confidence without constructing a
+  humanoid pose. Hardware-free SDK fixtures cover both directions of
+  yaw/pitch/roll, invalid/untracked/inactive inputs, time, failures, queue modes
+  and reopen. The installed profile is `openxr.observations.v1`; default builds
+  need no SDK. The caller owns session lifecycle, synchronization and frames;
+  device basis evidence remains documented rather than measured.
+
 - **Workspace acquisition boundary enforcement (Boundary Phase E).** Library
   production code, CMake declarations, package configs and manifests reject
   downstream motion packages, stage/UsdSkel/OpenExec includes, core protocol

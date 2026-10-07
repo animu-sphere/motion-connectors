@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+if(NOT TARGET motionConnectorCore::motionConnectorCore)
+    find_dependency(motionConnectorCore CONFIG REQUIRED)
+endif()
+find_dependency(OpenXR 1.1.36 CONFIG REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/motionConnectorOpenXRTargets.cmake")
+check_required_components(motionConnectorOpenXR)
