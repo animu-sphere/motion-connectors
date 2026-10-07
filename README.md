@@ -58,6 +58,7 @@ usd-avatar-runtime     composition, the update loop
 | `motionConnectorWire` | The `MotionFrame` wire format, `openstrata.motion.frame/v1`; knows no socket |
 | `motionConnectorWebSocket` | `MotionFrame` over WebSocket, both directions, listening or connecting |
 | `motionConnectorOpenXR` | optional OpenXR spaces, hand/body tracking observations and source normalization |
+| `motionConnectorWebXR` | caller-driven browser viewer, controller grip and hand observations; source normalization into the frame wire representation |
 | `motionConnectorVmc` | VMC Protocol input |
 | `motionConnectorMocopi` | mocopi native UDP input |
 | `motionConnectorVrchatOsc` | VRChat OSC Trackers input |

@@ -27,7 +27,7 @@ roadmap sequence.
 | boundary implementation: release assignment pending | generic tracking review | after browser Boundary D | 🚧 |
 | v0.2.0: transport and bindings | capture/bridge commands; Python bindings; record-stream example | CLI-O1 and CC-O7 | 🚧 |
 | v0.3.0: browser tracking | `motionConnectorMediaPipe` (Boundary D); JS/TS package; WASM-friendly data ABI | Boundary C reference; CC-O2 | ⬜ |
-| v0.4.0: XR and integration | `motionConnectorWebXR` (Boundary D); integration examples with `usd-motion-plugins` | Boundary C reference; `usd-motion-plugins` v0.2.0 | ⬜ |
+| v0.4.0: XR and integration | integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
 | later | generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
 
 ## Open decisions

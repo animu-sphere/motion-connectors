@@ -19,8 +19,8 @@ process.
 | tools, examples | whatever `usd-motion-plugins` library they call; `examples/usd_avatar_live` is the only place a stage appears |
 | Pin changes | coordinated: a new OpenUSD release is adopted here together with `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins`. Who releases first is open in `usd-vrm-plugins`' migration track |
 
-Whether the web path can avoid this closure is
-[WORKSPACE.md](WORKSPACE.md#7-open-questions) WS-O4.
+The browser path uses the frame wire representation without this native
+closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 
 ## 2. `usd-motion-plugins`
 
@@ -35,13 +35,13 @@ Whether the web path can avoid this closure is
 
 | | |
 | --- | --- |
-| Language | C++20 for native libraries; TypeScript for web modules |
+| Language | C++20 for native libraries; JavaScript with TypeScript declarations for WebXR |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
 | OpenStrata | `ost` 0.23.6, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
 | Python | the interpreter OpenUSD was built against, for bindings and tooling (v0.2.0) |
-| Node | an LTS release, for the JS / TS package (v0.3.0) |
+| Node | Node ≥20 for independent browser module tests; CI uses Node 22, never required by native builds |
 
 ## 4. Per-connector dependencies
 
@@ -65,7 +65,7 @@ only for semantic export; its packaged closure includes `motionSampling`.
 | `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are implemented here, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
 | `motionConnectorOpenXR` | `motionConnectorCore` and OpenXR loader/headers (SDK ≥1.1.36), found only for this optional module | installed core; third party ([notices](../../libs/motionConnectorOpenXR/THIRD_PARTY_NOTICES.md)) |
 | `motionConnectorMediaPipe` | the MediaPipe Tasks package | npm |
-| `motionConnectorWebXR` | browser APIs only | — |
+| `motionConnectorWebXR` | browser APIs only at runtime; TypeScript 5.9.3 and `@types/webxr` 0.5.24 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorWebXR/THIRD_PARTY_NOTICES.md) |
 
 Each third-party dependency is recorded in `THIRD_PARTY_NOTICES.md` in the
 change that adds it.

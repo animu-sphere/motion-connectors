@@ -46,6 +46,16 @@ functions. The list is bounded to the most recent Open/Acquire call.
 
 | Code | Severity | Recoverable | Raised by | Meaning |
 | --- | --- | --- | --- | --- |
+| `WEBXR_CONFIG_INVALID` | error | no | `motionConnectorWebXR` | Invalid profile, borrowed session/space, enabled inputs or queue configuration. |
+| `WEBXR_TIMESTAMP_INVALID` | warning | yes | `motionConnectorWebXR` | Source time does not advance or receive time regresses; no SDK query. |
+| `WEBXR_BUFFER_FULL` | warning | yes | `motionConnectorWebXR` | Lossless queue full; drain and retry during the active XR callback. |
+| `WEBXR_POSE_UNAVAILABLE` | warning | yes | `motionConnectorWebXR` | Browser reports no configured pose; components remain absent. |
+| `WEBXR_POSITION_EMULATED` | warning | yes | `motionConnectorWebXR` | API emulated position retained with Degraded state, without inferred confidence. |
+| `WEBXR_TRANSFORM_INVALID` | warning | yes | `motionConnectorWebXR` | Missing, non-finite or out-of-float-range component, or zero quaternion; component omitted. |
+| `WEBXR_API_FAILED` | error | no | `motionConnectorWebXR` | Pose query fails or the XRFrame belongs to another session; no partial frame, reopen required. |
+| `WEBXR_INPUT_LIMIT` | warning | yes | `motionConnectorWebXR` | More than eight session inputs; entire sample refused. |
+| `WEBXR_REFERENCE_SPACE_RESET` | error | no | `motionConnectorWebXR` | Reference-space epoch changed; reopen after caller accepts the new origin. |
+| `WEBXR_SESSION_ENDED` | error | no | `motionConnectorWebXR` | Borrowed session ended; replacement connector/session required. |
 | `OPENXR_CONFIGURATION_INVALID` | error | no | `motionConnectorOpenXR` | Profile, borrowed handles, conversion selection or queue capacity is invalid; no SDK function is resolved. |
 | `OPENXR_FUNCTION_UNAVAILABLE` | error | no | `motionConnectorOpenXR` | Required SDK function cannot be resolved for configured inputs. |
 | `OPENXR_LOCATE_FAILED` | error | no | `motionConnectorOpenXR` | Query fails/reports session loss, output count or active body confidence is invalid; SDK result retained. |

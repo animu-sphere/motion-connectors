@@ -90,6 +90,30 @@ Build output stays in the build tree. The runtime layout -- `bin/`, `lib/`,
 
 ## What the tests check
 
+### Browser acquisition
+
+The independent WebXR npm module requires no native build or package install:
+
+```powershell
+npm test --prefix web/motionConnectorWebXR
+npm pack ./web/motionConnectorWebXR --dry-run
+```
+
+`web-check` runs these Node 22 API fixtures and package checks. The source
+package includes JavaScript, TypeScript declarations and its declarative
+profile. No browser or headset is required for deterministic tests; native
+builds never require Node. `motionConnectorWire_webxrInterop` decodes the
+browser module's tested wire fixture with the C++ codec when the source
+fixture is available in the checkout. See the
+[WebXR usage guide](../../web/motionConnectorWebXR/README.md).
+
+From `web/motionConnectorWebXR/`, `npm ci --ignore-scripts` and
+`npm run typecheck` check the public package exports against browser WebXR
+declarations using pinned development dependencies. The runtime module remains
+dependency-free.
+
+### Native suites
+
 | Test | Checks |
 | --- | --- |
 | `workspace_docs`, `workspace_docs_selftest` | every relative link and anchor resolves; every version and OpenUSD pin mirror agrees (`scripts/check_docs.py`) |

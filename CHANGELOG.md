@@ -8,6 +8,17 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **WebXR acquisition reference (Boundary Phase D).** Independent npm module
+  `web/motionConnectorWebXR` borrows the caller's session, reference space and
+  active frame callback. Viewer/controller grip/25 hand-joint observations are
+  normalized into `webxr.observations.v1` frame wire values with bounded queues,
+  stable input identities, explicit missing components and local diagnostics.
+  Node API fixtures cover physical basis conversion, recovery, timestamps,
+  exceptions, session/reference-space events and all queue modes; the native
+  codec decodes the tested browser output. Includes TypeScript declarations and
+  profile data; native builds require no browser or Node dependency. Hardware
+  evidence and npm publication remain outside deterministic acquisition.
+
 - **OpenXR acquisition reference (Boundary Phase C).** Optional
   `motionConnectorOpenXR` links the shared core and OpenXR loader (SDK ≥1.1.36).
   It borrows caller-owned spaces and EXT hand/FB upper-body trackers, acquires

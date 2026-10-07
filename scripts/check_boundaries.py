@@ -9,6 +9,7 @@ closures in workspace, standalone and installed-consumer builds.
 from __future__ import annotations
 
 import argparse
+import json
 import pathlib
 import re
 import sys
@@ -117,6 +118,44 @@ def check(root: pathlib.Path, prefix: bool = False) -> list[str]:
             if DOWNSTREAM.fullmatch(name):
                 errors.append("library declaration closure: " + " -> ".join(route))
             pending.extend((edge, route + [edge]) for edge in graph.get(name, ()))
+    if not prefix:
+        errors.extend(check_web(root))
+    return errors
+
+
+def check_web(root: pathlib.Path) -> list[str]:
+    """Browser acquisition imports browser/MediaPipe APIs, never native packages."""
+    errors: list[str] = []
+    imports = re.compile(r'''(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["']([^"']+)["']''')
+    for area in sorted((root / "web").glob("motionConnector*")):
+        allowed = {"@mediapipe/tasks-vision"} if area.name == "motionConnectorMediaPipe" else set()
+        package = area / "package.json"
+        if not package.is_file():
+            errors.append(f"{area}: missing browser package declaration")
+            continue
+        try:
+            manifest = json.loads(package.read_text(encoding="utf-8"))
+        except (ValueError, OSError) as error:
+            errors.append(f"{package}: invalid browser package: {error}")
+            continue
+        for key in ("dependencies", "peerDependencies", "optionalDependencies"):
+            for name in manifest.get(key, {}):
+                if name not in allowed:
+                    errors.append(f"{package}: forbidden browser dependency: {name}")
+        for path in sorted((area / "src").rglob("*")):
+            if path.suffix not in {".js", ".mjs", ".ts"}:
+                continue
+            content = code_only(path.read_text(encoding="utf-8"))
+            for match in DOWNSTREAM.finditer(content):
+                errors.append(f"{path}: downstream motion dependency: {match.group()}")
+            for target in imports.findall(content):
+                if target in allowed:
+                    continue
+                if target.startswith("./") or target.startswith("../"):
+                    resolved = (path.parent / target).resolve()
+                    if resolved.is_relative_to(area.resolve()) and resolved.is_file():
+                        continue
+                errors.append(f"{path}: forbidden browser import: {target}")
     return errors
 
 

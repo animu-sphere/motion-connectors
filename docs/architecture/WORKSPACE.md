@@ -64,7 +64,7 @@ Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 | Identity | Directory | Role | Status |
 | --- | --- | --- | --- |
 | `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
-| `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation | reserved |
+| `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation | implemented 2026-10-07; independent npm module |
 
 Web modules are JavaScript / TypeScript (design policy §18, Rule 8). They are
 not compiled into any native build, and a native build never needs a browser
@@ -248,6 +248,13 @@ acquisition runtime probes. `workspace_boundaries`, `_selftest` and the SDK-free
 `boundaries-check` workflow check the scans and injected forbidden cases.
 Apply dependency restrictions to libraries, not recorder tools or consumer
 integration tests that deliberately exercise downstream intake/export.
+
+The source scan also checks browser production imports and npm runtime/peer
+dependencies. WebXR imports only files inside its own module; MediaPipe may
+add `@mediapipe/tasks-vision`. Native libraries, Node transports and downstream
+motion packages are forbidden on this path. Browser acquisition fixtures run
+in `web-check`; the native wire corpus reader checks the browser output fixture
+without adding a Node dependency to native builds.
 
 ## 3. Moving code in
 
