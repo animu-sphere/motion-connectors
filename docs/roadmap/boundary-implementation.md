@@ -12,7 +12,7 @@ Release assignment is maintained only in
 
 Use **Boundary Phase A–E** when referring to this plan, so it cannot be
 confused with the older Connector Phases or a sibling's migration phases.
-Remaining execution order is C, D, followed by the tracking placement
+Remaining execution order is D, followed by the tracking placement
 review. Boundary Phase E enforcement is recorded in
 [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement).
 
@@ -33,18 +33,13 @@ libraries and belongs in `usd-avatar-runtime` when that integration is built.
 
 ## Boundary Phase C — OpenXR reference implementation
 
-- ⬜ Implement the reserved `motionConnectorOpenXR` against the new boundary:
-  OpenXR loader → head/controller/hand/body observations → source
-  normalization → `MotionFrame`.
-- ⬜ Declare SDK requirements only in that optional connector. Keep filters,
-  retargeting, recording, `UsdStage` and avatar semantics outside it.
-- ⬜ Add hardware-independent decode/normalization/contract tests and use
-  OpenXR as the reference for later sources.
-
-Completion: the connector emits normalized observations through the shared
-contract, passes Boundary Phase E's gates, and its deterministic tests need
-no XR hardware. Device-only validation does not create a supported capability
-claim by itself.
+Acquisition, normalization and hardware-independent SDK/contract evidence are
+recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)
+and [component README](../../libs/motionConnectorOpenXR/README.md). The optional
+module follows Boundary Phase E's acquisition gates. Browser sources reuse its
+tracking-space observation boundary; the caller owns its session and frame loop.
+Device measurement remains operator evidence rather than deterministic reference
+acquisition's completion gate.
 
 ## Boundary Phase D — WebXR and MediaPipe
 

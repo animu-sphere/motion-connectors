@@ -101,7 +101,7 @@ connector that produced it.
 | VRChat OSC Trackers | left, +X is the body's right | +Y | +Z | m | Euler, degrees | **measured** 2026-08-30 against a labelled session, agreeing with VRChat's documentation ([report `motion/03`](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/03-2026-08-30-vrchat-osc-tracking-space.md)) |
 | MediaPipe (pose, hands, face) | — | — | — | normalized image or metric world landmarks | positions, not rotations | not yet; see [CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) CC-O2 |
 | WebXR | right | +Y | −Z | m | quaternion | documented only |
-| OpenXR | right | +Y | −Z | m | quaternion | documented only |
+| OpenXR | right | +Y | −Z | m | quaternion, scalar-last; tracking space | documented only ([Khronos spaces](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#spaces)); deterministic tests are not device measurement |
 
 A source whose forward is −Z (WebXR, OpenXR) reaches canonical with a rotation
 of 180° about Y, determinant +1 — no mirroring. That is a documented

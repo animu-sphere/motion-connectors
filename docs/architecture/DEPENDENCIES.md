@@ -63,7 +63,7 @@ only for semantic export; its packaged closure includes `motionSampling`.
 | `motionConnectorVrchatOsc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is implemented here, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
 | `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are implemented here, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
-| `motionConnectorOpenXR` | the OpenXR loader | third party |
+| `motionConnectorOpenXR` | `motionConnectorCore` and OpenXR loader/headers (SDK ≥1.1.36), found only for this optional module | installed core; third party ([notices](../../libs/motionConnectorOpenXR/THIRD_PARTY_NOTICES.md)) |
 | `motionConnectorMediaPipe` | the MediaPipe Tasks package | npm |
 | `motionConnectorWebXR` | browser APIs only | — |
 

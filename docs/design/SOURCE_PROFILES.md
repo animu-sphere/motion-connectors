@@ -44,11 +44,22 @@ meaning changes, never for an additive field.
 | `webxr.hand.v1` | WebXR Hand Input | hand joints | `motionConnectorWebXR` |
 | `webxr.viewer.v1` | WebXR | head, controllers | `motionConnectorWebXR` |
 | `openxr.hand.v1` | OpenXR `XR_EXT_hand_tracking` | hand joints | `motionConnectorOpenXR` |
+| `openxr.observations.v1` | OpenXR spaces, EXT hands and FB upper body | tracking-space observations | `motionConnectorOpenXR` |
 
 The table reserves names; a profile exists when its connector lands, and the
 [capability matrix](../reference/CAPABILITY_MATRIX.md) says when. Sender
 applications and relay identities belong in provenance, not in the profile
 identifier, so the three v0.1.0 IDs are the names above.
+
+`openxr.observations.v1` declares tracker observations with external assignment,
+not a semantic joint map. IDs are `head`, `controller:left/right`,
+`hand:left/right:<index>` (0–25 EXT joint indices) and `body:<index>` (0–69
+default FB upper-body joint indices). Only configured inputs are reported;
+absent components have false availability. The profile declares maximum
+capabilities, while each instance reports its configured set. Body/hand
+observations do not claim `body`/`hands`, which describe joints in a semantic
+pose. `openxr.hand.v1` remains reserved. SDK confidence is copied only to
+active FB body observations, never inferred from tracking flags.
 
 ## 3. What a profile declares
 

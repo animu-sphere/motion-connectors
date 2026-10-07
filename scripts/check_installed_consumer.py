@@ -327,6 +327,29 @@ def main() -> int:
                 print(f"the isolated {protocol} consumer did not exercise acquisition", file=sys.stderr)
                 return 1
             print(f"ok  installed {protocol} resolves without downstream motion packages")
+        if any(p["name"] == "motionConnectorOpenXR" for p in packages):
+            # Run the same SDK fixture against installed headers and library,
+            # without workspace targets, private includes or motion processing.
+            xr_source = work / "openxr-consumer-src"
+            xr_build = work / "openxr-consumer-build"
+            shutil.copytree(CONSUMER, xr_source)
+            shutil.copyfile(REPO / "cmake" / "MotionConnectorsBoundaries.cmake",
+                            xr_source / "MotionConnectorsBoundaries.cmake")
+            (xr_source / "packages.json").write_text(json.dumps({"packages": [{
+                "name": "motionConnectorOpenXR", "header": "motionConnectorOpenXR/Connector.h"
+            }]}) + "\n", encoding="utf-8")
+            shutil.copyfile(REPO / "libs/motionConnectorOpenXR/tests/test_connector.cpp",
+                            xr_source / "main.cpp")
+            with (xr_source / "CMakeLists.txt").open("a", encoding="utf-8") as cmake_file:
+                cmake_file.write('\ntarget_compile_options(installed_consumer PRIVATE '
+                                 '$<IF:$<CXX_COMPILER_ID:MSVC>,/UNDEBUG,-UNDEBUG>)\n')
+            xr_configure = list(configure)
+            xr_configure[xr_configure.index("-S") + 1] = xr_source
+            xr_configure[xr_configure.index("-B") + 1] = xr_build
+            run(xr_configure)
+            run(["cmake", "--build", xr_build, "--config", args.config])
+            run([next(xr_build.rglob(executable("installed_consumer")))], env=env)
+            print("ok  installed OpenXR acquisition fixture without downstream motion packages")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
         print("installed-consumer lane passed")

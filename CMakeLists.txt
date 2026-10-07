@@ -45,11 +45,13 @@ option(MOTIONCONNECTORS_BUILD_VRCHAT_OSC "Build the VRChat OSC connector" ON)
 # ON, though it is not a v0.1.0 connector: it brings no third-party dependency,
 # because RFC 6455 is implemented inside it (WEBSOCKET_CONNECTOR §2, §10).
 option(MOTIONCONNECTORS_BUILD_WEBSOCKET "Build the WebSocket connector" ON)
+option(MOTIONCONNECTORS_BUILD_OPENXR "Build the optional OpenXR connector (requires SDK)" OFF)
 option(MOTIONCONNECTORS_BUILD_TOOLS "Build the command-line tools" ${PROJECT_IS_TOP_LEVEL})
 
 set(_connectors_any_connector OFF)
 if(MOTIONCONNECTORS_BUILD_VMC OR MOTIONCONNECTORS_BUILD_MOCOPI
-   OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC OR MOTIONCONNECTORS_BUILD_WEBSOCKET)
+   OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC OR MOTIONCONNECTORS_BUILD_WEBSOCKET
+   OR MOTIONCONNECTORS_BUILD_OPENXR)
     set(_connectors_any_connector ON)
 endif()
 
@@ -133,6 +135,10 @@ endif()
 # its raw capture is `motion_connect record`'s, when that lands.
 if(MOTIONCONNECTORS_BUILD_WEBSOCKET)
     add_subdirectory("libs/motionConnectorWebSocket")
+endif()
+
+if(MOTIONCONNECTORS_BUILD_OPENXR)
+    add_subdirectory("libs/motionConnectorOpenXR")
 endif()
 
 # The shared-contract CLI. It links every v0.1.0 connector so `list` reports

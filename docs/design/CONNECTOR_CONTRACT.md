@@ -282,6 +282,14 @@ shared assembler would have one protocol's frame policy (measured:
 `usd-vrm-plugins`' OSC track §3.4). What is shared is the transport and the
 wire format ([WORKSPACE.md §1](../architecture/WORKSPACE.md#1-identities)).
 
+OpenXR assembly is caller-driven: one selected SDK time and one base space,
+with independent component validity. FB body-only acquisition preserves the
+SDK's actual observation time, including repeat/regression facts. If body time
+differs in a mixed head/controller/hand acquisition, body components are
+unavailable with a diagnostic retaining their SDK time; a separate body-only
+connector preserves asynchronous body input. No connector interpolates or
+aligns those instants ([reference acquisition](../../libs/motionConnectorOpenXR/README.md#observations-and-refusals)).
+
 ## 8. Buffering, push and pull
 
 ```text

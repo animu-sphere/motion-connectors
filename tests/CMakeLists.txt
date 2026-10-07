@@ -74,10 +74,27 @@ endforeach()
 
 set(_consumer_prefixes "")
 foreach(_prefix IN LISTS CMAKE_PREFIX_PATH)
-    if(_prefix MATCHES "external-libraries")
+    if(_prefix MATCHES "external-libraries" OR
+       (MOTIONCONNECTORS_BUILD_OPENXR AND
+        (EXISTS "${_prefix}/cmake/OpenXRConfig.cmake" OR
+         EXISTS "${_prefix}/lib/cmake/openxr/OpenXRConfig.cmake")))
         list(APPEND _consumer_prefixes --external-prefix "${_prefix}")
     endif()
 endforeach()
+if(MOTIONCONNECTORS_BUILD_OPENXR AND OpenXR_DIR)
+    # Forward an explicitly discovered SDK to the isolated installed consumer.
+    list(APPEND _consumer_prefixes --external-prefix "${OpenXR_DIR}")
+    # An installed SDK may put the config in cmake/ or lib/cmake/openxr/.
+    # Forward its prefix as well so a dynamic loader's bin/lib enters PATH.
+    set(_openxr_prefix "${OpenXR_DIR}")
+    foreach(_level RANGE 0 3)
+        if(EXISTS "${_openxr_prefix}/include/openxr/openxr.h")
+            list(APPEND _consumer_prefixes --external-prefix "${_openxr_prefix}")
+            break()
+        endif()
+        get_filename_component(_openxr_prefix "${_openxr_prefix}" DIRECTORY)
+    endforeach()
+endif()
 
 # The packages this configure installs, as each component registered them
 # (cmake/MotionConnectorsPackage.cmake). With a connector switched off, the lane

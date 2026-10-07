@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Validate the installed source profiles owned by the three connectors."""
+"""Validate connector-owned installed source profiles."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ PROFILE_FILES = {
     "vmc.v1": PROFILE_ROOT / "libs/motionConnectorVmc/profiles/vmc.v1.json",
     "mocopi.body.v1": PROFILE_ROOT / "libs/motionConnectorMocopi/profiles/mocopi.body.v1.json",
     "vrchat-osc.trackers.v1": PROFILE_ROOT / "libs/motionConnectorVrchatOsc/profiles/vrchat-osc.trackers.v1.json",
+    "openxr.observations.v1": PROFILE_ROOT / "libs/motionConnectorOpenXR/profiles/openxr.observations.v1.json",
 }
 
 VMC_SOURCE_JOINTS = [
@@ -101,7 +102,7 @@ def load_profile(profile_id: str, path: pathlib.Path) -> dict:
     require(basis["evidence"] in {"measured", "documented", "assumed"},
             f"{profile_id}: invalid evidence value")
     confidence = profile["confidence"]
-    require(confidence == {"kind": "none"},
+    require(profile_id == "openxr.observations.v1" or confidence == {"kind": "none"},
             f"{profile_id}: imported source confidence must be explicitly none")
     return profile
 
@@ -213,6 +214,33 @@ def check_vrchat(profile: dict) -> None:
             f"{profile_id}: tracker source must declare no source clock")
 
 
+def check_openxr(profile: dict) -> None:
+    profile_id = profile["id"]
+    expected = (["head", "controller:left", "controller:right"] +
+                [f"hand:{side}:{index}" for side in ("left", "right") for index in range(26)] +
+                [f"body:{index}" for index in range(70)])
+    require(profile["connector"] == "motionConnectorOpenXR" and
+            profile["observationKind"] == "trackers" and profile["assignment"] == "external" and
+            profile["jointSet"] == [], f"{profile_id}: acquisition must remain tracker observations")
+    require([item["source"] for item in profile["trackers"]] == expected and
+            all(item["channels"] == ["position", "rotation"] for item in profile["trackers"]),
+            f"{profile_id}: observation identities differ from the SDK acquisition contract")
+    basis = profile["basis"]
+    require(basis == {"handedness": "right", "upAxis": "+Y", "forwardAxis": "-Z",
+                     "lengthUnit": "metres", "rotation": {"kind": "quaternion", "componentOrder": "x,y,z,w"},
+                     "transformSpace": "tracking-space", "evidence": "documented"},
+            f"{profile_id}: basis does not describe OpenXR")
+    require(set(profile["capabilities"]) == {"trackers", "controllers", "source-timestamps", "confidence"},
+            f"{profile_id}: observations must not claim semantic body/hand poses")
+    require(profile["confidence"]["kind"] == "per-observation" and
+            profile["confidence"]["range"] == [0, 1], f"{profile_id}: invalid confidence declaration")
+    require(profile["clock"] == {"domain": "Device", "unit": "seconds",
+                                 "timestamp": "XrTime / 1e9", "sequence": None},
+            f"{profile_id}: SDK time must remain separate from receive time")
+    require(profile["extensions"] == {"hands": "XR_EXT_hand_tracking", "body": "XR_FB_body_tracking"},
+            f"{profile_id}: extension contract differs")
+
+
 def check_profiles(prefix: pathlib.Path | None, only: list[str]) -> None:
     unknown = sorted(set(only) - set(PROFILE_FILES))
     if unknown:
@@ -226,8 +254,10 @@ def check_profiles(prefix: pathlib.Path | None, only: list[str]) -> None:
             check_vmc(profile)
         elif profile_id == "mocopi.body.v1":
             check_mocopi(profile)
-        else:
+        elif profile_id == "vrchat-osc.trackers.v1":
             check_vrchat(profile)
+        else:
+            check_openxr(profile)
         print(f"{profile_id}: profile contract passed")
 
 

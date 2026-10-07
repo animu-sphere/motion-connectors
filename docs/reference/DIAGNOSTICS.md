@@ -39,8 +39,21 @@ through; this repository never re-codes it.
 
 ## 2. Catalog
 
+OpenXR uses a connector-local diagnostic record so SDK acquisition needs no
+transport dependency. Code/subject/timestamp and the SDK result for a failure
+are values; fixed severity, recoverability and detail come from its catalog
+functions. The list is bounded to the most recent Open/Acquire call.
+
 | Code | Severity | Recoverable | Raised by | Meaning |
 | --- | --- | --- | --- | --- |
+| `OPENXR_CONFIGURATION_INVALID` | error | no | `motionConnectorOpenXR` | Profile, borrowed handles, conversion selection or queue capacity is invalid; no SDK function is resolved. |
+| `OPENXR_FUNCTION_UNAVAILABLE` | error | no | `motionConnectorOpenXR` | Required SDK function cannot be resolved for configured inputs. |
+| `OPENXR_LOCATE_FAILED` | error | no | `motionConnectorOpenXR` | Query fails/reports session loss, output count or active body confidence is invalid; SDK result retained. |
+| `OPENXR_TIMESTAMP_INVALID` | warning | yes | `motionConnectorOpenXR` | Selected SDK time is invalid/nonadvancing or receive time is invalid/regressing; no SDK call. |
+| `OPENXR_TRANSFORM_INVALID` | warning | yes | `motionConnectorOpenXR` | Valid-marked transform is non-finite or quaternion zero; the component becomes unavailable. |
+| `OPENXR_TRACKING_UNAVAILABLE` | warning | yes | `motionConnectorOpenXR` | Component is invalid or not actively tracked; valid but untracked values remain available. |
+| `OPENXR_BUFFER_FULL` | warning | yes | `motionConnectorOpenXR` | Lossless queue full; drain and retry before SDK acquisition. |
+| `OPENXR_BODY_TIME_MISMATCH` | warning | yes | `motionConnectorOpenXR` | Body time differs from the requested instant. Body-only samples keep actual time; mixed frames mark body unavailable and retain SDK time in the diagnostic. |
 | `VMC_PACKET_MALFORMED` | warning | yes | `motionConnectorVmc` | The datagram or an OSC argument is not decodable. |
 | `VMC_UNSUPPORTED_MESSAGE` | info | yes | `motionConnectorVmc` | A well-formed message uses an address this adapter does not implement. |
 | `VMC_TIMESTAMP_REGRESSION` | warning | yes | `motionConnectorVmc` | An accepted frame timestamp does not advance. |

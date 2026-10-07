@@ -38,7 +38,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | imported 2026-09-20, with its history; namespace `openstrata::connectors::tracking`; consumes `usd-motion-plugins` `motionCore` |
 | `motionConnectorWire` | `libs/motionConnectorWire/` | the `MotionFrame` wire format: encode and decode `openstrata.motion.frame/v1` ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)); knows no socket | new | implemented 2026-10-04; namespace `openstrata::connectors::wire` |
 | `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions, listening or connecting; RFC 6455 implemented inside it ([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)) | new | implemented 2026-10-04; namespace `openstrata::connectors::websocket` |
-| `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | OpenXR head, controllers, hands, body-tracking extensions | new | reserved |
+| `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | caller-driven OpenXR spaces, EXT hand and FB upper-body tracking-space observations → `MotionFrame` | new | implemented 2026-10-07; namespace `openstrata::connectors::openxr`; optional SDK module |
 
 Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 [DESIGN_POLICY.md §46.9](../design/DESIGN_POLICY.md#469-names-and-layout-are-the-siblings)):
@@ -137,6 +137,14 @@ web modules ───────────────→ browser APIs, the M
 `motionConnectorCore` provides the shared connector contract; source adapters
 emit `MotionFrame` and end there. Only tools, examples and runtime integration
 may add `motionSampling` / `motionRecording` for downstream motion treatment.
+
+OpenXR borrows the caller's instance, base/input spaces and optional hand/body
+trackers. The caller owns extensions, session events, action sync and the frame
+loop. `Acquire` locates one SDK time; `Poll` drains the shared bounded queue.
+Its only direct links are the core and `OpenXR::openxr_loader`.
+`MOTIONCONNECTORS_BUILD_OPENXR` defaults OFF and finds SDK ≥1.1.36 only when
+selected. Other connectors require no OpenXR installation.
+
 The three source recorders stay here, with this target composition:
 
 ```text
