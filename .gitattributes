@@ -29,6 +29,7 @@
 # read by the same suite and by the generator's --check, so it keeps LF.
 *.frame.json binary
 libs/motionConnectorWire/tests/corpus/expectations.txt text eol=lf
+web/motionConnectorWebXR/tests/wire/expectations.txt text eol=lf
 
 # The WebSocket connector's corpora: byte streams and message captures, in the
 # packet-capture format, compared byte for byte by the generator's --check.
