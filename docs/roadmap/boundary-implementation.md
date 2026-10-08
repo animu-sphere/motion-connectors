@@ -43,8 +43,14 @@ acquisition's completion gate.
 
 ## Boundary Phase D — WebXR and MediaPipe
 
-- ⬜ Implement `motionConnectorWebXR`: browser acquisition of viewer,
-  controllers and hands → source normalization → `MotionFrame`.
+WebXR acquisition and deterministic contract/normalization evidence are recorded
+in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources) and
+[component README](../../web/motionConnectorWebXR/README.md). The caller owns
+the session, reference space and active animation callback; the module emits
+tracking-space observations in the existing frame wire representation.
+
+Remaining:
+
 - ⬜ Implement `motionConnectorMediaPipe`: landmarks → source-specific
   normalization → observations / `MotionFrame`.
 - ⬜ Resolve `CC-O2` and the source-profile representation

@@ -32,6 +32,12 @@ add_test(NAME motionConnectorWire_frameWire COMMAND motionConnectorWire_frameWir
 add_test(NAME motionConnectorWire_corpus
     COMMAND motionConnectorWire_corpus_tests "${_wire_corpus}")
 set(_wire_tests motionConnectorWire_frameWire motionConnectorWire_corpus)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../web/motionConnectorWebXR/tests/wire/expectations.txt")
+    add_test(NAME motionConnectorWire_webxrInterop
+        COMMAND motionConnectorWire_corpus_tests
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../../web/motionConnectorWebXR/tests/wire")
+    list(APPEND _wire_tests motionConnectorWire_webxrInterop)
+endif()
 
 if(WIN32)
     if(TARGET gf)

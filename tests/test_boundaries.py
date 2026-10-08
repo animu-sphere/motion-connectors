@@ -45,6 +45,26 @@ class SourceBoundaries(unittest.TestCase):
                     self.assertTrue(check(self.root))
                     path.unlink()
 
+    def test_browser_modules_reject_native_network_and_downstream_imports(self):
+        self.write("web/motionConnectorWebXR/package.json", '{"dependencies":{}}')
+        for target in ("motionCore", "motionConnectorCore", "motionRecording",
+                       "node:net", "../../libs/motionConnectorCore/Types.h", "https://example.test/sdk.js"):
+            with self.subTest(target=target):
+                self.write("web/motionConnectorWebXR/src/index.js", f'import value from "{target}";')
+                self.assertTrue(check(self.root))
+        self.write("web/motionConnectorWebXR/src/value.js", "export const value = 1;")
+        self.write("web/motionConnectorWebXR/src/index.js", 'export {value} from "./value.js";')
+        self.assertEqual(check(self.root), [])
+        self.write("web/motionConnectorWebXR/package.json", '{"peerDependencies":{"motionCore":"*"}}')
+        self.assertTrue(check(self.root))
+
+    def test_browser_mediapipe_package_is_source_local(self):
+        self.write("web/motionConnectorMediaPipe/package.json", '{"peerDependencies":{"@mediapipe/tasks-vision":"*"}}')
+        self.write("web/motionConnectorMediaPipe/src/index.js", 'import {PoseLandmarker} from "@mediapipe/tasks-vision";')
+        self.assertEqual(check(self.root), [])
+        self.write("web/motionConnectorMediaPipe/src/index.js", 'import("motionSampling");')
+        self.assertTrue(check(self.root))
+
     def test_stage_and_exec_headers(self):
         for header in ("pxr/usd/usd/stage.h", "pxr/usd/usdSkel/skeleton.h",
                        "pxr/exec/exec/computation.h"):

@@ -1,0 +1,27 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "webxr.observations.v1",
+  "source": "WebXR",
+  "connector": "motionConnectorWebXR",
+  "part": "observations",
+  "observationKind": "trackers",
+  "assignment": "external",
+  "jointSet": [],
+  "trackers": [
+    { "source": "head", "channels": ["position", "rotation"] }
+  ],
+  "trackerPatterns": [
+    { "source": "controller:<handedness>:<inputId>", "channels": ["position", "rotation"] },
+    { "source": "hand:<handedness>:<inputId>:<XRHandJoint>", "channels": ["position", "rotation"] }
+  ],
+  "basis": {
+    "handedness": "right", "upAxis": "+Y", "forwardAxis": "-Z", "lengthUnit": "metres",
+    "rotation": { "kind": "quaternion", "componentOrder": "x,y,z,w" },
+    "transformSpace": "tracking-space", "evidence": "documented",
+    "reference": "https://www.w3.org/TR/webxr/#spaces"
+  },
+  "confidence": { "kind": "none", "meaning": "WebXR provides no numeric pose confidence; emulated positions have local diagnostics" },
+  "capabilities": ["trackers", "source-timestamps", "controllers"],
+  "clock": { "domain": "LocalMonotonic", "unit": "seconds", "timestamp": "XR animation callback timestamp / 1000", "sequence": null },
+  "extensions": { "hands": "hand-tracking" }
+}

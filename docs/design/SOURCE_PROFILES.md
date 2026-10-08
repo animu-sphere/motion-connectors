@@ -43,6 +43,7 @@ meaning changes, never for an additive field.
 | `mediapipe.face.v1` | MediaPipe Face | blend shapes | `motionConnectorMediaPipe` |
 | `webxr.hand.v1` | WebXR Hand Input | hand joints | `motionConnectorWebXR` |
 | `webxr.viewer.v1` | WebXR | head, controllers | `motionConnectorWebXR` |
+| `webxr.observations.v1` | WebXR | viewer, controller grips and hand tracking-space observations | `motionConnectorWebXR` |
 | `openxr.hand.v1` | OpenXR `XR_EXT_hand_tracking` | hand joints | `motionConnectorOpenXR` |
 | `openxr.observations.v1` | OpenXR spaces, EXT hands and FB upper body | tracking-space observations | `motionConnectorOpenXR` |
 
@@ -60,6 +61,15 @@ capabilities, while each instance reports its configured set. Body/hand
 observations do not claim `body`/`hands`, which describe joints in a semantic
 pose. `openxr.hand.v1` remains reserved. SDK confidence is copied only to
 active FB body observations, never inferred from tracking flags.
+
+`webxr.observations.v1` uses external assignment, no semantic joint map, and
+no numeric confidence. Tracker IDs are `head`,
+`controller:<handedness>:<inputId>` and
+`hand:<handedness>:<inputId>:<XRHandJoint>`; handedness is left/right/none,
+input IDs are session object identities numbered from 1, and hand joints use
+the 25 WebXR names. Removal reports no further observations; a missing pose
+for a present input has absent components. Body/hand semantic capabilities
+are not claimed. `webxr.hand.v1` and `webxr.viewer.v1` remain reserved.
 
 ## 3. What a profile declares
 
@@ -128,6 +138,13 @@ fields in §3, with `jointSet` entries carrying `source`, `parent` and
 add `sourceIndex`; tracker profiles use `trackers` and never invent a joint
 map. A profile declares its basis evidence, confidence, capabilities and clock
 even when the value is explicitly `none`.
+
+Browser profiles ship in their npm module's `profiles/` directory, exported
+by package subpath, without a native CMake install. A dynamic tracker source
+may declare `trackerPatterns` alongside fixed `trackers`, with `source`
+patterns and `channels`; the pattern parameters are defined by that source's
+profile. WebXR uses handedness, input object ID and `XRHandJoint`, not a
+humanoid joint map.
 
 ## 6. Open questions
 

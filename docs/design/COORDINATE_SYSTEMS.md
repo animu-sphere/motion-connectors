@@ -100,7 +100,7 @@ connector that produced it.
 | VMC Protocol (Unity senders) | left | +Y | +Z | m | quaternion | **measured**: flip X alone (`usd-motion-plugins` [MOTION_CONTRACT §3](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md#3-coordinates-and-units)); which of two translation channels is body translation is open (`CS-O2`) |
 | VRChat OSC Trackers | left, +X is the body's right | +Y | +Z | m | Euler, degrees | **measured** 2026-08-30 against a labelled session, agreeing with VRChat's documentation ([report `motion/03`](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/03-2026-08-30-vrchat-osc-tracking-space.md)) |
 | MediaPipe (pose, hands, face) | — | — | — | normalized image or metric world landmarks | positions, not rotations | not yet; see [CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) CC-O2 |
-| WebXR | right | +Y | −Z | m | quaternion | documented only |
+| WebXR | right | +Y | −Z | m | quaternion, scalar-last; tracking space | documented only ([W3C spaces](https://www.w3.org/TR/webxr/#spaces)); deterministic head/grip/hand conversion tests are not device measurement |
 | OpenXR | right | +Y | −Z | m | quaternion, scalar-last; tracking space | documented only ([Khronos spaces](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#spaces)); deterministic tests are not device measurement |
 
 A source whose forward is −Z (WebXR, OpenXR) reaches canonical with a rotation

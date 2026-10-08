@@ -1,0 +1,28 @@
+name: web-check
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  webxr:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check acquisition and normalization without a headset
+        working-directory: web/motionConnectorWebXR
+        run: npm test
+      - name: Install pinned typecheck tooling
+        working-directory: web/motionConnectorWebXR
+        run: npm ci --ignore-scripts
+      - name: Check public declarations against browser WebXR types
+        working-directory: web/motionConnectorWebXR
+        run: npm run typecheck
+      - name: Check npm package contents
+        working-directory: web/motionConnectorWebXR
+        run: npm pack --dry-run
