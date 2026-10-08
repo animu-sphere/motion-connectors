@@ -22,6 +22,9 @@ endif()
 if(NOT TARGET motionConnectorVrchatOsc::motionConnectorVrchatOsc)
     find_package(motionConnectorVrchatOsc REQUIRED CONFIG)
 endif()
+if(NOT TARGET motionConnectorWebSocket::motionConnectorWebSocket)
+    find_package(motionConnectorWebSocket REQUIRED CONFIG)
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MotionConnectorsUtf8CodePage.cmake")
 
@@ -34,7 +37,8 @@ target_link_libraries(motion_connect
     PRIVATE
         motionConnectorVmc::motionConnectorVmc
         motionConnectorMocopi::motionConnectorMocopi
-        motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+        motionConnectorVrchatOsc::motionConnectorVrchatOsc
+        motionConnectorWebSocket::motionConnectorWebSocket)
 
 if(MSVC)
     target_compile_options(motion_connect PRIVATE /utf-8)

@@ -96,7 +96,7 @@ origins and assumed world axes are declared in
 
 | Identity | Kind | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- | --- |
-| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36; `bridge` and `record` in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md)) | new | `list`, `dump` and `inspect` implemented 2026-09-21; `record` and `bridge` reserved |
+| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36; `bridge` and `record` in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md)) | new | `list`, `dump` and `inspect` implemented 2026-09-21; WebSocket source and `bridge` implemented 2026-10-08; `record` reserved |
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture; transcribe a saved capture to a trace (`--inspect --export-trace`) | `usd-vrm-plugins`, with each connector | all three imported 2026-09-21, with their history |
 | examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
 | Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
@@ -155,6 +155,12 @@ tools/*, examples/* ───────→ the connectors they name; usd-motio
 bindings/python ───────────→ motionConnectorCore, the connectors it exposes
 web modules ───────────────→ browser APIs, the MediaPipe package; no native library
 ```
+
+`motion_connect` links VMC, mocopi, VRChat OSC and WebSocket, and is built
+only when all four CLI sources and tools are enabled. `bridge` adds the
+WebSocket sender without downstream motion treatment. Capture replay uses
+each source's acquisition push/flush path, waiting for a peer and preserving
+recorded pacing ([MOTION_CONNECT §3](../design/MOTION_CONNECT.md#3-bridge)).
 
 `motionConnectorCore` provides the shared connector contract; source adapters
 emit `MotionFrame` and end there. Only tools, examples and runtime integration

@@ -59,9 +59,11 @@ An empty cell means that source cannot carry that part.
 | --- | --- | --- | --- |
 | `motion_connect dump` | supported — `motion_connect_dump_vmc`, `_mocopi`, `_vrchat_osc`; installed: `workspace_installed_consumer` | shared `MotionFrame` live dump | v0.1.0 |
 | `motion_connect list`, `inspect` | supported — `motion_connect_list`, `motion_connect_inspect_vmc`, `_mocopi`, `_vrchat_osc`; installed: `workspace_installed_consumer` | shared `MotionFrame` inventory and packet-capture replay | v0.1.0 |
+| WebSocket source in `motion_connect list`, `dump`, `inspect` | supported — `motion_connect_list`, `motion_connect_dump_websocket`, `motion_connect_inspect_websocket`; installed: `workspace_installed_consumer` | sender profiles retained per frame; explicit live port and raw message replay | v0.2.0 |
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` raw capture tools | supported — inspect/loopback evidence is listed in the source rows | — (imported 2026-09-21) | v0.1.0 |
 | Recorder raw/export separation | supported — `vmc_record_inspect`, `mocopi_record_export`, `vrchat_osc_record_export` check that export preserves acquisition reports and produces deterministic trace bytes; existing loopback suites retain raw capture evidence | tools replay emitted observations and call `motionRecording` only for semantic export | unreleased |
-| `motion_connect record`, `bridge` | — | nowhere | v0.2.0 |
+| `motion_connect bridge` | supported — `motion_connect_bridge_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket`, `_listen`, `_live`, `_limits`, `_errors`; `_arguments` covers usage refusals | unchanged acquisition frames to WebSocket, live or paced capture replay; independent client checks origins and close 1001 | v0.2.0 |
+| `motion_connect record` | — | nowhere | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |
 | JS / TS package, WASM data ABI | — | nowhere | v0.3.0 |
 

@@ -345,7 +345,8 @@ TestSenderServesSeveralPeers()
     const auto stats = sender.GetPeerStats();
     Check(stats.size() == 2 && stats[0].sentMessages == 2 && stats[1].sentMessages == 2 &&
               stats[0].droppedMessages == 1 && stats[1].droppedMessages == 1 &&
-              stats[0].queuedMessages == 0,
+              stats[0].queuedMessages == 0 && stats[0].pendingBytes == 0 &&
+              stats[1].pendingBytes == 0,
           "and the queues say so");
 
     // A frame the encoder refuses goes to nobody (§7.1).

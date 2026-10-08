@@ -18,8 +18,10 @@ namespace openstrata::connectors::websocket::internal
 // Seconds on a steady clock, from an arbitrary origin.
 double SteadySeconds() noexcept;
 
-enum class IoStatus : std::uint8_t
-{
+// Validate a literal without DNS or opening a socket.
+bool IsNumericAddress(const std::string& address);
+
+enum class IoStatus : std::uint8_t {
     Ok,
     // Nothing to read, or no room to write. Not an error.
     WouldBlock,

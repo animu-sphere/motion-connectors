@@ -58,6 +58,8 @@ MOTION_CONNECT_CAPTURES = (
      "libs/motionConnectorMocopi/tests/corpus/neutral-standing-60hz.mocopipackets"),
     ("vrchat-osc", "vrchat-osc.trackers.v1",
      "libs/motionConnectorVrchatOsc/tests/corpus/generated/one-tracker.vrchatoscpackets"),
+    ("websocket", "websocket",
+     "libs/motionConnectorWebSocket/tests/corpus/messages/steady-60hz.websocketpackets"),
 )
 
 

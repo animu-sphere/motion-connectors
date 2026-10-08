@@ -141,12 +141,12 @@ if(MOTIONCONNECTORS_BUILD_OPENXR)
     add_subdirectory("libs/motionConnectorOpenXR")
 endif()
 
-# The shared-contract CLI. It links every v0.1.0 connector so `list` reports
+# The shared-contract CLI. It links every CLI source so `list` reports
 # the capabilities the adapters actually declare rather than a second table,
 # so it is built only when all of them are.
 if(MOTIONCONNECTORS_BUILD_TOOLS)
     if(MOTIONCONNECTORS_BUILD_VMC AND MOTIONCONNECTORS_BUILD_MOCOPI
-       AND MOTIONCONNECTORS_BUILD_VRCHAT_OSC)
+       AND MOTIONCONNECTORS_BUILD_VRCHAT_OSC AND MOTIONCONNECTORS_BUILD_WEBSOCKET)
         add_subdirectory("tools/motionConnect")
     else()
         message(STATUS "motion-connectors: motion_connect needs every connector; not built")
