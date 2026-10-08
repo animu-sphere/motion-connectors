@@ -8,10 +8,10 @@ this page holds what it carried forward and what v0.2.0 needs decided first.
 The accepted 2026-10-06 acquisition boundary is
 [DESIGN_POLICY §47](../design/DESIGN_POLICY.md#47-external-acquisition-boundary).
 Its incomplete work and completion criteria are in
-[boundary-implementation.md](boundary-implementation.md): implement
-MediaPipe (D), using the OpenXR and WebXR reference acquisition boundaries, under the
-dependency gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement). Generic tracking
-solve placement is reviewed afterwards. Release assignment is in the
+[boundary-implementation.md](boundary-implementation.md): review generic tracking
+placement after the OpenXR, WebXR and MediaPipe acquisition references, under
+the dependency gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement).
+Release assignment is in the
 [status table](README.md#status-at-a-glance). Current implementation evidence
 lives in the [capability matrix](../reference/CAPABILITY_MATRIX.md).
 

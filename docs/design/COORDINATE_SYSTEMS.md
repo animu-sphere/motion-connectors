@@ -99,13 +99,22 @@ connector that produced it.
 | mocopi native UDP | right | +Y | +Z | m | quaternion, scalar-last | **measured** 2026-08-12; the change of basis is the identity ([adapter plan §6](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/archive/motion-split/adapters-mocopi-vmc-ardy.md)) |
 | VMC Protocol (Unity senders) | left | +Y | +Z | m | quaternion | **measured**: flip X alone (`usd-motion-plugins` [MOTION_CONTRACT §3](https://github.com/animu-sphere/usd-motion-plugins/blob/main/docs/design/MOTION_CONTRACT.md#3-coordinates-and-units)); which of two translation channels is body translation is open (`CS-O2`) |
 | VRChat OSC Trackers | left, +X is the body's right | +Y | +Z | m | Euler, degrees | **measured** 2026-08-30 against a labelled session, agreeing with VRChat's documentation ([report `motion/03`](https://github.com/animu-sphere/usd-vrm-plugins/blob/main/docs/reports/motion/03-2026-08-30-vrchat-osc-tracking-space.md)) |
-| MediaPipe (pose, hands, face) | — | — | — | normalized image or metric world landmarks | positions, not rotations | not yet; see [CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) CC-O2 |
+| MediaPipe body/hand world landmarks | right (assumed) | −Y (assumed) | −Z (assumed) | m (documented), source-relative origins | positions only | metric units/origins documented in [Pose](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js) and [Hand](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js); axes **assumed**, not measured |
+| MediaPipe face blendshapes | — | — | — | channel scores | none | [documented](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js); normalized face landmarks/matrices are not acquired |
 | WebXR | right | +Y | −Z | m | quaternion, scalar-last; tracking space | documented only ([W3C spaces](https://www.w3.org/TR/webxr/#spaces)); deterministic head/grip/hand conversion tests are not device measurement |
 | OpenXR | right | +Y | −Z | m | quaternion, scalar-last; tracking space | documented only ([Khronos spaces](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#spaces)); deterministic tests are not device measurement |
 
 A source whose forward is −Z (WebXR, OpenXR) reaches canonical with a rotation
 of 180° about Y, determinant +1 — no mirroring. That is a documented
 expectation until a labelled session measures it.
+
+MediaPipe body/hand conversion is `(x, -y, -z)`, determinant +1. Its assumed
+source axes are image-right +X, image-down +Y, away-from-camera +Z. Vendor
+world output is metric but body is hip-relative and each hand has its own
+geometric-center origin; conversion does not recover camera/body translation.
+Normalized image coordinates never enter the metric envelope. Generated
+axis-direction fixtures exercise the declared assumption; a labelled session
+must still measure it. Face channels have no spatial basis.
 
 ## 6. Open questions
 

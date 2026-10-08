@@ -1,0 +1,25 @@
+{
+  "name": "@openstrata/motion-connector-mediapipe",
+  "version": "0.1.0",
+  "description": "Caller-driven MediaPipe Tasks result acquisition into MotionFrame",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    "./profiles/mediapipe.body.v1.json": "./profiles/mediapipe.body.v1.json",
+    "./profiles/mediapipe.hands.v1.json": "./profiles/mediapipe.hands.v1.json",
+    "./profiles/mediapipe.face.v1.json": "./profiles/mediapipe.face.v1.json"
+  },
+  "files": ["src", "profiles", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
+  "scripts": {
+    "test": "node --test tests/connector.test.js",
+    "typecheck": "tsc --noEmit --strict --target ES2022 --module NodeNext tests/usage.ts"
+  },
+  "devDependencies": { "@mediapipe/tasks-vision": "1.1.0", "typescript": "5.9.3" },
+  "engines": { "node": ">=20" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animu-sphere/motion-connectors.git",
+    "directory": "web/motionConnectorMediaPipe"
+  }
+}

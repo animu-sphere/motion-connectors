@@ -1,0 +1,45 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "mediapipe.face.v1",
+  "source": "MediaPipe Tasks",
+  "connector": "motionConnectorMediaPipe",
+  "part": "face",
+  "observationKind": "channels",
+  "assignment": "external",
+  "jointSet": [],
+  "actor": {
+    "count": 1,
+    "identity": "caller-supplied; single person only; no cross-task association"
+  },
+  "channels": {
+    "namespace": "mediapipe",
+    "source": "faceBlendshapes[].categories[].categoryName",
+    "values": "verbatim category scores; absent categories stay absent"
+  },
+  "basis": {
+    "handedness": null,
+    "upAxis": null,
+    "forwardAxis": null,
+    "lengthUnit": null,
+    "rotation": {
+      "kind": "none"
+    },
+    "transformSpace": "none",
+    "evidence": "documented",
+    "reference": "https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js"
+  },
+  "confidence": {
+    "kind": "none",
+    "meaning": "Blendshape scores are channel weights, not landmark confidence"
+  },
+  "capabilities": [
+    "face",
+    "source-timestamps"
+  ],
+  "clock": {
+    "domain": "LocalMonotonic",
+    "unit": "seconds",
+    "timestamp": "caller video/inference timestamp / 1000",
+    "sequence": null
+  }
+}

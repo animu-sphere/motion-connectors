@@ -12,3 +12,7 @@ that adds it: its name, version, license, and what it is used for
 ([DEPENDENCIES.md §4](docs/architecture/DEPENDENCIES.md#4-per-connector-dependencies)).
 A vendor SDK is declared in its connector's manifest, never discovered at build
 time.
+
+MediaPipe browser result declaration checks use Tasks Vision 1.1.0 and
+TypeScript 5.9.3 as development dependencies only; see
+[its notices](web/motionConnectorMediaPipe/THIRD_PARTY_NOTICES.md).

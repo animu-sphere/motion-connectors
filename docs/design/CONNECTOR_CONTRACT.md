@@ -198,6 +198,31 @@ type boundary without a reverse dependency or a copied contract
 Explicit assignment by an operator is the default; automatic assignment is a
 later aid over the same contract.
 
+### 4.1 Landmark observations
+
+CC-O2, accepted 2026-10-08: metric landmark positions use the existing
+`TrackerObservation` envelope, with position availability and optional numeric
+confidence. No rotation is inferred and no `MotionPose` joint translation type
+is introduced. The existing frame wire v1 carries these observations unchanged.
+
+MediaPipe body IDs are `body:<index>` (0–32). Hand IDs are
+`hand:left/right:<index>` (0–20), with the reported side taken from Tasks
+handedness. Source indices, landmark names, per-stream origins and confidence
+meaning are declarative profile hints ([SOURCE_PROFILES §5](SOURCE_PROFILES.md#5-where-profiles-live)).
+Positions use canonical axes/metres, but retain source-relative origins:
+body at the hip midpoint, each hand at its own geometric center. A common axis
+basis does not establish a common translation. The profile declares this limit;
+consumers need explicit alignment before a generic solve combines these groups.
+Image-normalized coordinates cannot be used as metric observations.
+
+A browser connector consumes one caller-owned Tasks result and never runs
+inference. Body/face accept one person, hands accept at most two distinct sides
+of that person. The caller supplies actor identity; no result slot establishes
+persistent identity and no cross-task association is inferred. CC-O5 remains
+open for multi-actor acquisition. Face blendshape categories travel as verbatim
+`mediapipe:<categoryName>` channels in the shared sparse pose, not as landmark
+confidence. Generic reconstruction remains downstream under §1.
+
 ## 5. State
 
 ```cpp
@@ -416,6 +441,9 @@ remain motion concerns.
 
 ## 13. Open questions
 
+CC-O2 was resolved on 2026-10-08 by §4.1: existing position-only tracker
+observations plus source-profile hints, with generic solve downstream.
+
 CC-O3 was resolved by the first shared-connector to live-intake test on
 2026-09-24 (§8). CC-O4 was closed by the measured mocopi grammar and its
 missing-bone tests (§5); MC-O6 remains open upstream for a producer that
@@ -425,7 +453,6 @@ the wire representation is JSON, `openstrata.motion.frame/v1`, owned by
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
-| CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source whose data does not fit `HumanJoint` version 1 (Connector Phase 4, MediaPipe, at the latest) |
-| CC-O2 | Landmark sources: which observation envelope/profile carries MediaPipe joint **positions**, confidence and source hints? Generic body solve belongs downstream under §1 and design policy §47; select the representation without inventing rotations or duplicating the motion contract | Boundary Phase D, before MediaPipe |
+| CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source requiring semantic joint data outside `HumanJoint` version 1; MediaPipe acquisition uses §4.1 observations |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
 | CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |

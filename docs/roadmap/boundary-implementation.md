@@ -12,8 +12,9 @@ Release assignment is maintained only in
 
 Use **Boundary Phase A–E** when referring to this plan, so it cannot be
 confused with the older Connector Phases or a sibling's migration phases.
-Remaining execution order is D, followed by the tracking placement
-review. Boundary Phase E enforcement is recorded in
+Remaining execution is the generic tracking placement review after the
+browser acquisition reference implementations. Boundary Phase E enforcement
+is recorded in
 [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement).
 
 ## Boundary Phase A — Thin VMC and mocopi libraries
@@ -49,22 +50,17 @@ in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources) and
 the session, reference space and active animation callback; the module emits
 tracking-space observations in the existing frame wire representation.
 
-Remaining:
-
-- ⬜ Implement `motionConnectorMediaPipe`: landmarks → source-specific
-  normalization → observations / `MotionFrame`.
-- ⬜ Resolve `CC-O2` and the source-profile representation
-  before freezing the browser boundary. Keep generic body solve downstream,
-  rather than fixing a reconstruction algorithm inside a connector.
+MediaPipe acquisition and deterministic contract/normalization evidence are
+recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)
+and [component README](../../web/motionConnectorMediaPipe/README.md).
+CC-O2 and SP-O3 are resolved by position-only tracker observations and profile
+hints; face blendshapes use shared pose channels. Generic solve remains
+downstream. The caller owns inference and assets. Assumed MediaPipe world axes
+still require labelled measurement as operator evidence.
 
 Browser layout and native closure decisions (WS-O4, WS-O6) are recorded in
 [WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules). Acquisition uses
 the frame wire representation without compiling native core to WASM.
-
-Completion: both sources follow the same acquisition contract as OpenXR,
-declare their basis and units, and have deterministic contract/normalization
-tests. Browser delivery never imports motion intake, filters, retargeting or
-semantic recording into the connector.
 
 ## Boundary Phase E — CI enforcement
 

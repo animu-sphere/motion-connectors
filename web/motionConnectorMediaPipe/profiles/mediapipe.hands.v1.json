@@ -1,0 +1,389 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "mediapipe.hands.v1",
+  "source": "MediaPipe Tasks",
+  "connector": "motionConnectorMediaPipe",
+  "part": "hands",
+  "observationKind": "trackers",
+  "assignment": "external",
+  "jointSet": [],
+  "actor": {
+    "count": 1,
+    "identity": "caller-supplied; single person only; no cross-task association"
+  },
+  "trackers": [
+    {
+      "source": "hand:left:0",
+      "sourceIndex": 0,
+      "landmarkName": "wrist",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:1",
+      "sourceIndex": 1,
+      "landmarkName": "thumb_cmc",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:2",
+      "sourceIndex": 2,
+      "landmarkName": "thumb_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:3",
+      "sourceIndex": 3,
+      "landmarkName": "thumb_ip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:4",
+      "sourceIndex": 4,
+      "landmarkName": "thumb_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:5",
+      "sourceIndex": 5,
+      "landmarkName": "index_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:6",
+      "sourceIndex": 6,
+      "landmarkName": "index_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:7",
+      "sourceIndex": 7,
+      "landmarkName": "index_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:8",
+      "sourceIndex": 8,
+      "landmarkName": "index_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:9",
+      "sourceIndex": 9,
+      "landmarkName": "middle_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:10",
+      "sourceIndex": 10,
+      "landmarkName": "middle_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:11",
+      "sourceIndex": 11,
+      "landmarkName": "middle_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:12",
+      "sourceIndex": 12,
+      "landmarkName": "middle_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:13",
+      "sourceIndex": 13,
+      "landmarkName": "ring_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:14",
+      "sourceIndex": 14,
+      "landmarkName": "ring_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:15",
+      "sourceIndex": 15,
+      "landmarkName": "ring_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:16",
+      "sourceIndex": 16,
+      "landmarkName": "ring_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:17",
+      "sourceIndex": 17,
+      "landmarkName": "pinky_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:18",
+      "sourceIndex": 18,
+      "landmarkName": "pinky_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:19",
+      "sourceIndex": 19,
+      "landmarkName": "pinky_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:left:20",
+      "sourceIndex": 20,
+      "landmarkName": "pinky_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:0",
+      "sourceIndex": 0,
+      "landmarkName": "wrist",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:1",
+      "sourceIndex": 1,
+      "landmarkName": "thumb_cmc",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:2",
+      "sourceIndex": 2,
+      "landmarkName": "thumb_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:3",
+      "sourceIndex": 3,
+      "landmarkName": "thumb_ip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:4",
+      "sourceIndex": 4,
+      "landmarkName": "thumb_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:5",
+      "sourceIndex": 5,
+      "landmarkName": "index_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:6",
+      "sourceIndex": 6,
+      "landmarkName": "index_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:7",
+      "sourceIndex": 7,
+      "landmarkName": "index_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:8",
+      "sourceIndex": 8,
+      "landmarkName": "index_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:9",
+      "sourceIndex": 9,
+      "landmarkName": "middle_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:10",
+      "sourceIndex": 10,
+      "landmarkName": "middle_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:11",
+      "sourceIndex": 11,
+      "landmarkName": "middle_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:12",
+      "sourceIndex": 12,
+      "landmarkName": "middle_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:13",
+      "sourceIndex": 13,
+      "landmarkName": "ring_finger_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:14",
+      "sourceIndex": 14,
+      "landmarkName": "ring_finger_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:15",
+      "sourceIndex": 15,
+      "landmarkName": "ring_finger_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:16",
+      "sourceIndex": 16,
+      "landmarkName": "ring_finger_tip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:17",
+      "sourceIndex": 17,
+      "landmarkName": "pinky_mcp",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:18",
+      "sourceIndex": 18,
+      "landmarkName": "pinky_pip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:19",
+      "sourceIndex": 19,
+      "landmarkName": "pinky_dip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "hand:right:20",
+      "sourceIndex": 20,
+      "landmarkName": "pinky_tip",
+      "channels": [
+        "position"
+      ]
+    }
+  ],
+  "basis": {
+    "handedness": "right",
+    "upAxis": "-Y",
+    "forwardAxis": "-Z",
+    "lengthUnit": "metres",
+    "rotation": {
+      "kind": "none"
+    },
+    "transformSpace": "source-relative",
+    "evidence": "assumed",
+    "reference": "https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/web_js",
+    "evidenceDetail": "Metric units and relative origin are documented. Axes are assumed image-right +X, image-down +Y, away-from-camera +Z; no labelled measurement.",
+    "conversion": {
+      "position": [
+        "x",
+        "-y",
+        "-z"
+      ],
+      "scale": 1
+    }
+  },
+  "origin": "each hand geometric center independently; no shared body or camera translation",
+  "confidence": {
+    "kind": "none",
+    "range": null,
+    "meaning": "Handedness score is a side classification, never point confidence"
+  },
+  "capabilities": [
+    "trackers",
+    "source-timestamps"
+  ],
+  "clock": {
+    "domain": "LocalMonotonic",
+    "unit": "seconds",
+    "timestamp": "caller video/inference timestamp / 1000",
+    "sequence": null
+  }
+}

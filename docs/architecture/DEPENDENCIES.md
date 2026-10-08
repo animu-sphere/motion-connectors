@@ -35,7 +35,7 @@ closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 
 | | |
 | --- | --- |
-| Language | C++20 for native libraries; JavaScript with TypeScript declarations for WebXR |
+| Language | C++20 for native libraries; JavaScript with TypeScript declarations for browser acquisition |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
 | OpenStrata | `ost` 0.23.6, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
@@ -64,7 +64,7 @@ only for semantic export; its packaged closure includes `motionSampling`.
 | `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is implemented here, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
 | `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are implemented here, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
 | `motionConnectorOpenXR` | `motionConnectorCore` and OpenXR loader/headers (SDK ≥1.1.36), found only for this optional module | installed core; third party ([notices](../../libs/motionConnectorOpenXR/THIRD_PARTY_NOTICES.md)) |
-| `motionConnectorMediaPipe` | the MediaPipe Tasks package | npm |
+| `motionConnectorMediaPipe` | caller-owned MediaPipe Tasks result objects, no runtime import; Tasks Vision 1.1.0 and TypeScript 5.9.3 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorMediaPipe/THIRD_PARTY_NOTICES.md) |
 | `motionConnectorWebXR` | browser APIs only at runtime; TypeScript 5.9.3 and `@types/webxr` 0.5.24 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorWebXR/THIRD_PARTY_NOTICES.md) |
 
 Each third-party dependency is recorded in `THIRD_PARTY_NOTICES.md` in the

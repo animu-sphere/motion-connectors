@@ -63,7 +63,7 @@ Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 
 | Identity | Directory | Role | Status |
 | --- | --- | --- | --- |
-| `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
+| `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | caller-driven MediaPipe Tasks body/hand metric world landmarks and face blendshape results, to the frame wire representation | implemented 2026-10-08; independent npm module |
 | `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation | implemented 2026-10-07; independent npm module |
 
 Web modules are JavaScript / TypeScript (design policy §18, Rule 8). They are
@@ -85,8 +85,12 @@ controller grip spaces and hand joints relative to that reference space. Poll
 only drains a bounded queue. Tracking-space observations are not parent-local
 humanoid rotations; anatomical assignment and generic pose reconstruction stay
 downstream. The browser path never opens a camera, XR session or socket as a
-side effect of acquiring or polling. MediaPipe's observation envelope and basis
-remain CC-O2 and SP-O3; the layout decision does not settle them.
+side effect of acquiring or polling. MediaPipe consumes completed caller-owned Tasks results, with no inference or
+camera side effect. CC-O2 and SP-O3 use existing position-only tracker values
+and declarative source index/name hints; face scores use shared pose channels.
+Single-actor acquisition performs no cross-task association. The source-relative
+origins and assumed world axes are declared in
+[COORDINATE_SYSTEMS §5](../design/COORDINATE_SYSTEMS.md#5-known-sources).
 
 ### 1.3 Tools, examples, bindings and data
 

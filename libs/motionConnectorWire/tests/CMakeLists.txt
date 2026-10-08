@@ -39,6 +39,13 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../web/motionConnectorWebXR/tests/w
     list(APPEND _wire_tests motionConnectorWire_webxrInterop)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../web/motionConnectorMediaPipe/tests/wire/expectations.txt")
+    add_test(NAME motionConnectorWire_mediapipeInterop
+        COMMAND motionConnectorWire_corpus_tests
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../../web/motionConnectorMediaPipe/tests/wire")
+    list(APPEND _wire_tests motionConnectorWire_mediapipeInterop)
+endif()
+
 if(WIN32)
     if(TARGET gf)
         set(_wire_gf gf)
