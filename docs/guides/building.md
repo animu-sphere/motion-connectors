@@ -112,6 +112,21 @@ From `web/motionConnectorWebXR/`, `npm ci --ignore-scripts` and
 declarations using pinned development dependencies. The runtime module remains
 dependency-free.
 
+MediaPipe result acquisition also needs no model, camera or native build:
+
+```powershell
+npm ci --ignore-scripts --prefix web/motionConnectorMediaPipe
+npm test --prefix web/motionConnectorMediaPipe
+npm run typecheck --prefix web/motionConnectorMediaPipe
+npm pack ./web/motionConnectorMediaPipe --dry-run
+```
+
+`web-check` checks both browser modules. MediaPipe declaration checks use
+Tasks Vision 1.1.0; it is development tooling, not bundled runtime code.
+`motionConnectorWire_mediapipeInterop` decodes the tested body/hand/face
+browser frames with the native codec. See the
+[MediaPipe usage guide](../../web/motionConnectorMediaPipe/README.md).
+
 ### Native suites
 
 | Test | Checks |

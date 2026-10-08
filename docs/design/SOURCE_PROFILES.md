@@ -71,6 +71,16 @@ the 25 WebXR names. Removal reports no further observations; a missing pose
 for a present input has absent components. Body/hand semantic capabilities
 are not claimed. `webxr.hand.v1` and `webxr.viewer.v1` remain reserved.
 
+`mediapipe.body.v1` and `mediapipe.hands.v1` use position-only trackers and
+external semantic assignment, with no rotation joint map (CC-O2). Their fixed
+tracker entries carry `sourceIndex` and `landmarkName`: all 33 pose indices,
+and all 21 hand indices for each reported side. The profiles declare
+source-relative origins separately from canonical basis conversion. Body
+confidence copies world landmark visibility; hand side scores do not become
+point confidence. `mediapipe.face.v1` declares the `mediapipe` channel namespace
+and no landmark/joint map. Each profile permits one caller-identified actor;
+hand groups share that identity only by the caller's assertion, not by inference.
+
 ## 3. What a profile declares
 
 | Field | Meaning |
@@ -112,7 +122,8 @@ target avatar joints          (a VRM node, a PMX bone, a UsdSkel joint)
   identifiers, non-humanoid rigs — is `usd-motion-plugins`' MC-O1 and this
   repository's `CC-O1`, decided upstream.
 - **A tracker is not a joint** ([CONNECTOR_CONTRACT.md §4](CONNECTOR_CONTRACT.md#4-trackerobservation)).
-  A tracker profile names trackers, and has no joint map.
+  A tracker profile names trackers, and has no joint map. Landmark names
+  in tracker profiles are observation hints, not semantic pose joint names.
 - **Channel names are verbatim and namespaced** (`vmc:Joy`, `arkit:jawOpen`).
   Resolving a producer's `Joy` to a rig's `happy` needs the rig, and belongs to
   the avatar-format repository.
@@ -148,15 +159,12 @@ humanoid joint map.
 
 ## 6. Open questions
 
-SP-O1 and SP-O2 are resolved by the installed profiles above:
+SP-O1–SP-O3 are resolved by the profiles above:
 
 | Id | Decision | Resolved |
 | --- | --- | --- |
 | SP-O1 | Use `<source>.<part>.v<major>`; `<part>` is optional, and sender applications and relays remain provenance rather than profile identity. | 2026-09-21 |
 | SP-O2 | Use one installed JSON data file per connector-owned profile under `share/motion-connectors/profiles/`, with `openstrata.motion.source-profile/v1`. | 2026-09-21 |
+| SP-O3 | Metric landmarks use tracker entries with source index/name hints and position availability, no rotation joint map. Origins are declared per source group; semantic solve stays downstream (CC-O2). Browser profiles ship as npm data. | 2026-10-08 |
 
-The remaining profile question is postponed with the source that needs it:
-
-| Id | Question | Resolve by |
-| --- | --- | --- |
-| SP-O3 | Landmark profiles (MediaPipe): a profile whose observation kind is positions has no rotation joint map; what its "joint map" is depends on CC-O2 | Connector Phase 4 |
+No profile questions remain open.

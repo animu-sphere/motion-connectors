@@ -7,22 +7,25 @@ on:
 permissions:
   contents: read
 jobs:
-  webxr:
+  browser:
+    strategy:
+      matrix:
+        module: [motionConnectorWebXR, motionConnectorMediaPipe]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check acquisition and normalization without a headset
-        working-directory: web/motionConnectorWebXR
+      - name: Check acquisition and normalization without devices or models
+        working-directory: web/${{ matrix.module }}
         run: npm test
       - name: Install pinned typecheck tooling
-        working-directory: web/motionConnectorWebXR
+        working-directory: web/${{ matrix.module }}
         run: npm ci --ignore-scripts
-      - name: Check public declarations against browser WebXR types
-        working-directory: web/motionConnectorWebXR
+      - name: Check public declarations against source API types
+        working-directory: web/${{ matrix.module }}
         run: npm run typecheck
       - name: Check npm package contents
-        working-directory: web/motionConnectorWebXR
+        working-directory: web/${{ matrix.module }}
         run: npm pack --dry-run

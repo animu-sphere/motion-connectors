@@ -46,6 +46,14 @@ functions. The list is bounded to the most recent Open/Acquire call.
 
 | Code | Severity | Recoverable | Raised by | Meaning |
 | --- | --- | --- | --- | --- |
+| `MEDIAPIPE_CONFIG_INVALID` | error | no | `motionConnectorMediaPipe` | Invalid profile, actor ID, coordinate conversion or buffer configuration. |
+| `MEDIAPIPE_TIMESTAMP_INVALID` | warning | yes | `motionConnectorMediaPipe` | Source time does not advance or receive time regresses; no frame. |
+| `MEDIAPIPE_BUFFER_FULL` | warning | yes | `motionConnectorMediaPipe` | Lossless queue full; drain and retry the same Tasks result. |
+| `MEDIAPIPE_RESULT_INVALID` | warning | yes | `motionConnectorMediaPipe` | Invalid topology, category data, handedness or single-actor bound; atomic refusal. |
+| `MEDIAPIPE_POSITION_INVALID` | warning | yes | `motionConnectorMediaPipe` | World landmark position is missing, non-finite or out of float range; position omitted. |
+| `MEDIAPIPE_CONFIDENCE_INVALID` | warning | yes | `motionConnectorMediaPipe` | Body visibility outside [0,1]; confidence omitted. |
+| `MEDIAPIPE_NO_DETECTION` | warning | yes | `motionConnectorMediaPipe` | No detection; empty actors published, no old observation retained. |
+| `MEDIAPIPE_BLENDSHAPES_UNAVAILABLE` | warning | yes | `motionConnectorMediaPipe` | Face detected without blendshape categories; actor has no pose. |
 | `WEBXR_CONFIG_INVALID` | error | no | `motionConnectorWebXR` | Invalid profile, borrowed session/space, enabled inputs or queue configuration. |
 | `WEBXR_TIMESTAMP_INVALID` | warning | yes | `motionConnectorWebXR` | Source time does not advance or receive time regresses; no SDK query. |
 | `WEBXR_BUFFER_FULL` | warning | yes | `motionConnectorWebXR` | Lossless queue full; drain and retry during the active XR callback. |

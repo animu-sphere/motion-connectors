@@ -1,0 +1,4 @@
+# Generated browser frames; native decoder accepts the same v1 shape.
+accepted	body.frame.json
+accepted	hands.frame.json
+accepted	face.frame.json

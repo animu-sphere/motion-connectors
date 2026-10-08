@@ -28,7 +28,8 @@ structure, evidence or incomplete work according to the ownership table below.
   the policy by section number.
   The accepted [external acquisition boundary (§47)](design/DESIGN_POLICY.md#47-external-acquisition-boundary)
   fixes library responsibility at `MotionFrame`; its implementation phases
-  are tracked in [the boundary roadmap](roadmap/boundary-implementation.md).
+  are recorded in [the boundary roadmap](roadmap/boundary-implementation.md),
+  which now carries the remaining generic tracking ownership review.
 - Six focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the

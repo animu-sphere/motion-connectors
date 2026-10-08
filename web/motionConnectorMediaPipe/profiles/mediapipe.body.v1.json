@@ -1,0 +1,321 @@
+{
+  "schema": "openstrata.motion.source-profile/v1",
+  "id": "mediapipe.body.v1",
+  "source": "MediaPipe Tasks",
+  "connector": "motionConnectorMediaPipe",
+  "part": "body",
+  "observationKind": "trackers",
+  "assignment": "external",
+  "jointSet": [],
+  "actor": {
+    "count": 1,
+    "identity": "caller-supplied; single person only; no cross-task association"
+  },
+  "trackers": [
+    {
+      "source": "body:0",
+      "sourceIndex": 0,
+      "landmarkName": "nose",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:1",
+      "sourceIndex": 1,
+      "landmarkName": "left_eye_inner",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:2",
+      "sourceIndex": 2,
+      "landmarkName": "left_eye",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:3",
+      "sourceIndex": 3,
+      "landmarkName": "left_eye_outer",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:4",
+      "sourceIndex": 4,
+      "landmarkName": "right_eye_inner",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:5",
+      "sourceIndex": 5,
+      "landmarkName": "right_eye",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:6",
+      "sourceIndex": 6,
+      "landmarkName": "right_eye_outer",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:7",
+      "sourceIndex": 7,
+      "landmarkName": "left_ear",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:8",
+      "sourceIndex": 8,
+      "landmarkName": "right_ear",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:9",
+      "sourceIndex": 9,
+      "landmarkName": "mouth_left",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:10",
+      "sourceIndex": 10,
+      "landmarkName": "mouth_right",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:11",
+      "sourceIndex": 11,
+      "landmarkName": "left_shoulder",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:12",
+      "sourceIndex": 12,
+      "landmarkName": "right_shoulder",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:13",
+      "sourceIndex": 13,
+      "landmarkName": "left_elbow",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:14",
+      "sourceIndex": 14,
+      "landmarkName": "right_elbow",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:15",
+      "sourceIndex": 15,
+      "landmarkName": "left_wrist",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:16",
+      "sourceIndex": 16,
+      "landmarkName": "right_wrist",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:17",
+      "sourceIndex": 17,
+      "landmarkName": "left_pinky",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:18",
+      "sourceIndex": 18,
+      "landmarkName": "right_pinky",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:19",
+      "sourceIndex": 19,
+      "landmarkName": "left_index",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:20",
+      "sourceIndex": 20,
+      "landmarkName": "right_index",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:21",
+      "sourceIndex": 21,
+      "landmarkName": "left_thumb",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:22",
+      "sourceIndex": 22,
+      "landmarkName": "right_thumb",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:23",
+      "sourceIndex": 23,
+      "landmarkName": "left_hip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:24",
+      "sourceIndex": 24,
+      "landmarkName": "right_hip",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:25",
+      "sourceIndex": 25,
+      "landmarkName": "left_knee",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:26",
+      "sourceIndex": 26,
+      "landmarkName": "right_knee",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:27",
+      "sourceIndex": 27,
+      "landmarkName": "left_ankle",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:28",
+      "sourceIndex": 28,
+      "landmarkName": "right_ankle",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:29",
+      "sourceIndex": 29,
+      "landmarkName": "left_heel",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:30",
+      "sourceIndex": 30,
+      "landmarkName": "right_heel",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:31",
+      "sourceIndex": 31,
+      "landmarkName": "left_foot_index",
+      "channels": [
+        "position"
+      ]
+    },
+    {
+      "source": "body:32",
+      "sourceIndex": 32,
+      "landmarkName": "right_foot_index",
+      "channels": [
+        "position"
+      ]
+    }
+  ],
+  "basis": {
+    "handedness": "right",
+    "upAxis": "-Y",
+    "forwardAxis": "-Z",
+    "lengthUnit": "metres",
+    "rotation": {
+      "kind": "none"
+    },
+    "transformSpace": "source-relative",
+    "evidence": "assumed",
+    "reference": "https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js",
+    "evidenceDetail": "Metric units and relative origin are documented. Axes are assumed image-right +X, image-down +Y, away-from-camera +Z; no labelled measurement.",
+    "conversion": {
+      "position": [
+        "x",
+        "-y",
+        "-z"
+      ],
+      "scale": 1
+    }
+  },
+  "origin": "midpoint of hips",
+  "confidence": {
+    "kind": "per-observation",
+    "range": [
+      0,
+      1
+    ],
+    "meaning": "World landmark visibility only; presence is not fused"
+  },
+  "capabilities": [
+    "trackers",
+    "source-timestamps",
+    "confidence"
+  ],
+  "clock": {
+    "domain": "LocalMonotonic",
+    "unit": "seconds",
+    "timestamp": "caller video/inference timestamp / 1000",
+    "sequence": null
+  }
+}

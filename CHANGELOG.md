@@ -6,6 +6,17 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add caller-driven browser MediaPipe Tasks result acquisition: body/hand
+  metric landmark observations and namespaced face blendshape channels in the
+  existing frame wire format. Single-actor bounds, timestamp validation,
+  component availability and all three bounded queue modes are deterministic.
+- Resolve CC-O2/SP-O3 with existing position-only tracker values and declarative
+  source hints, keeping anatomical solve downstream. Profiles explicitly declare
+  relative origins and assumed world axes pending labelled measurement.
+- Add independent npm packaging, Tasks Vision 1.1.0 declaration checks, browser
+  CI fixtures and native wire interop for all three MediaPipe profiles.
+
+
 ### Added
 
 - **WebXR acquisition reference (Boundary Phase D).** Independent npm module
