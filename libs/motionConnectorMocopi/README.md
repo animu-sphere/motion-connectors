@@ -40,6 +40,9 @@ Milestone D for the implementation order, and
 [below](#transport-arrives-first-here-and-that-is-the-finding) for why this
 adapter's order is the reverse of its sibling's.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## The format is not documented, so it was measured instead
 
 The transport is stated publicly and the payload is not. What the vendor

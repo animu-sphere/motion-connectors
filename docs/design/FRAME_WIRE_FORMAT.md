@@ -1,10 +1,8 @@
 # `MotionFrame` wire format
 
-> Status: **accepted**, 2026-10-04 (CC-O8); §3–§6 are **binding** since
-> 2026-10-04, when `motionConnectorWire` landed with its suite and generated
-> corpus, and §7's half about the receiving connector since
-> `motionConnectorWebSocket` landed the same day. The capability matrix says
-> what is implemented.
+> Contract: **accepted**, 2026-10-04 (CC-O8); §3–§7 define the wire contract.
+> Implementation status and test evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
 >
 > This document owns how a `MotionFrame` is **spelled as bytes** when it
 > crosses a process boundary: over WebSocket, into a browser, and to any other
@@ -48,9 +46,10 @@ per frame, identified as `openstrata.motion.frame/v1`.
 - **No measured budget asks for binary yet.** Size and parse cost are
   estimates until a session measures them; a binary encoding is `FW-O1`, and
   it encodes this same logical message.
-- **JSON is not the ABI.** The C ABI (`CC-O7`) and the WASM bridge (`WS-O4`)
-  are decided separately. This format names no OpenUSD type, so it holds
-  whichever way `WS-O4` goes.
+- **JSON is not the ABI.** The C ABI (`CC-O7`), JS object representation and WASM data ABI
+  are separate consumer contracts. WS-O4 fixes browser acquisition on wire
+  values without the native closure ([WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules));
+  it does not define a native WASM ABI. This format names no OpenUSD type.
 
 The identifier follows the installed profiles'
 `openstrata.motion.source-profile/v1`

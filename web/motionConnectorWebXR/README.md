@@ -7,6 +7,12 @@ It emits the tracker-only JavaScript value shape of
 [`openstrata.motion.frame/v1`](../../docs/design/FRAME_WIRE_FORMAT.md), ready for
 `JSON.stringify`. It creates no session, animation loop, camera or socket.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
+This module is an acquisition provider; the shared consumer API belongs to
+`bindings/js/` ([workspace boundary](../../docs/architecture/WORKSPACE.md#12-web-modules)).
+
 ## Session and frame ownership
 
 The caller requests the XR session and features (including `hand-tracking`

@@ -20,6 +20,9 @@ vrchat_osc_record --inspect session.vrchatoscpackets \
                   --assign "1=hips 2=leftFoot 3=rightFoot head=head"
 ```
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## Recording decodes nothing; reading a file does
 
 The live report says what a socket can see — how much arrived, from whom, how

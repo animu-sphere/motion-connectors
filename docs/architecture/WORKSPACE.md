@@ -7,16 +7,12 @@ them and to the rest of the ecosystem, and the invariants every change keeps.
 first, in its own pull request**. It is never made through a README, a roadmap
 entry or code.
 
-Status (2026-09-21): **contract adopted; the shared core and all three imported
-source adapters are implemented, with their source-specific assembly retained
-behind the shared boundary.**
-The build and CI tree holds the transport, OSC, tracking, VMC, mocopi and
-VRChat OSC implementations, along with their record tools. Unimplemented identities below remain
-*reserved* until the change that creates them lands, and their rows say so.
-Boundary revision (2026-10-06): **target dependency contract accepted**.
-§2.1 records the implemented acquisition graph. VMC and mocopi use
-`VmcFrameSource` / `MocopiFrameSource`; their former motion source compositions
-are private to consumer integration tests.
+Current capability status and test evidence live only in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md). This document owns
+component identity and dependency structure. VMC and mocopi use
+`VmcFrameSource` / `MocopiFrameSource`; downstream intake compositions are
+private to consumer integration tests. Reserved layouts below are design
+allocations, not directories or capability claims.
 The shape follows
 the design
 policy's §16 and §17, and the workspace discipline the sibling repositories
@@ -27,18 +23,18 @@ optional module, and two build modes, `ost` and plain CMake.
 
 ### 1.1 Native libraries
 
-| Identity | Directory | Role | Arrives from | Status |
-| --- | --- | --- | --- | --- |
-| `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | new | implemented 2026-09-21 |
-| `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `usd-vrm-plugins` `liveTransport` | imported 2026-09-19, with its history; namespace `openstrata::connectors::transport` |
-| `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `usd-vrm-plugins` `osc` | imported 2026-09-19, with its history; namespace `openstrata::connectors::osc` |
-| `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterVmc` | imported 2026-09-21, with its history; namespace `openstrata::connectors::vmc`; its recorder is `tools/vmcRecord/` |
-| `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterMocopi` | imported and adapted 2026-09-21, with its history; namespace `openstrata::connectors::mocopi`; its recorder is `tools/mocopiRecord/` |
-| `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames, `vrchat-osc.trackers.v1`, `IMotionConnector` adapter | `usd-vrm-plugins` `vrmAdapterVrchatOsc` | imported and adapted 2026-09-21, with its history; namespace `openstrata::connectors::vrchatOsc`; its recorder is `tools/vrchatOscRecord/` |
-| `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `usd-vrm-plugins` `motionTracking` | imported 2026-09-20, with its history; namespace `openstrata::connectors::tracking`; consumes `usd-motion-plugins` `motionCore` |
-| `motionConnectorWire` | `libs/motionConnectorWire/` | the `MotionFrame` wire format: encode and decode `openstrata.motion.frame/v1` ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)); knows no socket | new | implemented 2026-10-04; namespace `openstrata::connectors::wire` |
-| `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions, listening or connecting; RFC 6455 implemented inside it ([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)) | new | implemented 2026-10-04; namespace `openstrata::connectors::websocket` |
-| `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | caller-driven OpenXR spaces, EXT hand and FB upper-body tracking-space observations → `MotionFrame` | new | implemented 2026-10-07; namespace `openstrata::connectors::openxr`; optional SDK module |
+| Identity | Directory | Role | Namespace |
+| --- | --- | --- | --- |
+| `motionConnectorCore` | `libs/motionConnectorCore/` | `IMotionConnector`, `MotionFrame`, `TrackerObservation`, state, capabilities, timing, the bounded frame buffer ([CONNECTOR_CONTRACT.md](../design/CONNECTOR_CONTRACT.md)) | `openstrata::connectors::core` |
+| `motionConnectorTransport` | `libs/motionConnectorTransport/` | UDP receiver, the optional datagram queue, the packet-capture file format, the diagnostic vehicle; knows no protocol | `openstrata::connectors::transport` |
+| `motionConnectorOsc` | `libs/motionConnectorOsc/` | the OSC 1.0 wire format: packets, bundles, type tags, arguments; knows no address semantics | `openstrata::connectors::osc` |
+| `motionConnectorVmc` | `libs/motionConnectorVmc/` | VMC Protocol decode, frame assembly, `vmc.v1`, `IMotionConnector` adapter | `openstrata::connectors::vmc` |
+| `motionConnectorMocopi` | `libs/motionConnectorMocopi/` | mocopi native UDP decode, frame assembly, `mocopi.body.v1`, `IMotionConnector` adapter | `openstrata::connectors::mocopi` |
+| `motionConnectorVrchatOsc` | `libs/motionConnectorVrchatOsc/` | VRChat OSC Trackers decode, tracking-space normalization, tracker frames, `vrchat-osc.trackers.v1`, `IMotionConnector` adapter | `openstrata::connectors::vrchatOsc` |
+| `motionConnectorTracking` | `libs/motionConnectorTracking/` | tracker regions, assignment, the tracker solve ([CONNECTOR_CONTRACT.md §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)) | `openstrata::connectors::tracking` |
+| `motionConnectorWire` | `libs/motionConnectorWire/` | the `MotionFrame` wire format: encode and decode `openstrata.motion.frame/v1` ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)); knows no socket | `openstrata::connectors::wire` |
+| `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions, listening or connecting; RFC 6455 framing owned by this module ([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)) | `openstrata::connectors::websocket` |
+| `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | caller-driven OpenXR spaces, EXT hand and FB upper-body tracking-space observations → `MotionFrame` | `openstrata::connectors::openxr` |
 
 Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 [DESIGN_POLICY.md §46.9](../design/DESIGN_POLICY.md#469-names-and-layout-are-the-siblings)):
@@ -61,18 +57,18 @@ Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 
 ### 1.2 Web modules
 
-| Identity | Directory | Role | Status |
-| --- | --- | --- | --- |
-| `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | caller-driven MediaPipe Tasks body/hand metric world landmarks and face blendshape results, to the frame wire representation | implemented 2026-10-08; independent npm module |
-| `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation | implemented 2026-10-07; independent npm module |
+| Identity | Directory | Role |
+| --- | --- | --- |
+| `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | caller-driven MediaPipe Tasks body/hand metric world landmarks and face blendshape results, to the frame wire representation |
+| `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation |
 
 Web modules are JavaScript / TypeScript (design policy §18, Rule 8). They are
 not compiled into any native build, and a native build never needs a browser
 dependency (§17).
 
-Browser boundary decision (2026-10-07, WS-O4 and WS-O6): source modules live
+Browser boundary decision (WS-O4 and WS-O6): source modules live
 under `web/<identity>/`, each with its own npm package, declarative profiles and
-hardware-independent tests. `bindings/js/` remains reserved for a future shared
+hardware-independent tests. The reserved `bindings/js/` layout owns the shared
 consumer API; acquisition modules are not bindings over the native libraries.
 They use the existing `openstrata.motion.frame/v1` plain JavaScript value shape
 and carry 64-bit counters as decimal strings. Native core retains its installed
@@ -94,14 +90,22 @@ origins and assumed world axes are declared in
 
 ### 1.3 Tools, examples, bindings and data
 
-| Identity | Kind | Directory | Role | Arrives from | Status |
-| --- | --- | --- | --- | --- | --- |
-| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36; `bridge` and `record` in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md)) | new | `list`, `dump` and `inspect` implemented 2026-09-21; WebSocket source and `bridge` implemented 2026-10-08; `record` implemented 2026-10-08 |
-| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture; transcribe a saved capture to a trace (`--inspect --export-trace`) | `usd-vrm-plugins`, with each connector | all three imported 2026-09-21, with their history |
-| examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
-| Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
-| JS / TS package | binding | `bindings/js/` | `openConnector`, `frames()` async iterator, the WASM bridge (design policy §18) | new | reserved |
-| test corpus | data | `tests/data/<connector>/` | generated captures and recorded-session manifests (§5) | `usd-vrm-plugins`, with each connector | reserved |
+| Identity | Kind | Directory | Role |
+| --- | --- | --- | --- |
+| `motion_connect` | CLI | `tools/motionConnect/` | shared `MotionFrame` CLI contract in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md) |
+| `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/` | source-specific raw capture, inspection and downstream trace export |
+| source profiles | data | `libs/<identity>/profiles/`, `web/<identity>/profiles/` | installed acquisition profile declarations |
+| test corpus | data | `libs/<identity>/tests/corpus/` | generated captures and recorded-session manifests (§5) |
+
+Reserved layout allocations (implementation status is in the matrix):
+
+| Surface | Directory allocation | Ownership |
+| --- | --- | --- |
+| `record_stream` example | `examples/record_stream/` | connector → `MotionFrame` → downstream motion intake/recording |
+| other examples | `examples/dump_pose/`, `examples/usd_avatar_live/` | consumer programs; runtime/avatar application is integration |
+| Python binding | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror |
+| JS/TS binding | `bindings/js/` | shared consumer API across acquisition providers, WebSocket and native/WASM |
+| C ABI | package/header layout subject to CC-O7 | minimal in-process acquisition boundary (§1.4) |
 
 The three record tools remain, one per connector (WS-O3, decided
 2026-10-04). They share transport and session flags, not behaviour: each
@@ -114,13 +118,15 @@ connector contract, takes no connector's own options and writes no
 connector's session report, and it stays a capture/replay tool rather than a
 semantic motion recorder ([CONNECTOR_CONTRACT §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
 
-### 1.4 Reserved, later
+### 1.4 Unallocated surfaces
 
-| Identity | Role | Why later |
+Release ordering belongs to the [roadmap](../roadmap/current.md).
+
+| Identity | Role | Contract prerequisite |
 | --- | --- | --- |
 | a generation adapter (ARDY) | a motion generator behind `usd-motion-plugins`' generator interface | that interface does not exist yet (`usd-vrm-plugins` Motion Phase F, moved here) |
-| a C ABI | `motion_connector_t`, `motion_frame_t`, `motion_connector_poll` (design policy §38) | CC-O7 |
-| advanced devices | IMU suits, optical mocap, depth cameras, dedicated face trackers | Connector Phase 8 |
+| a C ABI | opaque connector handles and versioned acquisition views; no C++ STL or USD types (design policy §38) | CC-O7 defines ownership, lifetimes, errors and package layout |
+| advanced devices | IMU suits, optical mocap, depth cameras, dedicated face trackers | source-specific acquisition contracts |
 
 ### 1.5 Deliberately not here
 
@@ -137,8 +143,8 @@ semantic motion recorder ([CONNECTOR_CONTRACT §12](../design/CONNECTOR_CONTRACT
 
 ### 2.1 Inside the repository
 
-**Target library edges, accepted 2026-10-06.** Reserved components remain
-reserved under §1; this diagram does not claim that they exist.
+**Current production dependency graph.** Reserved surfaces in §1 are excluded.
+Their dependency contracts must preserve §2.2 before code is added.
 
 ```text
 motionConnectorCore ───────→ usd-motion-plugins motionCore
@@ -151,9 +157,8 @@ motionConnectorTracking ───→ usd-motion-plugins motionCore
 motionConnectorWire ───────→ motionConnectorCore, usd-motion-plugins motionCore
 motionConnectorWebSocket ──→ motionConnectorCore, motionConnectorWire, motionConnectorTransport (diagnostics, capture format); no third-party library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
-tools/*, examples/* ───────→ the connectors they name; usd-motion-plugins libraries
-bindings/python ───────────→ motionConnectorCore, the connectors it exposes
-web modules ───────────────→ browser APIs, the MediaPipe package; no native library
+tools/* ──────────────────→ the connectors they name; downstream motion libraries only for semantic export
+web modules ───────────────→ caller-owned browser/Tasks result APIs; no native library
 ```
 
 `motion_connect` links VMC, mocopi, VRChat OSC and WebSocket, and is built
@@ -184,7 +189,7 @@ vmc_record / mocopi_record / vrchat_osc_record
     → motionRecording                     (semantic export only)
 ```
 
-**Acquisition split, verified in the tree on 2026-10-06:**
+**Acquisition and consumer composition:**
 
 VMC and mocopi libraries have only the target edges above. Their frame sources
 own decode, source assembly, restart/session facts and diagnostic datagram
@@ -200,6 +205,11 @@ VRChat OSC performs the operator-configured tracker solve in the export path.
 VMC reports acquisition facts and omits the former downstream `intake:` line.
 The packaged `motionRecording` dependency requires `motionSampling` in the
 artifact closure; this is a packaging pin, not a direct recorder CMake link.
+
+The reserved Python binding consumes the C ABI, whose native implementation
+may link the exposed acquisition libraries. It must not bind C++ implementation
+details directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
+JS values and serialized wire representation distinct.
 
 ### 2.2 Forbidden
 
@@ -297,11 +307,9 @@ WORKSPACE.md §9.2), which this repository keeps from the receiving side:
 4. **Tests, the generated corpus and the recorded-session manifests come with
    it.** The replay evidence named for the move is reproduced here before the
    sender deletes its copy.
-5. **The contract documents come first.** The imported source leaves arrived
-   after the connector contract was documented, but before
-   `motionConnectorCore` was implemented. They remain source-specific until a
-   separate convergence change adapts them to the shared interface, so a move
-   stays a move.
+5. **The contract documents come first.** Import and shared-interface
+   adaptation are separate changes, so a move stays a move. Import history
+   is in the changelog; current capabilities are in the matrix.
 6. **Nothing VRM-specific arrives.** A header that names VRM vocabulary is a
    boundary defect and stays behind.
 
@@ -342,7 +350,7 @@ pins this repository the way it already pins that one.
   in its `requires.libraries` / `requires.tools`. A library's installed
   source profiles travel inside its artifact (`ost library package` puts
   `share/motion-connectors/profiles/` in the archive).
-- **The libraries are published first; the CLIs follow `ost`.** `ost`
+- **CLI packaging requires bundle-free tool packaging in `ost`.** `ost`
   packages a workspace tool only through `ost plugin package --workspace`,
   which refuses a workspace with no plugin bundle (`ost` 0.23.14:
   `no plugin bundles found in the workspace member set`), and this repository
@@ -352,8 +360,8 @@ pins this repository the way it already pins that one.
   publishes unchanged when `ost` can package it.
 - **A vendor SDK is declared, never discovered.** It appears in its
   connector's manifest and nowhere else, and only that connector's artifact
-  requires it. None of the v0.1.0 connectors uses one; the first that does
-  fixes the manifest field.
+  requires it. A connector requiring an SDK defines its manifest field alongside
+  that dependency.
 - **Device validation stays an operator's run.** Recorded sessions are
   replayed locally with `scripts/check_recorded_sessions.py` (§5), not in a
   release or capability lane, because CI holds no device bytes. A capability
@@ -363,12 +371,15 @@ pins this repository the way it already pins that one.
 ## 5. Test data
 
 ```text
-tests/data/<connector>/
+libs/<identity>/tests/corpus/
 ├─ generated/                 protocol shapes, committed, CI-runnable, no hardware
 └─ recorded/
    ├─ redistributable/        real sessions cleared for publication
    └─ manifests/              everything else, as measured facts
 ```
+
+Generated files may sit directly in `corpus/` or in its `generated/` directory;
+component corpus READMEs own their exact layout.
 
 A session that cannot be redistributed leaves **no bytes** in the repository.
 It leaves a manifest: capture hash, recording tool version, sender and device
@@ -394,7 +405,7 @@ bytes replays the manifest rows against them with
 6. The design policy's §42 rules hold.
 7. A connector library may depend on `motionCore`, but must not depend on
    `motionSampling`, `motionRecording`, `motionRetarget` or `motionUsd`;
-   §2.1 records the current violations to remove.
+   §2.4 defines enforcement of this closure.
 8. A connector emits observations and reports discontinuity. Temporal
    interpretation and continuity policy belong downstream.
 9. A connector library never opens or authors a `UsdStage`; protocol-specific
@@ -407,7 +418,7 @@ WS-O1, the names and layout, and WS-O7, the import order, were decided on
 and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
 The 2026-10-06 boundary clarification retains them for now and requires a
-later placement review for generic algorithms under
+placement review for generic algorithms under
 [DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
 WS-O3 was decided on 2026-10-04: the three record tools remain, one per
 connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
@@ -416,7 +427,7 @@ per tag, and one artifact per member in one OCI repository, the CLIs once
 
 WS-O4 and WS-O6 were decided on 2026-10-07 (§1.2): retain the native
 OpenUSD closure and use the existing frame wire representation in independent
-`web/<identity>/` npm modules. A native WASM ABI remains future work rather
-than a prerequisite for browser acquisition. There are no remaining workspace
+`web/<identity>/` npm modules. A native WASM ABI is a separate consumer contract,
+not a prerequisite for browser acquisition. There are no remaining workspace
 questions; source-specific observation questions remain in their owning
 contracts.

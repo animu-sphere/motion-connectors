@@ -4,9 +4,9 @@
 > rules are `usd-motion-plugins`' `MOTION_CONTRACT.md` §3, carried rather than
 > re-derived; this document adds what is a connector's: how a source's basis is
 > declared, who converts it, and what each known source was measured to be.
-> The rules are proposed. The known-source rows include measured evidence from
-> the imported source implementations; the capability matrix states whether a
-> source is integrated with the shared connector contract.
+> The known-source rows include measured evidence from imported sources.
+> Current source conformance and test evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
 >
 > This document owns source bases and their conversion. On that area it wins
 > over [DESIGN_POLICY.md](DESIGN_POLICY.md) §5.1 ("Required behavior") and §6.

@@ -24,8 +24,13 @@ has a section for VERSION or an `[Unreleased]` one.
 
 The diagnostic catalog is intentionally not checked here: code tables remain
 connector-owned, while their cross-connector naming decision is documented in
-DIAGNOSTICS.md (DIAG-O1 is resolved). This checker covers links, mirrors and
-dependency ranges; the adapter tests cover the catalog entries.
+DIAGNOSTICS.md (DIAG-O1 is resolved). This checker covers links, mirrors,
+dependency ranges and documentation ownership; adapter tests cover the catalog.
+
+Ownership -- roadmap prose holds unfinished work only; the root README and
+architecture pages link to the sole capability matrix. Scheduling phrases in
+other current docs warn for review. Published matrix release availability must
+match VERSION, finalized changelog headings and frozen release records.
 
 Release lane -- .github/workflows/release.yml is hand-authored, so it must
 bootstrap the `ost` openstrata.ci.yaml pins at every site that decides
@@ -57,6 +62,13 @@ IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)\s>]+)>?\s*\)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 EXTERNAL = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 MACHINE_LOCAL = re.compile(r"^(?:[A-Za-z]:[\\/]|/(?:home|Users|tmp)/|\\\\)")
+ROADMAP_DONE = re.compile(
+    r"✅|\[[xX]\]|\b(?:implemented|completed)\b|"
+    r"^\s*[-*+]\s+(?:done|complete)\b", re.IGNORECASE)
+SCHEDULE_STATUS = re.compile(
+    r"\b(?:planned\s+for\s+v\d|next\s+release|currently\s+implementing|"
+    r"in\s+progress)\b", re.IGNORECASE)
+RELEASE_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\] - \d{4}-\d{2}-\d{2}$", re.M)
 
 
 def slug(heading: str) -> str:
@@ -152,6 +164,115 @@ def check_file(path: pathlib.Path, cache: dict) -> list[str]:
                 elif fragment not in anchors(resolved, cache):
                     errors.append(f"{where}:{number}: {file_part or where} has "
                                   f"no heading #{fragment}")
+    return errors
+
+
+def check_doc_ownership(root: pathlib.Path, path: pathlib.Path) -> tuple[list[str], list[str]]:
+    """Narrow ownership gates, not a ban on words describing protocol state.
+
+    Frozen release/report/archive prose and contributor policy are excluded
+    from phrase warnings. Fenced examples and inline code follow the existing
+    Markdown scanner. Status vocabulary alone cannot prove semantic drift.
+    """
+    where = path.relative_to(root).as_posix()
+    errors: list[str] = []
+    warnings: list[str] = []
+    if where.startswith(("docs/releases/", "docs/reports/", "docs/archive/",
+                         "docs/contributing/")):
+        return errors, warnings
+    if where.startswith("docs/roadmap/"):
+        for number, line in markdown_lines(path):
+            if ROADMAP_DONE.search(line):
+                errors.append(f"{where}:{number}: finished roadmap work must "
+                              "leave roadmap in the same PR")
+    elif (path.name == "README.md" or where.startswith(
+            ("docs/architecture/", "docs/design/", "docs/reference/"))):
+        # Join adjacent prose lines so wrapping cannot hide a phrase.
+        paragraph: list[str] = []
+        first = 0
+        for number, line in [*markdown_lines(path), (0, "")]:
+            if line.strip():
+                if not paragraph:
+                    first = number
+                paragraph.append(line)
+            else:
+                match = SCHEDULE_STATUS.search(" ".join(paragraph))
+                if match:
+                    warnings.append(f"{where}:{first}: scheduling/progress phrase "
+                                    f"{match.group(0)!r}; use the roadmap or matrix")
+                paragraph = []
+    if where == "README.md" or where.startswith("docs/architecture/"):
+        has_matrix_link = any(
+            target.partition("#")[0].endswith("CAPABILITY_MATRIX.md")
+            and (path.parent / target.partition("#")[0]).resolve()
+            == (root / "docs/reference/CAPABILITY_MATRIX.md").resolve()
+            for _, line in markdown_lines(path) for target in LINK.findall(line))
+        if not has_matrix_link:
+            errors.append(f"{where}: link to the canonical CAPABILITY_MATRIX.md "
+                          "for implementation status")
+    return errors, warnings
+
+
+def check_release_docs(root: pathlib.Path) -> list[str]:
+    """Availability is a shipped release or 'unreleased', never a target date.
+
+    Finalizing a VERSION changelog heading requires its release record in the
+    same PR. An Unreleased section allows development without inventing a
+    future release record or editing historical scope.
+    """
+    errors: list[str] = []
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    finalized = set(RELEASE_HEADING.findall(changelog))
+    records = root / "docs/releases"
+    matrix_path = root / "docs/reference/CAPABILITY_MATRIX.md"
+    for heading in re.findall(r"^## \[\d+\.\d+\.\d+\].*$", changelog, re.M):
+        if not RELEASE_HEADING.fullmatch(heading):
+            errors.append(f"CHANGELOG.md: release heading must use "
+                          f"## [X.Y.Z] - YYYY-MM-DD: {heading}")
+
+    def key(value: str) -> tuple[int, ...]:
+        return tuple(int(p) for p in value.split("."))
+
+    for release in sorted(finalized):
+        if key(release) > key(version):
+            errors.append(f"CHANGELOG.md: finalized release {release} exceeds "
+                          f"VERSION {version}")
+        if not (records / f"v{release}.md").is_file():
+            errors.append(f"docs/releases/v{release}.md: missing record for "
+                          "finalized changelog release")
+    for record in sorted(records.glob("v*.md")):
+        release = record.stem.removeprefix("v")
+        if not re.fullmatch(r"\d+\.\d+\.\d+", release):
+            errors.append(f"docs/releases/{record.name}: invalid release filename")
+            continue
+        if release not in finalized:
+            errors.append(f"docs/releases/{record.name}: no finalized changelog heading")
+        if not re.search(rf"^# v{re.escape(release)}(?:\s|$)",
+                         record.read_text(encoding="utf-8"), re.M):
+            errors.append(f"docs/releases/{record.name}: title must name v{release}")
+    availability_table = False
+    for number, line in enumerate(matrix_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.startswith("|"):
+            availability_table = False
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if cells[-1] == "Release availability":
+            availability_table = True
+            continue
+        if not availability_table or all(re.fullmatch(r"[-: ]+", c) for c in cells):
+            continue
+        value = cells[-1]
+        if value in {"unreleased", "—"}:
+            continue
+        match = re.fullmatch(r"v(\d+\.\d+\.\d+)", value)
+        if not match or match.group(1) not in finalized:
+            errors.append(f"docs/reference/CAPABILITY_MATRIX.md:{number}: release "
+                          f"availability {value!r} has no finalized release; "
+                          "use unreleased or — and schedule in roadmap")
+    if not any("Release availability" in line for line in matrix_path.read_text(
+            encoding="utf-8").splitlines() if line.startswith("|")):
+        errors.append("docs/reference/CAPABILITY_MATRIX.md: no Release availability column")
     return errors
 
 
@@ -324,6 +445,93 @@ def selftest() -> int:
                              "machine-local")):
             failures.append(f"check_file reported {found}")
 
+        # Mutate ownership and release facts, not just regex examples.
+        roadmap = root / "docs/roadmap/current.md"
+        roadmap.parent.mkdir(parents=True)
+        roadmap.write_text(
+            "# Remaining work\n\n- [ ] Decide ABI\n\n"
+            "```text\nimplemented example\n```\n", encoding="utf-8")
+        if check_doc_ownership(root, roadmap) != ([], []):
+            failures.append("unfinished roadmap or fenced example was refused")
+        for marker in ("- [x] ABI", "- [X] ABI", "- ✅ done", "Implemented ABI",
+                       "completed phase", "- done ABI", "- complete ABI"):
+            roadmap.write_text(marker, encoding="utf-8")
+            if len(check_doc_ownership(root, roadmap)[0]) != 1:
+                failures.append(f"roadmap mutation escaped: {marker}")
+
+        reference = root / "docs/reference"
+        reference.mkdir(parents=True)
+        matrix = reference / "CAPABILITY_MATRIX.md"
+        matrix.write_text("# Capabilities\n", encoding="utf-8")
+        architecture = root / "docs/architecture/WORKSPACE.md"
+        architecture.parent.mkdir(parents=True)
+        for current_page, link in (
+                (root / "README.md", "docs/reference/CAPABILITY_MATRIX.md"),
+                (architecture, "../reference/CAPABILITY_MATRIX.md")):
+            current_page.write_text(f"[status]({link})\n", encoding="utf-8")
+            if check_doc_ownership(root, current_page) != ([], []):
+                failures.append("canonical matrix link was refused")
+            current_page.write_text("# Structure\n", encoding="utf-8")
+            if not check_doc_ownership(root, current_page)[0]:
+                failures.append("missing matrix link escaped")
+            current_page.write_text("[status](https://example.org/CAPABILITY_MATRIX.md)\n",
+                                    encoding="utf-8")
+            if not check_doc_ownership(root, current_page)[0]:
+                failures.append("noncanonical matrix link escaped")
+
+        design = root / "docs/design/contract.md"
+        design.parent.mkdir(parents=True)
+        for phrase in ("planned for v0.2.0", "next release",
+                       "currently implementing", "in\nprogress"):
+            design.write_text(phrase, encoding="utf-8")
+            errors, warnings = check_doc_ownership(root, design)
+            if errors or len(warnings) != 1:
+                failures.append(f"progress phrase did not warn: {phrase!r}")
+        design.write_text("```\nin progress\n```\nThe next receiver reads a complete frame.\n",
+                          encoding="utf-8")
+        if check_doc_ownership(root, design) != ([], []):
+            failures.append("protocol prose or fenced sample caused a warning")
+
+        records = root / "docs/releases"
+        records.mkdir(parents=True)
+        record = records / "v0.1.0.md"
+        record.write_text("# v0.1.0\n\nin progress\n", encoding="utf-8")
+        if check_doc_ownership(root, record) != ([], []):
+            failures.append("frozen release prose caused a warning")
+        (root / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+        changelog = root / "CHANGELOG.md"
+        changelog.write_text("## [Unreleased]\n\n## [0.1.0] - 2026-10-04\n",
+                             encoding="utf-8")
+        matrix_template = (
+            "| Capability | Status | Release availability |\n"
+            "| --- | --- | --- |\n| example | supported | {} |\n")
+        for availability in ("v0.1.0", "unreleased", "—"):
+            matrix.write_text(matrix_template.format(availability), encoding="utf-8")
+            if check_release_docs(root):
+                failures.append(f"valid release availability was refused: {availability}")
+        matrix.write_text(matrix_template.format("v0.2.0"), encoding="utf-8")
+        if not check_release_docs(root):
+            failures.append("unpublished matrix release escaped")
+        matrix.write_text(matrix_template.format("unreleased"), encoding="utf-8")
+        record.unlink()
+        if not check_release_docs(root):
+            failures.append("missing finalized release record escaped")
+        record.write_text("# v0.2.0\n", encoding="utf-8")
+        if not check_release_docs(root):
+            failures.append("release record title drift escaped")
+        record.write_text("# v0.1.0\n", encoding="utf-8")
+        changelog.write_text("## [Unreleased]\n", encoding="utf-8")
+        if not check_release_docs(root):
+            failures.append("release record without finalized changelog escaped")
+        changelog.write_text("## [0.1.0] - 2026-10-04\n## [0.2.0] - 2026-10-08\n",
+                             encoding="utf-8")
+        (records / "v0.2.0.md").write_text("# v0.2.0\n", encoding="utf-8")
+        if not check_release_docs(root):
+            failures.append("finalized release newer than VERSION escaped")
+        (root / "VERSION").write_text("0.2.0\n", encoding="utf-8")
+        if check_release_docs(root):
+            failures.append("consistent release preparation was refused")
+
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
@@ -390,14 +598,22 @@ def main() -> int:
     cache: dict[pathlib.Path, set[str]] = {}
     files = markdown_files(REPO)
     errors = [e for path in files for e in check_file(path, cache)]
+    warnings: list[str] = []
+    for path in files:
+        ownership_errors, ownership_warnings = check_doc_ownership(REPO, path)
+        errors.extend(ownership_errors)
+        warnings.extend(ownership_warnings)
     errors += check_mirrors(REPO)
     errors += check_release_lane_ost_pin(REPO)
+    errors += check_release_docs(REPO)
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     if errors:
         print("\n".join(errors), file=sys.stderr)
         print(f"{len(errors)} problem(s)", file=sys.stderr)
         return 1
     print(f"{len(files)} Markdown file(s): every relative link and anchor "
-          f"resolves; every version and pin mirror agrees")
+          f"resolves; version/pin mirrors and documentation ownership agree")
     return 0
 
 

@@ -1,9 +1,9 @@
 # Source profiles and joint naming
 
-> Status: **adopted**, 2026-09-21. The profile contract, identifiers and the
-> installed JSON representation are defined here. The three v0.1.0 connector
-> profiles are installed beside their libraries and checked by the workspace
-> profile test and the installed-consumer lane.
+> Contract: **accepted**, 2026-09-21. The profile contract, identifiers and
+> installed JSON representation are defined here. Implementation and installed
+> profile evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
 >
 > This document owns what a source *is*: its profile identifier, what the
 > profile declares, and how a source's joint names become the shared

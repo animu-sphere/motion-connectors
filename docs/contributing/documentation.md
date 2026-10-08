@@ -6,16 +6,16 @@ if it changes one of the following without updating the page that owns it:
 - a public boundary;
 - a frame's or a profile's meaning;
 - a source's declared basis;
-- implemented architecture;
-- delivery status.
+- repository architecture;
+- capability or release availability.
 
 ## Category ownership
 
 | Category | Put this here | Not this |
 | --- | --- | --- |
-| `architecture/` | Component identities, dependency edges, layout, build modes, external dependencies: the binding structural contract, with what exists marked as such. | Rationale; unimplemented components described as present. |
-| `design/` | Intended contracts, their rationale, the evidence they rest on, and open questions. | Claims that something is implemented. |
-| `reference/` | Facts about the current tree: capabilities, diagnostics. | Plans, except in a column clearly labelled as elsewhere or later. |
+| `architecture/` | Component identities, dependency edges, layout, build modes, external dependencies: the binding structural contract, without a duplicated implementation-status column. | Rationale; unimplemented components described as present. |
+| `design/` | Intended contracts, their rationale, the evidence they rest on, and open questions. | Implementation progress; release scheduling (planned / next / later). |
+| `reference/` | Facts about the current tree: capabilities, diagnostics. | Release scheduling; status snapshots copied from another repository. |
 | `roadmap/` | Incomplete, ordered work, its completion criteria, and which release carries it. | Completed work; rationale. |
 | `guides/` | How to accomplish a task, with commands that have been run. | Commands nobody has run. |
 | `releases/` | One immutable record per released version. | Work in progress. |
@@ -25,14 +25,25 @@ if it changes one of the following without updating the page that owns it:
 
 ## Status rules
 
-- A design document carries `proposed`, `accepted`, `binding`, `superseded` or
-  `rejected`. A section becomes binding when the code it describes lands with
-  tests; changing it afterwards is a contract change.
-- Roadmap items are ✅ done, 🚧 in progress, ⬜ not started, or ⛔ blocked.
-- The capability matrix never says "supported" without a test, and never for a
-  source whose only test needs hardware.
-- A release record and a dated report are not rewritten. A later finding gets a
-  new report and a one-line forward note on the old one.
+- Only [CAPABILITY_MATRIX.md](../reference/CAPABILITY_MATRIX.md) declares
+  supported, approximated, unsupported, implemented, tested and release
+  availability. A supported row must name test evidence; hardware-only
+  evidence does not establish deterministic support.
+- Design documents record accepted decisions, rationale, invariants and open
+  questions. Contract adoption dates are decision history, not dated progress
+  snapshots. Link to the matrix for conformance; put scheduling in the roadmap.
+- Architecture owns structure, component identity and dependency direction.
+  A reserved layout is a design allocation, not an implemented directory.
+- Roadmaps contain only unfinished tasks and completion criteria. Remove a
+  finished item in the same PR; do not leave checked boxes, done markers or
+  completed phases as a history log.
+- README pages explain purpose, inventory and usage. Link to canonical status
+  instead of copying connector support tables, implementation checklists or
+  release availability.
+- Do not use dated prose as a status source or copy dependency maps, open
+  question tables or release scope into multiple pages. Link to the owner.
+- Release records and dated reports are frozen history. Later findings get a
+  new report or a short forward note; they are not rewritten as current status.
 
 ## Cross-repository contracts
 
@@ -103,15 +114,41 @@ identified by prefix and number (`CC-O1`, `CS-O1`, `SP-O1`, `FW-O1`,
 - Never commit a capture, motion or recording whose terms do not allow
   redistribution, and never a recording of a person without their consent.
 
+## Definition of Done
+
+A feature requires code + tests + capability matrix + architecture/design
+updates where needed + changelog + removal of its finished roadmap items.
+Apply these updates in the same PR. A documentation-only change updates the
+owning pages and changelog and runs the documentation checks.
+
 ## Change checklist
 
-1. Planned behaviour is not presented as implemented.
-2. Every new page appears in its category index.
-3. Relative links and heading anchors resolve.
-4. Implementation changes update `architecture/` and `reference/`.
-5. Completed work leaves `roadmap/`.
-6. A departure from a design document is recorded in that document.
-7. A change to a section a sibling repository cites is checked against the
-   citation.
-8. A change that touches `usd-motion-plugins`' contract is proposed there, not
-   worked around here.
+1. Capability status changed → update the matrix with test evidence and release availability.
+2. Architecture changed → update the architecture owner.
+3. Design decision changed → update rationale/invariants/open questions in design.
+4. Landed behavior changed → update `CHANGELOG.md`; freeze shipped scope in `releases/` at release time.
+5. Remove finished work from `roadmap/` in the same PR.
+6. Add no duplicate status table, dependency map or open-question table.
+7. List new pages in their category index; keep links and heading anchors valid.
+8. Check changes to a cited section against sibling citations; preserve section meaning and identifiers.
+9. Propose changes to `usd-motion-plugins`' contract there rather than redefining it here.
+
+## Automated drift checks
+
+Run `python scripts/check_docs.py --selftest` and `python scripts/check_docs.py`.
+The existing `docs-check` workflow runs both on documentation changes.
+
+- Fail on roadmap done markers, checked task boxes and implemented/completed
+  claims outside fenced examples.
+- Warn on `planned for v`, `next release`, `currently implementing` and
+  `in progress` outside the roadmap in current README, architecture, design
+  and reference prose. Warnings require review, not a blanket word ban.
+- Require the root README and architecture pages to link to the capability matrix.
+- Check published release availability in the matrix against changelog headings,
+  release records and `VERSION`. Future scope belongs to the roadmap; a matrix
+  row uses `unreleased` until the release record and finalized changelog exist.
+  When preparing a release, provide its record in the same PR as the finalized
+  heading. Historical records are checked for consistency, not edited.
+
+These checks detect common drift; reviewers still assess semantic ownership,
+missing evidence and duplicated claims that a phrase scan cannot prove.

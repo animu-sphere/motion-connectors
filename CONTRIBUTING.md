@@ -57,7 +57,10 @@ template is intentionally short; a useful description says:
 Draft pull requests are welcome for early feedback. Reviews are a conversation:
 questions and suggestions should explain the concern, and contributors should
 have a clear path to address them. The [documentation guidelines](docs/contributing/documentation.md)
-describe where repository facts belong.
+describe where repository facts belong and the
+[documentation Definition of Done](docs/contributing/documentation.md#definition-of-done).
+Update capability evidence, architecture/design as needed and the changelog,
+and remove finished roadmap work in the same feature PR.
 
 ## Community
 

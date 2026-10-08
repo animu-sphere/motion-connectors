@@ -18,6 +18,15 @@ where this library was measured before it moved):
 | **Assignment** — tracker to body region | **this library** | tracker identities, a region vocabulary, an operator's statement |
 | **Solve** — assigned observations to a pose | **this library** | canonical bones, target-independent. Never an avatar |
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
+The existing assignment/solve placement is retained while the
+[ownership review](../../docs/roadmap/boundary-implementation.md) distinguishes
+observation organization from motion-semantic generation under
+[DESIGN_POLICY §47.5](../../docs/design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
+It is not a permanent placement rule for anatomical solve or pose reconstruction.
+
 ## A region is not a bone
 
 `TrackerRegion` reads like a short `HumanJoint` and is deliberately not one. The
@@ -43,7 +52,7 @@ t1=head t2=leftHand t3=rightHand      # comments run to end of line
 That is the same rule `motion_bvh_convert` follows with `--profile`: there is no
 default and no name heuristic, because a detector written before the contract
 settles the contract on whichever rig was recorded first. Automatic assignment
-from rest geometry is a later aid **over** this contract — a producer of
+from rest geometry must operate **over** this contract — a producer of
 `TrackerAssignmentSpec`, never a second way to reach a binding.
 
 ## A set it cannot place is three answers

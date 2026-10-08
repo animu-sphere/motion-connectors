@@ -4,8 +4,10 @@ Each released version gets one record here: what it set out to do, what it
 shipped, what it is compatible with, and what it does not do. A record is
 history: once its version is released it is not rewritten, and a later
 finding goes into a new record or a dated report. Incomplete work lives in
-the [roadmap](../roadmap/README.md), and which release carries what is stated
-only in its [status table](../roadmap/README.md#status-at-a-glance).
+the [roadmap](../roadmap/README.md), with intended milestones in its
+[scope table](../roadmap/README.md#status-at-a-glance).
+Current release availability lives only in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md).
 
 | Version | Record | Theme |
 | --- | --- | --- |
@@ -17,7 +19,9 @@ only in its [status table](../roadmap/README.md#status-at-a-glance).
    the ranges the manifests require. `scripts/check_docs.py` fails until they
    agree. Move the changelog's `[Unreleased]` entries under
    `## [X.Y.Z] - YYYY-MM-DD`, write the record here, and take the shipped
-   scope out of the [roadmap](../roadmap/README.md#status-at-a-glance). Merge.
+   scope out of the [roadmap](../roadmap/README.md#status-at-a-glance). Promote
+   only the shipped matrix rows from `unreleased` to `vX.Y.Z`; the docs check
+   requires that release record and finalized changelog heading. Merge.
 2. Run [release.yml](../../.github/workflows/release.yml) by hand on `main`
    (`gh workflow run release.yml`). The dry run builds, tests and packages
    everything a tag would, and uploads it as workflow artifacts.

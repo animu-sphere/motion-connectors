@@ -7,3 +7,6 @@ capabilities and the bounded `Latest`, `Ordered` and `Lossless` frame buffer.
 The core has no transport, protocol, device or avatar dependency. It is a
 plain static library and links only `motionCore` for the shared pose and its
 OpenUSD value types.
+
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).

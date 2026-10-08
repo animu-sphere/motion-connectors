@@ -27,6 +27,9 @@ Every other recorder in this repository turns a session into a file so a decoder
 can be *tested*. This one turns a session into a file so a decoder can be
 *written*.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## The report says what a socket can see
 
 The sibling tool has five layers to gather from and answers four questions —

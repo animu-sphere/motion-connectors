@@ -19,6 +19,9 @@ OSC wire format       = this library
 OSC address semantics = the adapter
 ```
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## Why it exists, and why it did not exist sooner
 
 The decoder was written inside `usd-vrm-plugins`' `vrmAdapterVmc` and stayed there through two

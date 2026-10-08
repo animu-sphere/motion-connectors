@@ -6,6 +6,12 @@ model/WASM assets, video timestamp and inference loop. `acquire` copies one
 completed task result; `poll` only drains a bounded queue. No inference, camera,
 socket, filter or anatomical reconstruction runs inside this module.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
+This module is an acquisition provider; the shared consumer API belongs to
+`bindings/js/` ([workspace boundary](../../docs/architecture/WORKSPACE.md#12-web-modules)).
+
 ## Usage
 
 ```js

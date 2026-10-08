@@ -34,6 +34,9 @@ A browser connects with `new WebSocket("ws://127.0.0.1:8765/",
 ["openstrata.motion.frame.v1"])`, from an origin listed in
 `WebSocketConfig::allowedOrigins`.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## What it guarantees
 
 - **Caller-driven.** `Poll`, `Send` and `Service` never block, and nothing
