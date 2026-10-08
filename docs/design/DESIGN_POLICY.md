@@ -1748,11 +1748,13 @@ now; the 2026-09-24 import decision is not a permanent placement rule for
 generic solve. Tracking-space normalization, source tracker IDs, raw
 observations, availability and source hints stay here.
 
-Reassess generic tracker assignment, anatomical solve, pose reconstruction,
-confidence fusion and multi-tracker motion synthesis for `usd-motion-plugins`
+Reassess anatomical solve, pose reconstruction, confidence fusion and
+multi-tracker motion synthesis for `usd-motion-plugins`
 when the algorithm works without a source/device name, is reusable across
 connectors and generically produces `MotionPose`. Any move must avoid the
 reverse dependency and duplicate observation contracts noted in §46.4.
+The ownership review in §47.5.1 settles assignment versus semantic generation
+and retains the direct solve until its downstream type-contract prerequisites.
 
 For each new feature, apply these placement rules:
 
@@ -1768,4 +1770,37 @@ head/controllers/hands/body observations, source normalization, then
 `MotionFrame`, with no filter, retargeter, recorder, stage or avatar semantics.
 WebXR and MediaPipe follow the same contract; generic body reconstruction
 must not be fixed inside a connector.
+
+### 47.5.1 Tracking ownership review
+
+**Accepted, 2026-10-08.** The deciding distinction is observation organization
+versus generating motion semantics. Operator assignment and its applicability
+validation stay in `motionConnectorTracking`: they map opaque observation
+identities to connector-owned `TrackerRegion` values, and consume no geometry,
+joint vocabulary or pose. A region remains a placement hint, never a joint alias.
+
+The direct `SolveTrackerPose` is motion-semantic generation. Its region-to-joint
+choice, ancestor composition, sparse local rotations and hips/root authoring
+operate without source/device names and belong in `usd-motion-plugins`.
+Anatomical reconstruction, confidence fusion and multi-tracker semantic solve
+share that owner. This ownership decision does not introduce a library edge or
+move code: the existing direct solve remains a compatibility path until the
+motion-owned input and component contract, validation/comparison/recording
+obligations and parity fixtures are adopted there.
+
+`MotionFrame` and its `core::TrackerObservation` stay connector-owned.
+`TrackerRegion` and assignment stay here too. The legacy
+`tracking::TrackerObservation` is only a projection for the direct solve, not
+a shared acquisition type to move or copy. A downstream input must describe
+motion semantics, without tracker IDs, regions or connector types; integration
+maps an assignment into that input by value. Neither repository aliases or
+copies the other's contract, and downstream libraries never include connectors.
+
+OpenXR/WebXR viewer, controller, hand and body hints identify source observations,
+not parent-local humanoid rotations. MediaPipe body/hand landmarks can be
+position-only and require reconstruction that the direct orientation solve
+cannot provide. VRChat OSC observations support the existing direct solve only
+with explicit operator assignment. None authorizes a source-specific body solve
+inside acquisition. The remaining motion-side contract and migration are scoped
+in [the boundary roadmap](../roadmap/boundary-implementation.md).
 

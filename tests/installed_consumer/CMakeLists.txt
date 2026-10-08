@@ -50,3 +50,9 @@ target_include_directories(installed_consumer PRIVATE "${CMAKE_CURRENT_BINARY_DI
 target_compile_definitions(installed_consumer PRIVATE
     MOTIONCONNECTORS_CONSUMER_PACKAGES=${_count})
 target_link_libraries(installed_consumer PRIVATE ${_targets})
+
+if(TARGET motionConnectorTracking::motionConnectorTracking
+   AND TARGET motionConnectorCore::motionConnectorCore)
+    target_compile_definitions(installed_consumer PRIVATE
+        MOTIONCONNECTORS_CONSUMER_TRACKING=1)
+endif()

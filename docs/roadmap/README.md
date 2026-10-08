@@ -11,7 +11,7 @@ changes to the [changelog](../../CHANGELOG.md), and frozen release scope to
 | Document | Contents |
 | --- | --- |
 | [current.md](current.md) | v0.2.0 execution order and release gates; v0.3.0 consumer boundary; deferred work and operator evidence. |
-| [boundary-implementation.md](boundary-implementation.md) | Generic tracking ownership review and its completion criteria. |
+| [boundary-implementation.md](boundary-implementation.md) | Motion-owned solve input prerequisites and the consumer parity/migration gate. |
 
 ## Status at a glance
 
@@ -20,7 +20,7 @@ incomplete release scope**, not implementation or release availability.
 
 | Milestone | Incomplete scope | Dependency |
 | --- | --- | --- |
-| v0.2.0: native consumer boundary | tracking ownership review; CC-O7 decision and C ABI; Python binding; `record_stream` example; installed-consumer and release artifact validation; docs consistency | preserve the acquisition gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement) |
+| v0.2.0: native consumer boundary | CC-O7 decision and C ABI; Python binding; `record_stream` example; installed-consumer and release artifact validation; docs consistency | preserve the acquisition gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement) |
 | v0.3.0: browser / JS / WASM consumer boundary | shared JS/TS consumer API in `bindings/js/`; WASM-friendly data ABI | the native C ABI and browser acquisition contracts |
 | after the current milestones | advanced devices, generation adapter and further integration examples | explicit scope and downstream contracts before scheduling |
 
@@ -33,7 +33,8 @@ runtime abstractions follow the current consumer-boundary milestones.
 Questions stay in their owning documents; this list schedules work without
 copying their definitions or resolution status.
 
-- Review [generic tracking ownership](boundary-implementation.md) before CC-O7.
+- Adopt the motion-owned input and parity contracts before
+  [generic solve migration](boundary-implementation.md).
 - Resolve [CC-O7](../design/CONNECTOR_CONTRACT.md#13-open-questions) before
   Python binding implementation and v0.2.0 validation.
 - Consider [CC-O1 and CC-O5](../design/CONNECTOR_CONTRACT.md#13-open-questions)

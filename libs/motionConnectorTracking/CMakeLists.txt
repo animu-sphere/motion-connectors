@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# motionConnectorTracking — which tracker is which body region, and nothing below or
-# above that.
+# motionConnectorTracking — tracker assignment and the retained direct solve.
+# Assignment organizes identities; the compatibility solve produces poses.
+# DESIGN_POLICY §47.5.1 and the boundary roadmap own its future migration.
 #
 # A plain static library, not a plugin bundle: it registers nothing with OpenUSD
 # and ships no plugInfo.json (WORKSPACE.md §1). Its allowed edge set was empty
@@ -15,10 +16,8 @@
 # never a `HumanJoint` — has no link line to fail on anyway (§2, which forbids
 # the alias by name). So the check reads the sources, per file.
 #
-# Unlike the two leaves above it, this library is on the **product** side of
-# §5's split, and nothing links it at all yet: §2's permission is
-# `adapters/*/tools/* -> motionConnectorTracking` and no CLI has taken it (VRC-6). Nothing
-# has to change for a product tool to link it either.
+# This library is on the product side of §5's split. vrchat_osc_record composes
+# assignment and solve for semantic export; source libraries never link it.
 
 cmake_minimum_required(VERSION 3.22)
 

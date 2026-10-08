@@ -2,8 +2,9 @@
 
 `motionConnectorTracking` answers two questions in the order they have to be asked:
 **which tracker is on which body region**, and **what that means for a
-skeleton**. It never answers the first by way of the second, which is the whole
-reason it is one library and not a header in `motionCore`.
+skeleton**. Assignment organizes observations; the retained direct solve
+generates a sparse pose. Their ownership is distinct even while both live in
+one package.
 
 A tracker source carries numbered observations that are pre-IK, and a tracker
 index is not a body role — it is an index into whatever the wearer strapped on.
@@ -16,16 +17,17 @@ where this library was measured before it moved):
 | --- | --- | --- |
 | **Decode** — bytes to an observation | the adapter | addresses, type tags, argument order |
 | **Assignment** — tracker to body region | **this library** | tracker identities, a region vocabulary, an operator's statement |
-| **Solve** — assigned observations to a pose | **this library** | canonical bones, target-independent. Never an avatar |
+| **Solve** — assigned observations to a pose | downstream motion processing; compatibility implementation here pending migration | canonical bones, target-independent. Never an avatar |
 
 Current capability status, test evidence and release availability are in the
 [capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
 
-The existing assignment/solve placement is retained while the
-[ownership review](../../docs/roadmap/boundary-implementation.md) distinguishes
-observation organization from motion-semantic generation under
-[DESIGN_POLICY §47.5](../../docs/design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
-It is not a permanent placement rule for anatomical solve or pose reconstruction.
+The [ownership decision](../../docs/design/DESIGN_POLICY.md#4751-tracking-ownership-review)
+keeps regions and assignment here and assigns semantic solve downstream.
+The [migration roadmap](../../docs/roadmap/boundary-implementation.md) defines
+the motion-owned input and parity prerequisites before code moves. Acquisition
+uses `core::TrackerObservation`; this library's observation is only the legacy
+solve input projection and does not carry acquisition confidence or timing.
 
 ## A region is not a bone
 
@@ -54,6 +56,14 @@ default and no name heuristic, because a detector written before the contract
 settles the contract on whichever rig was recorded first. Automatic assignment
 from rest geometry must operate **over** this contract — a producer of
 `TrackerAssignmentSpec`, never a second way to reach a binding.
+
+An assignment owns the complete observation identity order. Before applying its
+indices to another array, call `ValidateTrackerAssignmentObservation` with that
+array's identities. New values with the same identities are valid; a reordered,
+replaced, added or removed identity requires reassignment, including an ignored
+tracker. The direct solve performs this check itself and returns
+`AssignmentUnusable` before authoring a pose. Hand-built assignments must also
+fill `observedTrackers`.
 
 ## A set it cannot place is three answers
 
@@ -128,8 +138,8 @@ It is on the **product** side of
 consumer in this repository is `tools/vrchatOscRecord`. The imported
 `--export-trace` path takes an operator's assignment and produces a
 source-normalized pose for a downstream trace; it does not perform target-avatar
-IK. The trace export is a compatibility path under review, while the solve and
-its observation contract remain the responsibility of this library.
+IK. The trace export and direct solve remain compatibility paths pending the
+motion-owned input contract and consumer parity gate.
 
 No source *library* names it as a dependency, and none may: a decoder that
 resolved an assignment would have invented a calibration and hidden it inside a

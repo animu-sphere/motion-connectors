@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// What one device reported, under the identity the source calls it by — and
-// nothing about what that means for a body.
+// Legacy input projection for the retained direct tracker solve.
+// Acquisition observations are core::TrackerObservation in MotionFrame;
+// this type carries only the geometry that the compatibility solve reads.
+// It must not become a second acquisition contract or a motion-owned type.
+// DESIGN_POLICY §47.5.1 owns the boundary and migration prerequisites.
 //
 // This is the value the third of
 // [§5.1](../../../../docs/roadmap/osc-and-vrchat-trackers.md#51-assignment-is-a-third-thing-and-it-belongs-to-neither-end)'s
@@ -26,7 +29,7 @@
 // solve there with it.
 //
 // So the boundary is where it was — `motionCore` begins at the canonical pose —
-// and this library owns the shape in front of it, with one edge in the one
+// and this library retains the legacy projection, with one edge in the one
 // direction ([WORKSPACE.md §2](../../../../docs/architecture/WORKSPACE.md)).
 //
 // ## Canonical on arrival, and this library cannot check that
@@ -78,12 +81,10 @@
 #include <string_view>
 #include <vector>
 
-namespace openstrata::connectors::tracking
-{
+namespace openstrata::connectors::tracking {
 
 // One device's placement, in the canonical basis.
-struct TrackerObservation
-{
+struct TrackerObservation {
     // Verbatim, as the source names it. This is the string an operator's
     // statement addresses, so a solve driven by an assignment built from a
     // different spelling places nothing — which is a refusal the assignment
@@ -96,24 +97,20 @@ struct TrackerObservation
     bool hasPosition = false;
     bool hasRotation = false;
 
-    friend bool
-    operator==(const TrackerObservation& lhs, const TrackerObservation& rhs) noexcept
+    friend bool operator==(const TrackerObservation& lhs, const TrackerObservation& rhs) noexcept
     {
         // Exact, and gated on the flags. See the header note: a value under an
         // unset flag is not an observation, so it is not one here either.
         if (lhs.tracker != rhs.tracker || lhs.hasPosition != rhs.hasPosition ||
-            lhs.hasRotation != rhs.hasRotation)
-        {
+            lhs.hasRotation != rhs.hasRotation) {
             return false;
         }
-        if (lhs.hasPosition && lhs.position != rhs.position)
-        {
+        if (lhs.hasPosition && lhs.position != rhs.position) {
             return false;
         }
         return !lhs.hasRotation || lhs.rotation == rhs.rotation;
     }
-    friend bool
-    operator!=(const TrackerObservation& lhs, const TrackerObservation& rhs) noexcept
+    friend bool operator!=(const TrackerObservation& lhs, const TrackerObservation& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -126,8 +123,8 @@ struct TrackerObservation
 // `TrackerAssignmentBinding` holds an index into the observation the assignment
 // was made against, so an assignment built from one order and applied to
 // another binds a region to a device nobody wore. Building the identity list by
-// hand is how that happens; this is one line instead, and `SolveTrackerPose`
-// refuses an index it cannot resolve rather than trusting the caller did it.
+// hand is how that happens; this is one line instead. Assignment owns the
+// identity order, and `SolveTrackerPose` checks it before reading geometry.
 //
 // The views borrow from `observed`, so it must outlive them.
 MOTIONCONNECTORTRACKING_API std::vector<std::string_view>

@@ -1,36 +1,35 @@
-# Generic tracking ownership review
+# Generic tracking solve migration
 
-This page holds the remaining placement decision under
-[DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
+This page holds the remaining type-contract and migration work under
+[DESIGN_POLICY §47.5.1](../design/DESIGN_POLICY.md#4751-tracking-ownership-review).
 Current structure and dependency enforcement belong to
 [WORKSPACE §2](../architecture/WORKSPACE.md#2-dependency-directions);
 acquisition and test evidence belong to the
 [capability matrix](../reference/CAPABILITY_MATRIX.md). Historical Boundary
 Phases A–E are recorded in the [changelog](../../CHANGELOG.md).
 
-## Review scope
+## Prerequisites
 
-Retain `motionConnectorTracking` while reviewing its algorithms against the
-OpenXR, WebXR, MediaPipe and VRChat OSC observation contracts.
+Retain the direct solve in `motionConnectorTracking` until these prerequisites
+are adopted in `usd-motion-plugins` and consumer composition:
 
-- Keep source observation identity, tracker region hints, raw assignment
-  metadata, generic tracker assignment and acquisition-side tracking-space
-  normalization in `motion-connectors`.
-- Assess anatomical solve, humanoid pose reconstruction, confidence fusion
-  and multi-tracker semantic synthesis for `usd-motion-plugins`. The deciding
-  question is whether the algorithm organizes observations or generates motion
-  semantics, without requiring a source/device name.
-- Resolve observation and region types before proposing a move. A downstream
-  algorithm must not introduce a reverse repository dependency or copy the
-  shared contract.
+- Define a motion-owned semantic input, its component identity and dependency
+  edges, without connector observations, tracker identities or region types.
+- Specify sparse position/orientation availability, confidence handling,
+  validation, comparison and recording implications. Do not treat MediaPipe
+  position-only landmarks as a rig the orientation solve can reconstruct.
+- Adopt structural contract changes in their own PR before moving code.
+- Add consumer-owned adaptation from installed acquisition/assignment packages
+  to the motion input, retaining acquisition metadata outside the solve.
+- Prove parity for current direct orientation composition, hips/root handling,
+  partial rigs, silent ancestors, unused positions and refusal behavior.
 
-## Completion criteria
+## Migration gate
 
-Record the ownership decision and any type-boundary decision in the owning
-repositories' architecture/design documents. Keep assignment and semantic solve
-distinct even if they currently share a library. Schedule any resulting code
-move explicitly; this review does not assume that all tracking code moves.
-
-The review precedes the C ABI decision in
-[current.md](current.md#v020-execution-order), so ABI ownership can account for
-the observation boundary.
+Only after motion-owner algorithm tests and installed consumer parity pass,
+move the direct solve and remove the legacy input projection. Keep acquisition,
+regions, operator assignment and identity applicability here; introduce no
+reverse dependency and no copied observation contract. Coordinate with
+`usd-motion-plugins`' MC-O8. The acquisition C ABI can use the core observation
+boundary independently of this migration
+([current.md](current.md#v020-execution-order)).

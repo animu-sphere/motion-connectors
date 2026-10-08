@@ -85,8 +85,7 @@
 #include <string_view>
 #include <vector>
 
-namespace openstrata::connectors::tracking
-{
+namespace openstrata::connectors::tracking {
 
 // One line of an operator's statement: this tracker is on this region.
 //
@@ -94,18 +93,17 @@ namespace openstrata::connectors::tracking
 // through without interpretation — a number, a name, a serial. Nothing here
 // parses it, orders by it, or reads meaning out of its shape, which is what
 // keeps one wire's numbering convention from becoming this library's.
-struct TrackerRegionStatement
-{
+struct TrackerRegionStatement {
     std::string tracker;
     TrackerRegion region = TrackerRegion::Count;
 
-    friend bool
-    operator==(const TrackerRegionStatement& lhs, const TrackerRegionStatement& rhs) noexcept
+    friend bool operator==(const TrackerRegionStatement& lhs,
+                           const TrackerRegionStatement& rhs) noexcept
     {
         return lhs.tracker == rhs.tracker && lhs.region == rhs.region;
     }
-    friend bool
-    operator!=(const TrackerRegionStatement& lhs, const TrackerRegionStatement& rhs) noexcept
+    friend bool operator!=(const TrackerRegionStatement& lhs,
+                           const TrackerRegionStatement& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -113,8 +111,7 @@ struct TrackerRegionStatement
 
 // What to do with an observed tracker no statement places. See the header note;
 // the three differ in what a caller does next, not only in what they return.
-enum class UnplacedTrackerPolicy : std::uint8_t
-{
+enum class UnplacedTrackerPolicy : std::uint8_t {
     Refuse,
     Ignore,
     Hold,
@@ -129,8 +126,7 @@ MOTIONCONNECTORTRACKING_API std::optional<UnplacedTrackerPolicy>
 ParseUnplacedTrackerPolicy(std::string_view name) noexcept;
 
 // An operator's statement, whole.
-struct TrackerAssignmentSpec
-{
+struct TrackerAssignmentSpec {
     // In the order the operator wrote them. That order is the report order of
     // every vector below, so a printed assignment reads back in the shape it
     // was written rather than in an enum's.
@@ -151,7 +147,7 @@ struct TrackerAssignmentSpec
 // `reason` is filled with plain text naming the first failure when it is not
 // null; it is untouched on success.
 MOTIONCONNECTORTRACKING_API bool ValidateTrackerAssignmentSpec(const TrackerAssignmentSpec& spec,
-                                                      std::string* reason = nullptr);
+                                                               std::string* reason = nullptr);
 
 // Read a statement in the form an operator types:
 //
@@ -165,13 +161,12 @@ MOTIONCONNECTORTRACKING_API bool ValidateTrackerAssignmentSpec(const TrackerAssi
 // that does not validate — the two are one refusal to a caller, and separating
 // them would offer a spec that parsed and cannot be used.
 MOTIONCONNECTORTRACKING_API bool ParseTrackerAssignmentSpec(std::string_view text,
-                                                   TrackerAssignmentSpec* out,
-                                                   std::string* reason = nullptr);
+                                                            TrackerAssignmentSpec* out,
+                                                            std::string* reason = nullptr);
 
 // Why an observation was not assigned. The enumerator values are stable, and
 // they are *not* the contract a user reads — an adapter's codes are.
-enum class TrackerAssignmentRefusal : std::uint8_t
-{
+enum class TrackerAssignmentRefusal : std::uint8_t {
     None,
     // `spec` does not satisfy `ValidateTrackerAssignmentSpec`. `detail` carries
     // its reason verbatim.
@@ -207,21 +202,20 @@ MOTIONCONNECTORTRACKING_API std::string_view
 TrackerAssignmentRefusalName(TrackerAssignmentRefusal refusal) noexcept;
 
 // One region bound to one observed tracker.
-struct TrackerAssignmentBinding
-{
+struct TrackerAssignmentBinding {
     TrackerRegion region = TrackerRegion::Count;
     // An index into the observation `AssignTrackers` was given, never into the
     // spec: the caller holds the samples, and handing back a position in its own
     // array is what lets this library stay ignorant of what a sample is.
     std::size_t observedIndex = 0;
 
-    friend bool
-    operator==(const TrackerAssignmentBinding& lhs, const TrackerAssignmentBinding& rhs) noexcept
+    friend bool operator==(const TrackerAssignmentBinding& lhs,
+                           const TrackerAssignmentBinding& rhs) noexcept
     {
         return lhs.region == rhs.region && lhs.observedIndex == rhs.observedIndex;
     }
-    friend bool
-    operator!=(const TrackerAssignmentBinding& lhs, const TrackerAssignmentBinding& rhs) noexcept
+    friend bool operator!=(const TrackerAssignmentBinding& lhs,
+                           const TrackerAssignmentBinding& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -235,8 +229,7 @@ struct TrackerAssignmentBinding
 // its own evidence would make "the operator named a tracker this rig does not
 // carry" indistinguishable from "nothing was tried". `Placed()` is the gate,
 // and it is the only thing a caller may drive a solve from.
-struct TrackerAssignment
-{
+struct TrackerAssignment {
     // Defaults to a refusal, not to success. A `TrackerAssignment` nobody
     // assigned has concluded nothing, and a struct whose default state claims a
     // binding is a trap for exactly the paths that forget to check.
@@ -254,18 +247,20 @@ struct TrackerAssignment
     // under every policy; see the header note.
     std::vector<TrackerRegion> absent;
 
-    bool
-    Placed() const noexcept
-    {
-        return refusal == TrackerAssignmentRefusal::None;
-    }
+    // Owned identities in the observation's order, including unplaced trackers.
+    // Bindings can be reused with new values only while this identity order
+    // stays the same. Copying the strings keeps no views into a source frame.
+    std::vector<std::string> observedTrackers;
+
+    bool Placed() const noexcept { return refusal == TrackerAssignmentRefusal::None; }
 
     // The observed tracker bound to `region`, or nullopt when none is.
     MOTIONCONNECTORTRACKING_API std::optional<std::size_t> ObservedFor(TrackerRegion region) const;
 
     // The region an observed tracker was bound to, or nullopt when it is
     // unplaced or out of range.
-    MOTIONCONNECTORTRACKING_API std::optional<TrackerRegion> RegionFor(std::size_t observedIndex) const;
+    MOTIONCONNECTORTRACKING_API std::optional<TrackerRegion>
+    RegionFor(std::size_t observedIndex) const;
 };
 
 // Assign `spec` to the trackers an observation carries.
@@ -281,7 +276,16 @@ struct TrackerAssignment
 // nothing placed. It runs outermost-first — a statement that is not a statement
 // says nothing about a rig, and an observation that is not one is not addressed
 // by any check below it.
-MOTIONCONNECTORTRACKING_API TrackerAssignment AssignTrackers(const TrackerAssignmentSpec& spec,
-                                                    const std::vector<std::string_view>& observed);
+MOTIONCONNECTORTRACKING_API TrackerAssignment
+AssignTrackers(const TrackerAssignmentSpec& spec, const std::vector<std::string_view>& observed);
+
+// Check a placed assignment against the identities of the current observation.
+// Geometry and channel availability may change; identity order may not.
+// Hand-built assignments must also populate observedTrackers. The first
+// refusal is reported in reason, which is untouched on success.
+MOTIONCONNECTORTRACKING_API bool
+ValidateTrackerAssignmentObservation(const TrackerAssignment& assignment,
+                                     const std::vector<std::string_view>& observed,
+                                     std::string* reason = nullptr);
 
 } // namespace openstrata::connectors::tracking
