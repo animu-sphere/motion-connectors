@@ -6,6 +6,14 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Settle tracking ownership: observation identity, regions and operator
+  assignment stay connector-owned; semantic solve belongs downstream, with
+  its current compatibility implementation retained pending motion-owned
+  inputs and parity. Distinguish core acquisition observations from the legacy
+  solve projection. Assignment now owns observation identities and validates
+  applicability before solve, refusing reordered/replaced arrays and duplicate
+  device bindings without authoring a pose.
+
 - Align documentation with the native C ABI → Python → `record_stream` →
   v0.2.0 sequence and the v0.3.0 JS/TS + WASM consumer boundary. Keep roadmap
   work unfinished-only, separate browser acquisition from bindings, centralize

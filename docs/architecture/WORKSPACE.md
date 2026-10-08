@@ -161,6 +161,17 @@ tools/* ──────────────────→ the connectors
 web modules ───────────────→ caller-owned browser/Tasks result APIs; no native library
 ```
 
+Tracking ownership is settled in
+[DESIGN_POLICY §47.5.1](../design/DESIGN_POLICY.md#4751-tracking-ownership-review).
+The graph above retains the direct solve as a compatibility path. Region and
+assignment files, including observation applicability validation, have no
+motion/OpenUSD dependency; the existing solve alone takes the `motionCore` edge.
+`core::TrackerObservation` owns acquisition values; the tracking observation
+is a legacy solve input projection. No connector library links the tracking
+library, and no motion library consumes either connector observation type.
+Any solve migration first adopts a motion-owned input/component contract and
+changes the structural contracts in their own PR before moving code.
+
 `motion_connect` links VMC, mocopi, VRChat OSC and WebSocket, and is built
 only when all four CLI sources and tools are enabled. `bridge` adds the
 WebSocket sender without downstream motion treatment. `record` uses the
@@ -417,9 +428,10 @@ WS-O1, the names and layout, and WS-O7, the import order, were decided on
 2026-09-19 (§1.1 and §3). WS-O2 was decided on 2026-09-24: tracker assignment
 and the direct solve remain together in `motionConnectorTracking`
 ([CONNECTOR_CONTRACT §4](../design/CONNECTOR_CONTRACT.md#4-trackerobservation)).
-The 2026-10-06 boundary clarification retains them for now and requires a
-placement review for generic algorithms under
-[DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
+The 2026-10-08 review retains assignment here and assigns semantic solve to
+downstream motion processing; the direct solve stays on the current graph until
+the motion-side input contract and migration prerequisites are adopted
+([DESIGN_POLICY §47.5.1](../design/DESIGN_POLICY.md#4751-tracking-ownership-review)).
 WS-O3 was decided on 2026-10-04: the three record tools remain, one per
 connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
 per tag, and one artifact per member in one OCI repository, the CLIs once

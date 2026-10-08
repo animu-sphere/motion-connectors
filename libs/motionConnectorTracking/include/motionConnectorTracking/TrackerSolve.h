@@ -153,8 +153,7 @@
 #include <string>
 #include <vector>
 
-namespace openstrata::connectors::tracking
-{
+namespace openstrata::connectors::tracking {
 
 // The bone this solve places `region` on, or nullopt for a region it refuses.
 //
@@ -169,8 +168,7 @@ namespace openstrata::connectors::tracking
 MOTIONCONNECTORTRACKING_API std::optional<openstrata::motion::HumanJoint>
 TrackerRegionJoint(TrackerRegion region) noexcept;
 
-struct TrackerSolveConfig
-{
+struct TrackerSolveConfig {
     // Whether an observed hips **position** becomes `RootMotion::worldPosition`.
     // The hips rotation is authored regardless; see the header.
     //
@@ -184,8 +182,7 @@ struct TrackerSolveConfig
 // Why a solve produced no pose. As with the assignment layer, these are not the
 // contract a user reads — an adapter's diagnostic codes are, and this library
 // holds none.
-enum class TrackerSolveRefusal : std::uint8_t
-{
+enum class TrackerSolveRefusal : std::uint8_t {
     None,
     // The assignment handed in did not place: `Refuse`, `Hold`, an invalid
     // spec, or an observation the assignment layer rejected. `detail` carries
@@ -194,10 +191,9 @@ enum class TrackerSolveRefusal : std::uint8_t
     // happened one layer down.
     AssignmentRefused,
     // The assignment cannot be applied to *this* observation array: a binding
-    // indexes past its end, or two bindings name one region. Neither is
-    // producible by `AssignTrackers` on the array its identities came from, so
-    // this refusal means the two calls were given different arrays — which
-    // would otherwise bind a region to a device nobody wore.
+    // identities were reordered/replaced, an index is outside it, or bindings
+    // repeat a region/device. Applicability belongs to the assignment layer;
+    // this solve forwards its reason before reading geometry.
     AssignmentUnusable,
     // A value that is not one: a non-finite component, or a rotation that
     // cannot be normalised. Refused rather than sanitised — a pose carrying a
@@ -215,7 +211,8 @@ enum class TrackerSolveRefusal : std::uint8_t
 inline constexpr std::size_t TrackerSolveRefusalCount =
     static_cast<std::size_t>(TrackerSolveRefusal::Count);
 
-MOTIONCONNECTORTRACKING_API std::string_view TrackerSolveRefusalName(TrackerSolveRefusal refusal) noexcept;
+MOTIONCONNECTORTRACKING_API std::string_view
+TrackerSolveRefusalName(TrackerSolveRefusal refusal) noexcept;
 
 // What solving an assignment against an observation produced.
 //
@@ -230,8 +227,7 @@ MOTIONCONNECTORTRACKING_API std::string_view TrackerSolveRefusalName(TrackerSolv
 // `ObservationInvalid` onward the rule is the layer below's exactly: the caller
 // that most needs this struct is the one reporting on a solve that did not
 // succeed.
-struct TrackerSolve
-{
+struct TrackerSolve {
     // Defaults to a refusal. A `TrackerSolve` nobody solved has concluded
     // nothing, and `pose` is default-constructed rather than absent, so the
     // enumerator is the only thing that says whether reading it is meaningful.
@@ -278,11 +274,7 @@ struct TrackerSolve
     // would be answering the first question twice.
     std::vector<TrackerRegion> positionsUnused;
 
-    bool
-    Solved() const noexcept
-    {
-        return refusal == TrackerSolveRefusal::None;
-    }
+    bool Solved() const noexcept { return refusal == TrackerSolveRefusal::None; }
 };
 
 // Solve `assignment` against the observations it was made from.
@@ -298,9 +290,8 @@ struct TrackerSolve
 // solved. It runs outermost-first, because an assignment that refused says
 // nothing about an observation and an assignment applied to the wrong array is
 // not addressed by any check below it.
-MOTIONCONNECTORTRACKING_API TrackerSolve SolveTrackerPose(const TrackerAssignment& assignment,
-                                                 const std::vector<TrackerObservation>& observed,
-                                                 double timestamp,
-                                                 const TrackerSolveConfig& config = {});
+MOTIONCONNECTORTRACKING_API TrackerSolve SolveTrackerPose(
+    const TrackerAssignment& assignment, const std::vector<TrackerObservation>& observed,
+    double timestamp, const TrackerSolveConfig& config = {});
 
 } // namespace openstrata::connectors::tracking

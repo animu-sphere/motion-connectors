@@ -41,8 +41,7 @@
 #include <string>
 #include <vector>
 
-namespace
-{
+namespace {
 
 namespace tracking = openstrata::connectors::tracking;
 
@@ -107,18 +106,15 @@ WorldRotation(const openstrata::motion::MotionPose& pose, openstrata::motion::Hu
 {
     std::vector<openstrata::motion::HumanJoint> chain;
     std::optional<openstrata::motion::HumanJoint> walk = bone;
-    while (walk)
-    {
+    while (walk) {
         chain.push_back(*walk);
         walk = openstrata::motion::HumanJointParent(*walk);
     }
 
     pxr::GfQuatd world = pxr::GfQuatd::GetIdentity();
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it)
-    {
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const std::size_t index = static_cast<std::size_t>(*it);
-        if (pose.validRotations.test(index))
-        {
+        if (pose.validRotations.test(index)) {
             world = world * pxr::GfQuatd(pose.localRotations[index]);
         }
     }
@@ -135,8 +131,7 @@ AngleBetween(const pxr::GfQuatd& lhs, const pxr::GfQuatd& rhs)
     const pxr::GfQuatd b = rhs.GetNormalized();
     double dot = a.GetReal() * b.GetReal() + pxr::GfDot(a.GetImaginary(), b.GetImaginary());
     dot = std::fabs(dot);
-    if (dot > 1.0)
-    {
+    if (dot > 1.0) {
         dot = 1.0;
     }
     return 2.0 * std::acos(dot);
@@ -156,8 +151,7 @@ AssertReproduces(const openstrata::motion::MotionPose& pose, openstrata::motion:
 // A six-point rig: hips, head, two hands, two feet. Every fixture below starts
 // from this and removes or adds one thing, so what a difference costs is
 // visible in one place.
-struct SixPoint
-{
+struct SixPoint {
     std::vector<TrackerObservation> observed;
     TrackerAssignmentSpec spec;
     TrackerAssignment assignment;
@@ -185,8 +179,7 @@ MakeSixPoint()
 void
 TestEveryRefusalHasAName()
 {
-    for (std::size_t i = 0; i < TrackerSolveRefusalCount; ++i)
-    {
+    for (std::size_t i = 0; i < TrackerSolveRefusalCount; ++i) {
         assert(!TrackerSolveRefusalName(static_cast<TrackerSolveRefusal>(i)).empty());
     }
     // Outside the enum is empty rather than a guess, on the vocabulary's rule:
@@ -202,9 +195,11 @@ TestARegionReachesAJointOnlyWhereThisSolveKnowsWhichOne()
     assert(TrackerRegionJoint(TrackerRegion::Chest) == openstrata::motion::HumanJoint::Chest);
     assert(TrackerRegionJoint(TrackerRegion::Head) == openstrata::motion::HumanJoint::Head);
     assert(TrackerRegionJoint(TrackerRegion::LeftHand) == openstrata::motion::HumanJoint::LeftHand);
-    assert(TrackerRegionJoint(TrackerRegion::RightHand) == openstrata::motion::HumanJoint::RightHand);
+    assert(TrackerRegionJoint(TrackerRegion::RightHand) ==
+           openstrata::motion::HumanJoint::RightHand);
     assert(TrackerRegionJoint(TrackerRegion::LeftFoot) == openstrata::motion::HumanJoint::LeftFoot);
-    assert(TrackerRegionJoint(TrackerRegion::RightFoot) == openstrata::motion::HumanJoint::RightFoot);
+    assert(TrackerRegionJoint(TrackerRegion::RightFoot) ==
+           openstrata::motion::HumanJoint::RightFoot);
 
     // The four straps that sit between two bones. This is the library's own
     // argument read forwards, and it is checked rather than described because a
@@ -242,23 +237,33 @@ TestASolvedRigReproducesEveryObservedOrientation()
     // against the wrong parent fails here and only here.
     AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Hips, rig.observed[0].rotation);
     AssertReproduces(solve.pose, openstrata::motion::HumanJoint::Head, rig.observed[1].rotation);
-    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::LeftHand, rig.observed[2].rotation);
-    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
-    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::LeftFoot, rig.observed[4].rotation);
-    AssertReproduces(solve.pose, openstrata::motion::HumanJoint::RightFoot, rig.observed[5].rotation);
+    AssertReproduces(
+        solve.pose, openstrata::motion::HumanJoint::LeftHand, rig.observed[2].rotation);
+    AssertReproduces(
+        solve.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
+    AssertReproduces(
+        solve.pose, openstrata::motion::HumanJoint::LeftFoot, rig.observed[4].rotation);
+    AssertReproduces(
+        solve.pose, openstrata::motion::HumanJoint::RightFoot, rig.observed[5].rotation);
 
     // Sparse by construction: six placed bones and nothing else, with every
     // unobserved joint left at rest rather than estimated.
     assert(solve.pose.validRotations.count() == 6);
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Spine)));
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)));
-    assert(solve.pose.localRotations[static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)] ==
-           pxr::GfQuatf::GetIdentity());
+    assert(!solve.pose.validRotations.test(
+        static_cast<std::size_t>(openstrata::motion::HumanJoint::Spine)));
+    assert(!solve.pose.validRotations.test(
+        static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)));
+    assert(
+        solve.pose.localRotations[static_cast<std::size_t>(openstrata::motion::HumanJoint::Neck)] ==
+        pxr::GfQuatf::GetIdentity());
 
     // Reported in binding order, which is the operator's declaration order.
-    assert(solve.placed ==
-           Regions({TrackerRegion::Hips, TrackerRegion::Head, TrackerRegion::LeftHand,
-                    TrackerRegion::RightHand, TrackerRegion::LeftFoot, TrackerRegion::RightFoot}));
+    assert(solve.placed == Regions({TrackerRegion::Hips,
+                                    TrackerRegion::Head,
+                                    TrackerRegion::LeftHand,
+                                    TrackerRegion::RightHand,
+                                    TrackerRegion::LeftFoot,
+                                    TrackerRegion::RightFoot}));
     assert(solve.unsolved.empty());
     assert(solve.withoutRotation.empty());
     // Every one of the six reported an orientation, so nothing above anything
@@ -298,7 +303,8 @@ TestAnAddedStrapChangesALocalRotationAndNoWorldOne()
     assert(ParseTrackerAssignmentSpec(
         "t1=hips t2=head t3=leftHand t4=rightHand t5=leftFoot t6=rightFoot "
         "t7=chest",
-        &spec, nullptr));
+        &spec,
+        nullptr));
     const TrackerAssignment assignment = AssignTrackers(spec, TrackerIdentities(rig.observed));
     assert(assignment.Placed());
     const TrackerSolve with = SolveTrackerPose(assignment, rig.observed, 0.0);
@@ -314,7 +320,8 @@ TestAnAddedStrapChangesALocalRotationAndNoWorldOne()
     // The hands hang off the upper chest, which the chest strap moved: their
     // world orientations are still their own.
     AssertReproduces(with.pose, openstrata::motion::HumanJoint::LeftHand, rig.observed[2].rotation);
-    AssertReproduces(with.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
+    AssertReproduces(
+        with.pose, openstrata::motion::HumanJoint::RightHand, rig.observed[3].rotation);
 }
 
 void
@@ -357,7 +364,8 @@ TestARootThePolicyDoesNotAuthorIsReportedRatherThanDropped()
     // The rotation is authored either way: a body that turned turned, whatever
     // the translation is worth.
     assert(solve.pose.root.hasOrientation);
-    assert(solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
+    assert(solve.pose.validRotations.test(
+        static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
     // And the position it did not take is on the report rather than gone.
     assert(solve.positionsUnused == Regions({TrackerRegion::Hips}));
 }
@@ -470,7 +478,8 @@ TestAPositionOnlyTrackerCannotOrientAJoint()
     assert(solve.Solved());
     // The alternative — authoring identity — is bit-for-bit a tracker
     // reporting rest, so a consumer could not tell the two apart.
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
+    assert(!solve.pose.validRotations.test(
+        static_cast<std::size_t>(openstrata::motion::HumanJoint::Hips)));
     assert(!solve.pose.root.hasOrientation);
     assert(solve.withoutRotation == Regions({TrackerRegion::Hips}));
     // The position half still reached the root: half an observation is half an
@@ -488,7 +497,8 @@ TestAPositionOnlyTrackerCannotOrientAJoint()
     // trace and again in the clip replayed from it (report 04 section 5).
     assert(solve.placed.empty());
     assert(solve.withheldWithParent == Regions({TrackerRegion::Head}));
-    assert(!solve.pose.validRotations.test(static_cast<std::size_t>(openstrata::motion::HumanJoint::Head)));
+    assert(!solve.pose.validRotations.test(
+        static_cast<std::size_t>(openstrata::motion::HumanJoint::Head)));
 }
 
 void
@@ -663,6 +673,28 @@ TestAnAssignmentAppliedToADifferentArrayIsRefused()
     const TrackerSolve twice = SolveTrackerPose(doubled, rig.observed, 0.0);
     assert(twice.refusal == TrackerSolveRefusal::AssignmentUnusable);
     assert(twice.detail.find("head") != std::string::npos);
+
+    // Every index is in range, but it must still address the same tracker.
+    std::vector<TrackerObservation> reordered = rig.observed;
+    std::swap(reordered[0], reordered[1]);
+    const TrackerSolve wrongOrder = SolveTrackerPose(rig.assignment, reordered, 0.0);
+    assert(wrongOrder.refusal == TrackerSolveRefusal::AssignmentUnusable);
+    assert(wrongOrder.detail.find("was") != std::string::npos);
+    assert(wrongOrder.pose.validRotations.none());
+    assert(wrongOrder.placed.empty() && wrongOrder.unsolved.empty());
+    assert(wrongOrder.withoutRotation.empty() && wrongOrder.withheldWithParent.empty());
+    assert(wrongOrder.positionsUnused.empty());
+    assert(!wrongOrder.pose.root.hasPosition && !wrongOrder.pose.root.hasOrientation);
+
+    reordered = rig.observed;
+    reordered[0].tracker = "replacement";
+    assert(SolveTrackerPose(rig.assignment, reordered, 0.0).refusal ==
+           TrackerSolveRefusal::AssignmentUnusable);
+
+    // An assignment may consume a later frame with the same identities.
+    reordered = rig.observed;
+    reordered[0].rotation = Turn(pxr::GfVec3d(0.0, 1.0, 0.0), 25.0);
+    assert(SolveTrackerPose(rig.assignment, reordered, 1.0).Solved());
 }
 
 void
@@ -789,8 +821,7 @@ TestIdentitiesAreTheArrayTheAssignmentWasMadeFrom()
     const SixPoint rig = MakeSixPoint();
     const std::vector<std::string_view> identities = TrackerIdentities(rig.observed);
     assert(identities.size() == rig.observed.size());
-    for (std::size_t i = 0; i < identities.size(); ++i)
-    {
+    for (std::size_t i = 0; i < identities.size(); ++i) {
         assert(identities[i] == rig.observed[i].tracker);
     }
 

@@ -27,7 +27,7 @@ structure, rationale or incomplete work according to the ownership table below.
   ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
   the policy by section number.
   The accepted [external acquisition boundary (§47)](design/DESIGN_POLICY.md#47-external-acquisition-boundary)
-  fixes library responsibility at `MotionFrame`; the remaining generic tracking placement decision is scoped in
+  fixes library responsibility at `MotionFrame`; the remaining generic solve type-contract and migration work is scoped in
   [the boundary roadmap](roadmap/boundary-implementation.md).
 - Six focused contracts own one area each, and on that area they win over
   the design policy:

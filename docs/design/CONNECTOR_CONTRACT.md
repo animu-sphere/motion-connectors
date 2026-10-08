@@ -172,7 +172,7 @@ owner:
 | --- | --- | --- |
 | **Decode** — bytes to `TrackerObservation` | the connector | addresses, type tags, argument order; no body roles |
 | **Assignment** — which tracker is which body region | `motionConnectorTracking` | tracker identities, regions, an operator's explicit statement; never a protocol address literal |
-| **Solve** — assigned observations to a sparse `MotionPose` | `motionConnectorTracking` | assigned canonical observations and the shared joint vocabulary; never an avatar |
+| **Solve** — assigned observations to a sparse `MotionPose` | downstream motion processing; existing direct solve retained in `motionConnectorTracking` until its input contract is adopted | assigned canonical observations and the shared joint vocabulary; never an avatar |
 
 WS-O2 was decided on 2026-09-24: both generic steps remain in
 `motionConnectorTracking` for now. The direct solve consumes `TrackerRegion`
@@ -180,15 +180,26 @@ and an operator's assignment. Its tests are
 `motionConnectorTracking_trackerAssignment` and
 `motionConnectorTracking_trackerSolve`.
 
-The 2026-10-06 clarification keeps that implementation while reopening its
-long-term placement. Source tracking-space normalization, IDs, raw
-observations, availability and source hints stay connector-owned. Generic
-assignment, anatomical solve, pose reconstruction, confidence fusion and
-multi-tracker synthesis are candidates for `usd-motion-plugins` when they
-work without source/device names, are reusable across connectors and are
-generic `MotionPose` algorithms. A move must resolve the observation/region
-type boundary without a reverse dependency or a copied contract
-([DESIGN_POLICY §47.5](DESIGN_POLICY.md#475-tracking-and-placement-decisions)).
+The ownership review is recorded in
+[DESIGN_POLICY §47.5.1](DESIGN_POLICY.md#4751-tracking-ownership-review).
+`core::TrackerObservation` in `MotionFrame` is the acquisition contract,
+including optional confidence. `tracking::TrackerObservation` is the legacy
+direct solve's input projection, not a second acquisition contract. It carries
+no confidence or timing, and is neither serialized nor a downstream API.
+An integration may explicitly project observations for that solve; it must
+keep availability and metadata in its acquisition frame and cannot infer
+confidence from its absence in the projection.
+
+Assignment consumes opaque identity strings, not either geometric type.
+`AssignTrackers` owns a snapshot of every observed identity, including unplaced
+ones. `ValidateTrackerAssignmentObservation` checks binding indices, region
+validity, duplicate region/device bindings and the complete identity order.
+The same identities may carry new geometry or channel availability on a later
+frame; changed, added, removed or reordered identities require reassignment.
+Hand-built assignments must populate the snapshot too. Validation reports a
+plain reason and leaves it untouched on success. The direct solve reports a
+failed check as `AssignmentUnusable` before classifying or authoring a pose.
+Validation and assignment know no geometric value or bone.
 
 Explicit assignment by an operator is the default. Any automatic assignment
 must preserve the same observation and region contract.

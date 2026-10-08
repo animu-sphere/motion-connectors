@@ -9,11 +9,9 @@
 #include <cstddef>
 #include <string>
 
-namespace openstrata::connectors::tracking
-{
+namespace openstrata::connectors::tracking {
 
-namespace
-{
+namespace {
 
 constexpr std::array<std::string_view, TrackerSolveRefusalCount> kRefusalNames = {
     "None", "AssignmentRefused", "AssignmentUnusable", "ObservationInvalid", "NothingSolved"};
@@ -31,13 +29,6 @@ std::string
 Quote(std::string_view text)
 {
     return "\"" + std::string(text) + "\"";
-}
-
-std::string
-RegionText(TrackerRegion region)
-{
-    const std::string_view name = TrackerRegionName(region);
-    return name.empty() ? std::string("<outside the vocabulary>") : Quote(name);
 }
 
 bool
@@ -62,15 +53,15 @@ IsFinite(const pxr::GfQuatf& value) noexcept
 // a chain's ancestors are the union of its parent's and its parent — so this
 // reads one chain and not a fixed point.
 bool
-AncestorFellSilent(openstrata::motion::HumanJoint bone, const std::bitset<openstrata::motion::HumanJointCount>& namedJoints,
+AncestorFellSilent(openstrata::motion::HumanJoint bone,
+                   const std::bitset<openstrata::motion::HumanJointCount>& namedJoints,
                    const std::bitset<openstrata::motion::HumanJointCount>& withRotation)
 {
-    std::optional<openstrata::motion::HumanJoint> parent = openstrata::motion::HumanJointParent(bone);
-    while (parent)
-    {
+    std::optional<openstrata::motion::HumanJoint> parent =
+        openstrata::motion::HumanJointParent(bone);
+    while (parent) {
         const std::size_t index = static_cast<std::size_t>(*parent);
-        if (namedJoints.test(index) && !withRotation.test(index))
-        {
+        if (namedJoints.test(index) && !withRotation.test(index)) {
             return true;
         }
         parent = openstrata::motion::HumanJointParent(*parent);
@@ -94,9 +85,9 @@ ParentWorldRotation(openstrata::motion::HumanJoint bone,
                     const std::bitset<openstrata::motion::HumanJointCount>& valid)
 {
     std::vector<openstrata::motion::HumanJoint> chain;
-    std::optional<openstrata::motion::HumanJoint> parent = openstrata::motion::HumanJointParent(bone);
-    while (parent)
-    {
+    std::optional<openstrata::motion::HumanJoint> parent =
+        openstrata::motion::HumanJointParent(bone);
+    while (parent) {
         chain.push_back(*parent);
         parent = openstrata::motion::HumanJointParent(*parent);
     }
@@ -104,11 +95,9 @@ ParentWorldRotation(openstrata::motion::HumanJoint bone,
     // `chain` runs child-ward to root-ward; compose from the root down, because
     // world = parentWorld * local and the outermost rotation is applied last.
     pxr::GfQuatd world = pxr::GfQuatd::GetIdentity();
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it)
-    {
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         const std::size_t index = static_cast<std::size_t>(*it);
-        if (valid.test(index))
-        {
+        if (valid.test(index)) {
             world = world * authored[index];
         }
     }
@@ -120,8 +109,7 @@ ParentWorldRotation(openstrata::motion::HumanJoint bone,
 std::optional<openstrata::motion::HumanJoint>
 TrackerRegionJoint(TrackerRegion region) noexcept
 {
-    switch (region)
-    {
+    switch (region) {
     case TrackerRegion::Head:
         return openstrata::motion::HumanJoint::Head;
     case TrackerRegion::Chest:
@@ -172,41 +160,22 @@ SolveTrackerPose(const TrackerAssignment& assignment,
     // observation. The detail carries the layer below's own refusal, because a
     // caller reading only this enumerator would otherwise lose which of five
     // things happened there.
-    if (!assignment.Placed())
-    {
+    if (!assignment.Placed()) {
         solve.refusal = TrackerSolveRefusal::AssignmentRefused;
         solve.detail = std::string(TrackerAssignmentRefusalName(assignment.refusal));
-        if (!assignment.detail.empty())
-        {
+        if (!assignment.detail.empty()) {
             solve.detail += ": " + assignment.detail;
         }
         return solve;
     }
 
-    // Whether these bindings can be read against *this* array at all. Neither
-    // failure is producible by `AssignTrackers` on the identities the array
-    // gave it, so both mean the two calls were handed different arrays.
-    for (std::size_t i = 0; i < assignment.bound.size(); ++i)
-    {
-        const TrackerAssignmentBinding& binding = assignment.bound[i];
-        if (binding.observedIndex >= observed.size())
-        {
-            solve.refusal = TrackerSolveRefusal::AssignmentUnusable;
-            solve.detail = "region " + RegionText(binding.region) +
-                           " is bound to observed tracker " +
-                           std::to_string(binding.observedIndex) +
-                           ", and this observation carries " + std::to_string(observed.size());
-            return solve;
-        }
-        for (std::size_t j = 0; j < i; ++j)
-        {
-            if (assignment.bound[j].region == binding.region)
-            {
-                solve.refusal = TrackerSolveRefusal::AssignmentUnusable;
-                solve.detail = "region " + RegionText(binding.region) + " is bound twice";
-                return solve;
-            }
-        }
+    // Assignment applicability is observation organization, independent of
+    // geometry or pose generation. In-range indices alone cannot detect a
+    // reordered or replaced tracker array.
+    if (!ValidateTrackerAssignmentObservation(
+            assignment, TrackerIdentities(observed), &solve.detail)) {
+        solve.refusal = TrackerSolveRefusal::AssignmentUnusable;
+        return solve;
     }
 
     // Which bones this assignment names, and which of them this frame can
@@ -223,56 +192,44 @@ SolveTrackerPose(const TrackerAssignment& assignment,
     // on which of the two ways an observation failed to turn up.
     std::bitset<openstrata::motion::HumanJointCount> namedJoints;
     std::bitset<openstrata::motion::HumanJointCount> withRotation;
-    for (const TrackerRegion region : assignment.absent)
-    {
-        if (const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(region))
-        {
+    for (const TrackerRegion region : assignment.absent) {
+        if (const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(region)) {
             namedJoints.set(static_cast<std::size_t>(*bone));
         }
     }
-    for (const TrackerAssignmentBinding& binding : assignment.bound)
-    {
-        const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(binding.region);
-        if (!bone)
-        {
+    for (const TrackerAssignmentBinding& binding : assignment.bound) {
+        const std::optional<openstrata::motion::HumanJoint> bone =
+            TrackerRegionJoint(binding.region);
+        if (!bone) {
             continue;
         }
         const std::size_t index = static_cast<std::size_t>(*bone);
         namedJoints.set(index);
-        if (observed[binding.observedIndex].hasRotation)
-        {
+        if (observed[binding.observedIndex].hasRotation) {
             withRotation.set(index);
         }
     }
 
     // Classify first, refuse afterwards, on the assignment layer's rule: a
     // report of a refused solve reads the same evidence a successful one does.
-    for (const TrackerAssignmentBinding& binding : assignment.bound)
-    {
+    for (const TrackerAssignmentBinding& binding : assignment.bound) {
         const TrackerObservation& observation = observed[binding.observedIndex];
-        const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(binding.region);
+        const std::optional<openstrata::motion::HumanJoint> bone =
+            TrackerRegionJoint(binding.region);
 
-        if (!bone)
-        {
+        if (!bone) {
             solve.unsolved.push_back(binding.region);
-        }
-        else if (!observation.hasRotation)
-        {
+        } else if (!observation.hasRotation) {
             solve.withoutRotation.push_back(binding.region);
-        }
-        else if (AncestorFellSilent(*bone, namedJoints, withRotation))
-        {
+        } else if (AncestorFellSilent(*bone, namedJoints, withRotation)) {
             solve.withheldWithParent.push_back(binding.region);
-        }
-        else
-        {
+        } else {
             solve.placed.push_back(binding.region);
         }
 
         const bool consumesPosition = bone && *bone == openstrata::motion::HumanJoint::Hips &&
                                       config.authorRootMotion && observation.hasPosition;
-        if (observation.hasPosition && !consumesPosition)
-        {
+        if (observation.hasPosition && !consumesPosition) {
             solve.positionsUnused.push_back(binding.region);
         }
     }
@@ -283,37 +240,32 @@ SolveTrackerPose(const TrackerAssignment& assignment,
     // observation stop a pose. Neither shape reaches here from a wire — every
     // adapter refuses a non-finite component at decode — so the caller that
     // built its observations by hand is the one this catches.
-    for (const TrackerAssignmentBinding& binding : assignment.bound)
-    {
+    for (const TrackerAssignmentBinding& binding : assignment.bound) {
         const TrackerObservation& observation = observed[binding.observedIndex];
-        const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(binding.region);
-        if (!bone)
-        {
+        const std::optional<openstrata::motion::HumanJoint> bone =
+            TrackerRegionJoint(binding.region);
+        if (!bone) {
             continue;
         }
 
-        const bool consumesPosition =
-            *bone == openstrata::motion::HumanJoint::Hips && config.authorRootMotion && observation.hasPosition;
-        if (consumesPosition && !IsFinite(observation.position))
-        {
+        const bool consumesPosition = *bone == openstrata::motion::HumanJoint::Hips &&
+                                      config.authorRootMotion && observation.hasPosition;
+        if (consumesPosition && !IsFinite(observation.position)) {
             solve.refusal = TrackerSolveRefusal::ObservationInvalid;
             solve.detail =
                 "tracker " + Quote(observation.tracker) + " reports a position that is not finite";
             return solve;
         }
-        if (!observation.hasRotation)
-        {
+        if (!observation.hasRotation) {
             continue;
         }
-        if (!IsFinite(observation.rotation))
-        {
+        if (!IsFinite(observation.rotation)) {
             solve.refusal = TrackerSolveRefusal::ObservationInvalid;
             solve.detail =
                 "tracker " + Quote(observation.tracker) + " reports a rotation that is not finite";
             return solve;
         }
-        if (pxr::GfQuatd(observation.rotation).GetLength() < kShortestUsableRotation)
-        {
+        if (pxr::GfQuatd(observation.rotation).GetLength() < kShortestUsableRotation) {
             solve.refusal = TrackerSolveRefusal::ObservationInvalid;
             solve.detail = "tracker " + Quote(observation.tracker) +
                            " reports a rotation with no length to normalise";
@@ -326,55 +278,51 @@ SolveTrackerPose(const TrackerAssignment& assignment,
     // says so.
     std::vector<const TrackerAssignmentBinding*> ordered;
     ordered.reserve(assignment.bound.size());
-    for (const TrackerAssignmentBinding& binding : assignment.bound)
-    {
+    for (const TrackerAssignmentBinding& binding : assignment.bound) {
         ordered.push_back(&binding);
     }
-    std::stable_sort(ordered.begin(), ordered.end(),
-                     [](const TrackerAssignmentBinding* lhs, const TrackerAssignmentBinding* rhs)
-                     {
-                         const std::optional<openstrata::motion::HumanJoint> a = TrackerRegionJoint(lhs->region);
-                         const std::optional<openstrata::motion::HumanJoint> b = TrackerRegionJoint(rhs->region);
-                         return static_cast<std::size_t>(a.value_or(openstrata::motion::HumanJoint::Count)) <
-                                static_cast<std::size_t>(b.value_or(openstrata::motion::HumanJoint::Count));
-                     });
+    std::stable_sort(
+        ordered.begin(),
+        ordered.end(),
+        [](const TrackerAssignmentBinding* lhs, const TrackerAssignmentBinding* rhs) {
+            const std::optional<openstrata::motion::HumanJoint> a = TrackerRegionJoint(lhs->region);
+            const std::optional<openstrata::motion::HumanJoint> b = TrackerRegionJoint(rhs->region);
+            return static_cast<std::size_t>(a.value_or(openstrata::motion::HumanJoint::Count)) <
+                   static_cast<std::size_t>(b.value_or(openstrata::motion::HumanJoint::Count));
+        });
 
     std::array<pxr::GfQuatd, openstrata::motion::HumanJointCount> authored;
     authored.fill(pxr::GfQuatd::GetIdentity());
 
-    for (const TrackerAssignmentBinding* binding : ordered)
-    {
+    for (const TrackerAssignmentBinding* binding : ordered) {
         const TrackerObservation& observation = observed[binding->observedIndex];
-        const std::optional<openstrata::motion::HumanJoint> bone = TrackerRegionJoint(binding->region);
-        if (!bone)
-        {
+        const std::optional<openstrata::motion::HumanJoint> bone =
+            TrackerRegionJoint(binding->region);
+        if (!bone) {
             continue;
         }
         const std::size_t index = static_cast<std::size_t>(*bone);
 
-        if (*bone == openstrata::motion::HumanJoint::Hips && config.authorRootMotion && observation.hasPosition)
-        {
+        if (*bone == openstrata::motion::HumanJoint::Hips && config.authorRootMotion &&
+            observation.hasPosition) {
             // The root/hips rule, unchanged: a hips tracker is a body
             // translation observed at one place.
             solve.pose.root.worldPosition = observation.position;
             solve.pose.root.hasPosition = true;
         }
-        if (!observation.hasRotation)
-        {
+        if (!observation.hasRotation) {
             continue;
         }
         // Classified above, and skipped here for the reason stated there: the
         // parent a consumer will hold is not the identity this composition
         // would divide by. The hips can never reach this — nothing is above it
         // — so the root authored above is unaffected.
-        if (AncestorFellSilent(*bone, namedJoints, withRotation))
-        {
+        if (AncestorFellSilent(*bone, namedJoints, withRotation)) {
             continue;
         }
 
         const pxr::GfQuatd world = pxr::GfQuatd(observation.rotation).GetNormalized();
-        if (*bone == openstrata::motion::HumanJoint::Hips)
-        {
+        if (*bone == openstrata::motion::HumanJoint::Hips) {
             // And the other half of it: the same rotation is the body's
             // orientation and the hips' local rotation, because a rig rooted at
             // its hips has a root path of one joint.
@@ -392,8 +340,7 @@ SolveTrackerPose(const TrackerAssignment& assignment,
     }
 
     if (solve.pose.validRotations.none() && !solve.pose.root.hasPosition &&
-        !solve.pose.root.hasOrientation)
-    {
+        !solve.pose.root.hasOrientation) {
         solve.refusal = TrackerSolveRefusal::NothingSolved;
         solve.detail = "none of the " + std::to_string(assignment.bound.size()) +
                        " bound tracker(s) reached a bone or the root";
@@ -402,8 +349,7 @@ SolveTrackerPose(const TrackerAssignment& assignment,
         // refusal that said the trackers reached nothing, when what happened is
         // that every one of them was withheld under a silent root, would send a
         // reader looking at the straps.
-        if (!solve.withheldWithParent.empty())
-        {
+        if (!solve.withheldWithParent.empty()) {
             solve.detail += ", and " + std::to_string(solve.withheldWithParent.size()) +
                             " were withheld because a bone this assignment "
                             "names above them carried no rotation";

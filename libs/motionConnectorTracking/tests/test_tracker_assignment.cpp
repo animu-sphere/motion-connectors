@@ -23,8 +23,7 @@
 #include <string_view>
 #include <vector>
 
-namespace
-{
+namespace {
 
 namespace tracking = openstrata::connectors::tracking;
 
@@ -43,6 +42,7 @@ using tracking::TrackerRegionName;
 using tracking::TrackerRegionStatement;
 using tracking::UnplacedTrackerPolicy;
 using tracking::UnplacedTrackerPolicyName;
+using tracking::ValidateTrackerAssignmentObservation;
 using tracking::ValidateTrackerAssignmentSpec;
 
 TrackerRegionStatement
@@ -69,8 +69,7 @@ ThreePoint()
 void
 TestEveryRegionHasANameAndRoundTrips()
 {
-    for (std::size_t i = 0; i < TrackerRegionCount; ++i)
-    {
+    for (std::size_t i = 0; i < TrackerRegionCount; ++i) {
         const auto region = static_cast<TrackerRegion>(i);
         const std::string_view name = TrackerRegionName(region);
         assert(!name.empty());
@@ -96,14 +95,12 @@ TestEveryRegionHasANameAndRoundTrips()
 void
 TestEveryRefusalAndPolicyHasAName()
 {
-    for (std::size_t i = 0; i < TrackerAssignmentRefusalCount; ++i)
-    {
+    for (std::size_t i = 0; i < TrackerAssignmentRefusalCount; ++i) {
         assert(!TrackerAssignmentRefusalName(static_cast<TrackerAssignmentRefusal>(i)).empty());
     }
     assert(TrackerAssignmentRefusalName(TrackerAssignmentRefusal::Count).empty());
 
-    for (std::size_t i = 0; i < static_cast<std::size_t>(UnplacedTrackerPolicy::Count); ++i)
-    {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(UnplacedTrackerPolicy::Count); ++i) {
         const auto policy = static_cast<UnplacedTrackerPolicy>(i);
         const std::string_view name = UnplacedTrackerPolicyName(policy);
         assert(!name.empty());
@@ -191,8 +188,7 @@ TestAnUnplacedTrackerIsThreeAnswersAndTheEnumeratorIsTheDifference()
 
     // And every policy sees the same unplaced device, including the one that
     // succeeds: `Ignore` reports it rather than forgetting it.
-    for (const TrackerAssignment* result : {&refused, &held, &ignored})
-    {
+    for (const TrackerAssignment* result : {&refused, &held, &ignored}) {
         assert(result->unplaced.size() == 1);
         assert(result->unplaced[0] == 3);
         assert(result->bound.size() == 3);
@@ -234,8 +230,7 @@ TestAStatedTrackerThatDidNotArriveIsDataUnderTwoPoliciesAndHeldUnderTheThird()
     const std::vector<std::string_view> observed = {"t1", "t2"};
 
     for (const UnplacedTrackerPolicy policy :
-         {UnplacedTrackerPolicy::Refuse, UnplacedTrackerPolicy::Ignore})
-    {
+         {UnplacedTrackerPolicy::Refuse, UnplacedTrackerPolicy::Ignore}) {
         TrackerAssignmentSpec spec = ThreePoint();
         spec.unplaced = policy;
         const TrackerAssignment assignment = AssignTrackers(spec, observed);
@@ -274,10 +269,9 @@ TestAnAssignmentThatPlacedNothingIsRefusedUnderEveryPolicy()
     // binding set and let a caller drive a solve from nothing.
     const std::vector<std::string_view> observed = {"t7", "t8"};
 
-    for (const UnplacedTrackerPolicy policy :
-         {UnplacedTrackerPolicy::Refuse, UnplacedTrackerPolicy::Ignore,
-          UnplacedTrackerPolicy::Hold})
-    {
+    for (const UnplacedTrackerPolicy policy : {UnplacedTrackerPolicy::Refuse,
+                                               UnplacedTrackerPolicy::Ignore,
+                                               UnplacedTrackerPolicy::Hold}) {
         TrackerAssignmentSpec spec = ThreePoint();
         spec.unplaced = policy;
         const TrackerAssignment assignment = AssignTrackers(spec, observed);
@@ -287,12 +281,9 @@ TestAnAssignmentThatPlacedNothingIsRefusedUnderEveryPolicy()
         // The unplaced policies get their own refusal first, because it is the
         // more specific one and it says what the operator can act on. `Ignore`
         // has no such refusal, so it lands on the general one.
-        if (policy == UnplacedTrackerPolicy::Ignore)
-        {
+        if (policy == UnplacedTrackerPolicy::Ignore) {
             assert(assignment.refusal == TrackerAssignmentRefusal::NothingPlaced);
-        }
-        else
-        {
+        } else {
             assert(assignment.refusal != TrackerAssignmentRefusal::None);
             assert(assignment.refusal != TrackerAssignmentRefusal::NothingPlaced);
         }
@@ -304,8 +295,7 @@ TestAnAssignmentThatPlacedNothingIsRefusedUnderEveryPolicy()
     // it waits for — so `NothingPlaced` is unreachable under it, and that is
     // stated in the enum rather than pretended.
     for (const UnplacedTrackerPolicy policy :
-         {UnplacedTrackerPolicy::Refuse, UnplacedTrackerPolicy::Ignore})
-    {
+         {UnplacedTrackerPolicy::Refuse, UnplacedTrackerPolicy::Ignore}) {
         TrackerAssignmentSpec spec = ThreePoint();
         spec.unplaced = policy;
         const TrackerAssignment assignment = AssignTrackers(spec, {});
@@ -365,8 +355,7 @@ TestAStatementThatIsNotOneIsRefusedBeforeAnyRig()
     badPolicy.unplaced = static_cast<UnplacedTrackerPolicy>(200);
     broken.push_back(badPolicy);
 
-    for (const TrackerAssignmentSpec& spec : broken)
-    {
+    for (const TrackerAssignmentSpec& spec : broken) {
         std::string reason;
         assert(!ValidateTrackerAssignmentSpec(spec, &reason));
         assert(!reason.empty());
@@ -412,7 +401,8 @@ TestTheTextFormIsWhatAnOperatorTypes()
     std::string reason;
     assert(ParseTrackerAssignmentSpec("t1=head t2=leftHand,t3=rightHand  # a three-point rig\n"
                                       "t4=hips",
-                                      &spec, &reason));
+                                      &spec,
+                                      &reason));
     assert(reason.empty());
     assert(spec.statements.size() == 4);
     assert(spec.statements[0] == Statement("t1", TrackerRegion::Head));
@@ -435,8 +425,7 @@ TestTheTextFormIsWhatAnOperatorTypes()
              std::string_view("# only a comment"),
              std::string_view("t1=head t1=hips"), // stated twice
              std::string_view("t1=head t2=head"), // one region, two devices
-         })
-    {
+         }) {
         TrackerAssignmentSpec parsed;
         std::string why;
         assert(!ParseTrackerAssignmentSpec(text, &parsed, &why));
@@ -457,6 +446,41 @@ TestTheTextFormIsWhatAnOperatorTypes()
     assert(!ParseTrackerAssignmentSpec("t1=head", nullptr, &reason));
 }
 
+void
+TestAssignmentOwnsItsObservationAndChecksIdentityOrder()
+{
+    TrackerAssignment assignment;
+    {
+        std::vector<std::string> names = {"t3", "t1", "t2"};
+        assignment = AssignTrackers(ThreePoint(), {names[0], names[1], names[2]});
+        names[0] = "changed";
+    }
+    assert(assignment.observedTrackers == std::vector<std::string>({"t3", "t1", "t2"}));
+    std::string reason = "untouched";
+    assert(ValidateTrackerAssignmentObservation(assignment, {"t3", "t1", "t2"}, &reason));
+    assert(reason == "untouched");
+    assert(!ValidateTrackerAssignmentObservation(assignment, {"t1", "t3", "t2"}, &reason));
+    assert(reason.find("t3") != std::string::npos && reason.find("t1") != std::string::npos);
+    assert(!ValidateTrackerAssignmentObservation(assignment, {"t3", "t1", "other"}));
+    assert(!ValidateTrackerAssignmentObservation(assignment, {"t3", "t1"}));
+    assert(!ValidateTrackerAssignmentObservation(assignment, {"t3", "t1", "t2", "extra"}));
+    assert(!ValidateTrackerAssignmentObservation(TrackerAssignment{}, {}));
+
+    // Ignored observations still belong to the array the indices address.
+    TrackerAssignmentSpec spec = ThreePoint();
+    spec.unplaced = UnplacedTrackerPolicy::Ignore;
+    assignment = AssignTrackers(spec, {"t1", "t2", "t3", "extra"});
+    assert(ValidateTrackerAssignmentObservation(assignment, {"t1", "t2", "t3", "extra"}));
+    assert(!ValidateTrackerAssignmentObservation(assignment, {"t1", "t2", "t3", "other"}));
+
+    TrackerAssignment malformed = assignment;
+    malformed.bound[1].observedIndex = malformed.bound[0].observedIndex;
+    assert(!ValidateTrackerAssignmentObservation(malformed, {"t1", "t2", "t3", "extra"}));
+    malformed = assignment;
+    malformed.bound[0].region = TrackerRegion::Count;
+    assert(!ValidateTrackerAssignmentObservation(malformed, {"t1", "t2", "t3", "extra"}));
+}
+
 } // namespace
 
 int
@@ -473,6 +497,7 @@ main()
     TestAStatementThatIsNotOneIsRefusedBeforeAnyRig();
     TestAnObservationThatIsNotOneIsRefusedRatherThanHalfBound();
     TestTheTextFormIsWhatAnOperatorTypes();
+    TestAssignmentOwnsItsObservationAndChecksIdentityOrder();
     std::puts("motionConnectorTracking tracker assignment tests passed");
     return 0;
 }

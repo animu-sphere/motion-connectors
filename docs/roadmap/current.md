@@ -18,23 +18,20 @@ runtime scheduling belong downstream.
 
 ## v0.2.0 execution order
 
-1. Close the [generic tracking ownership review](boundary-implementation.md).
-   Retain the current library until observation organization and motion-semantic
-   generation have explicit owners and shared types have a safe boundary.
-2. Decide [CC-O7](../design/CONNECTOR_CONTRACT.md#13-open-questions), then
+1. Decide [CC-O7](../design/CONNECTOR_CONTRACT.md#13-open-questions), then
    implement the minimal C ABI over the acquisition boundary. Define opaque
    handles / POD views, fixed-width integers, versioned structs, ownership,
    lifetimes, UTF-8 strings and nullable values. Export no STL, exceptions, USD,
    avatar, filter, retarget or runtime-loop API. This is not a full C++ API mirror.
-3. Add `bindings/python/` on the C ABI: `open_connector`, `close`, `poll`, frame
+2. Add `bindings/python/` on the C ABI: `open_connector`, `close`, `poll`, frame
    iteration, capabilities, state, diagnostics and source profile access. Prefer
    a small, iterator-friendly API with safe ownership over exposing the C++ class
    tree. Evaluate CPython `abi3` without fixing the public API to one binding
    implementation.
-4. Add `examples/record_stream/`: connector → `MotionFrame` →
+3. Add `examples/record_stream/`: connector → `MotionFrame` →
    `usd-motion-plugins` intake → semantic stream / recording. The example may
    depend on downstream packages; production connector libraries may not.
-5. Validate installed consumers and release artifacts, reconcile the capability
+4. Validate installed consumers and release artifacts, reconcile the capability
    matrix and docs, then prepare v0.2.0.
 
 ### Release gates
@@ -51,6 +48,12 @@ runtime scheduling belong downstream.
 New connector additions are not release gates and do not interrupt this order.
 Acquisition references are evaluated through their matrix evidence; hardware
 validation remains operator work.
+
+The ABI follows the [tracking ownership decision](../design/DESIGN_POLICY.md#4751-tracking-ownership-review):
+core acquisition observations are exposed, assignment and semantic solve are
+not ABI operations. Coordinate the remaining
+[generic solve migration](boundary-implementation.md) after motion-owned input
+and parity contracts are adopted; it does not gate the acquisition ABI.
 
 ## v0.3.0 consumer boundary
 
