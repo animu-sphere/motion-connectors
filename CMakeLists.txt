@@ -132,7 +132,7 @@ endif()
 # WebSocket carries the frame wire format rather than a device's protocol, so
 # it links the core, the frame codec and the transport and no usd-motion-plugins
 # package beyond motionCore (WORKSPACE.md §2.1). It has no recorder of its own:
-# its raw capture is `motion_connect record`'s, when that lands.
+# its raw capture is `motion_connect record`'s.
 if(MOTIONCONNECTORS_BUILD_WEBSOCKET)
     add_subdirectory("libs/motionConnectorWebSocket")
 endif()

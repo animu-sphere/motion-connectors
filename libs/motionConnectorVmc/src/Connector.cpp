@@ -64,6 +64,7 @@ VmcConnector::Open(const openstrata::connectors::core::ConnectorConfig& config)
 void
 VmcConnector::Close()
 {
+    StopCapture();
     _receiver.Close();
     if (_buffer)
     {
@@ -82,6 +83,20 @@ openstrata::connectors::core::ConnectorCapabilities
 VmcConnector::GetCapabilities() const
 {
     return VmcCapabilities();
+}
+
+void
+VmcConnector::StartCapture()
+{
+    _capture = PacketCapture();
+    _capture.listenEndpoint = _receiver.GetBoundEndpoint();
+    _capturing = true;
+}
+
+void
+VmcConnector::StopCapture()
+{
+    _capturing = false;
 }
 
 bool
@@ -106,6 +121,14 @@ VmcConnector::Poll(openstrata::connectors::core::MotionFrame& out)
     if (status != ReceiveStatus::Received)
     {
         return false;
+    }
+
+    if (_capturing) {
+        RecordedDatagram record;
+        record.receiveTime = datagram.receiveTime;
+        record.peer = datagram.peer;
+        record.bytes = datagram.bytes;
+        _capture.datagrams.push_back(std::move(record));
     }
 
     PushDatagram(datagram.bytes.data(), datagram.bytes.size(), datagram.receiveTime);

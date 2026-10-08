@@ -25,7 +25,7 @@ roadmap sequence.
 | Release | Incomplete scope | Depends on | Status |
 | --- | --- | --- | --- |
 | boundary implementation: release assignment pending | generic tracking review | browser Boundary D reference implementations | 🚧 |
-| v0.2.0: transport and bindings | capture command; Python bindings; record-stream example | CLI-O1 and CC-O7 | 🚧 |
+| v0.2.0: transport and bindings | Python bindings; record-stream example | CC-O7 | 🚧 |
 | v0.3.0: browser tracking | shared JS/TS consumer API; WASM-friendly data ABI | browser acquisition references | ⬜ |
 | v0.4.0: XR and integration | integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
 | later | generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
@@ -37,7 +37,6 @@ The owning document holds the question; this list only schedules it.
 
 | Id | Question | Owner | Blocks |
 | --- | --- | --- | --- |
-| CLI-O1 | How `motion_connect record` captures a UDP source | [MOTION_CONNECT §7](../design/MOTION_CONNECT.md#7-open-questions) | `record`, v0.2.0 |
 | CC-O7 | A C ABI | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Python bindings, v0.2.0 |
 | CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
 | CS-O2 | VMC's two translation channels (`usd-motion-plugins` MC-O3) | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | a recorded session from two senders |

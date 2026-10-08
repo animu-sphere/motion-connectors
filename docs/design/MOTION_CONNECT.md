@@ -1,12 +1,12 @@
 # `motion_connect`
 
-> Status: **binding** for §2–§4, 2026-10-08, with §6's loopback tests.
-> Accepted on 2026-10-04. §5 is reserved until
-> `CLI-O1` is decided. The capability matrix says what is implemented.
+> Status: **binding** for §2–§5, 2026-10-08, with §6's loopback tests.
+> Accepted on 2026-10-04. `CLI-O1` was decided on 2026-10-08 (§5).
+> The capability matrix says what is implemented.
 >
 > This document owns what the shared-contract CLI does beyond reading one
 > connector: which connectors it opens, what `bridge` forwards and what it
-> keeps, and what `record` will capture. It also records the producer side of
+> keeps, and what `record` captures. It also records the producer side of
 > `FW-O2`: connector state and diagnostics do not cross the wire (§4). How a
 > frame is spelled is [FRAME_WIRE_FORMAT.md](FRAME_WIRE_FORMAT.md)'s, how it
 > travels is [WEBSOCKET_CONNECTOR.md](WEBSOCKET_CONNECTOR.md)'s, and what it
@@ -21,8 +21,7 @@
 
 - **In:** the connectors `motion_connect` can open (§2); `bridge`, which
   forwards one connector's frames to WebSocket peers (§3); why upstream state
-  and diagnostics stay at the bridge (§4); what `record` must be, once it is
-  designed (§5); the tests that make §2–§4 binding (§6).
+  and diagnostics stay at the bridge (§4); what `record` captures (§5); the tests that make §2–§5 binding (§6).
 - **Out:** the per-connector record tools and their options (WS-O3,
   [WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data));
   the message format; WebSocket roles, framing and refusals; a binary encoding
@@ -225,24 +224,79 @@ opens a new question with its evidence. `FW-O2` is not reused for it.
 
 ## 5. `record`
 
-Reserved. `record` captures what a connector received, below decoding, in
-that connector's packet-capture format
+`record` captures what a connector received, below decoding, in that
+connector's packet-capture format
 ([CONNECTOR_CONTRACT §12](CONNECTOR_CONTRACT.md#12-raw-capture)), through the
-shared connector contract rather than through the per-connector record tools,
-which remain (WS-O3). It takes no connector's own options, and it writes no
-session report and no trace.
+normal connector acquisition path. The per-connector record tools remain
+(WS-O3). It takes no connector's own options and writes no session report or
+semantic trace.
 
-For `--source websocket` the capture already exists:
-`WebSocketConnector::StartCapture` records each message in
-`!websocket-packet-capture`
-([WEBSOCKET §9](WEBSOCKET_CONNECTOR.md#9-raw-capture)). The three UDP
-connectors expose no capture. Their record tools capture below the connector,
-from the transport's `UdpReceiver`. How `record` reaches their datagrams is
-`CLI-O1`, and this section is written when that is decided.
+### 5.1 UDP acquisition and CLI-O1
+
+**CLI-O1 was decided on 2026-10-08:** the three concrete UDP connectors expose
+`StartCapture`, `StopCapture` and `GetCapture`, matching `WebSocketConnector`.
+`record` opens the selected connector through `Open(ConnectorConfig)` and
+polls it normally. It opens no separate `UdpReceiver`. The connector that
+owns the live socket is the place that sees the bytes before decoding; a
+second receiver would bypass the source that the command names. Raw capture
+stays optional on concrete acquisition APIs; `IMotionConnector` remains the
+minimal motion-frame interface and gains no transport type.
+
+For UDP, one received datagram is one record, including empty or refused
+payloads. For WebSocket, one complete text message is one record after
+unmasking/reassembly and before the wire codec, in `!websocket-packet-capture`
+([WEBSOCKET §9](WEBSOCKET_CONNECTOR.md#9-raw-capture)). Peer identity,
+receive order and bytes are retained. Handshakes, control frames and refused
+WebSocket framing are not messages and are not captured.
+
+`StartCapture` clears the saved records and stores the actual listening
+endpoint. Capture is live-only: `PushDatagram`, `PushPacket` and `PushMessage`
+replay injection do not append. Receive times use the monotonic clock since
+`Open`, also when capture begins later. `StopCapture` and `Close` stop
+appending and retain saved input. A subsequent `Open` stops the previous
+capture; its saved input remains until `StartCapture` resets it. Callers
+serialize before starting a new window. As with the existing WebSocket API,
+capture holds raw records in memory until saved; it is a diagnostic facility
+for a bounded session, not a streaming file writer.
+
+### 5.2 Command line
+
+```text
+motion_connect record --source <vmc|mocopi|vrchat-osc|websocket> --output PATH
+                      [--listen ADDR] [--port N]
+                      [--max-frames N] [--duration S]
+```
+
+Source, bind and stop options have the same meanings as `dump`. WebSocket
+requires `--port`; UDP uses the source's default port. Port 0 chooses a port
+for any source. `--output PATH` is required and names the raw capture file;
+its `record` meaning is distinct from `bridge --output websocket`. `--capture`
+and WebSocket bridge output flags are refused on `record`.
+
+The command opens the source, opens the output file (replacing an existing
+file), starts capture and prints `source:`, `capture:` and the actual
+`listen:` endpoint before polling. Standard error carries diagnostics in the
+shared one-line form. No per-frame line or connector-specific report is
+printed. `--max-frames` counts frames polled, not raw records; rejected input
+still records but cannot satisfy a frame limit. Use `--duration` or SIGINT
+for a session without frames. The final lines are `records: N` and `frames: N`.
+
+On SIGINT, a duration or frame limit, it stops capture, closes the source,
+writes through the source's existing packet-capture writer, checks flush and
+close, and exits 0. A source-open or output-open/write failure exits 1; usage
+errors exit 2. A source that enters `Error` stops the loop, saves input already
+received and exits 1. Output-open errors are detected before the receive loop.
+
+A session receiving nothing writes a header and reports `records: 0`; the
+existing strict reader refuses it with `the capture carries no datagrams`.
+No placeholder input is invented to make that file replayable. A source's
+normal live assembly is left intact: `record` never invokes a replay flush.
+Replaying a capture with `inspect` may therefore complete a final frame that
+was still open when live recording stopped.
 
 ## 6. Tests
 
-These tests bind §2–§4. They use loopback sockets and need no device:
+These tests bind §2–§5. They use loopback sockets and need no device:
 
 | Test | What |
 | --- | --- |
@@ -253,7 +307,11 @@ These tests bind §2–§4. They use loopback sockets and need no device:
 | `motion_connect_bridge_listen` | `bridge --ws-listen --ws-port 0` serves a client the test writes on the Python standard library. The client receives `openstrata.motion.frame/v1` messages numbered 1 to N. A client sending an `Origin` that is not allowed gets HTTP 403 |
 | `motion_connect_bridge_websocket` | a WebSocket capture replayed into `dump`, preserving its per-frame profile |
 | `motion_connect_bridge_live`, `_limits`, `_errors` | live WebSocket observations and silence, duration/max-frame stopping, and source/sender open failures |
-| `motion_connect_arguments` | the bridge refusals: no `--ws-port`, both roles, `--ws-connect` with port 0, an unknown `--output`, `--capture` with `--listen` |
+| `motion_connect_arguments` | bridge role/port/output conflicts; record source/output requirements, live WebSocket port and replay/bridge option refusals |
+| `motion_connect_record_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket` | independent loopback senders deliver generated corpus bytes plus empty/refused input; saved bytes, peers, times and replay frame signatures are checked |
+| `motion_connect_record_silent_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket` | a duration stops a silent source and saves a zero-record header, which the existing reader refuses |
+| `motion_connect_record_limits`, `_errors` | a frame limit stops promptly; occupied source ports and unwritable output fail before waiting |
+| `motion_connect_capture_lifecycle`, `motionConnectorWebSocket_loopback` | opt-in capture, stop/reset, retained input after close, replay exclusion and stopped capture after reopen |
 
 The test client is independent of `motionConnectorWebSocket` on purpose.
 `bridge` to `dump` checks that the tree agrees with itself, and the client
@@ -263,7 +321,6 @@ checks that the tree's bytes are what another implementation reads.
 ## 7. Open questions
 
 `FW-O2` was decided on 2026-10-04 (§4).
+`CLI-O1` was decided on 2026-10-08 (§5.1).
 
-| Id | Question | Resolve by |
-| --- | --- | --- |
-| CLI-O1 | How `record` captures a UDP source through the shared contract. Options: the three UDP connectors expose `StartCapture` / `GetCapture`, as `WebSocketConnector` does; or `record` opens the transport's `UdpReceiver` itself, as the record tools do, which bypasses the connector it names | `motion_connect record` (v0.2.0) |
+No open CLI questions remain.

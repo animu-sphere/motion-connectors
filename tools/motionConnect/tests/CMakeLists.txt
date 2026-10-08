@@ -4,6 +4,21 @@
 # (cmake/MotionConnectorsProject.cmake says why).
 motionconnectors_find_test_python()
 
+add_executable(motion_connect_capture_lifecycle_tests test_capture_lifecycle.cpp)
+target_compile_features(motion_connect_capture_lifecycle_tests PRIVATE cxx_std_20)
+target_link_libraries(motion_connect_capture_lifecycle_tests PRIVATE
+    motionConnectorVmc::motionConnectorVmc
+    motionConnectorMocopi::motionConnectorMocopi
+    motionConnectorVrchatOsc::motionConnectorVrchatOsc)
+if(WIN32)
+    target_link_libraries(motion_connect_capture_lifecycle_tests PRIVATE ws2_32)
+endif()
+if(MSVC)
+    target_compile_options(motion_connect_capture_lifecycle_tests PRIVATE /utf-8)
+endif()
+add_test(NAME motion_connect_capture_lifecycle
+    COMMAND motion_connect_capture_lifecycle_tests)
+
 if(NOT Python3_Interpreter_FOUND)
     message(STATUS "motionConnect: Python3 interpreter not found; skipping tests")
     return()
@@ -109,6 +124,31 @@ add_test(NAME motion_connect_bridge_limits
             --source mocopi --capture "${_motionconnect_mocopi_capture}")
 add_test(NAME motion_connect_bridge_errors
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_bridge.py"
+            --tool "$<TARGET_FILE:motion_connect>" --mode errors)
+
+foreach(_source vmc mocopi vrchat_osc websocket)
+    if(_source STREQUAL "vrchat_osc")
+        set(_source_name "vrchat-osc")
+        set(_capture "${_motionconnect_vrchat_capture}")
+    else()
+        set(_source_name "${_source}")
+        set(_capture "${_motionconnect_${_source}_capture}")
+    endif()
+    add_test(NAME motion_connect_record_${_source}
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_record.py"
+                --tool "$<TARGET_FILE:motion_connect>" --mode record
+                --source "${_source_name}" --capture "${_capture}")
+    add_test(NAME motion_connect_record_silent_${_source}
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_record.py"
+                --tool "$<TARGET_FILE:motion_connect>" --mode silent
+                --source "${_source_name}")
+endforeach()
+add_test(NAME motion_connect_record_limits
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_record.py"
+            --tool "$<TARGET_FILE:motion_connect>" --mode limits
+            --capture "${_motionconnect_mocopi_capture}")
+add_test(NAME motion_connect_record_errors
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_record.py"
             --tool "$<TARGET_FILE:motion_connect>" --mode errors)
 
 get_property(_motionconnect_tests DIRECTORY PROPERTY TESTS)

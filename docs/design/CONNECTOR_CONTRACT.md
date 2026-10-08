@@ -432,12 +432,18 @@ The target dependency is `record tool → connector library`, with a direct
 `record tool → motionRecording` dependency only for semantic export.
 `connector library → motionRecording` is forbidden. Raw capture and trace
 transcription are separate paths, and the tool uses the downstream writer
-rather than implementing `motion-capture-trace`. VMC/mocopi currently obtain
-that dependency transitively through their live-source libraries;
-[Boundary Phases A and B](../roadmap/boundary-implementation.md) remove that
-coupling. Diagnostic frame capture and `openstrata.motion.frame/v1` transport
+rather than implementing `motion-capture-trace`. VMC/mocopi acquisition
+and recorder composition follow the implemented boundary described in
+[WORKSPACE §2.1](../architecture/WORKSPACE.md#21-inside-the-repository).
+Diagnostic frame capture and `openstrata.motion.frame/v1` transport
 remain connector concerns; canonical traces, `MotionClip` and semantic replay
 remain motion concerns.
+
+Concrete VMC, mocopi, VRChat OSC and WebSocket connectors offer opt-in
+`StartCapture` / `StopCapture` / `GetCapture` for live raw input. Their shared
+lifecycle and the CLI composition are specified in
+[MOTION_CONNECT §5](MOTION_CONNECT.md#5-record); capture types do not enter
+`IMotionConnector`.
 
 ## 13. Open questions
 

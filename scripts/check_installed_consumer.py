@@ -15,7 +15,8 @@ proves the prefix works on its own:
      that it consumed exactly as many packages as the list names;
   3. with `--motion-connect`, the installed `motion_connect` lists the
      connectors, replays a capture copied out of the repository for each
-     through `inspect`, opens and stops `dump`, and refuses a bad argument --
+     through `inspect`, opens and stops `dump`, records silent sources, and
+     refuses a bad argument --
      tools/motionConnect/tests/test_motion_connect.py's checks, pointed at
      the prefix instead of the build tree.
 
@@ -50,6 +51,7 @@ CONSUMER = REPO / "tests" / "installed_consumer"
 DOC_DIR = pathlib.Path("share", "doc", "motion-connectors")
 PROFILE_DIR = pathlib.Path("share", "motion-connectors", "profiles")
 MOTION_CONNECT_TEST = REPO / "tools" / "motionConnect" / "tests" / "test_motion_connect.py"
+MOTION_CONNECT_RECORD_TEST = REPO / "tools" / "motionConnect" / "tests" / "test_record.py"
 # One committed capture per connector, as tools/motionConnect/tests replays.
 MOTION_CONNECT_CAPTURES = (
     ("vmc", "vmc.v1",
@@ -138,7 +140,11 @@ def check_motion_connect(prefix: pathlib.Path, work: pathlib.Path,
     for check in checks:
         run([sys.executable, MOTION_CONNECT_TEST, "--tool", tool, *check],
             env=env, cwd=work)
-    print(f"ok  the installed motion_connect passed {len(checks)} check(s)")
+    for source, _, _ in MOTION_CONNECT_CAPTURES:
+        run([sys.executable, MOTION_CONNECT_RECORD_TEST, "--tool", tool,
+             "--mode", "silent", "--source", source], env=env, cwd=work)
+    print(f"ok  the installed motion_connect passed "
+          f"{len(checks) + len(MOTION_CONNECT_CAPTURES)} check(s)")
     return 0
 
 
@@ -312,6 +318,9 @@ def main() -> int:
                 + '\n#include <cstdio>\nint main() {\n'
                   f'  openstrata::connectors::{protocol}::{source_class} source;\n'
                   f'  openstrata::connectors::{protocol}::{connector_class} connector;\n'
+                  '  connector.StartCapture();\n'
+                  '  if (!connector.GetCapture().datagrams.empty()) return 1;\n'
+                  '  connector.StopCapture();\n'
                   f'  if ({exercise}) return 1;\n'
                   f'  std::puts("consumed {protocol} acquisition only");\n}}\n',
                 encoding="utf-8")

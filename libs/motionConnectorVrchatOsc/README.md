@@ -295,3 +295,14 @@ Avatar Parameters, OSC eye tracking, OSCQuery discovery, an OSC **sender** or
 router, two-way VRChat client integration, realtime display, and OpenExec. A
 VRChat client is never a test dependency: every replay test completes with
 nothing installed.
+
+## Live raw capture
+
+After `Open`, call `StartCapture` and poll the connector normally. Each live
+UDP datagram is retained before decoding, including refused input, with its
+receive time and peer. `StopCapture` and `Close` stop appending while
+`GetCapture` retains the saved records; serialize them with this package's
+`WritePacketCaptureFile`. `StartCapture` resets the saved window and `Open`
+stops a previous one. Replay injection does not append. `GetEndpoint` exposes
+the actual bound endpoint, including an OS-selected port. The shared CLI and
+lifecycle contract are in [MOTION_CONNECT §5](../../docs/design/MOTION_CONNECT.md#5-record).
