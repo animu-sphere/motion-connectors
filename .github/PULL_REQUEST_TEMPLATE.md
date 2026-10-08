@@ -20,3 +20,14 @@
 - [ ] I updated the owning documentation when a public fact or capability changed.
 - [ ] I did not add a motion capture, packet capture, avatar model or screenshot without redistribution permission.
 - [ ] This pull request does not contain a security report.
+
+## Documentation ownership
+
+<!-- Check applicable items; mark others N/A in the description. -->
+
+- [ ] Capability status changed → `CAPABILITY_MATRIX.md` updated with evidence.
+- [ ] Architecture changed → architecture docs updated.
+- [ ] Design decision changed → design docs updated.
+- [ ] Landed behavior changed → `CHANGELOG.md` updated.
+- [ ] Finished roadmap work removed from roadmap in this PR.
+- [ ] No duplicate status table introduced.

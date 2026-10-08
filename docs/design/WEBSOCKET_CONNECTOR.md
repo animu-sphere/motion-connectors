@@ -1,11 +1,8 @@
 # WebSocket connector
 
-> Status: **accepted**, 2026-10-04, and **binding** since 2026-10-04, when
-> `motionConnectorWebSocket` landed with the tests each section names: §3–§6
-> by `motionConnectorWebSocket_loopback` and `_framingCorpus`, §7 by
-> `_connector` and `_messageCorpus`, §8 by `_connector`'s code table, and §9
-> by both corpora and the loopback suite's capture. The capability matrix says
-> what is implemented.
+> Contract: **accepted**, 2026-10-04. This document defines transport and
+> session invariants. Implementation status and test evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
 >
 > This document owns how `openstrata.motion.frame/v1` messages travel over
 > WebSocket: who listens, the opening handshake, the subset of RFC 6455 this
@@ -34,7 +31,7 @@
 
 ## 2. The decision
 
-**RFC 6455 is implemented here**, inside `motionConnectorWebSocket`, with no
+**The RFC 6455 subset belongs inside `motionConnectorWebSocket`**, with no
 third-party library. The choice was made on 2026-10-04 between that, vendoring
 IXWebSocket, and an Asio-based library (Boost.Beast, websocketpp):
 

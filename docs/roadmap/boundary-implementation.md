@@ -1,85 +1,36 @@
-# Connector boundary implementation
+# Generic tracking ownership review
 
-Status: 🚧 **implementation in progress**, 2026-10-06.
-This page holds incomplete work for
-[DESIGN_POLICY §47](../design/DESIGN_POLICY.md#47-external-acquisition-boundary).
-The target dependency graph is
+This page holds the remaining placement decision under
+[DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
+Current structure and dependency enforcement belong to
 [WORKSPACE §2](../architecture/WORKSPACE.md#2-dependency-directions);
-current capability claims remain in the
-[capability matrix](../reference/CAPABILITY_MATRIX.md).
-Release assignment is maintained only in
-[the roadmap status table](README.md#status-at-a-glance).
+acquisition and test evidence belong to the
+[capability matrix](../reference/CAPABILITY_MATRIX.md). Historical Boundary
+Phases A–E are recorded in the [changelog](../../CHANGELOG.md).
 
-Use **Boundary Phase A–E** when referring to this plan, so it cannot be
-confused with the older Connector Phases or a sibling's migration phases.
-Remaining execution is the generic tracking placement review after the
-browser acquisition reference implementations. Boundary Phase E enforcement
-is recorded in
-[WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement).
+## Review scope
 
-## Boundary Phase A — Thin VMC and mocopi libraries
+Retain `motionConnectorTracking` while reviewing its algorithms against the
+OpenXR, WebXR, MediaPipe and VRChat OSC observation contracts.
 
-Implemented acquisition boundaries and replay/installed-consumer evidence are
-recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract)
-and [changelog](../../CHANGELOG.md#unreleased). Workspace-wide enforcement
-continues in Phase E.
+- Keep source observation identity, tracker region hints, raw assignment
+  metadata, generic tracker assignment and acquisition-side tracking-space
+  normalization in `motion-connectors`.
+- Assess anatomical solve, humanoid pose reconstruction, confidence fusion
+  and multi-tracker semantic synthesis for `usd-motion-plugins`. The deciding
+  question is whether the algorithm organizes observations or generates motion
+  semantics, without requiring a source/device name.
+- Resolve observation and region types before proposing a move. A downstream
+  algorithm must not introduce a reverse repository dependency or copy the
+  shared contract.
 
-## Boundary Phase B — Recorder integration
+## Completion criteria
 
-Recorder composition and deterministic inspect/export evidence are recorded in
-the [capability matrix](../reference/CAPABILITY_MATRIX.md#3-tools-and-bindings)
-and [workspace contract](../architecture/WORKSPACE.md#21-inside-the-repository).
-Reusable `MotionFrame`-to-motion-intake orchestration remains outside connector
-libraries and belongs in `usd-avatar-runtime` when that integration is built.
+Record the ownership decision and any type-boundary decision in the owning
+repositories' architecture/design documents. Keep assignment and semantic solve
+distinct even if they currently share a library. Schedule any resulting code
+move explicitly; this review does not assume that all tracking code moves.
 
-## Boundary Phase C — OpenXR reference implementation
-
-Acquisition, normalization and hardware-independent SDK/contract evidence are
-recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)
-and [component README](../../libs/motionConnectorOpenXR/README.md). The optional
-module follows Boundary Phase E's acquisition gates. Browser sources reuse its
-tracking-space observation boundary; the caller owns its session and frame loop.
-Device measurement remains operator evidence rather than deterministic reference
-acquisition's completion gate.
-
-## Boundary Phase D — WebXR and MediaPipe
-
-WebXR acquisition and deterministic contract/normalization evidence are recorded
-in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources) and
-[component README](../../web/motionConnectorWebXR/README.md). The caller owns
-the session, reference space and active animation callback; the module emits
-tracking-space observations in the existing frame wire representation.
-
-MediaPipe acquisition and deterministic contract/normalization evidence are
-recorded in the [capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)
-and [component README](../../web/motionConnectorMediaPipe/README.md).
-CC-O2 and SP-O3 are resolved by position-only tracker observations and profile
-hints; face blendshapes use shared pose channels. Generic solve remains
-downstream. The caller owns inference and assets. Assumed MediaPipe world axes
-still require labelled measurement as operator evidence.
-
-Browser layout and native closure decisions (WS-O4, WS-O6) are recorded in
-[WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules). Acquisition uses
-the frame wire representation without compiling native core to WASM.
-
-## Boundary Phase E — CI enforcement
-
-Enforcement and installed-consumer evidence are recorded in
-[WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement), the
-[capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract) and the
-[changelog](../../CHANGELOG.md#unreleased). Source expansion follows these
-gates; this phase carries no remaining implementation checklist.
-
-## Follow-up — Generic tracking placement
-
-- ⬜ Reassess `motionConnectorTracking` generic assignment, anatomical solve,
-  pose reconstruction, confidence fusion and multi-tracker synthesis under
-  [DESIGN_POLICY §47.5](../design/DESIGN_POLICY.md#475-tracking-and-placement-decisions).
-  Keep `TrackerObservation`, source IDs/hints, availability, raw observations
-  and tracking-space normalization here. Move only algorithms that satisfy
-  all three criteria: no source/device name required, reusable across
-  connectors, and generic `MotionPose` production.
-
-Completion: record the ownership decision in the owning repositories and
-resolve shared types without a reverse dependency or a duplicate contract
-before moving any implementation.
+The review precedes the C ABI decision in
+[current.md](current.md#v020-execution-order), so ABI ownership can account for
+the observation boundary.

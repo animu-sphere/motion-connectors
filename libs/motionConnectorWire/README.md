@@ -20,6 +20,9 @@ openstrata::connectors::core::MotionFrame received;
 if (!wire::DecodeFrame(message, &received, &error)) { /* dropped; frame untouched */ }
 ```
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## What it guarantees
 
 - **Decode after encode is the identity** (§7), under the motion contract's

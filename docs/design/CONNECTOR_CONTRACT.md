@@ -1,16 +1,11 @@
 # Connector contract
 
-> Status: **core and source convergence implemented, release evidence in
-> progress**, 2026-09-21. This document defines the shared connector contract.
-> VMC, mocopi and VRChat OSC now have `IMotionConnector` adapters, and every
-> committed capture corpus is replayed through those adapters; the capability
-> matrix says what is implemented.
-> A section becomes **binding** when the code it describes lands here with its
-> tests.
-> Boundary clarification **accepted** 2026-10-06: connector libraries end at
-> observations/`MotionFrame`; imported VMC/mocopi live-source composition is
-> transitional and its removal is planned, not implemented by this revision
-> ([boundary roadmap](../roadmap/boundary-implementation.md)).
+> Contract: **accepted**; acquisition boundary clarification accepted
+> 2026-10-06. This document defines the shared connector interface and its
+> invariants. Implementation status and test evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
+> Connector libraries end at observations / `MotionFrame`; downstream intake,
+> sampling and semantic recording are consumer responsibilities.
 >
 > This document owns what lies **around** a pose: the connector interface,
 > `MotionFrame`, tracker observations, state, capabilities, receive-side time,
@@ -195,8 +190,8 @@ generic `MotionPose` algorithms. A move must resolve the observation/region
 type boundary without a reverse dependency or a copied contract
 ([DESIGN_POLICY §47.5](DESIGN_POLICY.md#475-tracking-and-placement-decisions)).
 
-Explicit assignment by an operator is the default; automatic assignment is a
-later aid over the same contract.
+Explicit assignment by an operator is the default. Any automatic assignment
+must preserve the same observation and region contract.
 
 ### 4.1 Landmark observations
 
@@ -364,8 +359,8 @@ intake adapter that routes `MotionFrame` to `usd-motion-plugins`. Tools,
 examples and integration tests may compose the two; connector libraries must
 end at `MotionFrame`. Source decode, assembly, restart detection and source
 diagnostics stay in acquisition libraries. `LiveCaptureSource`, `IMotionSource`
-and sampling/restart policy belong to consumer composition. The implemented
-VMC/mocopi split and acceptance evidence are recorded in the
+and sampling/restart policy belong to consumer composition. Acquisition
+conformance and test evidence are recorded in the
 [capability matrix](../reference/CAPABILITY_MATRIX.md#1-contract).
 
 ## 9. Diagnostics
@@ -433,7 +428,7 @@ The target dependency is `record tool → connector library`, with a direct
 `connector library → motionRecording` is forbidden. Raw capture and trace
 transcription are separate paths, and the tool uses the downstream writer
 rather than implementing `motion-capture-trace`. VMC/mocopi acquisition
-and recorder composition follow the implemented boundary described in
+and recorder composition follow the dependency boundary described in
 [WORKSPACE §2.1](../architecture/WORKSPACE.md#21-inside-the-repository).
 Diagnostic frame capture and `openstrata.motion.frame/v1` transport
 remain connector concerns; canonical traces, `MotionClip` and semantic replay
@@ -461,4 +456,4 @@ the wire representation is JSON, `openstrata.motion.frame/v1`, owned by
 | --- | --- | --- |
 | CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source requiring semantic joint data outside `HumanJoint` version 1; MediaPipe acquisition uses §4.1 observations |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
-| CC-O7 | A stable C ABI (design policy §38) over this interface, and when | the first non-C++ consumer of the native connectors (Python bindings, v0.2.0) |
+| CC-O7 | Concrete header/package and frame/diagnostic view contract for the minimal acquisition C ABI under [DESIGN_POLICY §38](DESIGN_POLICY.md#38-abi-considerations) | an accepted ownership/lifetime/error contract before language binding implementation; ordering is in [the roadmap](../roadmap/current.md) |

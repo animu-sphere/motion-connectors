@@ -48,6 +48,9 @@ solve is the motion layer's. See
 two sections below for why an adapter over a *published* specification still
 records before it decodes.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## The specification is published, and the recorder still comes first
 
 VRChat documents its OSC tracker surface, and Sony's help pages list

@@ -1,46 +1,45 @@
 # Roadmap
 
-The roadmap holds only **incomplete** work. When something lands, its detail
-leaves this directory: shipped scope goes to the changelog and a release
-record, and the implemented state to [architecture/](../architecture/) and
-[reference/](../reference/). Rationale lives in [design/](../design/).
-
-Legend: ✅ done · 🚧 in progress · ⬜ not started · ⛔ blocked
+This directory holds **incomplete work only**: ordering, completion criteria
+and intended release scope. Remove an item in the same PR that finishes it.
+Implementation status and test evidence live only in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md). Structure belongs to
+[architecture/](../architecture/), decisions to [design/](../design/), landed
+changes to the [changelog](../../CHANGELOG.md), and frozen release scope to
+[releases/](../releases/README.md).
 
 | Document | Contents |
 | --- | --- |
-| [current.md](current.md) | What v0.1.0 carried forward, and the decisions v0.2.0 needs first. |
-| [boundary-implementation.md](boundary-implementation.md) | Remaining generic tracking ownership review; acquisition reference evidence linked. |
-
-Shipped releases are recorded in [releases/](../releases/README.md). The
-completed import is recorded in the [changelog](../../CHANGELOG.md) and
-the current component identities are recorded in
-[architecture/WORKSPACE.md](../architecture/WORKSPACE.md). It is not an open
-roadmap sequence.
+| [current.md](current.md) | v0.2.0 execution order and release gates; v0.3.0 consumer boundary; deferred work and operator evidence. |
+| [boundary-implementation.md](boundary-implementation.md) | Generic tracking ownership review and its completion criteria. |
 
 ## Status at a glance
 
-**This table is the single source of truth for the incomplete release scope.**
+This heading is retained for existing links. The table owns **intended,
+incomplete release scope**, not implementation or release availability.
 
-| Release | Incomplete scope | Depends on | Status |
-| --- | --- | --- | --- |
-| boundary implementation: release assignment pending | generic tracking review | browser Boundary D reference implementations | 🚧 |
-| v0.2.0: transport and bindings | Python bindings; record-stream example | CC-O7 | 🚧 |
-| v0.3.0: browser tracking | shared JS/TS consumer API; WASM-friendly data ABI | browser acquisition references | ⬜ |
-| v0.4.0: XR and integration | integration examples with `usd-motion-plugins` | `usd-motion-plugins` v0.2.0 | ⬜ |
-| later | generation adapter; advanced devices; C ABI | generator interface in `usd-motion-plugins`; CC-O7 | ⬜ |
+| Milestone | Incomplete scope | Dependency |
+| --- | --- | --- |
+| v0.2.0: native consumer boundary | tracking ownership review; CC-O7 decision and C ABI; Python binding; `record_stream` example; installed-consumer and release artifact validation; docs consistency | preserve the acquisition gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement) |
+| v0.3.0: browser / JS / WASM consumer boundary | shared JS/TS consumer API in `bindings/js/`; WASM-friendly data ABI | the native C ABI and browser acquisition contracts |
+| after the current milestones | advanced devices, generation adapter and further integration examples | explicit scope and downstream contracts before scheduling |
 
-## Open decisions
+New connectors are not v0.2.0 release blockers. Binary encoding, TLS,
+multi-peer receive, multi-actor redesign, advanced device expansion and large
+runtime abstractions follow the current consumer-boundary milestones.
 
-Every open question the design documents carry, in the order they block work.
-The owning document holds the question; this list only schedules it.
+## Decision ordering
 
-| Id | Question | Owner | Blocks |
-| --- | --- | --- | --- |
-| CC-O7 | A C ABI | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | Python bindings, v0.2.0 |
-| CC-O1 | Joint data beyond `MotionPose` (feeds MC-O1, MC-O2) | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | v0.3.0 |
-| CS-O2 | VMC's two translation channels (`usd-motion-plugins` MC-O3) | [COORDINATES §6](../design/COORDINATE_SYSTEMS.md#6-open-questions) | a recorded session from two senders |
-| CC-O5 | `ActorId` type | [CONNECTOR §13](../design/CONNECTOR_CONTRACT.md#13-open-questions) | the first multi-actor source |
-| WSC-O2 | More than one receiving WebSocket peer | [WEBSOCKET §11](../design/WEBSOCKET_CONNECTOR.md#11-open-questions) | the first multi-actor source |
-| WSC-O1 | TLS for the WebSocket connector | [WEBSOCKET §11](../design/WEBSOCKET_CONNECTOR.md#11-open-questions) | a session across an untrusted network |
-| FW-O1 | A binary encoding of `MotionFrame` | [WIRE §9](../design/FRAME_WIRE_FORMAT.md#9-open-questions) | a measured session JSON does not meet |
+Questions stay in their owning documents; this list schedules work without
+copying their definitions or resolution status.
+
+- Review [generic tracking ownership](boundary-implementation.md) before CC-O7.
+- Resolve [CC-O7](../design/CONNECTOR_CONTRACT.md#13-open-questions) before
+  Python binding implementation and v0.2.0 validation.
+- Consider [CC-O1 and CC-O5](../design/CONNECTOR_CONTRACT.md#13-open-questions)
+  only when semantic joint data or a multi-actor source requires them.
+- Collect the sender evidence for
+  [CS-O2](../design/COORDINATE_SYSTEMS.md#6-open-questions) as operator work.
+- Revisit [WSC-O1 / WSC-O2](../design/WEBSOCKET_CONNECTOR.md#11-open-questions)
+  and [FW-O1](../design/FRAME_WIRE_FORMAT.md#9-open-questions) when a concrete
+  transport or measured encoding requirement justifies them.

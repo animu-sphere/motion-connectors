@@ -1,8 +1,8 @@
 # `motion_connect`
 
-> Status: **binding** for §2–§5, 2026-10-08, with §6's loopback tests.
-> Accepted on 2026-10-04. `CLI-O1` was decided on 2026-10-08 (§5).
-> The capability matrix says what is implemented.
+> Contract: **accepted**, 2026-10-04; `CLI-O1` decided on 2026-10-08 (§5).
+> Implementation status and test evidence live only in the
+> [capability matrix](../reference/CAPABILITY_MATRIX.md).
 >
 > This document owns what the shared-contract CLI does beyond reading one
 > connector: which connectors it opens, what `bridge` forwards and what it
@@ -21,19 +21,19 @@
 
 - **In:** the connectors `motion_connect` can open (§2); `bridge`, which
   forwards one connector's frames to WebSocket peers (§3); why upstream state
-  and diagnostics stay at the bridge (§4); what `record` captures (§5); the tests that make §2–§5 binding (§6).
+  and diagnostics stay at the bridge (§4); what `record` captures (§5); the acceptance checks for §2–§5 (§6).
 - **Out:** the per-connector record tools and their options (WS-O3,
   [WORKSPACE §1.3](../architecture/WORKSPACE.md#13-tools-examples-bindings-and-data));
   the message format; WebSocket roles, framing and refusals; a binary encoding
   (`FW-O1`); TLS (`WSC-O1`).
 
-`list`, `dump` and `inspect` shipped in v0.1.0, and their code is their
-reference. This document changes them only by adding a source (§2).
+`list`, `dump` and `inspect` consume the shared acquisition boundary.
+Source selection is specified in §2; release availability is in the matrix.
 
 ## 2. Sources
 
-`--source` takes `vmc`, `mocopi`, `vrchat-osc` and, from v0.2.0,
-`websocket`. Every command that takes `--source` takes all four:
+`--source` takes `vmc`, `mocopi`, `vrchat-osc` and `websocket`. Every command
+that takes `--source` takes all four:
 
 - **`list`** gains a `websocket` row. Its profile line reads
   `profile: (the sender's)`, because the profile is each frame's
@@ -107,7 +107,7 @@ motion_connect bridge --source <vmc|mocopi|vrchat-osc|websocket>
 | --- | --- | --- |
 | `--source`, `--listen`, `--port` | the source connector and where it listens, as for `dump` (§2) | `--listen 127.0.0.1`, the source's port |
 | `--capture PATH` | replay a capture instead of listening (§3.3); `--listen` and `--port` are then refused | live |
-| `--output websocket` | where frames go; the only value in v0.2.0 | `websocket` |
+| `--output websocket` | where frames go; the output value defined by this contract | `websocket` |
 | `--ws-listen ADDR` | serve peers that connect to `ADDR` | `127.0.0.1` |
 | `--ws-connect ADDR` | connect to a listening peer at `ADDR`, a numeric address; refused with `--ws-listen` | — |
 | `--ws-port N` | the WebSocket port; **required**. Port 0 is accepted only with `--ws-listen` | — |

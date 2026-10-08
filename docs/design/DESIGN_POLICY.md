@@ -665,7 +665,7 @@ motion-connectors/
 └─ tests/
 ```
 
-Web modules and language bindings remain later modules with their own layout;
+Web acquisition modules and language bindings have separate layout ownership;
 they are not part of the native build by accident. Not every connector has to
 be compiled into every runtime.
 
@@ -739,7 +739,7 @@ Do not require WebXR / MediaPipe to be implemented directly in C++.
 
 For browser-native APIs, JavaScript / TypeScript adapters are often the natural integration layer.
 
-Recommended JS API style:
+Shared JS/TS consumer API sketch (not the acquisition provider interface):
 
 ```ts
 const connector = await openConnector({
@@ -755,7 +755,11 @@ for await (const frame of connector.frames()) {
 
 ## 19. Python API
 
-Python should expose a similarly small interface.
+Python consumes the acquisition C ABI through a small, ownership-safe API,
+not the native C++ class tree. Binding implementation and CPython `abi3`
+packaging are separate choices; the public API must not depend on either.
+Core surfaces are open/close/poll, frame iteration, capabilities, state,
+diagnostics and source profile access.
 
 Example:
 
@@ -764,8 +768,9 @@ from motion_connectors import open_connector
 
 connector = open_connector("vmc", port=39539)
 
-for frame in connector:
-    print(frame.timestamp)
+for frame in connector.frames():
+    # consume acquisition observations
+    ...
 ```
 
 Potential applications:
@@ -1105,10 +1110,10 @@ Implementation order is a design constraint, not a second status or release
 table. The current incomplete order is maintained in
 [roadmap/current.md](../roadmap/current.md). The constraints are:
 
-1. Complete the shared connector contract before adding another source.
+1. Fix the shared connector contract before adding another source.
 2. Adapt the imported VMC, mocopi and VRChat OSC implementations without
    replacing their protocol-specific assembly or replay evidence.
-3. Add later transports, bindings, browser and XR sources only through the
+3. Add transports, bindings, browser and XR sources only through the
    same `MotionFrame` boundary.
 
 No source-specific implementation may define the shared core by accident.
@@ -1126,7 +1131,7 @@ sources. This policy defines the boundary, not the checklist.
 
 ## 32. Suggested `v0.2.x`
 
-The later release sequence is maintained in the roadmap. WebSocket transport,
+Release ordering is maintained in the roadmap. WebSocket transport,
 capture/bridge tooling and language bindings must continue to carry
 `MotionFrame`; they do not move semantic recording or retargeting upstream.
 
@@ -1134,16 +1139,17 @@ capture/bridge tooling and language bindings must continue to carry
 
 ## 33. Suggested `v0.3.x`
 
-The roadmap schedules browser tracking and the JS/WASM boundary here. The
-browser adapter still owns acquisition and normalization; avatar semantics
-remain downstream.
+Release scope is owned by [the roadmap](../roadmap/README.md). Browser
+acquisition providers own observations and normalization; a shared JS/TS
+consumer API and a WASM data ABI are separate consumer contracts.
 
 ---
 
 ## 34. Suggested `v0.4.x`
 
-The roadmap schedules WebXR and integration examples here. mocopi is already
-part of the v0.1.0 convergence scope; it is not a future source addition.
+Release scope is owned by [the roadmap](../roadmap/README.md). Integration
+examples compose acquisition with downstream motion packages without adding
+those dependencies to connector libraries.
 
 ---
 
@@ -1182,84 +1188,57 @@ Hardware should not be required for normal CI.
 
 ## 36. Debugging Tools
 
-Small diagnostic tools will be highly valuable.
-
-Recommended utilities:
-
-```text
-motion_connect list
-motion_connect dump
-motion_connect record
-motion_connect bridge
-motion_connect inspect
-```
-
-Examples:
-
-```bash
-motion_connect dump --source vmc
-motion_connect bridge --source vmc --output websocket
-motion_connect record --source mediapipe --output capture.jsonl
-```
-
-The v0.1.0 commands are `dump`, `list` and `inspect`. `record` captures raw
-transport/session data or diagnostic `MotionFrame` data; semantic motion
-recording remains in `usd-motion-plugins`. `bridge` may forward a
-`MotionFrame`, but it must not retarget it to an avatar.
+The CLI contract is owned by [MOTION_CONNECT.md](MOTION_CONNECT.md): source
+selection, bridge forwarding, raw recording and local diagnostics. Examples
+and options live there rather than in a second command inventory here.
+Semantic motion recording stays in `usd-motion-plugins`; a bridge forwards
+acquisition frames without retargeting or avatar application. Current command
+conformance and release availability belong to the
+[capability matrix](../reference/CAPABILITY_MATRIX.md#3-tools-and-bindings).
 
 ---
 
 ## 37. Interchange over Network
 
-Eventually define a compact wire representation for canonical motion.
-
-Candidates:
-
-```text
-JSON
-MessagePack
-CBOR
-FlatBuffers
-Protobuf
-custom binary
-```
-
-Start with debuggable JSON if needed.
-
-Do not make the JSON representation the permanent ABI too early.
-
-The logical contract is more important than the first serialization format.
+[FRAME_WIRE_FORMAT.md](FRAME_WIRE_FORMAT.md) owns the serialized `MotionFrame`
+contract (CC-O8): UTF-8 JSON, identified as `openstrata.motion.frame/v1`.
+Debuggability and browser interoperability motivate this choice. A binary
+encoding requires measured size/parse-cost evidence under FW-O1, rather than
+another independently maintained format. Network serialization is distinct
+from the in-process ABI (§38) and downstream semantic recording.
 
 ---
 
 ## 38. ABI Considerations
 
-If multiple languages consume the runtime, avoid exposing complex C++ STL structures as the stable ABI.
+The language-neutral boundary is a minimal **acquisition C ABI** over
+`MotionFrame`, not a full mirror of the C++ interface. CC-O7 owns the concrete
+header/package and view decisions ([CONNECTOR §13](CONNECTOR_CONTRACT.md#13-open-questions));
+release ordering belongs to the roadmap.
 
-Potential stable boundary:
+Its invariants are POD values and opaque handles, versioned structs, stable
+integer widths, explicit ownership and lifetime, UTF-8 strings, explicit
+nullable representation and errors that cannot throw across the ABI. No STL
+or USD type crosses it. Views must specify frame/diagnostic validity and how
+joint/tracker iteration, timestamps, actors, capabilities, state and source
+profiles are accessed. Retargeting, filtering, runtime loops, USD bridges and
+avatar APIs are downstream responsibilities.
 
-```text
-C ABI
-```
-
-Example conceptual shape:
+Conceptual shape only; names and signatures remain a CC-O7 decision:
 
 ```c
-motion_connector_t*
-motion_frame_t*
-motion_connector_poll(...)
+motion_connector_t* motion_connector_open(...);
+void motion_connector_close(...);
+motion_poll_result_t motion_connector_poll(...);
+motion_frame_view_t motion_frame_view(...);
+motion_diagnostic_view_t motion_connector_last_diagnostic(...);
 ```
 
-Bindings can then be layered for:
-
-```text
-Python
-JavaScript/WASM
-Rust
-C#
-```
-
-This matches the broader runtime goal of language-neutral reusable components.
+Bindings may layer Python, JavaScript/WASM, Rust or C# over this boundary.
+Keep three representations distinct: the in-process ABI, JS object values and
+serialized wire messages. WASM ownership/copy rules, 64-bit integers and string
+lifetimes need a consumer contract; neither native structs nor wire JSON can
+be assumed to provide it automatically.
 
 ---
 
@@ -1539,8 +1518,9 @@ upstream as evidence against `MC-O1` and `MC-O2`, not met by a local type
 §28's "C++ standard library and a small math abstraction" therefore describes
 what `motionConnectorCore` adds, not its whole closure: `motion-core` brings
 OpenUSD's foundation value types (`gf`, `tf`, `vt`) and nothing that opens a
-stage, so Rule 5 holds. Whether that closure is acceptable for the web and
-WASM path of §18 is `WS-O4`.
+stage, so Rule 5 holds. WS-O4 retains that native closure and separates
+browser acquisition via wire values ([WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules)).
+The native WASM data ABI is a distinct consumer contract.
 
 ### 46.2 The canonical basis includes a forward axis
 
@@ -1564,10 +1544,10 @@ MIG-4, which serves **Migration Phase E**.
 
 They were renamed on arrival and lost the `vrm` prefix
 ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)). They
-arrived after the connector contract was documented, but before the planned
-`motionConnectorCore` was implemented. Their source-specific APIs therefore
-remain separate until the current v0.1.0 convergence work adapts them to one
-shared connector interface.
+were imported without replacing their source-specific assembly. Import and
+shared-interface adaptation are separate changes, preserving protocol replay
+evidence. Their history is in the changelog; conformance is in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md).
 
 ### 46.4 A tracker observation is not a pose
 
@@ -1601,16 +1581,16 @@ motion phases are cited only when describing an import or dependency.
 
 §31–§34 originally put mocopi in v0.4.x. The mocopi and VRChat OSC connectors and
 `motionTracking` are imports of measured code, not new designs, and
-`usd-vrm-plugins` cannot finish its migration (MIG-5) while they wait here;
-each is frozen there until it moves. They were first scheduled for v0.2.0,
+`usd-vrm-plugins` could not finish its migration (MIG-5) while they waited;
+each remained frozen there until its move. They were first scheduled for v0.2.0,
 after v0.1.0 had fixed the contract. On 2026-09-19 WS-O7 moved them into
 v0.1.0, beside VMC: `liveTransport` and `osc` are linked by all three
 connectors, so importing them ahead of mocopi and VRChat OSC would have left
 `usd-vrm-plugins` either two copies for a release or an undeclared edge to
 this repository. The contract documents came first, but
-`motionConnectorCore` is still reserved: the import PRs did not implement it.
-Each connector now needs a separate adaptation to that core
+import and adaptation of `motionConnectorCore` are separate changes
 ([WORKSPACE.md §3](../architecture/WORKSPACE.md#3-moving-code-in)).
+This history does not define current capability status.
 So §30's concern, that mocopi should not define the core API, still holds. The
 current release mapping is in the [roadmap status table](../roadmap/README.md#status-at-a-glance),
 which is the single source of truth for incomplete delivery scope.
@@ -1641,21 +1621,20 @@ instead (WS-O1, decided 2026-09-19):
 - snake_case CLI commands (`motion_connect`, `vmc_record`);
 - the C++ namespace `openstrata::connectors`.
 
-The web modules' layout stays open (WS-O6), because it is a JavaScript
-package's shape and not a CMake one. Binding in
-[WORKSPACE.md §1.1](../architecture/WORKSPACE.md#11-native-libraries).
+WS-O6 places acquisition providers in independent `web/<identity>/` npm
+modules and reserves `bindings/js/` for the shared consumer API. Layout is
+owned by [WORKSPACE §1.1–§1.3](../architecture/WORKSPACE.md#12-web-modules).
 
 ---
 
 ## 47. External acquisition boundary
 
 Accepted on 2026-10-06. This section fixes `motion-connectors` as the
-**external acquisition edge**. It clarifies ownership; implementation work
-and completion criteria are in
-[roadmap/boundary-implementation.md](../roadmap/boundary-implementation.md).
-The imported VMC/mocopi live-source composition still exceeds this target,
-as [WORKSPACE §2.1](../architecture/WORKSPACE.md#21-inside-the-repository)
-records. This documentation change does not claim that it has been removed.
+**external acquisition edge**. It defines ownership; current component
+structure is in [WORKSPACE §2.1](../architecture/WORKSPACE.md#21-inside-the-repository),
+and acquisition conformance/test evidence is in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md). Remaining work belongs
+to [the roadmap](../roadmap/current.md).
 
 > `motion-connectors` owns what was observed.
 > `usd-motion-plugins` owns how that motion is treated.
@@ -1755,12 +1734,12 @@ record tool → connector library
 record tool → motionRecording       (semantic export only)
 ```
 
-There is no `connector library → motionRecording` edge in the target.
-`VmcLiveSource` and `MocopiLiveSource` are transitional composition layers:
-retain decode, assembly, restart detection and source diagnostics, but remove
-`IMotionSource` inheritance, `LiveCaptureSource` ownership, `PoseBuffer` and
-sampling policy, and converge on `MotionFrame` emission. Runtime intake
-composition belongs downstream, with `usd-avatar-runtime` the first choice.
+There must be no `connector library → motionRecording` edge. Acquisition
+frame sources own decode, assembly, restart detection and source diagnostics.
+`IMotionSource`, `LiveCaptureSource`, semantic buffers and sampling policy are
+consumer composition. Runtime intake belongs downstream, with
+`usd-avatar-runtime` the first choice; test-only intake composition does not
+become an installed connector interface.
 
 ### 47.5 Tracking and placement decisions
 
@@ -1784,7 +1763,7 @@ For each new feature, apply these placement rules:
   `usd-motion-plugins`.
 - Connector-to-motion-runtime orchestration: `usd-avatar-runtime`.
 
-OpenXR is the next reference source for this boundary: loader acquisition of
+OpenXR illustrates this boundary: loader acquisition of
 head/controllers/hands/body observations, source normalization, then
 `MotionFrame`, with no filter, retargeter, recorder, stage or avatar semantics.
 WebXR and MediaPipe follow the same contract; generic body reconstruction

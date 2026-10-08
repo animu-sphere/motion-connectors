@@ -6,6 +6,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Align documentation with the native C ABI → Python → `record_stream` →
+  v0.2.0 sequence and the v0.3.0 JS/TS + WASM consumer boundary. Keep roadmap
+  work unfinished-only, separate browser acquisition from bindings, centralize
+  release availability in the capability matrix, and add documentation ownership
+  checks to the PR template and docs consistency gate.
+
 - Add caller-driven browser MediaPipe Tasks result acquisition: body/hand
   metric landmark observations and namespaced face blendshape channels in the
   existing frame wire format. Single-actor bounds, timestamp validation,

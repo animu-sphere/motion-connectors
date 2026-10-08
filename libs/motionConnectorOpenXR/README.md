@@ -5,6 +5,9 @@ head and controller spaces, `XR_EXT_hand_tracking` joints and
 `XR_FB_body_tracking` upper-body joints relative to one caller-selected base
 space, then emits normalized `TrackerObservation`s in `MotionFrame`.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## Session ownership
 
 Construct `OpenXRConnector` with `SessionInput` borrowed handles. The caller
@@ -50,7 +53,8 @@ joint indices), and `body:<index>` (the 70 default FB upper-body joint indices).
 Hand/body joints are tracking-space observations, not parent-local humanoid
 rotations. They carry no `MotionPose`, root motion or inferred confidence. The
 runtime supplies anatomical assignment and any downstream pose reconstruction.
-The reserved `openxr.hand.v1` semantic pose profile is not implemented here.
+Semantic hand poses, including any `openxr.hand.v1` interpretation, belong
+to downstream motion processing rather than this observation provider.
 
 Capabilities are trackers and source timestamps, plus controllers when a
 controller handle is supplied and confidence when a body handle is supplied.

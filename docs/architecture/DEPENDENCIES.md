@@ -4,9 +4,9 @@ What `motion-connectors` builds against and what it refuses. Edges between
 this repository's own components are
 [WORKSPACE.md §2](WORKSPACE.md#2-dependency-directions)'s.
 
-Status (2026-09-21): **adopted by the current workspace.** The OpenUSD pin and
-the toolchain below are what the root project enforces. The per-connector rows
-describe the imported connectors and the reserved modules. Every value is taken from the sibling
+The OpenUSD pin and toolchain below describe the native build. The connector
+rows own dependency declarations, not capability status; see the
+[capability matrix](../reference/CAPABILITY_MATRIX.md). Every value is taken from the sibling
 repositories so that `usd-avatar-runtime` can compose all of them into one
 process.
 
@@ -16,7 +16,7 @@ process.
 | --- | --- |
 | Pin | OpenUSD **26.08**, exactly: the release `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins` pin. This repository opens no stage, but `motionCore` is built against one OpenUSD release, and a consumer built against another does not link |
 | `motionConnectorCore`, imported connectors | foundation value types only, through `motionCore`: `gf`, `tf`, `vt` |
-| tools, examples | whatever `usd-motion-plugins` library they call; `examples/usd_avatar_live` is the only place a stage appears |
+| tools, examples | whatever `usd-motion-plugins` library they call; stage application belongs to a consumer integration example or runtime |
 | Pin changes | coordinated: a new OpenUSD release is adopted here together with `usd-motion-plugins`, `usd-vrm-plugins` and `usd-mmd-plugins`. Who releases first is open in `usd-vrm-plugins`' migration track |
 
 The browser path uses the frame wire representation without this native
@@ -40,7 +40,7 @@ closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
 | OpenStrata | `ost` 0.23.6, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
-| Python | the interpreter OpenUSD was built against, for bindings and tooling (v0.2.0) |
+| Python tooling | Python interpreter for repository checks; the C ABI binding must define its Python packaging/ABI requirements separately from the native OpenUSD closure |
 | Node | Node ≥20 for independent browser module tests; CI uses Node 22, never required by native builds |
 
 ## 4. Per-connector dependencies
@@ -48,21 +48,20 @@ closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 Each is isolated to its connector and is off unless that connector is built
 (design policy §28).
 
-The table records **current dependencies** for existing components and
-intended SDK dependencies for reserved components. The accepted target in
-[WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository) is implemented by VMC and mocopi; their consumer integration
-tests own downstream intake/sampling dependencies. Recorders use `motionRecording`
+The table records **current dependencies** for existing components.
+[WORKSPACE §2.1](WORKSPACE.md#21-inside-the-repository) owns the component graph;
+consumer integration tests own downstream intake/sampling dependencies. Recorders use `motionRecording`
 only for semantic export; its packaged closure includes `motionSampling`.
 
 | Connector | Dependency | Kind |
 | --- | --- | --- |
 | `motionConnectorTransport` | OS sockets | system |
-| `motionConnectorOsc` | none; the wire format is implemented here | — |
+| `motionConnectorOsc` | none; OSC wire parsing is local | — |
 | `motionConnectorVmc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
 | `motionConnectorMocopi` | `motionConnectorCore`, `motionCore` and transport | installed sibling packages |
 | `motionConnectorVrchatOsc` | `motionConnectorCore`, `motionCore`, transport and OSC | installed sibling packages |
-| `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is implemented here, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
-| `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are implemented here, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
+| `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is local, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
+| `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are local, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
 | `motionConnectorOpenXR` | `motionConnectorCore` and OpenXR loader/headers (SDK ≥1.1.36), found only for this optional module | installed core; third party ([notices](../../libs/motionConnectorOpenXR/THIRD_PARTY_NOTICES.md)) |
 | `motionConnectorMediaPipe` | caller-owned MediaPipe Tasks result objects, no runtime import; Tasks Vision 1.1.0 and TypeScript 5.9.3 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorMediaPipe/THIRD_PARTY_NOTICES.md) |
 | `motionConnectorWebXR` | browser APIs only at runtime; TypeScript 5.9.3 and `@types/webxr` 0.5.24 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorWebXR/THIRD_PARTY_NOTICES.md) |
@@ -74,7 +73,7 @@ change that adds it.
 
 | Dependency | Refused because |
 | --- | --- |
-| `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd` in connector libraries | libraries end at `MotionFrame`; downstream intake/export dependencies belong to consumers ([boundary roadmap](../roadmap/boundary-implementation.md)) |
+| `motionSampling`, `motionRecording`, `motionRetarget`, `motionUsd` in connector libraries | libraries end at `MotionFrame`; downstream intake/export dependencies belong to consumers ([WORKSPACE §2.4](WORKSPACE.md#24-enforcement)) |
 | OpenUSD stage, Sdf, `usdSkel`, Hydra, OpenExec in any library | no connector requires a `UsdStage` (design policy Rule 5, §24) |
 | a filtering, IK or retargeting library | these exist once, downstream (design policy §26) |
 | an ML framework or model runtime in native code | a model-based tracker runs in its own package (MediaPipe in the browser), and a generator sits behind `usd-motion-plugins`' generator interface |

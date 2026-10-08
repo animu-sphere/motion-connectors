@@ -19,6 +19,9 @@ OSC / a vendor grammar / a tracker surface  = the adapter
 a socket, a capture file, a diagnostic line = this library
 ```
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## Why it exists, in one measurement
 
 Two adapters wrote this code twice. Normalised for their vendor identifier and

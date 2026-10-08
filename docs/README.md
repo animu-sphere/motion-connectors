@@ -7,7 +7,7 @@ way.
 
 The [capability matrix](reference/CAPABILITY_MATRIX.md) is the sole source of
 truth for what is currently implemented. Other documents describe intent,
-structure, evidence or incomplete work according to the ownership table below.
+structure, rationale or incomplete work according to the ownership table below.
 
 | Category | Answers | Start here |
 | --- | --- | --- |
@@ -27,9 +27,8 @@ structure, evidence or incomplete work according to the ownership table below.
   ordering live in [roadmap/](roadmap/), not here. Sibling repositories cite
   the policy by section number.
   The accepted [external acquisition boundary (§47)](design/DESIGN_POLICY.md#47-external-acquisition-boundary)
-  fixes library responsibility at `MotionFrame`; its implementation phases
-  are recorded in [the boundary roadmap](roadmap/boundary-implementation.md),
-  which now carries the remaining generic tracking ownership review.
+  fixes library responsibility at `MotionFrame`; the remaining generic tracking placement decision is scoped in
+  [the boundary roadmap](roadmap/boundary-implementation.md).
 - Six focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the
@@ -60,9 +59,11 @@ structure, evidence or incomplete work according to the ownership table below.
 
 - Code is authoritative for implemented behaviour; `architecture/` and
   `reference/` record it and change with it.
-- `design/` defines intended contracts and labels what is not implemented.
+- `design/` defines contracts, rationale, invariants and open decisions; it
+  carries no independent implementation progress or release schedule.
 - The capability matrix is the only document that states current capability
   status; other pages link to it instead of copying a status snapshot.
-- Which release carries what is stated only in the
-  [roadmap status table](roadmap/README.md#status-at-a-glance).
+- Intended incomplete release scope belongs to the
+  [roadmap](roadmap/README.md#status-at-a-glance); release availability belongs
+  to the matrix and frozen release scope to `releases/`.
 - The details are in [contributing/documentation.md](contributing/documentation.md).

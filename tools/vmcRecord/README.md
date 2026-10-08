@@ -20,6 +20,9 @@ operator pointing a sender at this port.
 So the tool turns one such session into two things a repository can keep: a
 capture file, and a statement of what was in it.
 
+Current capability status, test evidence and release availability are in the
+[capability matrix](../../docs/reference/CAPABILITY_MATRIX.md).
+
 ## The datagram reaches the file before the decoder sees it
 
 ```text
