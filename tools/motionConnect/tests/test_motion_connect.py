@@ -14,6 +14,8 @@ EXPECTED = (
     ("vmc", "vmc.v1", "body, hands, face, root-motion, source-timestamps"),
     ("mocopi", "mocopi.body.v1", "body, root-motion, source-timestamps"),
     ("vrchat-osc", "vrchat-osc.trackers.v1", "trackers"),
+    ("websocket", "(the sender's)",
+     "body, hands, face, eyes, root-motion, trackers, source-timestamps, confidence, multiple-actors"),
 )
 
 
@@ -30,6 +32,7 @@ def run_tool(tool: pathlib.Path, *arguments: str) -> str:
         errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        timeout=10,
     )
     if result.returncode != 0:
         fail(f"motion_connect {' '.join(arguments)} exited {result.returncode}: "
@@ -65,22 +68,37 @@ def check_dump(tool: pathlib.Path, source: str) -> None:
                       "--duration", "0.01")
     if f"source: " not in output or "frames: 0" not in output:
         fail(f"{source}: dump did not open and stop cleanly:\n{output}")
+    if source == "websocket" and "listen: 127.0.0.1:" not in output:
+        fail(f"websocket: dump did not print the bound endpoint:\n{output}")
     print(f"motion_connect dump: {source} opened a loopback receiver")
 
 
 def check_arguments(tool: pathlib.Path) -> None:
-    result = subprocess.run(
-        [str(tool), "dump", "--source", "vmc", "--max-frames", "-1"],
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if result.returncode != 2 or "whole number" not in result.stderr:
-        fail("negative --max-frames was not rejected:\n"
-             f"exit={result.returncode}\n{result.stderr}")
-    print("motion_connect arguments: negative frame counts are rejected")
+    bridge = ["bridge", "--source", "vmc"]
+    cases = [
+        (["dump", "--source", "vmc", "--max-frames", "-1"], "whole number"),
+        (bridge, "--ws-port is required"),
+        (bridge + ["--ws-port", "0", "--ws-listen", "127.0.0.1",
+                   "--ws-connect", "127.0.0.1"], "cannot be combined"),
+        (bridge + ["--ws-connect", "127.0.0.1", "--ws-port", "0"], "nonzero"),
+        (bridge + ["--ws-port", "0", "--output", "udp"], "expects websocket"),
+        (bridge + ["--ws-port", "0", "--capture", "fixture", "--listen", "127.0.0.1"],
+         "cannot be combined"),
+        (bridge + ["--ws-port", "0", "--capture", "fixture", "--port", "0"],
+         "cannot be combined"),
+        (["dump", "--source", "websocket"], "--port is required"),
+        (["bridge", "--source", "websocket", "--ws-port", "0"], "--port is required"),
+        (["dump", "--source", "vmc", "--ws-port", "0"], "only valid for bridge"),
+        (bridge + ["--ws-port", "65536"], "between 0 and 65535"),
+        (bridge + ["--ws-port", "0", "--duration", "nan"], "non-negative"),
+    ]
+    for arguments, error in cases:
+        result = subprocess.run([str(tool), *arguments], text=True, encoding="utf-8",
+                                errors="replace", capture_output=True, timeout=10)
+        if result.returncode != 2 or error not in result.stderr:
+            fail(f"arguments {arguments} were not rejected with {error}:\n"
+                 f"exit={result.returncode}\n{result.stderr}")
+    print("motion_connect arguments: bridge and source refusals are stable")
 
 
 def main() -> int:

@@ -5,7 +5,9 @@
 ([WEBSOCKET_CONNECTOR.md](../../docs/design/WEBSOCKET_CONNECTOR.md)):
 
 - `WebSocketConnector` receives them as an `IMotionConnector`;
-- `WebSocketFrameSender` sends them, for `motion_connect bridge`.
+- `WebSocketFrameSender` sends them, for `motion_connect bridge`. Its
+  peer statistics include queued messages and pending framing bytes so a
+  caller can finish partially written frames before closing.
 
 Either one **listens** or **connects**. After the handshake a connection is
 symmetric, so the role decides only who opens it.

@@ -107,9 +107,16 @@ Endpoint::Open(const WebSocketConfig& config, std::size_t maxPeers,
     }
     else
     {
-        _source = (config.address.find(':') != std::string::npos
-                       ? "[" + config.address + "]"
-                       : config.address) +
+        if (!IsNumericAddress(config.address))
+        {
+            if (error)
+            {
+                *error = "the peer address is not a numeric address this host understands";
+            }
+            return false;
+        }
+        _source = (config.address.find(':') != std::string::npos ? "[" + config.address + "]"
+                                                                 : config.address) +
                   ":" + std::to_string(config.port);
     }
     _open = true;
@@ -622,6 +629,7 @@ Endpoint::GetPeerStats() const
         entry.queuedMessages = peer->queue.size();
         entry.sentMessages = peer->sent;
         entry.droppedMessages = peer->dropped;
+        entry.pendingBytes = peer->session.Outbound().size();
         stats.push_back(std::move(entry));
     }
     return stats;

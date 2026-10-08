@@ -1,7 +1,7 @@
 # `motion_connect`
 
-> Status: **accepted**, 2026-10-04. §2–§4 become **binding** when
-> `motion_connect bridge` lands with the tests §6 names. §5 is reserved until
+> Status: **binding** for §2–§4, 2026-10-08, with §6's loopback tests.
+> Accepted on 2026-10-04. §5 is reserved until
 > `CLI-O1` is decided. The capability matrix says what is implemented.
 >
 > This document owns what the shared-contract CLI does beyond reading one
@@ -242,8 +242,7 @@ from the transport's `UdpReceiver`. How `record` reaches their datagrams is
 
 ## 6. Tests
 
-§2–§4 become binding with these tests, which bind loopback sockets and need no
-device:
+These tests bind §2–§4. They use loopback sockets and need no device:
 
 | Test | What |
 | --- | --- |
@@ -252,6 +251,8 @@ device:
 | `motion_connect_dump_websocket` | `dump --source websocket --port 0` prints its endpoint, opens and stops |
 | `motion_connect_bridge_vmc`, `_mocopi`, `_vrchat_osc` | `dump --source websocket` listens, and `bridge --capture … --ws-connect` replays that connector's capture into it. `dump` receives exactly the frames `inspect` delivers from the same capture, with the source's profile |
 | `motion_connect_bridge_listen` | `bridge --ws-listen --ws-port 0` serves a client the test writes on the Python standard library. The client receives `openstrata.motion.frame/v1` messages numbered 1 to N. A client sending an `Origin` that is not allowed gets HTTP 403 |
+| `motion_connect_bridge_websocket` | a WebSocket capture replayed into `dump`, preserving its per-frame profile |
+| `motion_connect_bridge_live`, `_limits`, `_errors` | live WebSocket observations and silence, duration/max-frame stopping, and source/sender open failures |
 | `motion_connect_arguments` | the bridge refusals: no `--ws-port`, both roles, `--ws-connect` with port 0, an unknown `--output`, `--capture` with `--listen` |
 
 The test client is independent of `motionConnectorWebSocket` on purpose.

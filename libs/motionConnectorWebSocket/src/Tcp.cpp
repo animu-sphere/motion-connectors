@@ -296,6 +296,18 @@ SteadySeconds() noexcept
     return std::chrono::duration<double>(Clock::now().time_since_epoch()).count();
 }
 
+bool
+IsNumericAddress(const std::string& address)
+{
+    addrinfo* resolved = nullptr;
+    if (!EnsureSocketsUsable() || !Resolve(address, 0, false, &resolved))
+    {
+        return false;
+    }
+    ::freeaddrinfo(resolved);
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // TcpStream
 // ---------------------------------------------------------------------------

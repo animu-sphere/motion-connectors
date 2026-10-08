@@ -44,6 +44,9 @@ struct WebSocketPeerStats
     std::uint64_t sentMessages = 0;
     // Messages dropped from a full queue, oldest first, never one part-written.
     std::uint64_t droppedMessages = 0;
+    // Framing bytes already started but not yet written to the socket. A
+    // graceful drain checks these as well as messages not started.
+    std::size_t pendingBytes = 0;
 };
 
 class MOTIONCONNECTORWEBSOCKET_API WebSocketFrameSender final

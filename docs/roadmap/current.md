@@ -57,18 +57,11 @@ against its manifest with `scripts/check_recorded_sessions.py`
 
 ## Next: v0.2.0
 
-v0.2.0 carries the capture/bridge commands, Python bindings and the
-record-stream example ([status table](README.md#status-at-a-glance)). The wire
-codec and the WebSocket connector have landed, both directions
-([capability matrix](../reference/CAPABILITY_MATRIX.md#2-sources)), so the
-commands can be built on them:
+The remaining v0.2.0 work is the capture command, Python bindings and the
+record-stream example ([status table](README.md#status-at-a-glance)). Bridge
+and WebSocket CLI source evidence is in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md#3-tools-and-bindings).
 
-- ⬜ `motion_connect bridge`: a source connector's frames out through
-  `WebSocketFrameSender`, as its frames were delivered, live or from a
-  capture, with `websocket` added as a source of `list`, `dump` and `inspect`.
-  It is designed in [MOTION_CONNECT §2–§4](../design/MOTION_CONNECT.md#3-bridge),
-  and done when §6's tests pass. `FW-O2` was decided with it: state and
-  diagnostics stay at the bridge.
 - ⬜ `motion_connect record`: a raw capture through the shared contract
   ([MOTION_CONNECT §5](../design/MOTION_CONNECT.md#5-record)). For WebSocket
   that is `WebSocketConnector`'s own capture, in the

@@ -14,3 +14,5 @@ requires:
       version: ">=0.1,<0.2"
     - id: motionConnectorVrchatOsc
       version: ">=0.1,<0.2"
+    - id: motionConnectorWebSocket
+      version: ">=0.1,<0.2"

@@ -19,6 +19,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motion_connect bridge`.** Forwards VMC, mocopi, VRChat OSC or WebSocket
+  acquisition frames through the WebSocket sender in either role. Capture
+  replay waits for a peer, keeps recorded pacing and drains both queued
+  messages and partially written bytes before bounded shutdown. State and
+  diagnostics stay at the CLI, which reports peer changes and frame/refusal
+  counts. Adds WebSocket `list`, `dump` and `inspect`, loopback/independent
+  client coverage and installed CLI source checks. Invalid connect-role
+  addresses now fail at open without DNS or a socket attempt.
+
 - **WebXR acquisition reference (Boundary Phase D).** Independent npm module
   `web/motionConnectorWebXR` borrows the caller's session, reference space and
   active frame callback. Viewer/controller grip/25 hand-joint observations are
