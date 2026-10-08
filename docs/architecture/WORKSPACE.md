@@ -63,12 +63,30 @@ Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 
 | Identity | Directory | Role | Status |
 | --- | --- | --- | --- |
-| `motionConnectorMediaPipe` | decided by WS-O6 | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
-| `motionConnectorWebXR` | decided by WS-O6 | WebXR viewer, controllers and hand input, to `MotionFrame` | reserved |
+| `motionConnectorMediaPipe` | `web/motionConnectorMediaPipe/` | MediaPipe pose, hands and face in the browser, to `MotionFrame` | reserved |
+| `motionConnectorWebXR` | `web/motionConnectorWebXR/` | caller-driven WebXR viewer, controller grip and hand tracking-space observations, to the frame wire representation | reserved |
 
 Web modules are JavaScript / TypeScript (design policy §18, Rule 8). They are
 not compiled into any native build, and a native build never needs a browser
 dependency (§17).
+
+Browser boundary decision (2026-10-07, WS-O4 and WS-O6): source modules live
+under `web/<identity>/`, each with its own npm package, declarative profiles and
+hardware-independent tests. `bindings/js/` remains reserved for a future shared
+consumer API; acquisition modules are not bindings over the native libraries.
+They use the existing `openstrata.motion.frame/v1` plain JavaScript value shape
+and carry 64-bit counters as decimal strings. Native core retains its installed
+`motionCore` / OpenUSD closure. No native core WASM build or data ABI is promised
+by this choice, and browser acquisition imports no native library.
+
+The caller owns the WebXR session, requested features, reference space and
+animation loop. Within an active XR frame, acquisition reads viewer, configured
+controller grip spaces and hand joints relative to that reference space. Poll
+only drains a bounded queue. Tracking-space observations are not parent-local
+humanoid rotations; anatomical assignment and generic pose reconstruction stay
+downstream. The browser path never opens a camera, XR session or socket as a
+side effect of acquiring or polling. MediaPipe's observation envelope and basis
+remain CC-O2 and SP-O3; the layout decision does not settle them.
 
 ### 1.3 Tools, examples, bindings and data
 
@@ -376,7 +394,9 @@ connector (§1.3). WS-O5 was decided on 2026-10-04: one version, one release
 per tag, and one artifact per member in one OCI repository, the CLIs once
 `ost` can package them (§4.1).
 
-| Id | Question | Resolve by |
-| --- | --- | --- |
-| WS-O4 | `motionConnectorCore`'s closure. Through `motionCore` it links OpenUSD's `gf`, `tf` and `vt`, which conflicts with design policy §28 ("C++ standard library, small math") and with a WASM build. Options: accept it natively and keep the web path on the wire format only ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md), which names no OpenUSD type); ask `usd-motion-plugins` for a foundation-free value layer; or put a C ABI (CC-O7) between them | Connector Phase 3 (WebSocket), before any WASM work |
-| WS-O6 | Web module layout: under `src/` as design policy §16 lists them, or under `bindings/js/` as one npm package with the JS API | Connector Phase 4 |
+WS-O4 and WS-O6 were decided on 2026-10-07 (§1.2): retain the native
+OpenUSD closure and use the existing frame wire representation in independent
+`web/<identity>/` npm modules. A native WASM ABI remains future work rather
+than a prerequisite for browser acquisition. There are no remaining workspace
+questions; source-specific observation questions remain in their owning
+contracts.

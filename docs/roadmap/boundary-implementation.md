@@ -47,9 +47,13 @@ acquisition's completion gate.
   controllers and hands → source normalization → `MotionFrame`.
 - ⬜ Implement `motionConnectorMediaPipe`: landmarks → source-specific
   normalization → observations / `MotionFrame`.
-- ⬜ Resolve `WS-O4`, `WS-O6`, `CC-O2` and the source-profile representation
+- ⬜ Resolve `CC-O2` and the source-profile representation
   before freezing the browser boundary. Keep generic body solve downstream,
   rather than fixing a reconstruction algorithm inside a connector.
+
+Browser layout and native closure decisions (WS-O4, WS-O6) are recorded in
+[WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules). Acquisition uses
+the frame wire representation without compiling native core to WASM.
 
 Completion: both sources follow the same acquisition contract as OpenXR,
 declare their basis and units, and have deterministic contract/normalization
