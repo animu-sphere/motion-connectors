@@ -96,7 +96,7 @@ origins and assumed world axes are declared in
 
 | Identity | Kind | Directory | Role | Arrives from | Status |
 | --- | --- | --- | --- | --- | --- |
-| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36; `bridge` and `record` in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md)) | new | `list`, `dump` and `inspect` implemented 2026-09-21; WebSocket source and `bridge` implemented 2026-10-08; `record` reserved |
+| `motion_connect` | CLI | `tools/motionConnect/` | `list`, `dump`, `record`, `bridge`, `inspect` over `MotionFrame` (design policy §36; `bridge` and `record` in [MOTION_CONNECT.md](../design/MOTION_CONNECT.md)) | new | `list`, `dump` and `inspect` implemented 2026-09-21; WebSocket source and `bridge` implemented 2026-10-08; `record` implemented 2026-10-08 |
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/`, as §2.1's diagram puts every tool | record a live session to a packet capture; transcribe a saved capture to a trace (`--inspect --export-trace`) | `usd-vrm-plugins`, with each connector | all three imported 2026-09-21, with their history |
 | examples | programs | `examples/dump_pose/`, `examples/record_stream/`, `examples/usd_avatar_live/` | the design policy §16's examples | new | reserved |
 | Python bindings | binding | `bindings/python/` | `open_connector`, frame iteration (design policy §19) | new | reserved |
@@ -109,7 +109,7 @@ tool's own options (`--staleness`, `--silence-timeout`, `--assign`,
 `--unplaced`), session report and trace transcription belong to its
 CLI integration layer, and a recorded-session manifest names the tool that made it
 (`"tool": "mocopi_record"`), so the command is provenance. `motion_connect
-record`, when it lands, does not replace them: it captures through the shared
+record` does not replace them: it captures through the shared
 connector contract, takes no connector's own options and writes no
 connector's session report, and it stays a capture/replay tool rather than a
 semantic motion recorder ([CONNECTOR_CONTRACT §12](../design/CONNECTOR_CONTRACT.md#12-raw-capture)).
@@ -158,7 +158,10 @@ web modules ───────────────→ browser APIs, the M
 
 `motion_connect` links VMC, mocopi, VRChat OSC and WebSocket, and is built
 only when all four CLI sources and tools are enabled. `bridge` adds the
-WebSocket sender without downstream motion treatment. Capture replay uses
+WebSocket sender without downstream motion treatment. `record` uses the
+concrete connectors' opt-in raw capture APIs while polling
+the same live acquisition path. It links no extra downstream package and
+opens no separate UDP receiver. Capture replay uses
 each source's acquisition push/flush path, waiting for a peer and preserving
 recorded pacing ([MOTION_CONNECT §3](../design/MOTION_CONNECT.md#3-bridge)).
 

@@ -231,6 +231,14 @@ TestConnectorListensSenderConnects()
               read.datagrams[2].bytes == capture.datagrams[2].bytes,
           "capture reads back");
 
+    connector.StopCapture();
+    Check(Transfer(sender, connector, 44, 1).size() == 1, "traffic continues after StopCapture");
+    Check(connector.GetCapture().datagrams.size() == 3, "StopCapture retains and stops");
+    connector.StartCapture();
+    Check(connector.GetCapture().datagrams.empty(), "StartCapture resets saved input");
+    Check(Transfer(sender, connector, 45, 1).size() == 1, "capture can restart");
+    Check(connector.GetCapture().datagrams.size() == 1, "one new live message captured");
+
     // Going away: 1001, a transition and never an error (§5, §6).
     sender.Close();
     Check(
@@ -240,6 +248,18 @@ TestConnectorListensSenderConnects()
     const auto* gone = Find(connector.GetDiagnostics(), "WEBSOCKET_PEER_DISCONNECTED");
     Check(gone && gone->detail.find("1001") != std::string::npos, "with 1001");
     Check(connector.GetState() == core::ConnectorState::Connecting, "and waits for the next");
+    connector.Close();
+    Check(connector.GetCapture().datagrams.size() == 1, "Close retains saved input");
+    Check(static_cast<bool>(connector.Open(Lossless(), Listen())), "reopen for capture");
+    Check(sender.Open(ConnectTo(PortOf(connector.GetEndpoint()))), "sender reopens");
+    Check(Pump([&] { return sender.GetPeerCount() == 1 && !connector.GetPeer().empty(); },
+               [&] {
+                   sender.Service();
+                   connector.Poll(unused);
+               }),
+          "handshake after reopen");
+    Check(Transfer(sender, connector, 1, 1).size() == 1, "traffic after reopen");
+    Check(connector.GetCapture().datagrams.size() == 1, "Open stops previous capture");
 }
 
 void

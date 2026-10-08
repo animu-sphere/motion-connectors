@@ -107,6 +107,7 @@ WebSocketConnector::Open(const core::ConnectorConfig& connector, const WebSocket
 void
 WebSocketConnector::Close()
 {
+    StopCapture();
     _endpoint->Close();
     if (_buffer)
     {

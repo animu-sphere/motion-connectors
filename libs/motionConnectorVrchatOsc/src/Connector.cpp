@@ -71,6 +71,7 @@ VrchatOscConnector::Open(const openstrata::connectors::core::ConnectorConfig& co
 void
 VrchatOscConnector::Close()
 {
+    StopCapture();
     _receiver.Close();
     if (_buffer)
     {
@@ -90,6 +91,20 @@ openstrata::connectors::core::ConnectorCapabilities
 VrchatOscConnector::GetCapabilities() const
 {
     return VrchatOscCapabilities();
+}
+
+void
+VrchatOscConnector::StartCapture()
+{
+    _capture = PacketCapture();
+    _capture.listenEndpoint = _receiver.GetBoundEndpoint();
+    _capturing = true;
+}
+
+void
+VrchatOscConnector::StopCapture()
+{
+    _capturing = false;
 }
 
 bool
@@ -114,6 +129,14 @@ VrchatOscConnector::Poll(openstrata::connectors::core::MotionFrame& out)
     if (status != ReceiveStatus::Received)
     {
         return false;
+    }
+
+    if (_capturing) {
+        RecordedDatagram record;
+        record.receiveTime = datagram.receiveTime;
+        record.peer = datagram.peer;
+        record.bytes = datagram.bytes;
+        _capture.datagrams.push_back(std::move(record));
     }
 
     _PushPacket(DecodeTrackerDatagram(datagram.bytes), datagram.receiveTime, datagram.peer);

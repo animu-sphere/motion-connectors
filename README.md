@@ -64,7 +64,7 @@ usd-avatar-runtime     composition, the update loop
 | `motionConnectorMocopi` | mocopi native UDP input |
 | `motionConnectorVrchatOsc` | VRChat OSC Trackers input |
 | `motionConnectorTracking` | Tracker regions, assignment and the tracker solve |
-| `motion_connect` | CLI over `MotionFrame`: `list`, `dump`, `inspect`, `bridge` |
+| `motion_connect` | CLI over `MotionFrame`: `list`, `dump`, `inspect`, `bridge`, `record` |
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLIs: record or inspect a live session's packet capture |
 
 Identities and dependency directions:

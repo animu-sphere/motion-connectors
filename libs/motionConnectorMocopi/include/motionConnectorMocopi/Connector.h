@@ -2,6 +2,7 @@
 #pragma once
 
 #include "motionConnectorMocopi/Diagnostics.h"
+#include "motionConnectorMocopi/PacketCapture.h"
 #include "motionConnectorMocopi/FrameSource.h"
 #include "motionConnectorMocopi/UdpReceiver.h"
 #include "motionConnectorMocopi/api.h"
@@ -30,6 +31,14 @@ public:
     openstrata::connectors::core::ConnectorCapabilities GetCapabilities() const override;
     bool Poll(openstrata::connectors::core::MotionFrame& out) override;
 
+    // Opt-in live capture before decoding. StartCapture clears the saved
+    // records; StopCapture and Close retain them. Replay injection is excluded.
+    // Times remain on the receiver's monotonic clock since Open.
+    void StartCapture();
+    void StopCapture();
+    const PacketCapture& GetCapture() const noexcept { return _capture; }
+    const std::string& GetEndpoint() const noexcept { return _receiver.GetBoundEndpoint(); }
+
     // Hardware-free input paths used by replay and connector tests. Both paths
     // enqueue the same MotionFrame values that Poll returns after UDP receive.
     std::size_t PushDatagram(const std::uint8_t* bytes, std::size_t size, double receiveTimestamp);
@@ -46,6 +55,8 @@ private:
     openstrata::connectors::core::MotionFrame _MakeFrame(const MocopiFrame& frame,
                                                          double receiveTimestamp);
 
+    bool _capturing = false;
+    PacketCapture _capture;
     UdpReceiver _receiver;
     MocopiFrameSource _source;
     std::unique_ptr<openstrata::connectors::core::FrameBuffer> _buffer;

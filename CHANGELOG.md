@@ -19,6 +19,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`motion_connect record`.** Captures live VMC, mocopi, VRChat OSC or
+  WebSocket input through each concrete connector before decoding, preserving
+  refused payloads, receive order/times and per-record peer identity in the
+  existing source packet-capture format. Supports duration/frame/SIGINT stops,
+  shared diagnostics and explicit output failures. Resolves CLI-O1 with opt-in
+  UDP capture APIs, without changing `IMotionConnector` or dependency closure.
+  Includes independent loopback/corpus replay tests, capture lifecycle checks
+  and installed CLI recording evidence.
+
 - **`motion_connect bridge`.** Forwards VMC, mocopi, VRChat OSC or WebSocket
   acquisition frames through the WebSocket sender in either role. Capture
   replay waits for a peer, keeps recorded pacing and drains both queued
@@ -257,6 +266,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   handoff and checks that the source timestamp survives intake.
 
 ### Added
+
+- **`motion_connect record`.** Captures live VMC, mocopi, VRChat OSC or
+  WebSocket input through each concrete connector before decoding, preserving
+  refused payloads, receive order/times and per-record peer identity in the
+  existing source packet-capture format. Supports duration/frame/SIGINT stops,
+  shared diagnostics and explicit output failures. Resolves CLI-O1 with opt-in
+  UDP capture APIs, without changing `IMotionConnector` or dependency closure.
+  Includes independent loopback/corpus replay tests, capture lifecycle checks
+  and installed CLI recording evidence.
 
 - **A release workflow.** `.github/workflows/release.yml` runs on a `vX.Y.Z`
   tag equal to `VERSION`. It builds and tests on the PR lane's three cells,

@@ -57,17 +57,10 @@ against its manifest with `scripts/check_recorded_sessions.py`
 
 ## Next: v0.2.0
 
-The remaining v0.2.0 work is the capture command, Python bindings and the
-record-stream example ([status table](README.md#status-at-a-glance)). Bridge
-and WebSocket CLI source evidence is in the
+The remaining v0.2.0 work is Python bindings and the record-stream example
+([status table](README.md#status-at-a-glance)). Bridge, raw capture and
+WebSocket CLI source evidence is in the
 [capability matrix](../reference/CAPABILITY_MATRIX.md#3-tools-and-bindings).
-
-- ⬜ `motion_connect record`: a raw capture through the shared contract
-  ([MOTION_CONNECT §5](../design/MOTION_CONNECT.md#5-record)). For WebSocket
-  that is `WebSocketConnector`'s own capture, in the
-  `!websocket-packet-capture` format
-  ([WEBSOCKET §9](../design/WEBSOCKET_CONNECTOR.md#9-raw-capture)). How it
-  reaches a UDP source's datagrams is `CLI-O1`, decided before it is built.
 
 One more decision comes before the bindings, because it fixes what crosses a
 language boundary:

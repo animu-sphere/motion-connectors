@@ -63,7 +63,7 @@ An empty cell means that source cannot carry that part.
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` raw capture tools | supported — inspect/loopback evidence is listed in the source rows | — (imported 2026-09-21) | v0.1.0 |
 | Recorder raw/export separation | supported — `vmc_record_inspect`, `mocopi_record_export`, `vrchat_osc_record_export` check that export preserves acquisition reports and produces deterministic trace bytes; existing loopback suites retain raw capture evidence | tools replay emitted observations and call `motionRecording` only for semantic export | unreleased |
 | `motion_connect bridge` | supported — `motion_connect_bridge_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket`, `_listen`, `_live`, `_limits`, `_errors`; `_arguments` covers usage refusals | unchanged acquisition frames to WebSocket, live or paced capture replay; independent client checks origins and close 1001 | v0.2.0 |
-| `motion_connect record` | — | nowhere | v0.2.0 |
+| `motion_connect record` | supported — `motion_connect_record_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket`, `_silent_*`, `_limits`, `_errors`, `motion_connect_capture_lifecycle`; `motion_connect_arguments` covers usage; installed: `workspace_installed_consumer` | concrete connector live capture before decoding; bytes, peers, receive times and replay parity, with no semantic export | v0.2.0 |
 | Python bindings | — | nowhere | v0.2.0 |
 | JS / TS package, WASM data ABI | — | nowhere | v0.3.0 |
 

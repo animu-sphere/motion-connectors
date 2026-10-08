@@ -482,3 +482,14 @@ cmake --build build/vmc
 `ost plugin build` is not the standalone route here: it takes a *bundle*
 directory and refuses anything without an `openstrata.plugin.yaml`, which an
 adapter does not have and must not grow.
+
+## Live raw capture
+
+After `Open`, call `StartCapture` and poll the connector normally. Each live
+UDP datagram is retained before decoding, including refused input, with its
+receive time and peer. `StopCapture` and `Close` stop appending while
+`GetCapture` retains the saved records; serialize them with this package's
+`WritePacketCaptureFile`. `StartCapture` resets the saved window and `Open`
+stops a previous one. Replay injection does not append. `GetEndpoint` exposes
+the actual bound endpoint, including an OS-selected port. The shared CLI and
+lifecycle contract are in [MOTION_CONNECT §5](../../docs/design/MOTION_CONNECT.md#5-record).

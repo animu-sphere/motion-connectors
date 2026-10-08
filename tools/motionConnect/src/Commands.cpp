@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cmath>
 #include <csignal>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -361,16 +362,11 @@ MakeDumpConfig(const Options& options)
     return config;
 }
 
-void
-PrintListen(websocket::WebSocketConnector& connector)
-{
-    std::cout << "listen: " << connector.GetEndpoint() << std::endl;
-}
-
 template <typename Connector>
 void
-PrintListen(Connector&)
+PrintListen(Connector& connector)
 {
+    std::cout << "listen: " << connector.GetEndpoint() << std::endl;
 }
 
 template <typename Connector>
@@ -417,6 +413,94 @@ ReportDiagnostics(Endpoint& endpoint)
         std::cerr << FormatDiagnostic(diagnostic) << '\n';
     }
     endpoint.ClearDiagnostics();
+}
+
+std::string_view
+CaptureMagic(Source source)
+{
+    switch (source) {
+    case Source::Vmc:
+        return openstrata::connectors::vmc::PacketCaptureMagic;
+    case Source::Mocopi:
+        return openstrata::connectors::mocopi::PacketCaptureMagic;
+    case Source::VrchatOsc:
+        return openstrata::connectors::vrchatOsc::PacketCaptureMagic;
+    case Source::WebSocket:
+        return websocket::PacketCaptureMagic;
+    }
+    return {};
+}
+
+template <typename Connector>
+int
+RunRecord(const Options& options, Connector& connector)
+{
+    const auto status = connector.Open(MakeDumpConfig(options));
+    ReportDiagnostics(connector);
+    if (!status) {
+        std::cerr << "motion_connect: " << status.message << '\n';
+        connector.Close();
+        return 1;
+    }
+    // Discover output errors before waiting on a live source. Keep the file
+    // open for this session; the existing writer owns every on-disk byte.
+    std::ofstream output(options.output, std::ios::binary);
+    if (!output) {
+        std::cerr << "motion_connect: could not open packet capture '" << options.output << "'\n";
+        connector.Close();
+        return 1;
+    }
+    connector.StartCapture();
+    interrupted = 0;
+    std::signal(SIGINT, OnInterrupt);
+    std::cout << "source: " << SourceLabel(options.source) << '\n'
+              << "capture: " << options.output << '\n';
+    PrintListen(connector);
+    const auto started = std::chrono::steady_clock::now();
+    std::size_t frames = 0;
+    bool failed = false;
+    while (!interrupted && (options.maxFrames == 0 || frames < options.maxFrames)) {
+        const double elapsed =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+        if (options.durationSeconds != 0.0 && elapsed >= options.durationSeconds) {
+            break;
+        }
+        const auto recordsBefore = connector.GetCapture().datagrams.size();
+        MotionFrame frame;
+        const bool polled = connector.Poll(frame);
+        if (polled) {
+            ++frames;
+        }
+        ReportDiagnostics(connector);
+        if (connector.GetState() == ConnectorState::Error) {
+            failed = true;
+            break;
+        }
+        // A false Poll can still have consumed a datagram that has not yet
+        // completed a frame. Drain that traffic immediately; on Windows even
+        // a 1 ms sleep can split a tracker's position/rotation burst.
+        if (!polled && connector.GetCapture().datagrams.size() == recordsBefore) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+    connector.StopCapture();
+    connector.Close();
+    ReportDiagnostics(connector);
+    const auto& capture = connector.GetCapture();
+    if (!openstrata::connectors::transport::WritePacketCapture(
+            CaptureMagic(options.source), output, capture) ||
+        !output.flush().good()) {
+        std::cerr << "motion_connect: could not write packet capture '" << options.output << "'\n";
+        return 1;
+    }
+    output.close();
+    if (output.fail()) {
+        std::cerr << "motion_connect: could not close packet capture '" << options.output << "'\n";
+        return 1;
+    }
+    std::cout << "records: " << capture.datagrams.size() << '\n'
+              << "frames: " << frames << std::endl;
+    return failed ? 1 : 0;
 }
 
 std::string_view
@@ -606,6 +690,8 @@ ParseOptions(int argc, char** argv, Options* options, bool* showHelp, std::strin
         options->command = Command::Dump;
     } else if (command == "inspect") {
         options->command = Command::Inspect;
+    } else if (command == "record") {
+        options->command = Command::Record;
     } else if (command == "bridge") {
         options->command = Command::Bridge;
     } else if (command == "--help" || command == "-h") {
@@ -670,12 +756,14 @@ ParseOptions(int argc, char** argv, Options* options, bool* showHelp, std::strin
         } else if (argument == "--output" || argument == "--ws-listen" ||
                    argument == "--ws-connect" || argument == "--ws-port" ||
                    argument == "--ws-path" || argument == "--allow-origin") {
-            options->wsOptionsSpecified = true;
+            if (argument != "--output")
+                options->wsOptionsSpecified = true;
             if (!TakeValue(argc, argv, &index, argument, &value, error)) {
                 return false;
             }
             if (argument == "--output") {
                 options->output = value;
+                options->outputSpecified = true;
             } else if (argument == "--ws-listen" || argument == "--ws-connect") {
                 options->wsAddress = value;
                 if (argument == "--ws-listen")
@@ -705,13 +793,26 @@ ParseOptions(int argc, char** argv, Options* options, bool* showHelp, std::strin
             return false;
         }
     } else if (!options->sourceSpecified) {
-        *error = "--source is required for dump, inspect, and bridge";
+        *error = "--source is required for dump, inspect, bridge, and record";
         return false;
     } else if (options->command == Command::Inspect && options->capturePath.empty()) {
         *error = "--capture is required for inspect";
         return false;
     } else if (options->command == Command::Dump && !options->capturePath.empty()) {
         *error = "--capture is only valid for inspect and bridge";
+        return false;
+    }
+    if (options->command == Command::Record) {
+        if (!options->outputSpecified || options->output.empty()) {
+            *error = "--output is required for record";
+            return false;
+        }
+        if (!options->capturePath.empty()) {
+            *error = "--capture is only valid for inspect and bridge";
+            return false;
+        }
+    } else if (options->command != Command::Bridge && options->outputSpecified) {
+        *error = "--output is only valid for bridge and record";
         return false;
     }
     if (options->command != Command::Bridge && options->wsOptionsSpecified) {
@@ -741,7 +842,8 @@ ParseOptions(int argc, char** argv, Options* options, bool* showHelp, std::strin
         }
     }
     if (options->command != Command::List && options->command != Command::Inspect &&
-        options->source == Source::WebSocket && options->capturePath.empty() &&
+        options->source == Source::WebSocket &&
+        (options->command == Command::Record || options->capturePath.empty()) &&
         !options->portSpecified) {
         *error = "--port is required for a live websocket source";
         return false;
@@ -757,7 +859,8 @@ PrintUsage(std::ostream& output)
               "  motion_connect list\n"
               "  motion_connect dump --source SOURCE [options]\n"
               "  motion_connect inspect --source SOURCE --capture PATH\n"
-              "  motion_connect bridge --source SOURCE --ws-port N [options]\n\n"
+              "  motion_connect bridge --source SOURCE --ws-port N [options]\n"
+              "  motion_connect record --source SOURCE --output PATH [options]\n\n"
               "Sources: vmc, mocopi, vrchat-osc, websocket\n\n"
               "Source and stop options:\n"
               "  --listen ADDR          Bind address (default 127.0.0.1).\n"
@@ -765,6 +868,8 @@ PrintUsage(std::ostream& output)
               "  --capture PATH         Inspect or bridge a capture instead of listening.\n"
               "  --max-frames N         Stop after N frames; 0 means unlimited.\n"
               "  --duration S           Stop after S seconds; 0 means unlimited.\n"
+              "Record output options:\n"
+              "  --output PATH          Save raw input in the source packet-capture format.\n"
               "Bridge output options:\n"
               "  --output websocket     Output format (default websocket).\n"
               "  --ws-listen ADDR       Serve peers (default 127.0.0.1).\n"
@@ -794,6 +899,10 @@ Run(const Options& options)
     if (options.command == Command::Bridge) {
         return WithSource(options.source,
                           [&](auto& connector) { return RunBridge(options, connector); });
+    }
+    if (options.command == Command::Record) {
+        return WithSource(options.source,
+                          [&](auto& connector) { return RunRecord(options, connector); });
     }
     return RunDumpBySource(options);
 }

@@ -307,6 +307,12 @@ This is what FRAME_WIRE_FORMAT §1 meant by design policy §35's
 `tests/data/websocket/body-pose.jsonl`. It is a capture of messages, and
 because it is the transport's format it needs no reader of its own.
 
+`StartCapture` resets saved messages; `StopCapture` and `Close` stop
+appending and retain them. `Open` stops any previous capture. Live receive
+times stay on the clock since `Open`; replay injection is excluded.
+The shared CLI uses this facility as described in
+[MOTION_CONNECT §5](MOTION_CONNECT.md#5-record).
+
 The hardware-free path is `PushMessage(text, receiveTimestamp, peer)`, as
 mocopi's is `PushDatagram`. A replayed capture goes through it and through the
 same assembly as a live session. Two generated corpora come with the connector:

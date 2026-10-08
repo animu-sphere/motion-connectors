@@ -14,6 +14,7 @@ enum class Command {
     Dump,
     Inspect,
     Bridge,
+    Record,
 };
 
 enum class Source {
@@ -35,6 +36,7 @@ struct Options {
     std::size_t maxFrames = 0;
     double durationSeconds = 0.0;
     std::string output = "websocket";
+    bool outputSpecified = false;
     std::string wsAddress = "127.0.0.1";
     bool wsListenSpecified = false;
     bool wsConnectSpecified = false;

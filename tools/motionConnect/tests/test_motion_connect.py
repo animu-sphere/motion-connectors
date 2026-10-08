@@ -76,6 +76,15 @@ def check_dump(tool: pathlib.Path, source: str) -> None:
 def check_arguments(tool: pathlib.Path) -> None:
     bridge = ["bridge", "--source", "vmc"]
     cases = [
+        (["record", "--output", "fixture"], "--source is required"),
+        (["record", "--source", "vmc"], "--output is required"),
+        (["record", "--source", "vmc", "--output", ""], "--output is required"),
+        (["record", "--source", "websocket", "--output", "fixture"], "--port is required"),
+        (["record", "--source", "vmc", "--output", "fixture", "--capture", "input"],
+         "only valid for inspect and bridge"),
+        (["record", "--source", "vmc", "--output", "fixture", "--ws-port", "0"],
+         "only valid for bridge"),
+        (["dump", "--source", "vmc", "--output", "fixture"], "only valid for bridge and record"),
         (["dump", "--source", "vmc", "--max-frames", "-1"], "whole number"),
         (bridge, "--ws-port is required"),
         (bridge + ["--ws-port", "0", "--ws-listen", "127.0.0.1",
