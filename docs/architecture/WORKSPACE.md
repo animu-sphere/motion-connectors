@@ -97,6 +97,7 @@ origins and assumed world axes are declared in
 | `vmc_record`, `mocopi_record`, `vrchat_osc_record` | CLI | `tools/<name>Record/` | source-specific raw capture, inspection and downstream trace export |
 | source profiles | data | `libs/<identity>/profiles/`, `web/<identity>/profiles/` | installed acquisition profile declarations |
 | test corpus | data | `libs/<identity>/tests/corpus/` | generated captures and recorded-session manifests (§5) |
+| `motion_connectors` | Python package | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror ([DESIGN_POLICY §19.1](../design/DESIGN_POLICY.md#191-the-python-binding)) |
 
 Reserved layout allocations (implementation status is in the matrix):
 
@@ -104,7 +105,6 @@ Reserved layout allocations (implementation status is in the matrix):
 | --- | --- | --- |
 | `record_stream` example | `examples/record_stream/` | connector → `MotionFrame` → downstream motion intake/recording |
 | other examples | `examples/dump_pose/`, `examples/usd_avatar_live/` | consumer programs; runtime/avatar application is integration |
-| Python binding | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror |
 | JS/TS binding | `bindings/js/` | shared consumer API across acquisition providers, WebSocket and native/WASM |
 
 The three record tools remain, one per connector (WS-O3, decided
@@ -157,6 +157,7 @@ motionConnectorWire ───────→ motionConnectorCore, usd-motion-plu
 motionConnectorWebSocket ──→ motionConnectorCore, motionConnectorWire, motionConnectorTransport (diagnostics, capture format); no third-party library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
 motionConnectorCAbi ───────→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorVmc, motionConnectorMocopi, motionConnectorVrchatOsc, motionConnectorWebSocket (each private and optional); no OpenXR, no tracking
+bindings/python ───────────→ motionConnectorCAbi, loaded at run time; the Python standard library; no link and no native code
 tools/* ──────────────────→ the connectors they name; downstream motion libraries only for semantic export
 web modules ───────────────→ caller-owned browser/Tasks result APIs; no native library
 ```
@@ -220,9 +221,11 @@ artifact closure; this is a packaging pin, not a direct recorder CMake link.
 The C ABI aggregates connectors as `motion_connect` does, which creates no edge
 between them. Its links are private, so its package exposes C alone, and assignment
 and solve are not ABI operations ([C_ABI §1](../design/C_ABI.md#1-scope)). The
-reserved Python binding consumes it and must not bind C++ implementation details
-directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
-JS values and serialized wire representation distinct.
+Python binding consumes it and must not bind C++ implementation details directly.
+It is a directory, not a workspace member: nothing in it is a library, tool or
+plugin artifact, and `MOTIONCONNECTORS_BUILD_PYTHON` installs it beside the
+library under `<libdir>/python/`. JS/TS consumers and the WASM data ABI keep the
+in-process ABI, JS values and serialized wire representation distinct.
 
 ### 2.2 Forbidden
 
@@ -274,7 +277,10 @@ protocol implementation; transport must contain no protocol semantics.
 files, package configs and manifest, and repeats the header/config scan on the
 clean installed prefix. It also holds the C ABI's public headers to C standard
 integers and their own export macros, and refuses a C ABI edge to tracking or
-OpenXR. `motionConnectorCAbi_exports` holds the exported symbols to the header. `cmake/MotionConnectorsBoundaries.cmake` traverses actual
+OpenXR, and it refuses a Python binding import outside its standard-library list,
+a declared dependency or native code. `motionConnectorCAbi_exports` holds the
+exported symbols to the header, and `motionConnectorPython_layout` holds the
+binding's declarations to it. `cmake/MotionConnectorsBoundaries.cmake` traverses actual
 target closures, including private static links, aliases, imported interfaces,
 configuration-specific imported library paths and generator-expression edges.
 It runs on standalone component builds even with tests disabled, at the end of

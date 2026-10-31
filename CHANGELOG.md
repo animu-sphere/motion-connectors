@@ -6,6 +6,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- **Python binding (`bindings/python/`).** `open_connector`, `Connector` and
+  draining `frames()` / `diagnostics()`, over the C ABI with `ctypes` and the
+  standard library alone ([DESIGN_POLICY §19.1](docs/design/DESIGN_POLICY.md#191-the-python-binding)).
+  Frames and diagnostics are immutable values copied at the poll, absence is
+  `None`, and a failed open is a retryable state. Replay parity against the C++
+  connectors, a layout check against the C header, a live loopback session and
+  the installed package are the evidence. The wheel is `py3-none-any`, so `abi3`
+  is not needed; no wheel is published yet.
+
 - **Acquisition C ABI (`motionConnectorCAbi`).** Resolve CC-O7 in
   [C_ABI.md](docs/design/C_ABI.md): a shared library exporting only `motion_*`,
   over VMC, mocopi, VRChat OSC and WebSocket. Frames and diagnostics are owned

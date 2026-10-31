@@ -111,6 +111,23 @@ class SourceBoundaries(unittest.TestCase):
                            f"target_link_libraries(x PRIVATE {name}::{name})")
                 self.assertTrue(check(self.root))
 
+    def test_python_binding_is_pure_and_standard_library_only(self):
+        module = "bindings/python/motion_connectors/_abi.py"
+        self.write(module, "import ctypes\nfrom . import _values\nfrom collections.abc import Iterator\n")
+        self.write("bindings/python/pyproject.toml", '[project]\ndependencies = []\n')
+        self.assertEqual(check(self.root), [])
+        for text in ("import pxr", "from pxr import Gf", "import numpy", "import motionRecording",
+                     "from motion_connectors._native import x", "import cffi"):
+            with self.subTest(text=text):
+                self.write(module, text)
+                self.assertTrue(check(self.root))
+        self.write(module, "import ctypes\n")
+        native = self.write("bindings/python/motion_connectors/_native.pyd", "")
+        self.assertTrue(check(self.root))
+        native.unlink()
+        self.write("bindings/python/pyproject.toml", '[project]\ndependencies = ["numpy"]\n')
+        self.assertTrue(check(self.root))
+
     def test_tools_tests_and_comments_are_permitted(self):
         text = '#include "motionRecording/api.h"\nconst char* p = "/VMC/Ext";'
         self.write("tools/record/main.cpp", text)

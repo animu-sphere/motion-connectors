@@ -782,6 +782,38 @@ Potential applications:
 - ML pipelines;
 - rapid prototyping.
 
+### 19.1 The Python binding
+
+Decided 2026-10-31. The contract beneath it is [C_ABI.md](C_ABI.md), and usage is
+in [`bindings/python/README.md`](../../bindings/python/README.md).
+
+- **Implementation: `ctypes`, standard library only.** Nothing is compiled, so no
+  extension module ties a release to one CPython, and no second native boundary
+  sits above the C ABI. `tests/test_binding.py` holds the hand-written declarations
+  to the header, field by field, because `ctypes` cannot check them against it.
+- **`abi3` is not needed.** The wheel is `py3-none-any`: it has no extension module
+  to tag. The library's OpenUSD closure still binds a process to whatever that
+  runtime requires, including its Python on Windows; `abi3` could not relax that.
+- **A frame is copied whole, at the poll.** Its handle is released before the poll
+  returns, so `Frame` and `Diagnostic` are immutable Python values with no lifetime
+  to get wrong. C_ABI §6 already makes a handle safe to outlive anything; copying
+  also removes the question of when a collector releases it. Measured on the
+  committed mocopi and VMC captures on Windows: under 0.1 ms a delivered frame. A
+  consumer that needs less can bind the C ABI itself.
+- **`None` is the absent spelling.** The ABI's `has_*` flags and zeroed storage stop
+  at the boundary, so an absent joint cannot be read as a value (C_ABI §8).
+- **`frames()` and `diagnostics()` drain and end.** The loop in the example above
+  runs once per caller's tick, not forever. A blocking iterator would need a wait
+  policy and a thread, and a runtime loop is downstream (§40).
+- **`port` is a required argument**, because configuration is explicit
+  ([CONNECTOR §2](CONNECTOR_CONTRACT.md#2-imotionconnector)). An out-of-range integer
+  or a string containing NUL is a `ValueError`, because `ctypes` would otherwise
+  wrap or truncate it before the ABI could refuse it.
+- **A connector holds a lock.** `ctypes` releases the GIL around each call, so the
+  ABI's one-thread-at-a-time rule would otherwise be the caller's to remember.
+- **Importing never loads the library.** It loads at first use, so enums and values
+  stay usable without it, and failure is a `LibraryError` naming what was tried.
+
 ---
 
 ## 20. Relationship with `usd-motion-plugins`
