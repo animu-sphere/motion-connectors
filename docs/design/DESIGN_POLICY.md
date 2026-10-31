@@ -1212,8 +1212,8 @@ from the in-process ABI (§38) and downstream semantic recording.
 ## 38. ABI Considerations
 
 The language-neutral boundary is a minimal **acquisition C ABI** over
-`MotionFrame`, not a full mirror of the C++ interface. CC-O7 owns the concrete
-header/package and view decisions ([CONNECTOR §13](CONNECTOR_CONTRACT.md#13-open-questions));
+`MotionFrame`, not a full mirror of the C++ interface. [C_ABI.md](C_ABI.md) owns
+the concrete header, package and view decisions (CC-O7, decided 2026-10-31);
 release ordering belongs to the roadmap.
 
 Its invariants are POD values and opaque handles, versioned structs, stable
@@ -1223,16 +1223,6 @@ or USD type crosses it. Views must specify frame/diagnostic validity and how
 joint/tracker iteration, timestamps, actors, capabilities, state and source
 profiles are accessed. Retargeting, filtering, runtime loops, USD bridges and
 avatar APIs are downstream responsibilities.
-
-Conceptual shape only; names and signatures remain a CC-O7 decision:
-
-```c
-motion_connector_t* motion_connector_open(...);
-void motion_connector_close(...);
-motion_poll_result_t motion_connector_poll(...);
-motion_frame_view_t motion_frame_view(...);
-motion_diagnostic_view_t motion_connector_last_diagnostic(...);
-```
 
 Bindings may layer Python, JavaScript/WASM, Rust or C# over this boundary.
 Keep three representations distinct: the in-process ABI, JS object values and

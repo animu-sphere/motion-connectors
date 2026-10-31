@@ -105,7 +105,7 @@ Reserved layout allocations (implementation status is in the matrix):
 | other examples | `examples/dump_pose/`, `examples/usd_avatar_live/` | consumer programs; runtime/avatar application is integration |
 | Python binding | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror |
 | JS/TS binding | `bindings/js/` | shared consumer API across acquisition providers, WebSocket and native/WASM |
-| C ABI | package/header layout subject to CC-O7 | minimal in-process acquisition boundary (§1.4) |
+| C ABI | `libs/motionConnectorCAbi/` | `motionConnectorCAbi`, the in-process acquisition boundary over the connectors ([C_ABI.md](../design/C_ABI.md)); the one shared library, exporting only `motion_*`; it links the VMC, mocopi, VRChat OSC and WebSocket connectors privately, and neither tracking nor OpenXR |
 
 The three record tools remain, one per connector (WS-O3, decided
 2026-10-04). They share transport and session flags, not behaviour: each
@@ -125,7 +125,6 @@ Release ordering belongs to the [roadmap](../roadmap/current.md).
 | Identity | Role | Contract prerequisite |
 | --- | --- | --- |
 | a generation adapter (ARDY) | a motion generator behind `usd-motion-plugins`' generator interface | that interface does not exist yet (`usd-vrm-plugins` Motion Phase F, moved here) |
-| a C ABI | opaque connector handles and versioned acquisition views; no C++ STL or USD types (design policy §38) | CC-O7 defines ownership, lifetimes, errors and package layout |
 | advanced devices | IMU suits, optical mocap, depth cameras, dedicated face trackers | source-specific acquisition contracts |
 
 ### 1.5 Deliberately not here
@@ -217,9 +216,11 @@ VMC reports acquisition facts and omits the former downstream `intake:` line.
 The packaged `motionRecording` dependency requires `motionSampling` in the
 artifact closure; this is a packaging pin, not a direct recorder CMake link.
 
-The reserved Python binding consumes the C ABI, whose native implementation
-may link the exposed acquisition libraries. It must not bind C++ implementation
-details directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
+The reserved C ABI aggregates connectors as `motion_connect` does, which creates
+no edge between them. Its links are private, so its package exposes C alone, and
+assignment and solve are not ABI operations
+([C_ABI §1](../design/C_ABI.md#1-scope)). The reserved Python binding consumes it
+and must not bind C++ implementation details directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
 JS values and serialized wire representation distinct.
 
 ### 2.2 Forbidden
