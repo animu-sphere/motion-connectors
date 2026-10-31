@@ -56,6 +56,7 @@ Every connector is optional (WORKSPACE.md §4), and each is one CMake option:
 | `MOTIONCONNECTORS_BUILD_OPENXR` | `OFF` | `motionConnectorOpenXR`; requires installed OpenXR-SDK ≥1.1.36 |
 | `MOTIONCONNECTORS_BUILD_PYTHON` | `ON` | installs and tests the [Python binding](../../bindings/python/README.md), whenever the C ABI is built |
 | `MOTIONCONNECTORS_BUILD_TOOLS` | `ON` at the top level | the recorders, and `motion_connect` when all four CLI sources are on |
+| `MOTIONCONNECTORS_BUILD_EXAMPLES` | follows `MOTIONCONNECTORS_BUILD_TOOLS` | [`record_stream`](../../examples/record_stream/README.md), when VMC, mocopi, WebSocket and the tools are on; never installed |
 | `MOTIONCONNECTORS_BUILD_TESTS` | `ON` at the top level | every component's tests and the workspace tests |
 
 The transport and the OSC wire format depend on nothing and are always built.
@@ -141,7 +142,8 @@ browser frames with the native codec. See the
 | `motion_connect_inspect_*` | the CLI replays representative UDP and WebSocket captures through the shared contract |
 | `motion_connect_bridge_*` | four capture sources reach WebSocket `dump`; an independent client checks listen/path/origin policy, numbering, receive times, pacing and close 1001; live observations, silence, limits and open failures are checked |
 | `motion_connect_record_*`, `motion_connect_capture_lifecycle` | four live sources save byte-exact input and per-record peers before decoding; capture replay parity, silent duration expiry, frame limits, open/output errors and capture lifecycle are checked |
-| `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package the build installed, each of which `tests/installed_consumer/packages.json` must list; when the build has `motion_connect`, the installed one passes `list`, `dump`, `inspect`, silent `record` and argument checks from the prefix |
+| `record_stream_*` | VMC and mocopi takes match their recorder's export once intake conditioning is set aside, with deterministic bytes; a clock regression opens a new take; tracker-only actors and silent sessions record nothing; a live VMC session matches its replay. They carry the `consumer-integration` label, and `_loopback` and `_observations` bind a socket |
+| `workspace_installed_consumer` | the tree installs into a clean prefix that names no source or build path, and a project copied outside the repository consumes every package the build installed, each of which `tests/installed_consumer/packages.json` must list; when the build has `motion_connect`, the installed one passes `list`, `dump`, `inspect`, silent `record` and argument checks from the prefix; when it has `record_stream`, the example builds outside the repository against the prefix and downstream motion packages and records each source |
 | `motionConnectorPython_layout`, `_api`, `_replayParity`, `_loopback` | the binding's declarations match the C header; refusals, frame lifetimes, absence, UTF-8 and threads; every field, frame and diagnostic matches the C++ connector on each source's corpus; a live VMC session over a loopback socket |
 | `motionConnectorMocopi_frameSource` | source missing/loss/duplicate and restart facts, timestamps and diagnostic identity, with shared-connector parity over all captures |
 | `motionConnectorVmc_frameSource` | source observations retain missing/stale/duplicate facts, restart timestamps, receive-clock fallback and diagnostic identity without downstream intake policy |

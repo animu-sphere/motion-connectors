@@ -118,6 +118,10 @@ set(_consumer_tool_args "")
 if(TARGET motion_connect)
     set(_consumer_tool_args --motion-connect)
 endif()
+# Likewise configured before this directory.
+if(TARGET record_stream)
+    list(APPEND _consumer_tool_args --record-stream)
+endif()
 
 add_test(NAME workspace_installed_consumer
     COMMAND "${MOTIONCONNECTORS_TEST_PYTHON}"

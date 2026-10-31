@@ -6,6 +6,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- **`record_stream` example (`examples/record_stream/`).** A consumer program,
+  connector → `MotionFrame` → `LiveCaptureSource` → `MotionRecorder` →
+  `motion-capture-trace`, over live or replayed VMC, mocopi and WebSocket input.
+  One intake and recorder per actor, evaluation on the source's clock, and a new
+  take where that clock goes back are its own stated policy; the `motionRecording`
+  dependency stays out of every connector library. Comparison with each recorder's
+  export, restart takes, a live session and a build outside the repository against
+  installed packages are the evidence.
+
 - **Python binding (`bindings/python/`).** `open_connector`, `Connector` and
   draining `frames()` / `diagnostics()`, over the C ABI with `ctypes` and the
   standard library alone ([DESIGN_POLICY §19.1](docs/design/DESIGN_POLICY.md#191-the-python-binding)).

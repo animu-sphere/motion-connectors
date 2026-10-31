@@ -20,7 +20,7 @@ incomplete release scope**, not implementation or release availability.
 
 | Milestone | Incomplete scope | Dependency |
 | --- | --- | --- |
-| v0.2.0: native consumer boundary | `record_stream` example; installed-consumer and release artifact validation; docs consistency | preserve the acquisition gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement) |
+| v0.2.0: native consumer boundary | installed-consumer and release artifact validation; docs consistency | preserve the acquisition gates in [WORKSPACE §2.4](../architecture/WORKSPACE.md#24-enforcement) |
 | v0.3.0: browser / JS / WASM consumer boundary | shared JS/TS consumer API in `bindings/js/`; WASM-friendly data ABI | the native C ABI and browser acquisition contracts |
 | after the current milestones | advanced devices, generation adapter and further integration examples | explicit scope and downstream contracts before scheduling |
 

@@ -21,7 +21,10 @@ proves the prefix works on its own:
      the prefix instead of the build tree;
   4. with the C ABI, the installed Python package finds the prefix's library
      by itself and replays each source --
-     bindings/python/tests/test_binding.py's InstalledTest.
+     bindings/python/tests/test_binding.py's InstalledTest;
+  5. with `--record-stream`, examples/record_stream, copied out of the
+     repository, builds against the prefix and the downstream motion packages
+     and records each source, with the prefix's recorders as its oracle.
 
 The list is empty until the first import, and the lane runs anyway: what it
 proves before then is that the install, the leak scan and a consumer outside
@@ -35,7 +38,8 @@ is expected. `--usd-root` is left out when nothing built reaches OpenUSD.
 
   check_installed_consumer.py --build-dir build/windows-msvc --config Release
       [--usd-root C:/usd/openusd-26.08] [--package NAME ...]
-      [--generator Ninja --make-program ...] [--motion-connect] [--keep DIR]
+      [--generator Ninja --make-program ...] [--motion-connect]
+      [--record-stream] [--keep DIR]
 """
 
 from __future__ import annotations
@@ -55,6 +59,7 @@ DOC_DIR = pathlib.Path("share", "doc", "motion-connectors")
 PROFILE_DIR = pathlib.Path("share", "motion-connectors", "profiles")
 MOTION_CONNECT_TEST = REPO / "tools" / "motionConnect" / "tests" / "test_motion_connect.py"
 MOTION_CONNECT_RECORD_TEST = REPO / "tools" / "motionConnect" / "tests" / "test_record.py"
+RECORD_STREAM_TEST = REPO / "examples" / "record_stream" / "tests" / "test_record_stream.py"
 # One committed capture per connector, as tools/motionConnect/tests replays.
 MOTION_CONNECT_CAPTURES = (
     ("vmc", "vmc.v1",
@@ -182,6 +187,9 @@ def main() -> int:
     parser.add_argument("--motion-connect", action="store_true",
                         help="the build installs motion_connect; run it from "
                              "the prefix")
+    parser.add_argument("--record-stream", action="store_true",
+                        help="the build has record_stream; build it against the "
+                             "prefix and the downstream motion packages")
     parser.add_argument("--keep", type=pathlib.Path,
                         help="work here instead of a deleted temporary directory")
     args = parser.parse_args()
@@ -421,6 +429,27 @@ def main() -> int:
             print("ok  installed Python binding found its library and replayed each source")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
+        if args.record_stream:
+            # The one consumer here that adds downstream motion packages, so it
+            # configures without the refusals above. Only its CMake project and
+            # source are copied, which is what a consumer copies.
+            stream_source = work / "record-stream-src"
+            stream_build = work / "record-stream-build"
+            stream_source.mkdir()
+            for name in ("CMakeLists.txt", "main.cpp"):
+                shutil.copyfile(REPO / "examples/record_stream" / name, stream_source / name)
+            stream_configure = [argument for argument in configure
+                                if not str(argument).startswith("-DCMAKE_DISABLE_FIND_PACKAGE_")]
+            stream_configure[stream_configure.index("-S") + 1] = stream_source
+            stream_configure[stream_configure.index("-B") + 1] = stream_build
+            run(stream_configure)
+            run(["cmake", "--build", stream_build, "--config", args.config])
+            run([sys.executable, RECORD_STREAM_TEST,
+                 "--tool", next(stream_build.rglob(executable("record_stream"))),
+                 "--vmc-record", prefix / "bin" / executable("vmc_record"),
+                 "--mocopi-record", prefix / "bin" / executable("mocopi_record"),
+                 "--root", REPO, "--mode", "replay"], env=env, cwd=work)
+            print("ok  record_stream built outside the repository and recorded each source")
         print("installed-consumer lane passed")
         return 0
     except subprocess.CalledProcessError as error:

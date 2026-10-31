@@ -11,7 +11,7 @@ Current capability status and test evidence live only in the
 [capability matrix](../reference/CAPABILITY_MATRIX.md). This document owns
 component identity and dependency structure. VMC and mocopi use
 `VmcFrameSource` / `MocopiFrameSource`; downstream intake compositions are
-private to consumer integration tests. Reserved layouts below are design
+private to consumer integration tests and `record_stream`. Reserved layouts below are design
 allocations, not directories or capability claims.
 The shape follows
 the design
@@ -98,12 +98,12 @@ origins and assumed world axes are declared in
 | source profiles | data | `libs/<identity>/profiles/`, `web/<identity>/profiles/` | installed acquisition profile declarations |
 | test corpus | data | `libs/<identity>/tests/corpus/` | generated captures and recorded-session manifests (§5) |
 | `motion_connectors` | Python package | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror ([DESIGN_POLICY §19.1](../design/DESIGN_POLICY.md#191-the-python-binding)) |
+| `record_stream` | example | `examples/record_stream/` | connector → `MotionFrame` → downstream motion intake/recording; consumer policy in [its README](../../examples/record_stream/README.md) |
 
 Reserved layout allocations (implementation status is in the matrix):
 
 | Surface | Directory allocation | Ownership |
 | --- | --- | --- |
-| `record_stream` example | `examples/record_stream/` | connector → `MotionFrame` → downstream motion intake/recording |
 | other examples | `examples/dump_pose/`, `examples/usd_avatar_live/` | consumer programs; runtime/avatar application is integration |
 | JS/TS binding | `bindings/js/` | shared consumer API across acquisition providers, WebSocket and native/WASM |
 
@@ -159,6 +159,7 @@ motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
 motionConnectorCAbi ───────→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorVmc, motionConnectorMocopi, motionConnectorVrchatOsc, motionConnectorWebSocket (each private and optional); no OpenXR, no tracking
 bindings/python ───────────→ motionConnectorCAbi, loaded at run time; the Python standard library; no link and no native code
 tools/* ──────────────────→ the connectors they name; downstream motion libraries only for semantic export
+examples/record_stream ────→ motionConnectorVmc, motionConnectorMocopi, motionConnectorWebSocket, motionRecording
 web modules ───────────────→ caller-owned browser/Tasks result APIs; no native library
 ```
 
@@ -224,7 +225,10 @@ and solve are not ABI operations ([C_ABI §1](../design/C_ABI.md#1-scope)). The
 Python binding consumes it and must not bind C++ implementation details directly.
 It is a directory, not a workspace member: nothing in it is a library, tool or
 plugin artifact, and `MOTIONCONNECTORS_BUILD_PYTHON` installs it beside the
-library under `<libdir>/python/`. JS/TS consumers and the WASM data ABI keep the
+library under `<libdir>/python/`. `record_stream` is likewise a directory, not a
+workspace member: `MOTIONCONNECTORS_BUILD_EXAMPLES` builds it and nothing installs
+it. It configures alone against installed packages, so it is a template a consumer
+can copy. JS/TS consumers and the WASM data ABI keep the
 in-process ABI, JS values and serialized wire representation distinct.
 
 ### 2.2 Forbidden
