@@ -261,7 +261,19 @@ jobs:
             ost library build "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
             ost library test "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
             ost library package "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > ".ost-ci/libraries/$lib.json"
-            ost library verify-consumer "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
+            # Not on Linux yet: the published runtime declares no host packages, so
+            # the isolated consumer cannot find MaterialX's X11 (open-strata#289).
+            # The PR lane's installed consumer covers these packages there.
+            if [ "${RUNNER_OS}" != "Linux" ]; then
+              verified=0
+              ost library verify-consumer "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} || verified=$?
+              if [ "$verified" -ne 0 ]; then
+                # `ost` writes the reason to this report, not to the log.
+                find "libs/$lib/.strata/targets" -name library-consumer.json -exec \
+                  jq -r '.checks | to_entries[] | .key, (.value.stdout // ""), (.value.stderr // "")' {} +
+                exit "$verified"
+              fi
+            fi
             echo "::endgroup::"
           done
       - name: Package every CLI as its own artifact

@@ -21,8 +21,10 @@ runtime scheduling belong downstream.
 1. Validate installed consumers and release artifacts, reconcile the capability
    matrix and docs, then prepare v0.2.0. Run the
    [release dry run](../releases/README.md#how-a-release-is-cut) on all three
-   targets first: `ost library verify-consumer` and CLI packaging are measured
-   on Windows only so far.
+   targets first. `ost library verify-consumer` stays out of the Linux release
+   lane until it can find MaterialX's X11 with the published runtime
+   ([open-strata#289](https://github.com/animu-sphere/open-strata/issues/289));
+   the installed-consumer lane covers those packages meanwhile.
 
 ### Release gates
 

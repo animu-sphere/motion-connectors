@@ -213,6 +213,9 @@ def listen(tool, source, capture, limit=0):
         # Without a completed handshake, even the shortest capture must wait.
         time.sleep(0.15)
         assert child.poll() is None, "replay finished before a peer connected"
+        # Replay's clock starts at this handshake. Timing from before it means a
+        # slow first delivery on a loaded host cannot shorten the measured span.
+        connecting = time.monotonic()
         client = Client(port, path="/motion", origin="https://app.example")
         try:
             messages, times = receive(client)
@@ -234,7 +237,8 @@ def listen(tool, source, capture, limit=0):
                 assert message == original, (message, original)
         if len(times) > 1:
             span = messages[-1]["timing"]["receiveTimestamp"] - messages[0]["timing"]["receiveTimestamp"]
-            assert times[-1] - times[0] >= span - 0.03, "replay did not preserve pacing"
+            resolution = time.get_clock_info("monotonic").resolution
+            assert times[-1] - connecting >= span - resolution, "replay did not preserve pacing"
         finish(child, output, errors, len(expected))
         assert "[WEBSOCKET_ORIGIN_REFUSED]" in "".join(errors), errors
     print("bridge listener: independent client, origin policy, pacing, numbering and close 1001")

@@ -36,7 +36,9 @@ Current release availability lives only in the
 On each of Windows x86_64, macOS arm64 and Linux x86_64, the workflow builds
 and tests the root tree, builds, tests, packages and verifies an installed
 consumer of each library with `ost library`, and packages each CLI with
-`ost plugin package --workspace`. `motionConnectorOpenXR` ships as source
+`ost plugin package --workspace`. Consumer verification skips Linux for now
+([roadmap](../roadmap/current.md#v020-execution-order)).
+`motionConnectorOpenXR` ships as source
 ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)). Its runtime and `ost` pins mirror
 [openstrata.ci.yaml](../../openstrata.ci.yaml) and are re-pinned with it;
 `scripts/check_docs.py` fails when the `ost` pin drifts.
