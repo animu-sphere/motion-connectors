@@ -6,10 +6,15 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Resolve CC-O7 in [C_ABI.md](docs/design/C_ABI.md): the acquisition C ABI is its
-  own shared package, with owned frame and diagnostic handles, size-versioned
-  views, fixed-width values, explicit availability, UTF-8 strings and no exception
-  across the boundary. Allocate `libs/motionConnectorCAbi/`.
+- **Acquisition C ABI (`motionConnectorCAbi`).** Resolve CC-O7 in
+  [C_ABI.md](docs/design/C_ABI.md): a shared library exporting only `motion_*`,
+  over VMC, mocopi, VRChat OSC and WebSocket. Frames and diagnostics are owned
+  handles that outlive later polls and the connector; views are size-versioned,
+  with fixed-width values, explicit availability, UTF-8 strings and no exception
+  across the boundary. A frame with a non-UTF-8 field is refused and counted, and
+  raises `C_ABI_FRAME_NOT_UTF8`. Replay parity against the C++ connectors, a C
+  consumer with frozen layouts, an export check and an installed C consumer are
+  the evidence.
 
 - Settle tracking ownership: observation identity, regions and operator
   assignment stay connector-owned; semantic solve belongs downstream, with

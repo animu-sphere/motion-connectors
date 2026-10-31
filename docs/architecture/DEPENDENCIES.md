@@ -40,7 +40,7 @@ closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
 | OpenStrata | `ost` 0.23.6, pinned in `openstrata.ci.yaml`, as the sibling workspaces pin it |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
-| Python tooling | Python interpreter for repository checks; the C ABI binding must define its Python packaging/ABI requirements separately from the native OpenUSD closure |
+| Python tooling | Python interpreter for repository checks; the binding on the C ABI must define its Python packaging/ABI requirements separately from the native OpenUSD closure |
 | Node | Node ≥20 for independent browser module tests; CI uses Node 22, never required by native builds |
 
 ## 4. Per-connector dependencies
@@ -63,6 +63,7 @@ only for semantic export; its packaged closure includes `motionSampling`.
 | `motionConnectorWire` | `motionConnectorCore` and `motionCore`; the JSON parser is local, because [FRAME_WIRE_FORMAT §6](../design/FRAME_WIRE_FORMAT.md#6-what-a-reader-refuses)'s refusals are properties of the parse ([its README](../../libs/motionConnectorWire/README.md#the-json-layer-is-here)) | installed sibling packages |
 | `motionConnectorWebSocket` | `motionConnectorCore`, `motionConnectorWire`, transport and OS sockets; RFC 6455, SHA-1 and base64 are local, because the connector stays caller-driven and its refusals are properties of the frame parse ([WEBSOCKET_CONNECTOR §2](../design/WEBSOCKET_CONNECTOR.md#2-the-decision)); TLS is `WSC-O1` | installed sibling packages; system |
 | `motionConnectorOpenXR` | `motionConnectorCore` and OpenXR loader/headers (SDK ≥1.1.36), found only for this optional module | installed core; third party ([notices](../../libs/motionConnectorOpenXR/THIRD_PARTY_NOTICES.md)) |
+| `motionConnectorCAbi` | `motionConnectorCore`, `motionCore` and, each optional and private, the VMC, mocopi, VRChat OSC and WebSocket connectors; a consumer compiles against C alone and loads OpenUSD's `gf` closure at run time | installed sibling packages |
 | `motionConnectorMediaPipe` | caller-owned MediaPipe Tasks result objects, no runtime import; Tasks Vision 1.1.0 and TypeScript 5.9.3 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorMediaPipe/THIRD_PARTY_NOTICES.md) |
 | `motionConnectorWebXR` | browser APIs only at runtime; TypeScript 5.9.3 and `@types/webxr` 0.5.24 for declaration checks | npm development tooling only; [notices](../../web/motionConnectorWebXR/THIRD_PARTY_NOTICES.md) |
 

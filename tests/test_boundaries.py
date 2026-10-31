@@ -87,6 +87,30 @@ class SourceBoundaries(unittest.TestCase):
                 self.assertTrue(check(self.root))
                 path.unlink()
 
+    def test_c_abi_header_is_c(self):
+        header = "libs/motionConnectorCAbi/include/motionConnectorCAbi/MotionConnector.h"
+        self.write(header, '#include "motionConnectorCAbi/api.h"\n#include <stdint.h>\n')
+        self.assertEqual(check(self.root), [])
+        for text in ("#include <string>", '#include "motionCore/MotionPose.h"',
+                     '#include "pxr/base/gf/quatf.h"', "std::string value;",
+                     "pxr::GfQuatf value;", "openstrata::connectors::core::MotionFrame frame;"):
+            with self.subTest(text=text):
+                self.write(header, text)
+                self.assertTrue(check(self.root))
+        path = self.write("prefix/include/motionConnectorCAbi/MotionConnector.h",
+                          "#include <vector>")
+        self.assertTrue(check(path.parents[2], prefix=True))
+
+    def test_c_abi_edges(self):
+        self.write("libs/motionConnectorCAbi/CMakeLists.txt",
+                   "target_link_libraries(x PRIVATE motionConnectorVmc::motionConnectorVmc)")
+        self.assertEqual(check(self.root), [])
+        for name in ("motionConnectorTracking", "motionConnectorOpenXR"):
+            with self.subTest(name=name):
+                self.write("libs/motionConnectorCAbi/CMakeLists.txt",
+                           f"target_link_libraries(x PRIVATE {name}::{name})")
+                self.assertTrue(check(self.root))
+
     def test_tools_tests_and_comments_are_permitted(self):
         text = '#include "motionRecording/api.h"\nconst char* p = "/VMC/Ext";'
         self.write("tools/record/main.cpp", text)

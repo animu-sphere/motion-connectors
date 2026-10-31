@@ -44,6 +44,10 @@
       "name": "motionConnectorOpenXR",
       "header": "motionConnectorOpenXR/Connector.h",
       "profile": "openxr.observations.v1"
+    },
+    {
+      "name": "motionConnectorCAbi",
+      "header": "motionConnectorCAbi/MotionConnector.h"
     }
   ]
 }
