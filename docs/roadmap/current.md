@@ -18,11 +18,9 @@ runtime scheduling belong downstream.
 
 ## v0.2.0 execution order
 
-1. Decide [CC-O7](../design/CONNECTOR_CONTRACT.md#13-open-questions), then
-   implement the minimal C ABI over the acquisition boundary. Define opaque
-   handles / POD views, fixed-width integers, versioned structs, ownership,
-   lifetimes, UTF-8 strings and nullable values. Export no STL, exceptions, USD,
-   avatar, filter, retarget or runtime-loop API. This is not a full C++ API mirror.
+1. Implement the minimal C ABI over the acquisition boundary, under
+   [C_ABI.md](../design/C_ABI.md). Export no STL, exceptions, USD, avatar, filter,
+   retarget or runtime-loop API. This is not a full C++ API mirror.
 2. Add `bindings/python/` on the C ABI: `open_connector`, `close`, `poll`, frame
    iteration, capabilities, state, diagnostics and source profile access. Prefer
    a small, iterator-friendly API with safe ownership over exposing the C++ class
@@ -36,7 +34,7 @@ runtime scheduling belong downstream.
 
 ### Release gates
 
-- C ABI decision and implementation with explicit lifetime/error behavior.
+- C ABI implementation with the contract's lifetime and error behavior.
 - Python bindings with safe acquisition-frame consumption.
 - The `record_stream` downstream recording integration example.
 - Capability matrix entries with test evidence and accurate release availability.

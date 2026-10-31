@@ -6,6 +6,11 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Resolve CC-O7 in [C_ABI.md](docs/design/C_ABI.md): the acquisition C ABI is its
+  own shared package, with owned frame and diagnostic handles, size-versioned
+  views, fixed-width values, explicit availability, UTF-8 strings and no exception
+  across the boundary. Allocate `libs/motionConnectorCAbi/`.
+
 - Settle tracking ownership: observation identity, regions and operator
   assignment stay connector-owned; semantic solve belongs downstream, with
   its current compatibility implementation retained pending motion-owned

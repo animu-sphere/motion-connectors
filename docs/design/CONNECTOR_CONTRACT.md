@@ -461,10 +461,12 @@ CC-O3 was resolved by the first shared-connector to live-intake test on
 missing-bone tests (§5); MC-O6 remains open upstream for a producer that
 actually reports tracking state. CC-O8 was decided on 2026-10-04: version 1 of
 the wire representation is JSON, `openstrata.motion.frame/v1`, owned by
-[FRAME_WIRE_FORMAT.md](FRAME_WIRE_FORMAT.md), and it is not the ABI.
+[FRAME_WIRE_FORMAT.md](FRAME_WIRE_FORMAT.md), and it is not the ABI. CC-O7 was
+decided on 2026-10-31: the minimal acquisition C ABI is its own shared package,
+with owned frame and diagnostic handles and size-versioned views, owned by
+[C_ABI.md](C_ABI.md).
 
 | Id | Question | Resolve by |
 | --- | --- | --- |
 | CC-O1 | What design policy §5.1 asks for beyond `MotionPose` — string joint identifiers outside the shared vocabulary, per-joint translation and scale — and which source first needs it. Raised upstream as evidence for MC-O1 and MC-O2, never met with a local pose type | a source requiring semantic joint data outside `HumanJoint` version 1; MediaPipe acquisition uses §4.1 observations |
 | CC-O5 | `ActorId`: an integer, a string, or a source-scoped pair | the first multi-actor source |
-| CC-O7 | Concrete header/package and frame/diagnostic view contract for the minimal acquisition C ABI under [DESIGN_POLICY §38](DESIGN_POLICY.md#38-abi-considerations) | an accepted ownership/lifetime/error contract before language binding implementation; ordering is in [the roadmap](../roadmap/current.md) |

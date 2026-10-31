@@ -70,7 +70,7 @@ An empty cell means that source cannot carry that part.
 | Recorder raw/export separation | supported — `vmc_record_inspect`, `mocopi_record_export`, `vrchat_osc_record_export` check that export preserves acquisition reports and produces deterministic trace bytes; existing loopback suites retain raw capture evidence | tools replay emitted observations and call `motionRecording` only for semantic export | unreleased |
 | `motion_connect bridge` | supported — `motion_connect_bridge_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket`, `_listen`, `_live`, `_limits`, `_errors`; `_arguments` covers usage refusals | unchanged acquisition frames to WebSocket, live or paced capture replay; independent client checks origins and close 1001 | unreleased |
 | `motion_connect record` | supported — `motion_connect_record_vmc`, `_mocopi`, `_vrchat_osc`, `_websocket`, `_silent_*`, `_limits`, `_errors`, `motion_connect_capture_lifecycle`; `motion_connect_arguments` covers usage; installed: `workspace_installed_consumer` | concrete connector live capture before decoding; bytes, peers, receive times and replay parity, with no semantic export | unreleased |
-| C ABI | — | no acquisition C ABI; CC-O7 owns the decision | — |
+| C ABI | — | no acquisition C ABI; [C_ABI.md](../design/C_ABI.md) owns the contract | — |
 | Python bindings | — | no binding over the C ABI | — |
 | `record_stream` example | — | no standalone downstream recording example under `examples/record_stream/` | — |
 | Shared JS/TS consumer API (`bindings/js/`) | — | browser acquisition providers are separate source modules, not this binding | — |

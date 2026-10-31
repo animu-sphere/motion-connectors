@@ -22,7 +22,7 @@
 - **Out:** the meaning of the fields
   ([CONNECTOR_CONTRACT.md](CONNECTOR_CONTRACT.md) §3–§6, the motion contract
   §5–§7); WebSocket framing, connection state and reconnects
-  ([WEBSOCKET_CONNECTOR.md](WEBSOCKET_CONNECTOR.md)); a C ABI (`CC-O7`); a motion file format.
+  ([WEBSOCKET_CONNECTOR.md](WEBSOCKET_CONNECTOR.md)); the C ABI ([C_ABI.md](C_ABI.md)); a motion file format.
 
 **The wire format is a message format, not a file format.** A WebSocket
 session is kept for diagnosis and test corpora the way every other session is
@@ -46,7 +46,7 @@ per frame, identified as `openstrata.motion.frame/v1`.
 - **No measured budget asks for binary yet.** Size and parse cost are
   estimates until a session measures them; a binary encoding is `FW-O1`, and
   it encodes this same logical message.
-- **JSON is not the ABI.** The C ABI (`CC-O7`), JS object representation and WASM data ABI
+- **JSON is not the ABI.** The C ABI ([C_ABI.md](C_ABI.md)), JS object representation and WASM data ABI
   are separate consumer contracts. WS-O4 fixes browser acquisition on wire
   values without the native closure ([WORKSPACE §1.2](../architecture/WORKSPACE.md#12-web-modules));
   it does not define a native WASM ABI. This format names no OpenUSD type.

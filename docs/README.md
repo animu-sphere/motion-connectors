@@ -29,7 +29,7 @@ structure, rationale or incomplete work according to the ownership table below.
   The accepted [external acquisition boundary (§47)](design/DESIGN_POLICY.md#47-external-acquisition-boundary)
   fixes library responsibility at `MotionFrame`; the remaining generic solve type-contract and migration work is scoped in
   [the boundary roadmap](roadmap/boundary-implementation.md).
-- Six focused contracts own one area each, and on that area they win over
+- Seven focused contracts own one area each, and on that area they win over
   the design policy:
   - [design/CONNECTOR_CONTRACT.md](design/CONNECTOR_CONTRACT.md) covers the
     connector interface, `MotionFrame`, tracker observations, state, time,
@@ -41,6 +41,8 @@ structure, rationale or incomplete work according to the ownership table below.
     identifiers, what a profile declares, and joint naming;
   - [design/FRAME_WIRE_FORMAT.md](design/FRAME_WIRE_FORMAT.md) covers how a
     `MotionFrame` is spelled as bytes across a process boundary;
+  - [design/C_ABI.md](design/C_ABI.md) covers the in-process acquisition C ABI:
+    its package, versioning, ownership, lifetimes, errors and views;
   - [design/WEBSOCKET_CONNECTOR.md](design/WEBSOCKET_CONNECTOR.md) covers how
     those messages travel over WebSocket: roles, the handshake, the RFC 6455
     subset, session state and relayed-frame assembly;
