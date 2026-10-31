@@ -372,7 +372,8 @@ pins this repository the way it already pins that one.
   has none. Until `ost` packages a tool in a bundle-free workspace, a release
   publishes the libraries, and the CLIs ship as source in the release's
   source archive. Each tool keeps its `openstrata.tool.yaml` so that it
-  publishes unchanged when `ost` can package it.
+  publishes unchanged when `ost` can package it
+  ([open-strata#281](https://github.com/animu-sphere/open-strata/issues/281)).
 - **A vendor SDK is declared, never discovered.** It appears in its
   connector's manifest and nowhere else, and only that connector's artifact
   requires it. A connector requiring an SDK defines its manifest field alongside

@@ -31,8 +31,11 @@ runtime scheduling belong downstream.
    [release.yml](../../.github/workflows/release.yml): `ost library build` of
    `motionConnectorVmc` and `motionConnectorMocopi` stops at their tests' `REQUIRED`
    `motionRecording` / `motionSampling`, which the library descriptors rightly do
-   not declare, and `LIBRARIES` omits `motionConnectorOpenXR`, so its count check
-   against `libs/` fails.
+   not declare ([open-strata#279](https://github.com/animu-sphere/open-strata/issues/279)), and `LIBRARIES` omits
+   `motionConnectorOpenXR`, so its count check against `libs/` fails.
+   `ost library verify-consumer` stays out of the release lanes until it can find
+   the runtime's OpenUSD ([open-strata#280](https://github.com/animu-sphere/open-strata/issues/280)); the installed-consumer lane
+   covers those packages meanwhile.
 
 ### Release gates
 
@@ -64,7 +67,8 @@ v0.2.0.
 ## Deferred work
 
 - Publish CLI artifacts when `ost` can package tools without a plugin bundle
-  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
+  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution),
+  [open-strata#281](https://github.com/animu-sphere/open-strata/issues/281)).
 - Revisit actor identity with the first multi-actor source (`CC-O5`).
 - Schedule advanced mocap / IMU / optical / depth sources, generation adapters,
   binary encoding, TLS, multi-peer receive and runtime abstraction only after
