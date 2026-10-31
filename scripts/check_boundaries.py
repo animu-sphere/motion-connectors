@@ -9,6 +9,7 @@ closures in workspace, standalone and installed-consumer builds.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import pathlib
 import re
@@ -33,6 +34,8 @@ C_ABI_INCLUDE = re.compile(r'#\s*include\s*[<"](?P<target>[^>"]+)[>"]')
 C_ABI_ALLOWED_INCLUDE = re.compile(r"stdint\.h|motionConnectorCAbi/.*")
 C_ABI_CPP_TYPE = re.compile(r"\b(?:std|pxr|openstrata)\s*::")
 C_ABI_FORBIDDEN_EDGE = re.compile(r"motionconnector(?:tracking|openxr)")
+PYTHON_BINDING_IMPORTS = {"__future__", "collections", "ctypes", "dataclasses", "enum", "os",
+                          "pathlib", "struct", "sys", "threading", "weakref"}
 SOURCE_SUFFIXES = {".h", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx", ".inl"}
 # Preserve literals, including raw strings: URLs and embedded comment
 # delimiters must not hide a later include or a forbidden address.
@@ -139,6 +142,34 @@ def check(root: pathlib.Path, prefix: bool = False) -> list[str]:
             pending.extend((edge, route + [edge]) for edge in graph.get(name, ()))
     if not prefix:
         errors.extend(check_web(root))
+        errors.extend(check_python_binding(root))
+    return errors
+
+
+def check_python_binding(root: pathlib.Path) -> list[str]:
+    """The binding consumes the C ABI at run time: standard library, no native code."""
+    errors: list[str] = []
+    package = root / "bindings" / "python" / "motion_connectors"
+    for path in sorted(package.rglob("*")):
+        if path.suffix.lower() in {".pyd", ".so", ".dll", ".dylib", ".c", ".cpp", ".pyx"}:
+            errors.append(f"{path}: native code in the Python binding")
+        if path.suffix != ".py":
+            continue
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            names = []
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0:
+                names = [node.module or ""]
+            for name in names:
+                if name.split(".")[0] not in PYTHON_BINDING_IMPORTS:
+                    errors.append(f"{path}:{node.lineno}: forbidden binding import: {name}")
+    manifest = root / "bindings" / "python" / "pyproject.toml"
+    if manifest.is_file():
+        declared = re.search(r"^dependencies\s*=\s*\[(.*?)\]", manifest.read_text(encoding="utf-8"),
+                             re.M | re.S)
+        if declared is None or declared.group(1).strip():
+            errors.append(f"{manifest}: the binding must declare `dependencies = []`")
     return errors
 
 

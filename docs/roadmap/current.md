@@ -18,15 +18,10 @@ runtime scheduling belong downstream.
 
 ## v0.2.0 execution order
 
-1. Add `bindings/python/` on the [C ABI](../design/C_ABI.md): `open_connector`,
-   `close`, `poll`, frame iteration, capabilities, state, diagnostics and source
-   profile access. Prefer a small, iterator-friendly API with safe ownership over
-   exposing the C++ class tree. Evaluate CPython `abi3` without fixing the public
-   API to one binding implementation.
-2. Add `examples/record_stream/`: connector → `MotionFrame` →
+1. Add `examples/record_stream/`: connector → `MotionFrame` →
    `usd-motion-plugins` intake → semantic stream / recording. The example may
    depend on downstream packages; production connector libraries may not.
-3. Validate installed consumers and release artifacts, reconcile the capability
+2. Validate installed consumers and release artifacts, reconcile the capability
    matrix and docs, then prepare v0.2.0. Two known blockers in
    [release.yml](../../.github/workflows/release.yml): `ost library build` of
    `motionConnectorVmc` and `motionConnectorMocopi` stops at their tests' `REQUIRED`
@@ -39,7 +34,6 @@ runtime scheduling belong downstream.
 
 ### Release gates
 
-- Python bindings with safe acquisition-frame consumption.
 - The `record_stream` downstream recording integration example.
 - Capability matrix entries with test evidence and accurate release availability.
 - Installed-consumer checks, including the new consumer surfaces.

@@ -47,6 +47,7 @@ option(MOTIONCONNECTORS_BUILD_VRCHAT_OSC "Build the VRChat OSC connector" ON)
 option(MOTIONCONNECTORS_BUILD_WEBSOCKET "Build the WebSocket connector" ON)
 option(MOTIONCONNECTORS_BUILD_OPENXR "Build the optional OpenXR connector (requires SDK)" OFF)
 option(MOTIONCONNECTORS_BUILD_C_ABI "Build the acquisition C ABI" ON)
+option(MOTIONCONNECTORS_BUILD_PYTHON "Install and test the Python binding over the C ABI" ON)
 option(MOTIONCONNECTORS_BUILD_TOOLS "Build the command-line tools" ${PROJECT_IS_TOP_LEVEL})
 
 set(_connectors_any_connector OFF)
@@ -148,6 +149,10 @@ if(MOTIONCONNECTORS_BUILD_C_ABI AND
    (MOTIONCONNECTORS_BUILD_VMC OR MOTIONCONNECTORS_BUILD_MOCOPI
     OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC OR MOTIONCONNECTORS_BUILD_WEBSOCKET))
     add_subdirectory("libs/motionConnectorCAbi")
+    # Pure Python over that library, so it needs nothing the library does not.
+    if(MOTIONCONNECTORS_BUILD_PYTHON)
+        add_subdirectory("bindings/python")
+    endif()
 endif()
 
 # The shared-contract CLI. It links every CLI source so `list` reports

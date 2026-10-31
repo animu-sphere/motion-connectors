@@ -18,7 +18,10 @@ proves the prefix works on its own:
      through `inspect`, opens and stops `dump`, records silent sources, and
      refuses a bad argument --
      tools/motionConnect/tests/test_motion_connect.py's checks, pointed at
-     the prefix instead of the build tree.
+     the prefix instead of the build tree;
+  4. with the C ABI, the installed Python package finds the prefix's library
+     by itself and replays each source --
+     bindings/python/tests/test_binding.py's InstalledTest.
 
 The list is empty until the first import, and the lane runs anyway: what it
 proves before then is that the install, the leak scan and a consumer outside
@@ -110,7 +113,7 @@ def check_prefix(prefix: pathlib.Path, build_dir: pathlib.Path,
                           text.replace("\\", "\\\\")})
     for path in prefix.rglob("*"):
         if path.suffix.lower() not in {".json", ".cmake", ".yaml", ".txt", ".h",
-                                       ".md"}:
+                                       ".md", ".py"}:
             continue
         lowered = path.read_text(encoding="utf-8", errors="replace").lower()
         for needle in forbidden:
@@ -396,6 +399,26 @@ def main() -> int:
                 print(f"the C consumer printed {result.stdout!r}", file=sys.stderr)
                 return 1
             print("ok  installed C ABI consumed from C alone")
+            python_packages = sorted(prefix.glob("lib*/python/motion_connectors"))
+            if len(python_packages) != 1:
+                print(f"the prefix has {len(python_packages)} Python packages under "
+                      "lib*/python/motion_connectors, expected one", file=sys.stderr)
+                return 1
+            python_env = dict(env, PYTHONPATH=str(python_packages[0].parent),
+                              PYTHONDONTWRITEBYTECODE="1",
+                              MOTION_CONNECTORS_TEST_PREFIX=str(prefix))
+            # The binding must find the library itself, and no RPATH reaches the
+            # prefix's OpenUSD closure from a Python process.
+            python_env.pop("MOTION_CONNECTORS_LIBRARY", None)
+            if sys.platform != "win32":
+                variable = ("DYLD_LIBRARY_PATH" if sys.platform == "darwin"
+                            else "LD_LIBRARY_PATH")
+                python_env[variable] = os.pathsep.join(
+                    [*(str(path) for path in prefix.glob("lib*")), *usd_paths, *external_paths,
+                     python_env.get(variable, "")])
+            run([sys.executable, REPO / "bindings/python/tests/test_binding.py", "InstalledTest"],
+                env=python_env, cwd=work)
+            print("ok  installed Python binding found its library and replayed each source")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
         print("installed-consumer lane passed")

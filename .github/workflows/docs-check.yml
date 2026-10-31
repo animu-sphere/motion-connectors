@@ -19,6 +19,7 @@ on:
       - "**/openstrata.tool.yaml"
       - "**/CMakeLists.txt"
       - "cmake/MotionConnectorsOpenUsd.cmake"
+      - "bindings/python/motion_connectors/__init__.py"
       - "scripts/check_docs.py"
       - ".github/workflows/docs-check.yml"
   push:
@@ -33,6 +34,7 @@ on:
       - "**/openstrata.tool.yaml"
       - "**/CMakeLists.txt"
       - "cmake/MotionConnectorsOpenUsd.cmake"
+      - "bindings/python/motion_connectors/__init__.py"
       - "scripts/check_docs.py"
       - ".github/workflows/docs-check.yml"
   workflow_dispatch:

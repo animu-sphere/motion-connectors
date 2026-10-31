@@ -362,6 +362,8 @@ def check_mirrors(root: pathlib.Path) -> list[str]:
     for manifest in sorted(root.glob("*/*/openstrata.*.yaml")):
         expect(manifest, r"^\s+version:\s*([0-9][^\s#]*)", version, "version")
         errors.extend(check_ranges(root, manifest, version))
+    expect(root / "bindings" / "python" / "motion_connectors" / "__init__.py",
+           r'^__version__\s*=\s*"([^"]+)"', version, "package version")
     # No CMake project restates the number: every CMakeLists.txt takes
     # MOTIONCONNECTORS_VERSION from cmake/MotionConnectorsProject.cmake, which
     # reads VERSION and has no fallback to drift.

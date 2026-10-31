@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Pure Python: the wheel holds no native code, and needs no abi3 tag
+# (DESIGN_POLICY §19.1). The C ABI library is the consumer's, from an installed
+# prefix or MOTION_CONNECTORS_LIBRARY.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motion-connectors"
+dynamic = ["version"]
+description = "Acquisition over the motion-connectors C ABI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = []
+
+[tool.setuptools]
+packages = ["motion_connectors"]
+
+[tool.setuptools.package-data]
+motion_connectors = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "motion_connectors.__version__" }
