@@ -18,10 +18,7 @@ runtime scheduling belong downstream.
 
 ## v0.2.0 execution order
 
-1. Add `examples/record_stream/`: connector → `MotionFrame` →
-   `usd-motion-plugins` intake → semantic stream / recording. The example may
-   depend on downstream packages; production connector libraries may not.
-2. Validate installed consumers and release artifacts, reconcile the capability
+1. Validate installed consumers and release artifacts, reconcile the capability
    matrix and docs, then prepare v0.2.0. Two known blockers in
    [release.yml](../../.github/workflows/release.yml): `ost library build` of
    `motionConnectorVmc` and `motionConnectorMocopi` stops at their tests' `REQUIRED`
@@ -34,7 +31,6 @@ runtime scheduling belong downstream.
 
 ### Release gates
 
-- The `record_stream` downstream recording integration example.
 - Capability matrix entries with test evidence and accurate release availability.
 - Installed-consumer checks, including the new consumer surfaces.
 - Release artifact validation under the [release procedure](../releases/README.md#how-a-release-is-cut).

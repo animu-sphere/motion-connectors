@@ -49,6 +49,7 @@ option(MOTIONCONNECTORS_BUILD_OPENXR "Build the optional OpenXR connector (requi
 option(MOTIONCONNECTORS_BUILD_C_ABI "Build the acquisition C ABI" ON)
 option(MOTIONCONNECTORS_BUILD_PYTHON "Install and test the Python binding over the C ABI" ON)
 option(MOTIONCONNECTORS_BUILD_TOOLS "Build the command-line tools" ${PROJECT_IS_TOP_LEVEL})
+option(MOTIONCONNECTORS_BUILD_EXAMPLES "Build the consumer examples" ${MOTIONCONNECTORS_BUILD_TOOLS})
 
 set(_connectors_any_connector OFF)
 if(MOTIONCONNECTORS_BUILD_VMC OR MOTIONCONNECTORS_BUILD_MOCOPI
@@ -164,6 +165,19 @@ if(MOTIONCONNECTORS_BUILD_TOOLS)
         add_subdirectory("tools/motionConnect")
     else()
         message(STATUS "motion-connectors: motion_connect needs every connector; not built")
+    endif()
+endif()
+
+# Consumer programs. An example may depend on downstream motion packages; a
+# connector library may not (WORKSPACE.md §2.1). It follows the tools, because
+# they bring the same motionRecording dependency to a configure.
+if(MOTIONCONNECTORS_BUILD_EXAMPLES)
+    if(MOTIONCONNECTORS_BUILD_VMC AND MOTIONCONNECTORS_BUILD_MOCOPI
+       AND MOTIONCONNECTORS_BUILD_WEBSOCKET AND MOTIONCONNECTORS_BUILD_TOOLS)
+        add_subdirectory("examples/record_stream")
+    else()
+        message(STATUS "motion-connectors: record_stream needs VMC, mocopi, WebSocket "
+                       "and the tools; not built")
     endif()
 endif()
 
