@@ -46,6 +46,7 @@ option(MOTIONCONNECTORS_BUILD_VRCHAT_OSC "Build the VRChat OSC connector" ON)
 # because RFC 6455 is implemented inside it (WEBSOCKET_CONNECTOR §2, §10).
 option(MOTIONCONNECTORS_BUILD_WEBSOCKET "Build the WebSocket connector" ON)
 option(MOTIONCONNECTORS_BUILD_OPENXR "Build the optional OpenXR connector (requires SDK)" OFF)
+option(MOTIONCONNECTORS_BUILD_C_ABI "Build the acquisition C ABI" ON)
 option(MOTIONCONNECTORS_BUILD_TOOLS "Build the command-line tools" ${PROJECT_IS_TOP_LEVEL})
 
 set(_connectors_any_connector OFF)
@@ -139,6 +140,14 @@ endif()
 
 if(MOTIONCONNECTORS_BUILD_OPENXR)
     add_subdirectory("libs/motionConnectorOpenXR")
+endif()
+
+# The acquisition C ABI, over whichever of its sources this configure built
+# (docs/design/C_ABI.md). OpenXR is not one: its handles are the caller's.
+if(MOTIONCONNECTORS_BUILD_C_ABI AND
+   (MOTIONCONNECTORS_BUILD_VMC OR MOTIONCONNECTORS_BUILD_MOCOPI
+    OR MOTIONCONNECTORS_BUILD_VRCHAT_OSC OR MOTIONCONNECTORS_BUILD_WEBSOCKET))
+    add_subdirectory("libs/motionConnectorCAbi")
 endif()
 
 # The shared-contract CLI. It links every CLI source so `list` reports

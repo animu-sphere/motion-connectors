@@ -32,6 +32,7 @@ contract violation without knowing which connector produced it:
 | wire format (OSC) | malformed packets, as protocol-neutral events |
 | frame wire format (`motionConnectorWire`) | a refused `openstrata.motion.frame/v1` message, `WIRE_*` |
 | each connector | its protocol's semantics and frame assembly, frozen before its decoder |
+| C ABI (`motionConnectorCAbi`) | a frame this boundary cannot represent, `C_ABI_*`; every other code passes through unchanged |
 | connector core | state transitions, buffer overflow, contract violations (non-finite values, clock regressions) |
 
 A code raised by `usd-motion-plugins` keeps its own code when it passes
@@ -128,6 +129,7 @@ functions. The list is bounded to the most recent Open/Acquire call.
 | `WIRE_QUATERNION_INVALID` | warning | yes | `motionConnectorWire` | A rotation is zero or not unit length. |
 | `WIRE_COUNTER_INVALID` | warning | yes | `motionConnectorWire` | A counter string is not a decimal `uint64` without a leading zero. |
 | `WIRE_ID_DUPLICATE` | warning | yes | `motionConnectorWire` | An actor appears twice in a frame, or a tracker twice in an actor. |
+| `C_ABI_FRAME_NOT_UTF8` | warning | yes | `motionConnectorCAbi` | A frame field that is not UTF-8; the frame is refused at the ABI and counted, and the subject names the field. |
 | `WIRE_VALUE_NOT_FINITE` | warning | yes | `motionConnectorWire` | The writer was handed a non-finite number, which JSON cannot spell. |
 
 ## 3. Imported families

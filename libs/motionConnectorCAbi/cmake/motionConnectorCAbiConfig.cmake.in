@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# The connectors stop inside the shared library, so a consumer compiles against
+# C alone. OpenUSD's gf is the one edge left: the library loads it at run time,
+# and a linker resolves a shared library's own needs through this target.
+if(NOT TARGET gf AND NOT TARGET pxr::gf)
+    find_dependency(pxr CONFIG REQUIRED)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/motionConnectorCAbiTargets.cmake")
+check_required_components(motionConnectorCAbi)

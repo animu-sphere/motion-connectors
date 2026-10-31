@@ -28,6 +28,11 @@ TRANSPORT_PROTOCOL = re.compile(
 NETWORK_INCLUDE = re.compile(
     r'#\s*include\s*[<"](?:winsock\w*|ws2tcpip\.h|sys/socket\.h|'
     r'netinet/|arpa/|openxr/|boost/asio|asio[/.]|websocket)', re.I)
+# The C ABI's public header is C: nothing else may reach a consumer through it.
+C_ABI_INCLUDE = re.compile(r'#\s*include\s*[<"](?P<target>[^>"]+)[>"]')
+C_ABI_ALLOWED_INCLUDE = re.compile(r"stdint\.h|motionConnectorCAbi/.*")
+C_ABI_CPP_TYPE = re.compile(r"\b(?:std|pxr|openstrata)\s*::")
+C_ABI_FORBIDDEN_EDGE = re.compile(r"motionconnector(?:tracking|openxr)")
 SOURCE_SUFFIXES = {".h", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx", ".inl"}
 # Preserve literals, including raw strings: URLs and embedded comment
 # delimiters must not hide a later include or a forbidden address.
@@ -49,6 +54,15 @@ def code_only(text: str, cmake: bool = False) -> str:
     return parts.sub(replace, text)
 
 
+def check_c_abi_header(path: pathlib.Path, text: str) -> list[str]:
+    errors = [f"{path}: C ABI header includes {match.group('target')}"
+              for match in C_ABI_INCLUDE.finditer(text)
+              if not C_ABI_ALLOWED_INCLUDE.fullmatch(match.group("target"))]
+    errors += [f"{path}: C ABI header names {match.group()}"
+               for match in C_ABI_CPP_TYPE.finditer(text)]
+    return errors
+
+
 def check_files(owner: str, paths: list[pathlib.Path]) -> tuple[list[str], set[str]]:
     errors: list[str] = []
     edges: set[str] = set()
@@ -58,6 +72,8 @@ def check_files(owner: str, paths: list[pathlib.Path]) -> tuple[list[str], set[s
         rules = [(DOWNSTREAM, "downstream motion dependency")]
         if is_source:
             rules.append((STAGE_INCLUDE, "stage/UsdSkel/OpenExec include"))
+            if path.parent.name == "motionConnectorCAbi":
+                errors.extend(check_c_abi_header(path, text))
             if owner.lower() in {"motionconnectorcore", "motionconnectorosc",
                                  "motionconnectortransport"}:
                 rules.append((ADDRESSES, "protocol address literal"))
@@ -107,6 +123,9 @@ def check(root: pathlib.Path, prefix: bool = False) -> list[str]:
         failures, edges = check_files(owner, sorted(paths))
         errors.extend(failures)
         graph[owner.lower()] = edges
+        if owner.lower() == "motionconnectorcabi":
+            errors.extend(f"{area}: C ABI reaches {edge}" for edge in sorted(edges)
+                          if C_ABI_FORBIDDEN_EDGE.fullmatch(edge))
     for owner in graph:
         pending = [(owner, [owner])]
         visited = set()

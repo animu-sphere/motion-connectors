@@ -35,6 +35,7 @@ optional module, and two build modes, `ost` and plain CMake.
 | `motionConnectorWire` | `libs/motionConnectorWire/` | the `MotionFrame` wire format: encode and decode `openstrata.motion.frame/v1` ([FRAME_WIRE_FORMAT.md](../design/FRAME_WIRE_FORMAT.md)); knows no socket | `openstrata::connectors::wire` |
 | `motionConnectorWebSocket` | `libs/motionConnectorWebSocket/` | `MotionFrame` over WebSocket, both directions, listening or connecting; RFC 6455 framing owned by this module ([WEBSOCKET_CONNECTOR.md](../design/WEBSOCKET_CONNECTOR.md)) | `openstrata::connectors::websocket` |
 | `motionConnectorOpenXR` | `libs/motionConnectorOpenXR/` | caller-driven OpenXR spaces, EXT hand and FB upper-body tracking-space observations → `MotionFrame` | `openstrata::connectors::openxr` |
+| `motionConnectorCAbi` | `libs/motionConnectorCAbi/` | the in-process acquisition C ABI over the connectors ([C_ABI.md](../design/C_ABI.md)); the one shared library, exporting only `motion_*` | none: C symbols only |
 
 Names follow the siblings' workspace discipline (WS-O1, decided 2026-09-19;
 [DESIGN_POLICY.md §46.9](../design/DESIGN_POLICY.md#469-names-and-layout-are-the-siblings)):
@@ -105,7 +106,6 @@ Reserved layout allocations (implementation status is in the matrix):
 | other examples | `examples/dump_pose/`, `examples/usd_avatar_live/` | consumer programs; runtime/avatar application is integration |
 | Python binding | `bindings/python/` | small acquisition consumer API on the C ABI, not a C++ class-tree mirror |
 | JS/TS binding | `bindings/js/` | shared consumer API across acquisition providers, WebSocket and native/WASM |
-| C ABI | `libs/motionConnectorCAbi/` | `motionConnectorCAbi`, the in-process acquisition boundary over the connectors ([C_ABI.md](../design/C_ABI.md)); the one shared library, exporting only `motion_*`; it links the VMC, mocopi, VRChat OSC and WebSocket connectors privately, and neither tracking nor OpenXR |
 
 The three record tools remain, one per connector (WS-O3, decided
 2026-10-04). They share transport and session flags, not behaviour: each
@@ -156,6 +156,7 @@ motionConnectorTracking ───→ usd-motion-plugins motionCore
 motionConnectorWire ───────→ motionConnectorCore, usd-motion-plugins motionCore
 motionConnectorWebSocket ──→ motionConnectorCore, motionConnectorWire, motionConnectorTransport (diagnostics, capture format); no third-party library
 motionConnectorOpenXR ─────→ motionConnectorCore, the OpenXR loader
+motionConnectorCAbi ───────→ motionConnectorCore, usd-motion-plugins motionCore; motionConnectorVmc, motionConnectorMocopi, motionConnectorVrchatOsc, motionConnectorWebSocket (each private and optional); no OpenXR, no tracking
 tools/* ──────────────────→ the connectors they name; downstream motion libraries only for semantic export
 web modules ───────────────→ caller-owned browser/Tasks result APIs; no native library
 ```
@@ -216,11 +217,11 @@ VMC reports acquisition facts and omits the former downstream `intake:` line.
 The packaged `motionRecording` dependency requires `motionSampling` in the
 artifact closure; this is a packaging pin, not a direct recorder CMake link.
 
-The reserved C ABI aggregates connectors as `motion_connect` does, which creates
-no edge between them. Its links are private, so its package exposes C alone, and
-assignment and solve are not ABI operations
-([C_ABI §1](../design/C_ABI.md#1-scope)). The reserved Python binding consumes it
-and must not bind C++ implementation details directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
+The C ABI aggregates connectors as `motion_connect` does, which creates no edge
+between them. Its links are private, so its package exposes C alone, and assignment
+and solve are not ABI operations ([C_ABI §1](../design/C_ABI.md#1-scope)). The
+reserved Python binding consumes it and must not bind C++ implementation details
+directly. JS/TS consumers and the WASM data ABI keep the in-process ABI,
 JS values and serialized wire representation distinct.
 
 ### 2.2 Forbidden
@@ -271,7 +272,9 @@ OpenExec includes in library code. `motionConnectorCore` must contain no
 protocol implementation; transport must contain no protocol semantics.
 `scripts/check_boundaries.py` scans every library's production sources, CMake
 files, package configs and manifest, and repeats the header/config scan on the
-clean installed prefix. `cmake/MotionConnectorsBoundaries.cmake` traverses actual
+clean installed prefix. It also holds the C ABI's public headers to C standard
+integers and their own export macros, and refuses a C ABI edge to tracking or
+OpenXR. `motionConnectorCAbi_exports` holds the exported symbols to the header. `cmake/MotionConnectorsBoundaries.cmake` traverses actual
 target closures, including private static links, aliases, imported interfaces,
 configuration-specific imported library paths and generator-expression edges.
 It runs on standalone component builds even with tests disabled, at the end of

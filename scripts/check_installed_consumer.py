@@ -361,6 +361,41 @@ def main() -> int:
             run(["cmake", "--build", xr_build, "--config", args.config])
             run([next(xr_build.rglob(executable("installed_consumer")))], env=env)
             print("ok  installed OpenXR acquisition fixture without downstream motion packages")
+        if any(p["name"] == "motionConnectorCAbi" for p in packages):
+            # A consumer in C that names no connector and links this one target,
+            # running against the prefix's shared library.
+            c_source = work / "c-abi-consumer-src"
+            c_build = work / "c-abi-consumer-build"
+            c_source.mkdir()
+            shutil.copyfile(REPO / "libs/motionConnectorCAbi/tests/test_c_consumer.c",
+                            c_source / "main.c")
+            (c_source / "CMakeLists.txt").write_text(
+                "cmake_minimum_required(VERSION 3.22)\n"
+                "project(MotionConnectorsCAbiConsumer LANGUAGES C CXX)\n"
+                "find_package(motionConnectorCAbi ${MOTIONCONNECTORS_CONSUMER_VERSION} "
+                "CONFIG REQUIRED)\n"
+                "add_executable(c_abi_consumer main.c)\n"
+                "set_target_properties(c_abi_consumer PROPERTIES\n"
+                "    C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF\n"
+                "    LINKER_LANGUAGE C)\n"
+                "target_link_libraries(c_abi_consumer PRIVATE "
+                "motionConnectorCAbi::motionConnectorCAbi)\n",
+                encoding="utf-8")
+            c_configure = list(configure)
+            c_configure[c_configure.index("-S") + 1] = c_source
+            c_configure[c_configure.index("-B") + 1] = c_build
+            # cl compiles both languages. g++ would compile main.c as C++, so
+            # any other toolchain finds its own C compiler.
+            if args.cxx_compiler and pathlib.Path(args.cxx_compiler).stem.lower() == "cl":
+                c_configure.append(f"-DCMAKE_C_COMPILER={args.cxx_compiler}")
+            run(c_configure)
+            run(["cmake", "--build", c_build, "--config", args.config])
+            result = run([next(c_build.rglob(executable("c_abi_consumer")))], env=env,
+                         stdout=subprocess.PIPE)
+            if "consumed the C ABI" not in result.stdout.splitlines():
+                print(f"the C consumer printed {result.stdout!r}", file=sys.stderr)
+                return 1
+            print("ok  installed C ABI consumed from C alone")
         if args.motion_connect and check_motion_connect(prefix, work, env):
             return 1
         print("installed-consumer lane passed")

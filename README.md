@@ -60,6 +60,7 @@ usd-avatar-runtime     composition, the update loop
 | `motionConnectorOpenXR` | optional OpenXR spaces, hand/body tracking observations and source normalization |
 | `motionConnectorWebXR` | caller-driven browser viewer, controller grip and hand observations; source normalization into the frame wire representation |
 | `motionConnectorMediaPipe` | caller-driven browser body/hand world landmarks and face blendshape acquisition into the frame wire representation |
+| `motionConnectorCAbi` | The in-process acquisition C ABI over the connectors, for language bindings |
 | `motionConnectorVmc` | VMC Protocol input |
 | `motionConnectorMocopi` | mocopi native UDP input |
 | `motionConnectorVrchatOsc` | VRChat OSC Trackers input |

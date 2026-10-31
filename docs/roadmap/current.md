@@ -18,23 +18,24 @@ runtime scheduling belong downstream.
 
 ## v0.2.0 execution order
 
-1. Implement the minimal C ABI over the acquisition boundary, under
-   [C_ABI.md](../design/C_ABI.md). Export no STL, exceptions, USD, avatar, filter,
-   retarget or runtime-loop API. This is not a full C++ API mirror.
-2. Add `bindings/python/` on the C ABI: `open_connector`, `close`, `poll`, frame
-   iteration, capabilities, state, diagnostics and source profile access. Prefer
-   a small, iterator-friendly API with safe ownership over exposing the C++ class
-   tree. Evaluate CPython `abi3` without fixing the public API to one binding
-   implementation.
-3. Add `examples/record_stream/`: connector → `MotionFrame` →
+1. Add `bindings/python/` on the [C ABI](../design/C_ABI.md): `open_connector`,
+   `close`, `poll`, frame iteration, capabilities, state, diagnostics and source
+   profile access. Prefer a small, iterator-friendly API with safe ownership over
+   exposing the C++ class tree. Evaluate CPython `abi3` without fixing the public
+   API to one binding implementation.
+2. Add `examples/record_stream/`: connector → `MotionFrame` →
    `usd-motion-plugins` intake → semantic stream / recording. The example may
    depend on downstream packages; production connector libraries may not.
-4. Validate installed consumers and release artifacts, reconcile the capability
-   matrix and docs, then prepare v0.2.0.
+3. Validate installed consumers and release artifacts, reconcile the capability
+   matrix and docs, then prepare v0.2.0. Two known blockers in
+   [release.yml](../../.github/workflows/release.yml): `ost library build` of
+   `motionConnectorVmc` and `motionConnectorMocopi` stops at their tests' `REQUIRED`
+   `motionRecording` / `motionSampling`, which the library descriptors rightly do
+   not declare, and `LIBRARIES` omits `motionConnectorOpenXR`, so its count check
+   against `libs/` fails.
 
 ### Release gates
 
-- C ABI implementation with the contract's lifetime and error behavior.
 - Python bindings with safe acquisition-frame consumption.
 - The `record_stream` downstream recording integration example.
 - Capability matrix entries with test evidence and accurate release availability.
@@ -47,11 +48,9 @@ New connector additions are not release gates and do not interrupt this order.
 Acquisition references are evaluated through their matrix evidence; hardware
 validation remains operator work.
 
-The ABI follows the [tracking ownership decision](../design/DESIGN_POLICY.md#4751-tracking-ownership-review):
-core acquisition observations are exposed, assignment and semantic solve are
-not ABI operations. Coordinate the remaining
-[generic solve migration](boundary-implementation.md) after motion-owned input
-and parity contracts are adopted; it does not gate the acquisition ABI.
+Coordinate the remaining [generic solve migration](boundary-implementation.md)
+after motion-owned input and parity contracts are adopted; it does not gate
+v0.2.0.
 
 ## v0.3.0 consumer boundary
 
