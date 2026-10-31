@@ -298,6 +298,10 @@ def main() -> int:
                                      re.IGNORECASE)
     for path in (config_path, source / "openstrata.library.yaml"):
         text = re.sub(r"#[^\n]*", "", path.read_text(encoding="utf-8"))
+        # `requires.test_libraries` is this suite's own and enters no closure;
+        # scripts/check_boundaries.py draws the same line.
+        text = re.sub(r"^(?P<indent> +)test_libraries:[^\n]*\n"
+                      r"(?:[ \t]*\n|(?P=indent)(?: |- )[^\n]*\n)*", "", text, flags=re.M)
         if forbidden_downstream.search(text):
             errors.append(f"downstream motion dependency is forbidden: {path}")
     resolved = set(re.findall(r"find_dependency\s*\(\s*([A-Za-z0-9_]+)", config))

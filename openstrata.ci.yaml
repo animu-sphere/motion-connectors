@@ -24,8 +24,11 @@
 # openstrata.ci.yaml records their provenance). The ecosystem pins one OpenUSD
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
-# `ost` pin is 0.23.6 (2026-09-24), re-pinned across the ecosystem together
-# with usd-motion-plugins, usd-vrm-plugins and usd-mmd-plugins. 0.23.6 installs
+# `ost` pin is 0.23.17 (2026-11-01), taken ahead of the sibling workspaces for
+# what v0.2.0's release needs: 0.23.15 adds `requires.test_libraries` and packages
+# a tool in a workspace with no plugin bundle (open-strata#279, #281), and 0.23.16
+# and 0.23.17 let `ost library verify-consumer` resolve the runtime's OpenUSD with
+# its Python and X11 host dependencies (open-strata#280, #285, #287). 0.23.6 installs
 # a workspace dependency bundle into its own target-local stage as well as the
 # shared link prefix, fixing 0.23.5's bundle-packaging regression
 # (usd-vrm-plugins' ost report 47); nothing here ships a bundle. 0.23.5 stages
@@ -89,7 +92,7 @@ schema: 1
 
 bootstrap:
   ost:
-    version: "0.23.6"
+    version: "0.23.17"
     repository: animu-sphere/open-strata
 
 runners:

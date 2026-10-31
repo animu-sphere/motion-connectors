@@ -19,3 +19,10 @@ library:
 cmake:
   package: motionConnectorOsc
   target: motionConnectorOsc::motionConnectorOsc
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorOsc
+  exported_targets: [motionConnectorOsc::motionConnectorOsc]
+  public_headers: [include/motionConnectorOsc/**]

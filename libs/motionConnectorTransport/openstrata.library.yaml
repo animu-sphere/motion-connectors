@@ -21,3 +21,10 @@ library:
 cmake:
   package: motionConnectorTransport
   target: motionConnectorTransport::motionConnectorTransport
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorTransport
+  exported_targets: [motionConnectorTransport::motionConnectorTransport]
+  public_headers: [include/motionConnectorTransport/**]

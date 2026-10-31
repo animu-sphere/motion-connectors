@@ -18,7 +18,7 @@ row's status. `vX.Y.Z` means available in that release; `unreleased`
 means only in the working tree, and `—` means no implementation or release.
 Intended milestones belong to [the roadmap](../roadmap/current.md), not this
 column. Native library availability does not imply a published npm package
-or CLI artifact; artifact kinds are governed by
+or binary artifact; artifact kinds are governed by
 [WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution).
 
 ## 1. Contract

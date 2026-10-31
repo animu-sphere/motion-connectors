@@ -19,15 +19,10 @@ runtime scheduling belong downstream.
 ## v0.2.0 execution order
 
 1. Validate installed consumers and release artifacts, reconcile the capability
-   matrix and docs, then prepare v0.2.0. Two known blockers in
-   [release.yml](../../.github/workflows/release.yml): `ost library build` of
-   `motionConnectorVmc` and `motionConnectorMocopi` stops at their tests' `REQUIRED`
-   `motionRecording` / `motionSampling`, which the library descriptors rightly do
-   not declare ([open-strata#279](https://github.com/animu-sphere/open-strata/issues/279)), and `LIBRARIES` omits
-   `motionConnectorOpenXR`, so its count check against `libs/` fails.
-   `ost library verify-consumer` stays out of the release lanes until it can find
-   the runtime's OpenUSD ([open-strata#280](https://github.com/animu-sphere/open-strata/issues/280)); the installed-consumer lane
-   covers those packages meanwhile.
+   matrix and docs, then prepare v0.2.0. Run the
+   [release dry run](../releases/README.md#how-a-release-is-cut) on all three
+   targets first: `ost library verify-consumer` and CLI packaging are measured
+   on Windows only so far.
 
 ### Release gates
 
@@ -56,9 +51,8 @@ v0.2.0.
 
 ## Deferred work
 
-- Publish CLI artifacts when `ost` can package tools without a plugin bundle
-  ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution),
-  [open-strata#281](https://github.com/animu-sphere/open-strata/issues/281)).
+- Publish `motionConnectorOpenXR` when a descriptor can declare the OpenXR
+  loader ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
 - Revisit actor identity with the first multi-actor source (`CC-O5`).
 - Schedule advanced mocap / IMU / optical / depth sources, generation adapters,
   binary encoding, TLS, multi-peer receive and runtime abstraction only after

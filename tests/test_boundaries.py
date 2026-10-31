@@ -45,6 +45,21 @@ class SourceBoundaries(unittest.TestCase):
                     self.assertTrue(check(self.root))
                     path.unlink()
 
+    def test_test_scope_is_the_only_descriptor_exemption(self):
+        file = "libs/motionConnectorFuture/openstrata.library.yaml"
+        scoped = "  test_libraries:\n    - id: motionRecording\n      version: '>=0.5'\n"
+        self.write(file, f"requires:\n{scoped}cmake:\n  package: motionConnectorFuture\n")
+        self.assertEqual(check(self.root), [])
+        for text in (
+            f"requires:\n{scoped}  libraries:\n    - id: motionRecording\n",
+            f"requires:\n  libraries:\n    - id: motionRecording\n{scoped}",
+            f"requires:\n{scoped}  build_libraries:\n    - id: motionRecording\n",
+            "test_libraries:\n  - id: motionRecording\n",
+        ):
+            with self.subTest(text=text):
+                self.write(file, text)
+                self.assertTrue(check(self.root))
+
     def test_browser_modules_reject_native_network_and_downstream_imports(self):
         self.write("web/motionConnectorWebXR/package.json", '{"dependencies":{}}')
         for target in ("motionCore", "motionConnectorCore", "motionRecording",
