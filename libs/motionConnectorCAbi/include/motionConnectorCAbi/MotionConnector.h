@@ -42,7 +42,7 @@ extern "C" {
     type name = {};                                                                                \
     name.struct_size = static_cast<uint32_t>(sizeof(type))
 #else
-#define MOTION_INIT(type, name) type name = {(uint32_t)sizeof(type)}
+#define MOTION_INIT(type, name) type name = {.struct_size = (uint32_t)sizeof(type)}
 #endif
 
 typedef int32_t motion_status_t;
