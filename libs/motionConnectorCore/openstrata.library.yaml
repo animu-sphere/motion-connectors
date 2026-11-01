@@ -21,3 +21,10 @@ requires:
 cmake:
   package: motionConnectorCore
   target: motionConnectorCore::motionConnectorCore
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorCore
+  exported_targets: [motionConnectorCore::motionConnectorCore]
+  public_headers: [include/motionConnectorCore/**]

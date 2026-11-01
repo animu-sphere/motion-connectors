@@ -11,24 +11,23 @@
 # Pushing a tag `vX.Y.Z` (which must equal the repo VERSION file and have a
 # finalized CHANGELOG section) builds and tests the whole workspace on the
 # same three OS cells and digest-pinned runtimes as the PR lane, packages
-# every library, and PUBLISHES each as a digest-pinned OpenStrata artifact
-# that another repository can name in its `requires.libraries`.
+# every library and CLI, and PUBLISHES each as a digest-pinned OpenStrata
+# artifact that another repository can name in its `requires.libraries` or
+# `requires.tools`.
 #
-# THE LIBRARIES ARE THE RELEASE. Consumers reach this repository only through
-# installed packages (WORKSPACE.md §2.3). The release's real output is a table
-# of digests, one row per library per target, which the `publish` job
+# THE LIBRARIES AND CLIs ARE THE RELEASE. Consumers reach this repository only
+# through installed packages (WORKSPACE.md §2.3). The release's real output is a
+# table of digests, one row per member per target, which the `publish` job
 # generates from what it actually pushed rather than from anything
 # hand-written. It ships as a release asset AND inside the notes. A library's
 # source profiles travel inside its archive.
 #
-# THE CLIs ARE NOT PUBLISHED YET. `ost` packages a workspace tool only through
-# `ost plugin package --workspace`, which refuses a workspace with no plugin
-# bundle, and this repository has none. Until it can, the four CLIs ship in
-# the source archive, and each keeps its openstrata.tool.yaml so it publishes
-# unchanged later (WORKSPACE.md §4.1).
+# motionConnectorOpenXR SHIPS AS SOURCE. Its public link is the OpenXR loader,
+# which a library descriptor cannot declare, so neither these runners nor a
+# consumer's declared closure can provide it (WORKSPACE.md §4.1).
 #
-# ONE OCI REPOSITORY, TAGGED PER LIBRARY: `ghcr.io/animu-sphere/motion-connectors`
-# with the tag `<library>-<version>-<target>`. A freshly pushed GHCR package is
+# ONE OCI REPOSITORY, TAGGED PER MEMBER: `ghcr.io/animu-sphere/motion-connectors`
+# with the tag `<member>-<version>-<target>`. A freshly pushed GHCR package is
 # private and is made public only through the web UI, once per PACKAGE -- one
 # repository is one flip.
 #
@@ -61,6 +60,7 @@ env:
   # closure itself, so this order is not a correctness requirement -- it keeps
   # each prerequisite built before the library that consumes it.
   LIBRARIES: "motionConnectorTransport motionConnectorOsc motionConnectorCore motionConnectorWire motionConnectorTracking motionConnectorVmc motionConnectorMocopi motionConnectorVrchatOsc motionConnectorWebSocket motionConnectorCAbi"
+  SOURCE_ONLY_LIBRARIES: "motionConnectorOpenXR"
 
 jobs:
   preflight:
@@ -139,6 +139,10 @@ jobs:
             runs_on: ["ubuntu-24.04"]
             require_openusd: cy2026/linux/x86_64/gl
             host_python: "3.13"
+            # The published runtime declares no host packages, so the isolated
+            # consumer is told about MaterialX's X11, installed below
+            # (open-strata#289).
+            verify_consumer_args: "--host-package apt:libx11-dev --host-package apt:libxt-dev"
     steps:
       - name: Check out the repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -167,7 +171,7 @@ jobs:
             *) echo "::error title=ost bootstrap::no ost release asset for ${RUNNER_OS}-${RUNNER_ARCH}" ; exit 1 ;;
           esac
           asset="ost-cli-${triple}.${ext}"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.6"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$( (command -v sha256sum > /dev/null && sha256sum "$asset" || shasum -a 256 "$asset") | cut -d' ' -f1 )"
@@ -195,15 +199,15 @@ jobs:
           set -euo pipefail
           version="$(ost --version)"
           echo "$version"
-          if [ "$version" != "ost 0.23.6" ]; then
-            echo "::error title=ost bootstrap::expected 'ost 0.23.6', got '$version'" ; exit 1
+          if [ "$version" != "ost 0.23.18" ]; then
+            echo "::error title=ost bootstrap::expected 'ost 0.23.18', got '$version'" ; exit 1
           fi
       - name: Restore the artifact registry cache (speed only, never correctness)
         if: ${{ vars.OST_CI_DISABLE_CACHE != 'true' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ost-ci-home/artifacts
-          key: ost-registry-0.23.6-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
+          key: ost-registry-0.23.18-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
       - name: Pull the pinned runtime SDK from its remote reference
         shell: bash
         run: |
@@ -251,7 +255,7 @@ jobs:
       - name: Run the whole CTest suite
         shell: bash
         run: ost test --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
-      - name: Build, test and package every library as its own artifact
+      - name: Build, test, package and verify every library as its own artifact
         shell: bash
         run: |
           set -euo pipefail
@@ -261,45 +265,78 @@ jobs:
             ost library build "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
             ost library test "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
             ost library package "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > ".ost-ci/libraries/$lib.json"
+            verified=0
+            ost library verify-consumer "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} ${{ matrix.verify_consumer_args }} || verified=$?
+            if [ "$verified" -ne 0 ]; then
+              # `ost` writes the reason to this report, not to the log.
+              find "libs/$lib/.strata/targets" -name library-consumer.json -exec \
+                jq -r '.runtime_python, (.checks | to_entries[] | .key, (.value.stdout // ""), (.value.stderr // ""))' {} +
+              # Only a warning on macOS: with the published runtime the isolated
+              # consumer refuses the framework Python's include directory
+              # (open-strata#291). The PR
+              # lane's installed consumer covers these packages there.
+              if [ "${RUNNER_OS}" != "macOS" ]; then exit "$verified"; fi
+              echo "::warning title=verify-consumer::$lib did not verify on ${RUNNER_OS}"
+            fi
             echo "::endgroup::"
           done
+      - name: Package every CLI as its own artifact
+        shell: bash
+        run: ost plugin package --workspace --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > .ost-ci/tools.json
       - name: Stage the release artifacts
         shell: bash
         run: |
           set -euo pipefail
           version="${{ needs.preflight.outputs.version }}"
           mkdir -p release-stage/packages
-          # Counted from the tree, not from the list above: a library that is
-          # added under libs/ but not to LIBRARIES must fail here rather than
+          # Compared with the tree, not with the list above: a library that is
+          # added under libs/ without being named here must fail rather than
           # quietly not ship.
-          want_libs="$(ls -d libs/*/ | wc -l | tr -d ' ')"
-          got_libs="$(echo ${LIBRARIES} | wc -w | tr -d ' ')"
-          if [ "$want_libs" -ne "$got_libs" ]; then
-            echo "::error title=release packaging::libs/ holds $want_libs libraries but LIBRARIES names $got_libs" ; exit 1
+          want_libs="$(ls libs | sort | xargs)"
+          got_libs="$(printf '%s\n' ${LIBRARIES} ${SOURCE_ONLY_LIBRARIES} | sort | xargs)"
+          if [ "$want_libs" != "$got_libs" ]; then
+            echo "::error title=release packaging::libs/ holds [$want_libs] but LIBRARIES and SOURCE_ONLY_LIBRARIES name [$got_libs]" ; exit 1
+          fi
+          want_tools="$(ls -d tools/*/ | wc -l | tr -d ' ')"
+          got_tools="$(jq '[.data.packages[] | select(.member == "tool")] | length' .ost-ci/tools.json)"
+          if [ "$want_tools" -ne "$got_tools" ]; then
+            echo "::error title=release packaging::tools/ holds $want_tools CLIs but $got_tools were packaged" ; exit 1
+          fi
+          # `ost` packages whatever is staged and only warns when no managed build
+          # produced it, so an unattributed CLI must not ship.
+          unattributed="$(jq -r '.data.packages[] | select(.member == "tool" and .build_provenance.status != "matched") | .name' .ost-ci/tools.json | xargs)"
+          if [ -n "$unattributed" ]; then
+            echo "::error title=release packaging::not produced by this job's build: $unattributed" ; exit 1
           fi
           # Each dist directory holds manifest.json beside the archive, which
           # is exactly what `ost artifact import` takes, so the whole directory
           # is staged and the publish job imports from it.
-          for lib in ${LIBRARIES}; do
-            json=".ost-ci/libraries/$lib.json"
-            archive="$(jq -er '.data.archive' "$json")"
-            digest="$(jq -er '.data.archive_digest' "$json")"
-            target="$(jq -er '.data.target' "$json")"
-            got_version="$(jq -er '.data.library.version' "$json")"
+          stage() {
+            kind="$1" ; name="$2" ; got_version="$3" ; target="$4" ; digest="$5" ; archive="$6"
             if [ "$got_version" != "$version" ]; then
-              echo "::error title=release packaging::$lib packaged version $got_version but the release is $version" ; exit 1
+              echo "::error title=release packaging::$name packaged version $got_version but the release is $version" ; exit 1
             fi
             if command -v cygpath > /dev/null; then archive="$(cygpath -u "$archive")"; fi
             dist_dir="$(dirname "$archive")"
             if [ ! -f "$dist_dir/manifest.json" ]; then
-              echo "::error title=release packaging::$lib has no manifest.json beside its archive, so it cannot be imported and published" ; exit 1
+              echo "::error title=release packaging::$name has no manifest.json beside its archive, so it cannot be imported and published" ; exit 1
             fi
-            mkdir -p "release-stage/packages/$lib"
-            cp -R "$dist_dir/." "release-stage/packages/$lib/"
+            mkdir -p "release-stage/packages/$name"
+            cp -R "$dist_dir/." "release-stage/packages/$name/"
             cp "$archive" release-stage/
-            cp "$dist_dir/manifest.json" "release-stage/$lib-$version-$target.manifest.json"
-            printf '%s\t%s\t%s\t%s\n' "$lib" "$version" "$target" "$digest" >> release-stage/library-digests.tsv
+            cp "$dist_dir/manifest.json" "release-stage/$name-$version-$target.manifest.json"
+            printf '%s\t%s\t%s\t%s\t%s\n' "$kind" "$name" "$version" "$target" "$digest" >> release-stage/artifact-digests.tsv
+          }
+          for lib in ${LIBRARIES}; do
+            json=".ost-ci/libraries/$lib.json"
+            stage library "$lib" "$(jq -er '.data.library.version' "$json")" \
+              "$(jq -er '.data.target' "$json")" "$(jq -er '.data.archive_digest' "$json")" \
+              "$(jq -er '.data.archive' "$json")"
           done
+          while IFS=$'\t' read -r name got_version target digest archive; do
+            stage tool "$name" "$got_version" "$target" "$digest" "$archive"
+          done < <(jq -er '.data.packages[] | select(.member == "tool")
+                           | [.name, .version, .target, .archive_digest, .archive] | @tsv' .ost-ci/tools.json | tr -d '\r')
           ls -l release-stage
       - name: Upload the staged artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -310,7 +347,7 @@ jobs:
           retention-days: 7
 
   publish:
-    name: publish the library artifacts
+    name: publish the library and CLI artifacts
     needs: [preflight, build]
     runs-on: ubuntu-24.04
     permissions:
@@ -341,7 +378,7 @@ jobs:
         run: |
           set -euo pipefail
           asset="ost-cli-x86_64-unknown-linux-musl.tar.xz"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.6"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$(sha256sum "$asset" | cut -d' ' -f1)"
@@ -354,7 +391,7 @@ jobs:
           bin="$(find .ost-ci/bootstrap-bin -type f -name ost | head -n 1)"
           chmod +x "$bin"
           echo "$(cd "$(dirname "$bin")" && pwd)" >> "$GITHUB_PATH"
-      - name: Import every library artifact into the local registry
+      - name: Import every artifact into the local registry
         shell: bash
         run: |
           set -euo pipefail
@@ -364,17 +401,17 @@ jobs:
             ost artifact import "$dir" --json > /dev/null
           done
           echo "imported $(ls -d staged/*/packages/* | wc -l) package(s)"
-          # One row per (library, target), read from what the build jobs
+          # One row per (member, target), read from what the build jobs
           # actually produced rather than from a list written here.
-          cat staged/*/library-digests.tsv | sort -u > .ost-ci/artifacts.tsv
+          cat staged/*/artifact-digests.tsv | sort -u > .ost-ci/artifacts.tsv
           cat .ost-ci/artifacts.tsv
-      - name: Push each library to the OCI repository
+      - name: Push each artifact to the OCI repository
         if: ${{ needs.preflight.outputs.is_release == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
           : > .ost-ci/pushed.tsv
-          while IFS=$'\t' read -r name ver target digest; do
+          while IFS=$'\t' read -r kind name ver target digest; do
             tag="${name}-${ver}-${target}"
             out=".ost-ci/push-${tag}.json"
             ost artifact push "$digest" "oci://${OCI_REPOSITORY}:${tag}" --json > "$out" < /dev/null
@@ -383,7 +420,7 @@ jobs:
             if [ "$art" != "$digest" ]; then
               echo "::error title=publish::pushing $tag reported artifact digest $art, expected $digest" ; exit 1
             fi
-            printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$ver" "$target" "$digest" "$oci" >> .ost-ci/pushed.tsv
+            printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$kind" "$name" "$ver" "$target" "$digest" "$oci" >> .ost-ci/pushed.tsv
             echo "pushed $tag -> $oci"
           done < .ost-ci/artifacts.tsv
       - name: Build the consumer pin table
@@ -401,42 +438,46 @@ jobs:
             rows=.ost-ci/dry.tsv
             awk -F'\t' '{print $0 "\t"}' .ost-ci/artifacts.tsv > "$rows"
           fi
-          # What the table MUST contain, counted from the tree and from the
-          # build jobs that ran -- not from a number written here. A target
+          # What the table MUST contain, counted from the lists each build job
+          # held against the tree and from the jobs that ran -- not from a number
+          # written here. A target
           # whose archive silently never arrived would otherwise ship a pin
           # table that is correct about everything it mentions and missing a
           # platform.
-          want_libs="$(ls -d libs/*/ | wc -l | tr -d ' ')"
+          want_libs="$(echo ${LIBRARIES} | wc -w | tr -d ' ')"
+          want_tools="$(ls -d tools/*/ | wc -l | tr -d ' ')"
           want_targets="$(ls -d staged/release-* | wc -l | tr -d ' ')"
-          echo "expecting $want_libs library(ies) on $want_targets target(s)"
-          python3 - "$rows" "$version" "$released" "${OCI_REPOSITORY}" "$want_libs" "$want_targets" <<'PY'
+          echo "expecting $want_libs library(ies) and $want_tools CLI(s) on $want_targets target(s)"
+          python3 - "$rows" "$version" "$released" "${OCI_REPOSITORY}" "$want_libs" "$want_tools" "$want_targets" <<'PY'
           import json, pathlib, sys
           rows_path, version, released, repository = sys.argv[1:5]
-          want_libs, want_targets = int(sys.argv[5]), int(sys.argv[6])
-          pins: dict[str, dict] = {}
+          want_libs, want_tools, want_targets = (int(arg) for arg in sys.argv[5:8])
+          pins: dict[str, dict[str, dict]] = {"library": {}, "tool": {}}
           for line in pathlib.Path(rows_path).read_text().splitlines():
               if not line.strip():
                   continue
               parts = line.split("\t")
-              name, ver, target, digest = parts[:4]
-              oci = parts[4] if len(parts) > 4 else ""
+              kind, name, ver, target, digest = parts[:5]
+              oci = parts[5] if len(parts) > 5 else ""
               entry = {"digest": digest}
               if oci:
                   entry["source"] = f"oci://{repository}@{oci}"
-              pins.setdefault(name, {})[target] = entry
-          if len(pins) != want_libs:
-              raise SystemExit(
-                  f"::error title=publish::the pin table has {len(pins)} "
-                  f"library(ies), but libs/ holds {want_libs}: {sorted(pins)}")
-          for name, targets in sorted(pins.items()):
-              if len(targets) != want_targets:
+              pins[kind].setdefault(name, {})[target] = entry
+          for kind, want in (("library", want_libs), ("tool", want_tools)):
+              if len(pins[kind]) != want:
                   raise SystemExit(
-                      f"::error title=publish::{name} has {len(targets)} "
-                      f"target(s), expected {want_targets}: {sorted(targets)}")
+                      f"::error title=publish::the pin table has {len(pins[kind])} "
+                      f"{kind} row(s), expected {want}: {sorted(pins[kind])}")
+              for name, targets in sorted(pins[kind].items()):
+                  if len(targets) != want_targets:
+                      raise SystemExit(
+                          f"::error title=publish::{name} has {len(targets)} "
+                          f"target(s), expected {want_targets}: {sorted(targets)}")
           out = pathlib.Path("out")
           out.mkdir(exist_ok=True)
           document = {"version": version, "published": released == "true",
-                      "repository": repository, "libraries": pins}
+                      "repository": repository, "libraries": pins["library"],
+                      "tools": pins["tool"]}
           (out / "external-library-pins.json").write_text(
               json.dumps(document, indent=2, sort_keys=True) + "\n")
           major, minor = version.split(".")[:2]
@@ -445,25 +486,26 @@ jobs:
           if released != "true":
               md.append("> Dry run: nothing was pushed, so no `source` is named. "
                         "The digests are this build's.\n")
-          for name in sorted(pins):
-              md.append(f"<details><summary><code>{name}</code></summary>\n")
-              md.append("```yaml")
-              md.append("requires:")
-              md.append("  libraries:")
-              md.append(f"    - id: {name}")
-              md.append(f'      version: ">={lower},<{upper}"')
-              md.append("      artifact:")
-              md.append("        targets:")
-              for target in sorted(pins[name]):
-                  entry = pins[name][target]
-                  md.append(f"          {target}:")
-                  md.append(f"            digest: {entry['digest']}")
-                  if "source" in entry:
-                      md.append(f"            source: {entry['source']}")
-              md.append("```")
-              md.append("\n</details>\n")
+          for kind, field in (("library", "libraries"), ("tool", "tools")):
+              for name in sorted(pins[kind]):
+                  md.append(f"<details><summary><code>{name}</code></summary>\n")
+                  md.append("```yaml")
+                  md.append("requires:")
+                  md.append(f"  {field}:")
+                  md.append(f"    - id: {name}")
+                  md.append(f'      version: ">={lower},<{upper}"')
+                  md.append("      artifact:")
+                  md.append("        targets:")
+                  for target in sorted(pins[kind][name]):
+                      entry = pins[kind][name][target]
+                      md.append(f"          {target}:")
+                      md.append(f"            digest: {entry['digest']}")
+                      if "source" in entry:
+                          md.append(f"            source: {entry['source']}")
+                  md.append("```")
+                  md.append("\n</details>\n")
           (out / "external-library-pins.md").write_text("\n".join(md) + "\n")
-          print(f"{len(pins)} library(ies) in the pin table")
+          print(f"{len(pins['library'])} library(ies) and {len(pins['tool'])} CLI(s) in the pin table")
           PY
           cat out/external-library-pins.md
       - name: Upload the pin table

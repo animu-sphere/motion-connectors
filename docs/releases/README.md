@@ -27,14 +27,18 @@ Current release availability lives only in the
    everything a tag would, and uploads it as workflow artifacts.
 3. Tag the merge commit `vX.Y.Z` and push the tag. The workflow checks the tag
    against `VERSION` and the changelog heading, repeats the dry run's lanes,
-   pushes every library to `ghcr.io/animu-sphere/motion-connectors`, and
+   pushes every artifact to `ghcr.io/animu-sphere/motion-connectors`, and
    creates a **draft** release.
 4. Read the draft and publish it. Publishing is a human decision; nothing
    publishes automatically. The first push of a new GHCR package leaves it
    private, so it is made public once in the package's settings.
 
 On each of Windows x86_64, macOS arm64 and Linux x86_64, the workflow builds
-and tests the root tree, then builds, tests and packages each library with
-`ost library`. Its runtime and `ost` pins mirror
+and tests the root tree, builds, tests, packages and verifies an installed
+consumer of each library with `ost library`, and packages each CLI with
+`ost plugin package --workspace`. Consumer verification only warns on macOS for now
+([roadmap](../roadmap/current.md#v020-execution-order)).
+`motionConnectorOpenXR` ships as source
+([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)). Its runtime and `ost` pins mirror
 [openstrata.ci.yaml](../../openstrata.ci.yaml) and are re-pinned with it;
 `scripts/check_docs.py` fails when the `ost` pin drifts.

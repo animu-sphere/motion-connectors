@@ -35,3 +35,10 @@ requires:
 cmake:
   package: motionConnectorWire
   target: motionConnectorWire::motionConnectorWire
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorWire
+  exported_targets: [motionConnectorWire::motionConnectorWire]
+  public_headers: [include/motionConnectorWire/**]

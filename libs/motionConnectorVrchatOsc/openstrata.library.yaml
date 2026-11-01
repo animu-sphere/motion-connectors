@@ -48,3 +48,10 @@ requires:
 cmake:
   package: motionConnectorVrchatOsc
   target: motionConnectorVrchatOsc::motionConnectorVrchatOsc
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorVrchatOsc
+  exported_targets: [motionConnectorVrchatOsc::motionConnectorVrchatOsc]
+  public_headers: [include/motionConnectorVrchatOsc/**]

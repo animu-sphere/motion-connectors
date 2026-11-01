@@ -50,3 +50,10 @@ requires:
 cmake:
   package: motionConnectorTracking
   target: motionConnectorTracking::motionConnectorTracking
+package:
+  standalone: true
+  aggregate_member: false
+package_contract:
+  package_name: motionConnectorTracking
+  exported_targets: [motionConnectorTracking::motionConnectorTracking]
+  public_headers: [include/motionConnectorTracking/**]

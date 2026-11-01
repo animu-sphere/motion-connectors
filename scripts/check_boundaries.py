@@ -36,6 +36,11 @@ C_ABI_CPP_TYPE = re.compile(r"\b(?:std|pxr|openstrata)\s*::")
 C_ABI_FORBIDDEN_EDGE = re.compile(r"motionconnector(?:tracking|openxr)")
 PYTHON_BINDING_IMPORTS = {"__future__", "collections", "ctypes", "dataclasses", "enum", "os",
                           "pathlib", "struct", "sys", "threading", "weakref"}
+# A descriptor's `requires.test_libraries` is absent from every published closure,
+# and consumer tests own downstream policy. A top-level key stays scanned.
+TEST_SCOPE = re.compile(
+    r"^(?P<indent> +)test_libraries:[^\n]*\n"
+    r"(?:[ \t]*\n|(?P=indent)(?: |- )[^\n]*\n)*", re.M)
 SOURCE_SUFFIXES = {".h", ".hpp", ".hxx", ".c", ".cc", ".cpp", ".cxx", ".inl"}
 # Preserve literals, including raw strings: URLs and embedded comment
 # delimiters must not hide a later include or a forbidden address.
@@ -72,6 +77,8 @@ def check_files(owner: str, paths: list[pathlib.Path]) -> tuple[list[str], set[s
     for path in paths:
         is_source = path.suffix.lower() in SOURCE_SUFFIXES
         text = code_only(path.read_text(encoding="utf-8"), cmake=not is_source)
+        if path.name == "openstrata.library.yaml":
+            text = TEST_SCOPE.sub(lambda m: re.sub(r"[^\n]", " ", m.group()), text)
         rules = [(DOWNSTREAM, "downstream motion dependency")]
         if is_source:
             rules.append((STAGE_INCLUDE, "stage/UsdSkel/OpenExec include"))

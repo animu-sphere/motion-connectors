@@ -96,7 +96,9 @@ endmacro()
 #   <PROJECT_NAME upper-cased>_BUILD_TESTS
 #     - set explicitly:                     that value
 #     - else, inside the workspace build:   MOTIONCONNECTORS_BUILD_TESTS
-#     - else (a standalone configure):      PROJECT_IS_TOP_LEVEL
+#     - else (a standalone configure):      PROJECT_IS_TOP_LEVEL, unless
+#       BUILD_TESTING is off, which is how `ost library` builds a prerequisite
+#       and a verified consumer: their test-only dependencies are not in reach
 #
 # The component then tests the option by its literal name
 # (`if(MOTIONCONNECTOROSC_BUILD_TESTS)`), so a reader of the component sees it.
@@ -120,6 +122,9 @@ macro(motionconnectors_component_project)
             set(_motionconnectors_tests_default "${MOTIONCONNECTORS_BUILD_TESTS}")
         else()
             set(_motionconnectors_tests_default "${PROJECT_IS_TOP_LEVEL}")
+            if(DEFINED BUILD_TESTING AND NOT BUILD_TESTING)
+                set(_motionconnectors_tests_default OFF)
+            endif()
         endif()
         option(${_motionconnectors_tests_option} "Build ${PROJECT_NAME} tests"
                ${_motionconnectors_tests_default})

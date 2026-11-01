@@ -375,19 +375,15 @@ pins this repository the way it already pins that one.
   in its `requires.libraries` / `requires.tools`. A library's installed
   source profiles travel inside its artifact (`ost library package` puts
   `share/motion-connectors/profiles/` in the archive).
-- **CLI packaging requires bundle-free tool packaging in `ost`.** `ost`
-  packages a workspace tool only through `ost plugin package --workspace`,
-  which refuses a workspace with no plugin bundle (`ost` 0.23.14:
-  `no plugin bundles found in the workspace member set`), and this repository
-  has none. Until `ost` packages a tool in a bundle-free workspace, a release
-  publishes the libraries, and the CLIs ship as source in the release's
-  source archive. Each tool keeps its `openstrata.tool.yaml` so that it
-  publishes unchanged when `ost` can package it
-  ([open-strata#281](https://github.com/animu-sphere/open-strata/issues/281)).
 - **A vendor SDK is declared, never discovered.** It appears in its
   connector's manifest and nowhere else, and only that connector's artifact
   requires it. A connector requiring an SDK defines its manifest field alongside
   that dependency.
+- **`motionConnectorOpenXR` ships as source until it can declare its SDK.** Its
+  public link is the OpenXR loader, and a library descriptor has no field for
+  one, so `ost library verify-consumer` could not resolve it from the declared
+  closure. A release publishes every other library and CLI, and this one stays
+  in the source archive.
 - **Device validation stays an operator's run.** Recorded sessions are
   replayed locally with `scripts/check_recorded_sessions.py` (§5), not in a
   release or capability lane, because CI holds no device bytes. A capability

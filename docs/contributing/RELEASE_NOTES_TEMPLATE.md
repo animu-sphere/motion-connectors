@@ -14,13 +14,13 @@ installed packages.
 
 {changelog}
 
-## Consuming a library from another repository
+## Consuming a library or CLI from another repository
 
-Every library is published twice: as a `.tar.zst` asset below, and as a
+Every library and CLI is published twice: as a `.tar.zst` asset below, and as a
 digest-pinned OpenStrata artifact in one OCI repository,
-`ghcr.io/animu-sphere/motion-connectors`, tagged `<library>-{version}-<target>`.
-A consumer declares the dependency under `requires.libraries` in its own
-descriptor and pins the archive digest per target. The table below is
+`ghcr.io/animu-sphere/motion-connectors`, tagged `<member>-{version}-<target>`.
+A consumer declares the dependency under `requires.libraries` or `requires.tools`
+in its own descriptor and pins the archive digest per target. The table below is
 generated from this release's published artifacts, so it can be pasted as it
 stands:
 
@@ -36,14 +36,15 @@ everything here is built against the one OpenUSD release the ecosystem pins
 
 | artifact | contents |
 | --- | --- |
-| `<library>-{version}-<target>.tar.zst` | one installed library package for `<target>`: `motionConnectorTransport`, `motionConnectorOsc`, `motionConnectorCore`, `motionConnectorTracking`, `motionConnectorVmc`, `motionConnectorMocopi`, `motionConnectorVrchatOsc`; a connector's source profile is inside its archive |
-| `<library>-{version}-<target>.manifest.json` | OpenStrata manifest sidecar per library, carrying its dependency closure, checksums and SBOM |
-| `motion-connectors-{version}-src.tar.gz` | source archive at this tag, including the `motion_connect`, `vmc_record`, `mocopi_record` and `vrchat_osc_record` CLIs |
+| `<library>-{version}-<target>.tar.zst` | one installed library package for `<target>`: `motionConnectorTransport`, `motionConnectorOsc`, `motionConnectorCore`, `motionConnectorWire`, `motionConnectorTracking`, `motionConnectorVmc`, `motionConnectorMocopi`, `motionConnectorVrchatOsc`, `motionConnectorWebSocket`, `motionConnectorCAbi`; a connector's source profile is inside its archive |
+| `<tool>-{version}-<target>.tar.zst` | one CLI for `<target>`: `motion_connect`, `vmc_record`, `mocopi_record`, `vrchat_osc_record` |
+| `<member>-{version}-<target>.manifest.json` | OpenStrata manifest sidecar per member, carrying its dependency closure, checksums and SBOM |
+| `motion-connectors-{version}-src.tar.gz` | source archive at this tag, including `motionConnectorOpenXR`, which is not published as a binary |
 | `SHA256SUMS` | SHA-256 checksums of every file above |
 | `external-library-pins.md` / `.json` | the pin table above, as a file |
 
-The CLIs are not yet published as artifacts: `ost` packages a workspace tool
-only alongside a plugin bundle, and this repository has none
+`motionConnectorOpenXR` is not published as an artifact: a library descriptor
+cannot yet declare the OpenXR loader it links
 ([WORKSPACE.md §4.1](https://github.com/animu-sphere/motion-connectors/blob/{tag}/docs/architecture/WORKSPACE.md#41-distribution)).
 
 ## SHA-256 checksums
