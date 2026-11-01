@@ -6,6 +6,8 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-01
+
 - **The `ost` pin is 0.23.19, and the release lanes use what it adds.**
   `motionRecording` and `motionSampling` move to `requires.test_libraries` on VMC
   and mocopi, so `ost library build` reaches their consumer tests without either

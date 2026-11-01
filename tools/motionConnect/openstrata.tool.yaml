@@ -2,17 +2,17 @@
 schema: openstrata.tool/v1alpha1
 tool:
   id: motion_connect
-  version: 0.1.0
+  version: 0.2.0
   license: Apache-2.0
 executables: [motion_connect]
 directories: [bin]
 requires:
   libraries:
     - id: motionConnectorVmc
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorMocopi
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorVrchatOsc
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorWebSocket
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"

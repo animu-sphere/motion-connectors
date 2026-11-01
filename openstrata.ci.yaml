@@ -25,7 +25,7 @@
 # release because usd-avatar-runtime composes every package into one process
 # (docs/architecture/DEPENDENCIES.md §1), so these are re-pinned together. The
 # `ost` pin is 0.23.19 (2026-11-01), taken ahead of the sibling workspaces for
-# what v0.2.0's release needs: 0.23.15 adds `requires.test_libraries` and packages
+# what the v0.2.0 release needed: 0.23.15 adds `requires.test_libraries` and packages
 # a tool in a workspace with no plugin bundle (open-strata#279, #281), 0.23.16
 # to 0.23.18 let `ost library verify-consumer` resolve the runtime's OpenUSD with
 # its Python and declared X11 host dependencies (open-strata#280, #285, #287,
