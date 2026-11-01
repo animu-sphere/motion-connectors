@@ -21,10 +21,11 @@ runtime scheduling belong downstream.
 1. Validate installed consumers and release artifacts, reconcile the capability
    matrix and docs, then prepare v0.2.0. Run the
    [release dry run](../releases/README.md#how-a-release-is-cut) on all three
-   targets first. `ost library verify-consumer` stays out of the Linux release
-   lane until it can find MaterialX's X11 with the published runtime
-   ([open-strata#289](https://github.com/animu-sphere/open-strata/issues/289));
-   the installed-consumer lane covers those packages meanwhile.
+   targets first. `ost library verify-consumer` is required on Windows and only
+   warns elsewhere: on Linux it cannot find MaterialX's X11 with the published
+   runtime ([open-strata#289](https://github.com/animu-sphere/open-strata/issues/289)),
+   and on macOS it refuses the framework Python's include directory. The
+   installed-consumer lane covers those packages meanwhile.
 
 ### Release gates
 
