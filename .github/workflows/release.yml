@@ -171,7 +171,7 @@ jobs:
             *) echo "::error title=ost bootstrap::no ost release asset for ${RUNNER_OS}-${RUNNER_ARCH}" ; exit 1 ;;
           esac
           asset="ost-cli-${triple}.${ext}"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.19"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$( (command -v sha256sum > /dev/null && sha256sum "$asset" || shasum -a 256 "$asset") | cut -d' ' -f1 )"
@@ -199,15 +199,15 @@ jobs:
           set -euo pipefail
           version="$(ost --version)"
           echo "$version"
-          if [ "$version" != "ost 0.23.18" ]; then
-            echo "::error title=ost bootstrap::expected 'ost 0.23.18', got '$version'" ; exit 1
+          if [ "$version" != "ost 0.23.19" ]; then
+            echo "::error title=ost bootstrap::expected 'ost 0.23.19', got '$version'" ; exit 1
           fi
       - name: Restore the artifact registry cache (speed only, never correctness)
         if: ${{ vars.OST_CI_DISABLE_CACHE != 'true' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ost-ci-home/artifacts
-          key: ost-registry-0.23.18-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
+          key: ost-registry-0.23.19-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
       - name: Pull the pinned runtime SDK from its remote reference
         shell: bash
         run: |
@@ -271,12 +271,7 @@ jobs:
               # `ost` writes the reason to this report, not to the log.
               find "libs/$lib/.strata/targets" -name library-consumer.json -exec \
                 jq -r '.runtime_python, (.checks | to_entries[] | .key, (.value.stdout // ""), (.value.stderr // ""))' {} +
-              # Only a warning on macOS: with the published runtime the isolated
-              # consumer refuses the framework Python's include directory
-              # (open-strata#291). The PR
-              # lane's installed consumer covers these packages there.
-              if [ "${RUNNER_OS}" != "macOS" ]; then exit "$verified"; fi
-              echo "::warning title=verify-consumer::$lib did not verify on ${RUNNER_OS}"
+              exit "$verified"
             fi
             echo "::endgroup::"
           done
@@ -378,7 +373,7 @@ jobs:
         run: |
           set -euo pipefail
           asset="ost-cli-x86_64-unknown-linux-musl.tar.xz"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.19"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$(sha256sum "$asset" | cut -d' ' -f1)"
