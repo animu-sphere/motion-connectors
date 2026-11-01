@@ -38,7 +38,7 @@ closure ([WORKSPACE §1.2](WORKSPACE.md#12-web-modules), WS-O4).
 | Language | C++20 for native libraries; JavaScript with TypeScript declarations for browser acquisition |
 | Build | CMake 3.22 or later; `CMakePresets.json` for plain CMake |
 | Compilers | MSVC on Windows, Clang on macOS arm64, GCC on Linux: the siblings' three lanes |
-| OpenStrata | `ost` 0.23.17, pinned in `openstrata.ci.yaml` |
+| OpenStrata | `ost` 0.23.18, pinned in `openstrata.ci.yaml` |
 | Tests | as in the siblings: plain executables registered with CTest, checking with `assert()` compiled into Release builds, unless the scaffold records a reason to differ |
 | Python tooling | Python interpreter for repository checks; the binding on the C ABI must define its Python packaging/ABI requirements separately from the native OpenUSD closure |
 | Node | Node ≥20 for independent browser module tests; CI uses Node 22, never required by native builds |

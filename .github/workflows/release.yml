@@ -139,6 +139,10 @@ jobs:
             runs_on: ["ubuntu-24.04"]
             require_openusd: cy2026/linux/x86_64/gl
             host_python: "3.13"
+            # The published runtime declares no host packages, so the isolated
+            # consumer is told about MaterialX's X11, installed below
+            # (open-strata#289).
+            verify_consumer_args: "--host-package apt:libx11-dev --host-package apt:libxt-dev"
     steps:
       - name: Check out the repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -167,7 +171,7 @@ jobs:
             *) echo "::error title=ost bootstrap::no ost release asset for ${RUNNER_OS}-${RUNNER_ARCH}" ; exit 1 ;;
           esac
           asset="ost-cli-${triple}.${ext}"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.17"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$( (command -v sha256sum > /dev/null && sha256sum "$asset" || shasum -a 256 "$asset") | cut -d' ' -f1 )"
@@ -195,15 +199,15 @@ jobs:
           set -euo pipefail
           version="$(ost --version)"
           echo "$version"
-          if [ "$version" != "ost 0.23.17" ]; then
-            echo "::error title=ost bootstrap::expected 'ost 0.23.17', got '$version'" ; exit 1
+          if [ "$version" != "ost 0.23.18" ]; then
+            echo "::error title=ost bootstrap::expected 'ost 0.23.18', got '$version'" ; exit 1
           fi
       - name: Restore the artifact registry cache (speed only, never correctness)
         if: ${{ vars.OST_CI_DISABLE_CACHE != 'true' }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ost-ci-home/artifacts
-          key: ost-registry-0.23.17-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
+          key: ost-registry-0.23.18-${{ runner.os }}-${{ runner.arch }}-${{ matrix.cache_cell }}-${{ matrix.runtime_artifact }}
       - name: Pull the pinned runtime SDK from its remote reference
         shell: bash
         run: |
@@ -262,16 +266,15 @@ jobs:
             ost library test "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }}
             ost library package "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} --json > ".ost-ci/libraries/$lib.json"
             verified=0
-            ost library verify-consumer "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} || verified=$?
+            ost library verify-consumer "libs/$lib" --target ${{ matrix.platform }} --profile ${{ matrix.profile }} ${{ matrix.verify_consumer_args }} || verified=$?
             if [ "$verified" -ne 0 ]; then
               # `ost` writes the reason to this report, not to the log.
               find "libs/$lib/.strata/targets" -name library-consumer.json -exec \
                 jq -r '.runtime_python, (.checks | to_entries[] | .key, (.value.stdout // ""), (.value.stderr // ""))' {} +
-              # Required on Windows alone: with the published runtimes the isolated
-              # consumer cannot find MaterialX's X11 on Linux (open-strata#289) and
-              # refuses the framework Python's include directory on macOS. The PR
-              # lane's installed consumer covers these packages on both.
-              if [ "${RUNNER_OS}" = "Windows" ]; then exit "$verified"; fi
+              # Only a warning on macOS: with the published runtime the isolated
+              # consumer refuses the framework Python's include directory. The PR
+              # lane's installed consumer covers these packages there.
+              if [ "${RUNNER_OS}" != "macOS" ]; then exit "$verified"; fi
               echo "::warning title=verify-consumer::$lib did not verify on ${RUNNER_OS}"
             fi
             echo "::endgroup::"
@@ -374,7 +377,7 @@ jobs:
         run: |
           set -euo pipefail
           asset="ost-cli-x86_64-unknown-linux-musl.tar.xz"
-          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.17"
+          base="https://github.com/animu-sphere/open-strata/releases/download/v0.23.18"
           curl -fsSLo "$asset" "$base/$asset"
           curl -fsSLo "$asset.sha256" "$base/$asset.sha256"
           actual="$(sha256sum "$asset" | cut -d' ' -f1)"
