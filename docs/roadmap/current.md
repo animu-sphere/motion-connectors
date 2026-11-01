@@ -22,8 +22,9 @@ runtime scheduling belong downstream.
    matrix and docs, then prepare v0.2.0. Run the
    [release dry run](../releases/README.md#how-a-release-is-cut) on all three
    targets first. `ost library verify-consumer` only warns on macOS, where it
-   refuses the framework Python's include directory; the installed-consumer lane
-   covers those packages meanwhile.
+   refuses the framework Python's include directory
+   ([open-strata#291](https://github.com/animu-sphere/open-strata/issues/291));
+   the installed-consumer lane covers those packages meanwhile.
 
 ### Release gates
 

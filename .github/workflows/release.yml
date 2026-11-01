@@ -272,7 +272,8 @@ jobs:
               find "libs/$lib/.strata/targets" -name library-consumer.json -exec \
                 jq -r '.runtime_python, (.checks | to_entries[] | .key, (.value.stdout // ""), (.value.stderr // ""))' {} +
               # Only a warning on macOS: with the published runtime the isolated
-              # consumer refuses the framework Python's include directory. The PR
+              # consumer refuses the framework Python's include directory
+              # (open-strata#291). The PR
               # lane's installed consumer covers these packages there.
               if [ "${RUNNER_OS}" != "macOS" ]; then exit "$verified"; fi
               echo "::warning title=verify-consumer::$lib did not verify on ${RUNNER_OS}"
