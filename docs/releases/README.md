@@ -12,6 +12,7 @@ Current release availability lives only in the
 | Version | Record | Theme |
 | --- | --- | --- |
 | v0.1.0 | [v0.1.0.md](v0.1.0.md) | The first release: VMC, mocopi and VRChat OSC behind one connector contract, as seven digest-pinned libraries |
+| v0.2.0 | [v0.2.0.md](v0.2.0.md) | The native consumer boundary: acquisition ends at `MotionFrame`, with a C ABI, a Python binding, WebSocket and published CLIs |
 
 ## How a release is cut
 

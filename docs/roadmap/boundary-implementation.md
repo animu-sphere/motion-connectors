@@ -32,4 +32,4 @@ regions, operator assignment and identity applicability here; introduce no
 reverse dependency and no copied observation contract. Coordinate with
 `usd-motion-plugins`' MC-O8. The acquisition C ABI can use the core observation
 boundary independently of this migration
-([current.md](current.md#v020-execution-order)).
+([C_ABI.md](../design/C_ABI.md)).

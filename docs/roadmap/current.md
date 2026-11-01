@@ -1,8 +1,8 @@
 # Current priorities
 
-The next milestone is a stable native consumer boundary for v0.2.0, followed
-by the JS/TS and WASM consumer boundary for v0.3.0. Implementation status and
-test evidence live in the [capability matrix](../reference/CAPABILITY_MATRIX.md);
+The next milestone is the JS/TS and WASM consumer boundary for v0.3.0.
+Implementation status and test evidence live in the
+[capability matrix](../reference/CAPABILITY_MATRIX.md);
 landed changes live in the [changelog](../../CHANGELOG.md).
 
 ## Preserve the acquisition boundary
@@ -16,29 +16,6 @@ self-tests. A connector ends at observations / `MotionFrame`. Filtering,
 smoothing, skeleton solve, retargeting, semantic recording, USD authoring and
 runtime scheduling belong downstream.
 
-## v0.2.0 execution order
-
-1. Validate installed consumers and release artifacts, reconcile the capability
-   matrix and docs, then prepare v0.2.0. Run the
-   [release dry run](../releases/README.md#how-a-release-is-cut) on all three
-   targets first.
-
-### Release gates
-
-- Capability matrix entries with test evidence and accurate release availability.
-- Installed-consumer checks, including the new consumer surfaces.
-- Release artifact validation under the [release procedure](../releases/README.md#how-a-release-is-cut).
-- Documentation ownership and drift cleanup under the
-  [documentation Definition of Done](../contributing/documentation.md#definition-of-done).
-
-New connector additions are not release gates and do not interrupt this order.
-Acquisition references are evaluated through their matrix evidence; hardware
-validation remains operator work.
-
-Coordinate the remaining [generic solve migration](boundary-implementation.md)
-after motion-owned input and parity contracts are adopted; it does not gate
-v0.2.0.
-
 ## v0.3.0 consumer boundary
 
 - Add a shared JS/TS consumer API under `bindings/js/` for browser acquisition,
@@ -48,8 +25,14 @@ v0.2.0.
   integer handling and string lifetimes. Keep the in-process C ABI, JS object
   representation and serialized frame wire format distinct.
 
+New connector additions are not release gates. Acquisition references are
+evaluated through their matrix evidence; hardware validation remains operator
+work.
+
 ## Deferred work
 
+- Coordinate the remaining [generic solve migration](boundary-implementation.md)
+  after motion-owned input and parity contracts are adopted.
 - Publish `motionConnectorOpenXR` when a descriptor can declare the OpenXR
   loader ([WORKSPACE §4.1](../architecture/WORKSPACE.md#41-distribution)).
 - Revisit actor identity with the first multi-actor source (`CC-O5`).
@@ -60,7 +43,7 @@ v0.2.0.
 ## Operator evidence
 
 These tasks require a session and manifest, or an explicit decision that a
-device cannot produce the evidence. They do not gate a feature PR or v0.2.0.
+device cannot produce the evidence. They do not gate a feature PR or a release.
 Replay recorded sessions against their manifests with
 `scripts/check_recorded_sessions.py`
 ([building guide](../guides/building.md#replaying-the-recorded-device-sessions)).

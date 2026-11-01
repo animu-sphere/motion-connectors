@@ -14,15 +14,15 @@ schema: openstrata.library/v1alpha1
 library:
   id: motionConnectorWebSocket
   # Mirrors the repository-root VERSION (docs/architecture/WORKSPACE.md §4).
-  version: 0.1.0
+  version: 0.2.0
 requires:
   libraries:
     - id: motionConnectorCore
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorWire
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorTransport
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionCore
       version: ">=0.5,<0.6"
       artifact:

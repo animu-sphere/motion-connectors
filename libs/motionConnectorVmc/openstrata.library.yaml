@@ -19,11 +19,11 @@ schema: openstrata.library/v1alpha1
 library:
   id: motionConnectorVmc
   # Mirrors VERSION; release preparation updates this in lockstep.
-  version: 0.1.0
+  version: 0.2.0
 requires:
   libraries:
     - id: motionConnectorCore
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionCore
       version: ">=0.5,<0.6"
       artifact:
@@ -38,9 +38,9 @@ requires:
             digest: sha256:1d2ac0bce7211539c008a0a584088d9acdebdada39f020ab489e3d7796eb29cb
             source: oci://ghcr.io/animu-sphere/usd-motion-plugins@sha256:9f05cf3b1c5c4663ef5350b3d37a0a1512b7692a72b993b2c25e50ed4c38de08
     - id: motionConnectorTransport
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
     - id: motionConnectorOsc
-      version: ">=0.1,<0.2"
+      version: ">=0.2,<0.3"
   # Confined to the consumer-integration tests (WORKSPACE.md §2.2): neither
   # enters this library's installed closure.
   test_libraries:

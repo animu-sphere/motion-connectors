@@ -22,9 +22,9 @@
 # (each connector's boundary check reads it against the link line), and any
 # data the component installs beside its package (a source profile, say).
 #
-# SameMinorVersion is the default because the product is pre-1.0: a 0.2 is
-# free to break a 0.1 consumer, and every descriptor under tools/ requires
-# ">=0.1,<0.2" of the libraries it links.
+# SameMinorVersion is the default because the product is pre-1.0: a 0.3 is
+# free to break a 0.2 consumer, and every descriptor under tools/ requires
+# ">=0.2,<0.3" of the libraries it links.
 #
 # Each call records the package in the global MOTIONCONNECTORS_PACKAGES
 # property, which is how the installed-consumer lane knows which packages this

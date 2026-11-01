@@ -12,7 +12,7 @@ from ._values import (Actor, BufferMode, Capability, ClockDomain, ConnectorState
                       SourceKind, Tracker, Vector3, WebSocketOptions, WebSocketRole)
 
 # Mirrors the repository-root VERSION file (WORKSPACE.md §4).
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Actor", "BufferMode", "Capability", "ClockDomain", "Connector", "ConnectorState",

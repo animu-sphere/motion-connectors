@@ -17,7 +17,7 @@ schema: openstrata.library/v1alpha1
 library:
   id: motionConnectorTransport
   # Mirrors the repository-root VERSION (docs/architecture/WORKSPACE.md §4).
-  version: 0.1.0
+  version: 0.2.0
 cmake:
   package: motionConnectorTransport
   target: motionConnectorTransport::motionConnectorTransport
