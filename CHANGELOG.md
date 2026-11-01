@@ -6,14 +6,14 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- **The `ost` pin is 0.23.18, and the release lanes use what it adds.**
+- **The `ost` pin is 0.23.19, and the release lanes use what it adds.**
   `motionRecording` and `motionSampling` move to `requires.test_libraries` on VMC
   and mocopi, so `ost library build` reaches their consumer tests without either
   entering a published closure. The boundary scans exempt that scope alone, and a
   component's tests now default off under `BUILD_TESTING=OFF`, as `ost` sets for a
   prerequisite. Every released library declares a package mode and runs
-  `ost library verify-consumer`, only a warning on macOS, and the four CLIs are
-  published as artifacts under `requires.tools` pins.
+  `ost library verify-consumer`, required on all three targets, and the four CLIs
+  are published as artifacts under `requires.tools` pins.
   `motionConnectorOpenXR` ships as source, because a descriptor cannot declare the
   OpenXR loader.
 
